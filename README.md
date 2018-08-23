@@ -10,7 +10,7 @@ mpif90 -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f
 # Features
 * Berry curvature calculation
 * Compute Chern number for certain band(s)
-* Circular dichroism (optical selectivity due to the circulary polarized right)
+* Circular dichroism (optical selectivity response to the circulary polarized light)
 * Wavefunction plot (Gamma point only in the current version)
 
 # Example
