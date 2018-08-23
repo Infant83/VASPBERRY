@@ -2805,10 +2805,10 @@
       write(6,*)" Flag '-assume byterecl' is required for ifort."
       write(6,*)" for OSX,  -Wl,-stack_size,0x80000000 may be required"
       write(6,*)" ex-noMPI)ifort -fpp -assume byterecl -mkl 
-     &-o berry berry.f"
+     &-o vaspberry vaspberry.f"
       write(6,*)" ex-MPI)mpif90 -DMPI_USE -mkl -fpp -assume byterecl 
-     &-o berry berry.f"
-!     write(6,*)" ex-MPI) mpif90 -DMPI_USE -fpp -assume byterecl -o berry berry.f "
+     &-o vaspberry vaspberry.f"
+!     write(6,*)" ex-MPI) mpif90 -DMPI_USE -fpp -assume byterecl -o vaspberry vaspberry.f "
 
       stop
       end subroutine help
