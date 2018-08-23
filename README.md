@@ -15,4 +15,4 @@ mpif90 -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f
 
 # Example
 * 1H-MoS2 : Berry curvature and Chern number
-* Quantum Anomalous Hall effect (Trypheny-lead lattice) : See H.-J. Kim, C. Li, J. Feng, J.-H. Cho, and Z. Zhang, PRB 93, 041404(R) (2016)  
+* Quantum Anomalous Hall effect (Trypheny-lead lattice) : See H.-J. Kim, C. Li, J. Feng, J.-H. Cho, and Z. Zhang, PRB 93, 041404(R) (2016) (the example files will be provided upon request)
