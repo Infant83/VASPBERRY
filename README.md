@@ -14,6 +14,17 @@ mpif90 -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f
 * Circular dichroism (optical selectivity response to the circulary polarized light)
 * Wavefunction plot (Gamma point only in the current version)
 
+# Usage
+* Instruction and possible options
+> ./VASPBERRY -h
+* Berry curvature calculation and Chern number (ex, k-grid: 12x12, multiband berry curvature from 1-th to 18-th band)
+> ./VASPBERRY -kx 12 -ky 12 -ii 1 -if 18
+* Circular dichroism [ex, transition rate from 11-th to 12-th state by right(+) polarized light]
+> ./VASPBERRY -kx 12 -ky 12 -cd -ii 11 -if 12
+* Real space wavefunction plot [ex, to plot 18-th state with 1-st k-point (if it is gamma point), with 40x40x40 grid for density file]
+> ./VASPBERRY -wf 18 -k 1 -ng 40,40,40
+
+
 # Example
 * 1H-MoS2 : Berry curvature and Chern number
 * Quantum Anomalous Hall effect (Trypheny-lead lattice) : See H.-J. Kim, C. Li, J. Feng, J.-H. Cho, and Z. Zhang, PRB 93, 041404(R) (2016) (the example files will be provided upon request)
