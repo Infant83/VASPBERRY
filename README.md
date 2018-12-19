@@ -16,13 +16,13 @@ mpif90 -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f
 
 # Usage
 * Instruction and possible options
-> ./VASPBERRY -h
+> ./vaspberry -h
 * Berry curvature calculation and Chern number (ex, k-grid: 12x12, multiband berry curvature from 1-th to 18-th band)
-> ./VASPBERRY -kx 12 -ky 12 -ii 1 -if 18
+> ./vaspberry -kx 12 -ky 12 -ii 1 -if 18
 * Circular dichroism [ex, transition rate from 11-th to 12-th state by right(+) polarized light]
-> ./VASPBERRY -kx 12 -ky 12 -cd -ii 11 -if 12
+> ./vaspberry -kx 12 -ky 12 -cd -ii 11 -if 12
 * Real space wavefunction plot [ex, to plot 18-th state with 1-st k-point (if it is gamma point), with 40x40x40 grid for density file]
-> ./VASPBERRY -wf 18 -k 1 -ng 40,40,40
+> ./vaspberry -wf 18 -k 1 -ng 40,40,40
 
 
 # Example
