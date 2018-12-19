@@ -1,6 +1,6 @@
 # VASPBERRY
 Berry curvature and Chern number calculations with the output (WAVECAR) of VASP code.
-VASPBERRY is written for the post-processing pur pose of the VASP outputs, i.e., WAVECAR the Bloch wavefunction infor mation. VASPBERRY can compute Berry curvature and Chern number via Fukui's method [S ee J. Phys. S oc. Jap. 74, 1674 (2005)]. In addition Circular dichroism also can be evaluated. Since it directly reads the wavefunction coefficients, one can also obtain real space wavefunction character psi_nk(r) by simple command.
+VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., WAVECAR the Bloch wavefunction information. VASPBERRY can compute Berry curvature and Chern number via Fukui's method [See J. Phys. Soc. Jap. 74, 1674 (2005)]. In addition Circular dichroism also can be evaluated. Since it directly reads the wavefunction coefficients, one can also obtain real space wavefunction character psi_nk(r) by simple command.
 
 # Compile
 * Serial version : 
