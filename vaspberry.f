@@ -22,7 +22,7 @@
 !              -for Z2 invariant evaluation (routines are modified..)
 ! routine change: routine for getting a determiant -> get_det : 2018, Jun. 28. H.-J. Kim
 
-! last update and bug fixes : 2018. Jun. 28. by H.-J. Kim 
+! last update and bug fixes : 2020. Jun. 10. by H.-J. Kim 
 
 !#define MPI_USE
 !#undef  MPI_USE
@@ -63,14 +63,14 @@
 #ifdef MPI_USE
       include 'mpif.h'
       INTEGER         status(MPI_STATUS_SIZE)
-      call mpi_init(ierr)
-      call mpi_comm_size(mpi_comm_world,nprocs,ierr)
-      call mpi_comm_rank(mpi_comm_world,myrank,ierr)
+      call MPI_INIT(ierr)
+      call MPI_COMM_SIZE(MPI_COMM_WORLD,nprocs,ierr)
+      call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ierr)
       if(myrank == 0)then
        write(6,*)"THIS IS ROOT:",myrank
       endif
       if(myrank == 0)then
-       time_1=MPI_Wtime()
+       time_1=MPI_WTIME()
       endif
 #else
       nprocs=1
@@ -174,7 +174,7 @@
        write(6,'(A,I6)')     "#  NB3MAX    : ",nbmax(3)
       endif
 #ifdef MPI_USE
-      call mpi_barrier(mpi_comm_world,ierr)
+      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 #endif
       allocate(ig(3,npmax))
       allocate(coeff(npmax))
@@ -298,17 +298,17 @@
        enddo   ! ik    end
 
 #ifdef MPI_USE
-      call MPI_BARRIER(mpi_comm_world,ierr)
-      call MPI_REDUCE(rnnfield,rnnfield_tot,1,mpi_real8,
-     &                mpi_sum,0,mpi_comm_world,ierr)
-      call MPI_REDUCE(rnnfield_bottom,rnnfield_bottom_tot,1,mpi_real8,
-     &                mpi_sum,0,mpi_comm_world,ierr)
-      call MPI_REDUCE(rnfield,rnfield_tot,iz2*nk,mpi_real8,
-     &                mpi_sum,0,mpi_comm_world,ierr)
-      call MPI_REDUCE(recivec,recivec_tot,3*iz2*nk,mpi_real8,
-     &                mpi_sum,0,mpi_comm_world,ierr)
-      call MPI_REDUCE(recilat,recilat_tot,3*iz2*nk,mpi_real8,
-     &                mpi_sum,0,mpi_comm_world,ierr)
+      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      call MPI_REDUCE(rnnfield,rnnfield_tot,1,MPI_REAL8,
+     &                MPI_SUM,0,MPI_COMM_WORLD,ierr)
+      call MPI_REDUCE(rnnfield_bottom,rnnfield_bottom_tot,1,MPI_REAL8,
+     &                MPI_SUM,0,MPI_COMM_WORLD,ierr)
+      call MPI_REDUCE(rnfield,rnfield_tot,iz2*nk,MPI_REAL8,
+     &                MPI_SUM,0,MPI_COMM_WORLD,ierr)
+      call MPI_REDUCE(recivec,recivec_tot,3*iz2*nk,MPI_REAL8,
+     &                MPI_SUM,0,MPI_COMM_WORLD,ierr)
+      call MPI_REDUCE(recilat,recilat_tot,3*iz2*nk,MPI_REAL8,
+     &                MPI_SUM,0,MPI_COMM_WORLD,ierr)
 
       rnnfield=rnnfield_tot
       rnnfield_bottom=rnnfield_bottom_tot
@@ -561,15 +561,15 @@
       endif
 
 #ifdef MPI_USE
-        call MPI_BARRIER(mpi_comm_world,ierr)
-        call MPI_REDUCE(chernnumber,chernnumber_tot,1,mpi_real8,
-     &                  mpi_sum,0,mpi_comm_world,ierr)
-        call MPI_REDUCE(berrycurv,berrycurv_tot,nk,mpi_real8,
-     &                  mpi_sum,0,mpi_comm_world,ierr)
-        call MPI_REDUCE(recivec,recivec_tot,3*nk,mpi_real8,
-     &                  mpi_sum,0,mpi_comm_world,ierr)
-        call MPI_REDUCE(recilat,recilat_tot,3*nk,mpi_real8,
-     &                  mpi_sum,0,mpi_comm_world,ierr)
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        call MPI_REDUCE(chernnumber,chernnumber_tot,1,MPI_REAL8,
+     &                  MPI_SUM,0,MPI_COMM_WORLD,ierr)
+        call MPI_REDUCE(berrycurv,berrycurv_tot,nk,MPI_REAL8,
+     &                  MPI_SUM,0,MPI_COMM_WORLD,ierr)
+        call MPI_REDUCE(recivec,recivec_tot,3*nk,MPI_REAL8,
+     &                  MPI_SUM,0,MPI_COMM_WORLD,ierr)
+        call MPI_REDUCE(recilat,recilat_tot,3*nk,MPI_REAL8,
+     &                  MPI_SUM,0,MPI_COMM_WORLD,ierr)
          chernnumber=chernnumber_tot
          berrycurv(:)=berrycurv_tot(:)
          recivec(:,:)=recivec_tot(:,:)
@@ -656,11 +656,13 @@
       enddo
 #ifdef MPI_USE
       endif
- 9999 if(myrank==0)write(6,*)"end of program"
-      call MPI_BARRIER(mpi_comm_world,ierr)
-#else
- 9999 write(6,*)"end of program"
 #endif
+ 9999 if(myrank==0) write(6,*)"end of program"
+
+#ifdef MPI_USE
+      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+#endif
+
       deallocate(ig)
       deallocate(coeff)
       deallocate(coeff1u)
@@ -700,7 +702,7 @@
        write(6,*) "End sequence      : ",time_4-time_3
       endif
 
-      call MPI_BARRIER(mpi_comm_world,ierr)
+      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
       CALL MPI_FINALIZE(ierr)
 #endif
       end program
@@ -911,6 +913,7 @@
       dimension wkgr(npmax)
       integer nplist(nk)
       integer ikk(5),isgg(2,5),npl(5),itrim(5),ig(3,npmax)
+      integer nbmax(3)
       integer nk,nband,npmax,kperiod,ispin,irecl
       character*75 filename,foname,fonameo,fonameoi
       data c/0.262465831d0/ ! constant c = 2m/hbar**2 [1/eV Ang^2]
@@ -1014,6 +1017,7 @@
         dimension a1(3),a2(3),a3(3),ikk(1),coord(3)
         dimension n_atom(10),rs(3),rss(3)
         character*4 at_name(10),const(3)
+        character*75 fonameo
         character dummy
 
         !get total number of atoms : read EIGENVAL header
@@ -1063,15 +1067,15 @@
 
         do while(icont .eq. 0) ! check selective or dynamics
          read(ID+10,*) dummy
-         if (dummy == "S" .or. dymmy == "s") then 
+         if (dummy == "S" .or. dummy == "s") then 
           write(ID,'(A)') "Selective dynamics"
           icont=0;iselect=1
          elseif(dummy == "D" .or. dummy == "d")then
           write(ID,'(A)') "Direct"
           icont=1;idirect=1
           rss(:)=rs(:)
-         elseif(dummy == "C" .or. dummy == "c" .or. dymmy == "k" .or. 
-     &          dymmy == "K")then
+         elseif(dummy == "C" .or. dummy == "c" .or. dummy == "k" .or. 
+     &          dummy == "K")then
           write(ID,'(A)') "Cartesian"
           icont=1
           do j=1,3
@@ -1418,7 +1422,7 @@
       irecl=3+(ikk(iilp)-1)*(nband+1)+nk*(nband+1)*(isp-1)+nni
       if(itrim(iilp) .eq. 0)then
        read(10,rec=irecl)(coeff(i),i=1,npl(iilp))
-      elseif(itrim(iilp) .ge. 1 .and. mod(nni,2))then
+      elseif(itrim(iilp) .ge. 1 .and. mod(nni,2) .eq. 1)then
        read(10,rec=irecl)(coeff(i),i=1,npl(iilp))
       elseif(itrim(iilp) .ge. 1 .and. mod(nni,2) .eq. 0)then
        read(10,rec=irecl-1)(coeff(i),i=1,npl(iilp))
@@ -2677,24 +2681,6 @@
       stop
       end subroutine test
 
-      subroutine copy_file (file_name, file_name_new)
-      ! copies a file file_name to file_name_new
-      ! file_name and file_name_new must include the path information and may include wildcard characters
-
-      USE ifport 
-      implicit character*100 (f)
-      character*1000 fnam
-      logical*4 logical_result
-
-      len1 = len_trim(file_name); len2 = len_trim(file_name_new)
-      fnam = 'copy/y ' //file_name(1:len1) //' '//file_name_new(1:len2)
-
-      l = len_trim(fnam)
-      logical_result = systemqq(fnam(1:l))
-
-      return
-      end subroutine copy_file
-
       subroutine help(ver_tag)
       character*75 ver_tag
       write(6,*)"          **** PROGRAM INSTRUCTION ***"
@@ -2808,7 +2794,11 @@
      &-o vaspberry vaspberry.f"
       write(6,*)" ex-MPI)mpif90 -DMPI_USE -mkl -fpp -assume byterecl 
      &-o vaspberry vaspberry.f"
-!     write(6,*)" ex-MPI) mpif90 -DMPI_USE -fpp -assume byterecl -o vaspberry vaspberry.f "
+      write(6,*)" ex-noMPI-gfortran) gfortran -I/opt/local/include 
+     &-L/opt/local/lib/lapack/ -l lapack -o vaspberry vaspberry_gfortran
+     &_serial.f"
+
+!     write(6,*)" ex-MPI) mpif90 -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f "
 
       stop
       end subroutine help
