@@ -4,14 +4,14 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
 
 # Compile
 * Serial version : 
-    ###### ifort -fpp -assume byterecl -mkl -o vaspberry vaspberry.f
+    > ifort -fpp -assume byterecl -mkl -o vaspberry vaspberry.f
 * Multicore version : 
-    ###### mpif90 -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f
+    > mpif90 -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f
 
 * Note for gfortran:
     For gfortran, please use vaspberry_gfortran_serial.f for the compilation. This only support non-parallel calculations.
     For the compilation, for example
-    ###### gfortran -L/usr/local/lib/lapack/ -l lapack -o vaspberry vaspberry_gfortran_serial.f
+    > gfortran -L/usr/local/lib/lapack/ -l lapack -o vaspberry vaspberry_gfortran_serial.f
 
 # Features
 * Berry curvature calculation
