@@ -28,7 +28,7 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
 > ./vaspberry -kx 12 -ky 12 -cd -ii 11 -if 12
 * Real space wavefunction plot [ex, to plot 18-th state with 1-st k-point (if it is gamma point), with 40x40x40 grid for density file]
 > ./vaspberry -wf 18 -k 1 -ng 40,40,40
-* If your system is semimetallic, there can be following error messages: "error. !!! ne(k) /= ne(k') !!!". This is due to that the number of occupied states counted based on the calculated Fermi level is differ over the Brillouin zone. In this case, one can explicitly specify the number of electrons (NE) of your system, so that VASPBERRY calculate berry curvature with "NE" bands. 
+* If your system is semimetallic, there can be following error messages: "error. !!! ne(k) /= ne(k') !!!". This is due to that the number of occupied states for certain k-point (ne(k)) counted based on the calculated Fermi level is differ over the Brillouin zone. In this case, one can explicitly specify the number of electrons (NE) of your system, so that VASPBERRY calculate berry curvature with "NE" bands. 
 > ./vaspberry -kx 12 -ky 12 -ii 1 -if 18 -ne 18
 
 # Example
