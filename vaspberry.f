@@ -2735,7 +2735,7 @@
       write(6,*)"                  :  Default : BERRYCURV.dat          "
       write(6,*)" -kp np           : Print Berry curvature distribution"
       write(6,*)"                  : with extended BZ with 'np x np'-BZ"
-      write(6,*)"                  :  Default : 1              "
+      write(6,*)"                  :  Default : 2              "
       write(6,*)" -skp 1(or 0)     : Specify whether special K-points "
       write(6,*)"                  : will be printed in the SKP.dat "
       write(6,*)"                  : You may specify the points by hand"
