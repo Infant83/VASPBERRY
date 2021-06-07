@@ -22,16 +22,10 @@
 !              -for Z2 invariant evaluation (routines are modified..)
 ! routine change: routine for getting a determiant -> get_det : 2018, Jun. 28. H.-J. Kim
 
-! version 0.94 Add routine Berry curvature calculation for: 2020. Sep. 01. Sun-Woo Kim & H.-J. Kim
-!                 n-th (to m-th)  eigenstate using Kubo formula :        (kimsunwoo821@gmail.com)
-!                 usage: -kubo 1 -ii n -if m
-! version 0.95 MPI parallelization implemented (MPI_USE)  : 2020. Sep. 02. H.-J. Kim
-!              -for Berrycurvature calculation using Kubo formula (-kubo) 
-
-! last update and bug fixes : 2020. Sep. 07. by S.-W. Kim & H.-J. Kim 
+! last update and bug fixes : 2020. Jun. 10. by H.-J. Kim 
 
 !#define MPI_USE
-!#undef  MPI_USE        
+!#undef  MPI_USE
 
       PROGRAM VASPBERRY
 
@@ -50,13 +44,8 @@
       real*8,    allocatable :: wnklist(:,:),xrnfield(:)
       real*8,    allocatable :: recilat(:,:),xrecilat(:,:),occ(:)
       real*8,    allocatable :: selectivity(:),xselectivity(:)
-      real*8,    allocatable :: berrycurv_kubo(:),xberrycurv_kubo(:)
-      real*8,    allocatable :: berrycurv_kubo_mpi(:)
-      real*8,    allocatable :: berrycurv_kubo_tot(:)
-      real*8,    allocatable :: berrycurv_kubo_tot_mpi(:)
       real*16,   allocatable :: ener(:)
       integer,   allocatable :: ig(:,:),nplist(:)
-      integer*4                 ie
       dimension selectivitymax(4),selectivitymin(4)
       dimension a1(3),a2(3),a3(3),b1(3),b2(3),b3(3),a2xa3(3),sumkg(3)
       dimension wk(3),wkk(3,5),ikk(5),isgg(2,5),npl(5),itr(5),itrim(5)
@@ -65,19 +54,16 @@
       complex*16  detS(4),detA,detLOOP
       integer k, n, nkx, nky,nini,nmax,ns,ne,icd,ivel
       character*75 filename,foname,fonameo,fbz,ver_tag,vdirec
-      character*20,external :: int2str
       data c/0.262465831d0/ ! constant c = 2m/hbar**2 [1/eV Ang^2]
       real*8  rfield,rnnfield,rnnfield_bottom
       real*8  rnnfield_tot,rnnfield_bottom_tot
       real*8, allocatable:: w_half_klist(:,:)
       integer, allocatable:: i_half_klist(:),i_trim_klist(:)
       integer :: myrank, nprocs, ierr
-      integer ::  mpi_comm_earth
 #ifdef MPI_USE
       include 'mpif.h'
       INTEGER         status(MPI_STATUS_SIZE)
       call MPI_INIT(ierr)
-      mpi_comm_earth = MPI_COMM_WORLD
       call MPI_COMM_SIZE(MPI_COMM_WORLD,nprocs,ierr)
       call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ierr)
       if(myrank == 0)then
@@ -89,7 +75,6 @@
 #else
       nprocs=1
       myrank=0
-      mpi_comm_earth = 0
 #endif
 
       ver_tag="# VASPBERRY (Ver 1.0), by Hyun-Jung Kim. 2018. Aug. 23."
@@ -103,7 +88,7 @@
 
 !!$*  reading general informations
       call parse(filename,foname,nkx,nky,ispinor,icd,ixt,fbz,
-     &   ivel,ikubo,iz,ihf,nini,nmax,nn,kperiod,it,iskp,ine,ver_tag,
+     &   ivel,iz,ihf,nini,nmax,kperiod,it,iskp,ine,ver_tag,
      &   iwf,ikwf,ng,rs,imag)
       if(myrank == 0)call creditinfo(ver_tag)
 
@@ -132,7 +117,7 @@
        ne=0
        irec=3+(ik-1)*(nband+1)
        read(10,rec=irec) xnplane, (wk(i),i=1,3),
-     &                  (cener(inn),occ(inn),inn=1,nband)
+     &                  (cener(nn),occ(nn),nn=1,nband)
        wklist(:,ik)=wk(:)
        nplist(ik)=nint(xnplane)
        do n=1,nband; ne=ne+nint(occ(n)); enddo
@@ -211,13 +196,6 @@
       allocate(coeff2u(nbtot),coeff2d(nbtot))
       if(icd.eq.1) allocate(selectivity(nk))
       if(icd.eq.1) allocate(xselectivity(kperiod*2*kperiod*2*nk))
-      if(ikubo.eq.1) allocate(berrycurv_kubo(nk))
-      if(ikubo.eq.1) allocate(xberrycurv_kubo(kperiod*2*kperiod*2*nk))
-      if(ikubo.eq.1) allocate(berrycurv_kubo_tot(nk))
-#ifdef MPI_USE
-      if(ikubo.eq.1) allocate(berrycurv_kubo_mpi(nk))
-      berrycurv_kubo_mpi = 0d0
-#endif
       if(ivel .eq. 1 .and. myrank==0) then
         ni=nini 
         nj=nini
@@ -300,7 +278,7 @@
 
 !       write(6,'(A)')"#__________________________
 !    &________________________________ "
-!       write(6,'(A)')"# Berry Curvature F (A^2) :
+!       write(6,'(A)')"# Berry Curvature F (A^-2) :
 !    & -Im[logPI_S(det(S(K_s,K_s+1)))]/dk^2"
 !       write(6,'(A)')"# N-field strength       :
 !    & Sum_s{Im[log(det(S(K_s,k_s+1)))]}/2pi - F/2pi "
@@ -364,7 +342,7 @@
      &                     irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
      &                     dSkxky,nini,nmax,xrecivec,xrecilat,kext,
      &                     xrnfield,rnnfield,rnnfield_bottom,0,0,
-     &                     iz2,icd,iz,ivel,ikubo,nprocs)
+     &                     iz2,icd,iz,ivel,nprocs)
         endif !myrank ==0
        enddo !ispin end
 
@@ -372,7 +350,7 @@
       endif !if Z2 end
 
       do isp=1,ispin   ! ispin start
-       if(icd+ivel+iz+iwf+ikubo.eq.0)then
+       if(icd+ivel+iz+iwf.eq.0)then
         chernnumber=0.
       if(myrank == 0)then
         write(6,*)" "
@@ -404,9 +382,7 @@
         ink=1;ifk=nk
 #endif
         do ik=ink, ifk     !ik loop.
-!    !write(6,*)'ccc', nkx, nky, iz, iz2, nband, nk, ik ,isp
          call klpfind(wkk, isp,ik,nk,nband,nkx,nky,0,0,iz,iz2) !k-loop(4pts) of ik-kpoint (K)
-!    !write(6,*)'vvv'
          write(6,*)" "
          write(6,490) ik,(wkk(i,1),i=1,3)
   490    format("#* Closed loop for KPOINT",I5," : (",3F9.5,"  )")
@@ -518,7 +494,7 @@
 
          write(6,'(A)')"#__________________________
      &________________________________ "
-         write(6,'(A)')"# Berry Curvature (A^2) :
+         write(6,'(A)')"# Berry Curvature (A^-2) :
      & -Im[logPI_S(det(S(K_s,K_s+1)))]/dk^2"
          do j=1,3
           recivec(j,ik)=(wklp(1,1,ik)+wklp(1,3,ik))*b1(j)*0.5+
@@ -527,7 +503,7 @@
           recilat(j,ik)=(wklp(j,1,ik)+wklp(j,3,ik))*0.5
          enddo
          write(6,'(A)')"#      kx        ky        kz(A^-1)
-     &   Berry Curvature (A^2)"
+     &   Berry Curvature (A^-2)"
          write(6,'(A,3F11.6,A,F16.6)')'#',(recivec(i,ik),i=1,3),"     ",
      &                                    berrycurv(ik)
 
@@ -616,23 +592,18 @@
      &                   irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
      &                   dSkxky,nini,nmax,xrecivec,xrecilat,kext,
      &                   xberrycurv,chernnumber,0.,0,0,
-     &                   iz2,icd,iz,ivel,ikubo,nprocs)
+     &                   iz2,icd,iz,ivel,nprocs)
 #else
        call write_result(isp,ispin,ispinor,fonameo,foname,filename,
      &                   irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
      &                   dSkxky,nini,nmax,xrecivec,xrecilat,kext,
      &                   xberrycurv,chernnumber,0.,berrymax,berrymin,
-     &                   iz2,icd,iz,ivel,ikubo,nprocs)
+     &                   iz2,icd,iz,ivel,nprocs)
 #endif
        endif
 
 !!! ######### LOOP for OPTICAL SELECTIVITY ###########################################
        elseif(icd.eq.1 .and. myrank==0)then   ! calculate optical selectivity
-#ifdef MPI_USE
-        if(myrank == 0)then
-         time_2=MPI_WTIME()
-        endif
-#endif
         call optical_selectivity(selectivity, 
      &                           selectivitymax,selectivitymin,
      &             b1,b2,b3,wklist,isp,
@@ -656,94 +627,10 @@
      &                  irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
      &                  dSkxky,nini,nmax,xrecivec,xrecilat,kext,
      &                  xselectivity,0,0.,selectivitymax,selectivitymin,
-     &                  iz2,icd,iz,ivel,ikubo,nprocs)
-#ifdef MPI_USE
-        if(myrank == 0)then
-         time_3=MPI_WTIME()
-        endif
-#endif
-       
-!!! ######### LOOP END for OPTICAL SELECTIVITY ###########################################
+     &                  iz2,icd,iz,ivel,nprocs)
 
-!!! ######### LOOP for Berry curvature using Kubo formula ###############################
-!       elseif(ikubo.eq.1.and. myrank==0) then
-        elseif(ikubo.eq.1               ) then
-#ifdef MPI_USE
-         if(myrank == 0)then
-          time_2=MPI_WTIME()
-         endif
-#endif
-         chernnumber_total=0d0
-         do ie=nini, nmax
-           if(myrank .eq. 0) then
-             write(6,'(A  )')" "
-             write(6,'(A,I)')"# BERRY CURVATURE FOR BAND INDEX n= ", ie
-             write(6,'(A,I)')"#                     SPIN INDEX s= ", isp
-             write(6,'(A  )')" "
-           endif
-#ifdef MPI_USE
-           call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-#endif
-           berrycurv_kubo = 0d0
-           call kubo_berry_curvature(berrycurv_kubo,
-     &             b1,b2,b3,wklist,isp,
-     &             nband,ecut,ispinor,nplist,nbmax,npmax,
-     &             nk,ie,
-     &             nprocs,myrank,mpi_comm_earth)      
-
-           if(myrank .eq. 0) then
-            chernnumber=0d0
-            do ik=1,nk
-             do j=1,3
-              recivec(j,ik)=wklist(1,ik)*b1(j)+
-     &                      wklist(2,ik)*b2(j)+
-     &                      wklist(3,ik)*b3(j)
-              recilat(j,ik)=wklist(j,ik)
-             enddo
-             chernnumber      =chernnumber+
-     &                                berrycurv_kubo(ik)*dSkxky/(2.*pi)
-             chernnumber_total=chernnumber_total+
-     &                                berrycurv_kubo(ik)*dSkxky/(2.*pi)
-             berrycurv_kubo_tot(ik) = berrycurv_kubo_tot(ik) +
-     &                                berrycurv_kubo(ik)
-            enddo
-            call get_ext_variable(xrecivec,xrecilat,xberrycurv_kubo,
-     &                       kext,recivec,recilat,berrycurv_kubo,
-     &                       nk,kperiod,nk,iz2,
-     &                       b1,b2,b3) ! extending over exteded-BZ
-            
-            call get_sorted_xrvari(xrecivec,xrecilat,xberrycurv_kubo,
-     &                             kext,kperiod,nk,iz2) ! sorting
-            call write_result(isp,ispin,ispinor,fonameo,foname,filename,
-     &                     irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
-     &                     dSkxky,ie,ie    ,xrecivec,xrecilat,kext,
-     &                     xberrycurv_kubo,chernumber,0.,0.,0.,
-     &                     iz2,icd,iz,ivel,ikubo,nprocs)
-           endif
-         enddo ! loop ie
-
-         ! for total berry curvature
-         if(myrank .eq. 0 .and. nini .ne. nmax) then
-          call get_ext_variable(xrecivec,xrecilat,xberrycurv_kubo,kext,
-     &                     recivec,recilat,berrycurv_kubo_tot,
-     &                     nk,kperiod,nk,iz2,
-     &                     b1,b2,b3) ! extending over exteded-BZ
-
-          call get_sorted_xrvari(xrecivec,xrecilat,xberrycurv_kubo,
-     &                           kext,kperiod,nk,iz2) ! sorting
-          call write_result(isp,ispin,ispinor,fonameo,foname,filename,
-     &                    irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
-     &                    dSkxky,nini,nmax,xrecivec,xrecilat,kext,
-     &                    xberrycurv_kubo,chernumber_total,0.,0.,0.,
-     &                    iz2,icd,iz,ivel,ikubo,nprocs)
-         endif
-#ifdef MPI_USE
-         if(myrank == 0)then
-          time_3=MPI_WTIME()
-         endif
-#endif
        endif !icd over
-!!! ######### LOOP END for Berry curvature using Kubo formula ###########################
+!!! ######### LOOP END for OPTICAL SELECTIVITY ###########################################
 
       enddo !ispin loop over
 
@@ -825,7 +712,7 @@
      &                  irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
      &                  dSkxky,nini,nmax,xrecivec,xrecilat,kext,
      &                  xrvari,rvari,rvari2,rvari3,rvari4,
-     &                  iz2,icd,iz,ivel,ikubo, nprocs)
+     &                  iz2,icd,iz,ivel,nprocs)
       implicit real*8 (a-h,o-z)
       dimension b1(3),b2(3),b3(3)
       real*8  xrecivec(3,kperiod*2*kperiod*2*nk*iz2)
@@ -834,26 +721,16 @@
       real*8  rvari,rvari2
       real*8  xb(3),xtemp,rvari3(4),rvari4(4)
       character*75 filename,foname,fonameo
-      character*75 foname_
-      character*20,external :: int2str
-       
-       if(ikubo .eq. 1 .and. nini .eq. nmax) then
-         write(foname_, '(3A )')TRIM(foname),'.EIG-',
-     &                          trim(ADJUSTL(int2str(nini)))
-       else
-         foname_ = foname
-       endif
 
        if(isp .eq. 1 .and. ispinor .eq. 1 .and. ispin.eq.2) then
-        write(fonameo,'(A,A)')TRIM(foname_),'.UP.dat'
+        write(fonameo,'(A,A)')TRIM(foname),'.UP.dat'
         else if (isp .eq. 2 .and. ispinor .eq. 1 .and. ispin.eq.2)then
-         write(fonameo,'(A,A)')TRIM(foname_),'.DN.dat'
+         write(fonameo,'(A,A)')TRIM(foname),'.DN.dat'
         else if (isp .eq. 1 .and. ispinor .eq. 2) then
-         write(fonameo,'(A,A)')TRIM(foname_),'.dat'
+         write(fonameo,'(A,A)')TRIM(foname),'.dat'
         else if (isp .eq. 1 .and. ispinor .eq. 1 .and. ispin.eq.1)then
-         write(fonameo,'(A,A)')TRIM(foname_),'.dat'
+         write(fonameo,'(A,A)')TRIM(foname),'.dat'
        endif
-
        open(32,file=fonameo,status='unknown')
        write(32,'(A,I4,A)')"# Job running on ",nprocs," total cores"
        write(32,'(A,A)')   "# File reading...  : ",filename
@@ -879,14 +756,14 @@
         if(iz == 1)then
          write(32,'(A,I4)')"# Z2 invariant for the BAND : ",nini
         elseif(iz+ivel+icd .eq. 0)then
-          write(32,'(A,I4)')"# Chern Number for the BAND : ",nmax
+         write(32,'(A,I4)')"# Chern Number for the BAND : ",nmax
         endif
        else
         if(iz == 1)then
          write(32,'(A,I4,A,I4)')"# Z2 invariant for the BANDS : ",nini,
      &                         " - ",nmax
         elseif(iz+ivel+icd .eq. 0)then
-          write(32,'(A,I4,A,I4)')"# Chern Number for the BANDS : ",nini,
+         write(32,'(A,I4,A,I4)')"# Chern Number for the BANDS : ",nini,
      &                         "    -  ",nmax
         endif
        endif
@@ -896,7 +773,7 @@
      &                  mod((nint(rvari)),2)
         write(32,'(A,I2)')"# Z2 Invariant (bottom) =    ",
      &                  mod((nint(rvari2)),2)
-        write(32,'(A)')"# Berry Curvature F (A^2) :
+        write(32,'(A)')"# Berry Curvature F (A^-2) :
      &  -Im[logPI_S(det(S(K_s,K_s+1)))]/dk^2"
         write(32,'(A)')"# N-field strength       :
      &  Sum_s{Im[log(det(S(K_s,k_s+1)))]}/2pi - F/2pi "
@@ -922,44 +799,22 @@
         write(32,'(A)')"# (cart) kx        ky        kz(A^-1)
      &   selectivity(n(k)),        (recip)kx        ky        kz"
 
-       elseif(ikubo == 1)then !Berry curvature using Kubo formula
-        write(32,'(A)')"# Chern Number is sum of 
-     &Berry Curvature over 1BZ"
-        write(32,'(A,F16.4)')"# Chern Number =   ",rvari
-        write(32,'(A,I4)')"# Berry curvature using kubo for BAND 
-     & index n ", nini
-        write(32,'(A)')"# Omega_n=      |P(k,s,nm,+)|^2-|P(k,s,nm,-)|^2"
-        write(32,'(A)')"#         sum_n -------------------------------"
-        write(32,'(A)')"#        (n/=m) |energy(k,s,n)-energy(k,s,m)|^2"
-        write(32,'(A)')"#  The TRANSITION MATRIX ELEMENT P ="
-        write(32,'(A)')"#   P(k,s,nm,+ or -) = 1/sqrt(2)[p_x(k,nm,s) +
-     &(or -) i*p_y(k,nm,s)]"
-        write(32,'(A)')"#  THE INTERBAND TRANSITION MATRIX p_x,y ="
-        write(32,'(A)')"#   p_x,y(k,nm,s)=<psi(k,n,s)|-i*hbar*1/dx(y)|
-     &psi(k,m,s)>"
-!       write(32,'(A,4F16.6)')"# MAXVAL of SELECTIVITY at kx,ky,kz 
-!    &(in reci)= ",(rvari3(i),i=1,4)
-!       write(32,'(A,4F16.6)')"# MINVAL of SELECTIVITY at kx,ky,kz 
-!    &(in reci)= ",(rvari4(i),i=1,4)
-        write(32,'(A)')"# (cart) kx        ky        kz(A^-1)
-     &   BERRYKUBO(A^2),          (recip)kx        ky        kz"
-
        else !BERRYCURVATURE
         write(32,'(A)')"# Chern Number is sum of 
      &Berry Curvature over 1BZ"
-        write(32,'(A,F16.4)')"# Chern Number =   ",rvari
-        write(32,'(A,4F16.4)')"# MAXVAL of BERRYCURV at kx,ky,kz 
+        write(32,'(A,F16.6)')"# Chern Number =   ",rvari
+        write(32,'(A,4F16.6)')"# MAXVAL of BERRYCURV at kx,ky,kz 
      &(in reci)= ",(rvari3(i),i=1,4)
-        write(32,'(A,4F16.4)')"# MINVAL of BERRYCURV at kx,ky,kz 
+        write(32,'(A,4F16.6)')"# MINVAL of BERRYCURV at kx,ky,kz 
      &(in reci)= ",(rvari4(i),i=1,4)
-        write(32,'(A)')"# Berry Curvature (A^2) :
+        write(32,'(A)')"# Berry Curvature (A^-2) :
      &-Im[logPI_S(det(S(K_s,K_s+1)))]/dk^2"
         write(32,'(A)')"# (cart) kx        ky        kz(A^-1)
-     &   Berry Curvature (A^2),   (recip)kx        ky        kz"
+     &   Berry Curvature (A^-2),   (recip)kx        ky        kz"
        endif
 
        do ik=1,kext
-        write(32,'(3F11.6,A,F20.4,A,3F11.6)')(xrecivec(i,ik),i=1,3),
+        write(32,'(3F11.6,A,F11.6,A,3F11.6)')(xrecivec(i,ik),i=1,3),
      &        "     ",xrvari(ik),"            ",
      &        (xrecilat(i,ik),i=1,3)
        enddo
@@ -1658,7 +1513,7 @@
       complex*16 coeffvu(npmax),coeffvd(npmax)
       complex*16 coeffcu(npmax),coeffcd(npmax)
       integer :: ig(3,npmax)
-      !data hbar/6.58211928e-16/ 
+!     data hbar/6.58211928e-16/ 
       data hbar/1./ !Here, I will set hbar = 1. for the simplicity
       do ik=1,nk
        cinter_mtrx_x=(0.,0.)
@@ -1670,7 +1525,6 @@
        wk(:)=wklist(:,ik)
        np=nplist(ik)
        call plindx(ig,ncnt, ispinor,wk,b1,b2,b3,nbmax,np,ecut,npmax)
-       !write(6,*)ik,nband,isp,nini,nmax;stop
        read(10,rec=(3+(ik-1)*(nband+1)+
      &                nk*(nband+1)*(isp-1)+nini))(coeff(i),i=1,np)
        coeffv=coeff;coeff=(0.,0.)
@@ -1696,14 +1550,13 @@
      &            hbar*conjg(coeffcu(iplane))*xkgy*coeffvu(iplane)+
      &            hbar*conjg(coeffcd(iplane))*xkgy*coeffvd(iplane)
          else if(ispinor .eq. 1) then
-         ! write(6,*)coeffc(iplane), xkgx
           cinter_mtrx_x=cinter_mtrx_x+
      &            hbar*conjg(coeffc(iplane))*xkgx*coeffv(iplane)
           cinter_mtrx_y=cinter_mtrx_y+
      &            hbar*conjg(coeffc(iplane))*xkgy*coeffv(iplane)
         endif
        enddo ! iplane loop end
-       !stop
+
        ctrans_mtrx_left  = cinter_mtrx_x + (0.,1.)*cinter_mtrx_y
        ctrans_mtrx_right = cinter_mtrx_x - (0.,1.)*cinter_mtrx_y
        selectivity(ik) = 
@@ -1735,123 +1588,6 @@
 
       return
       end subroutine optical_selectivity
-
-!!$*  subroutine for computing berry curvature for the nn band in the given k-point using kubo formula
-      subroutine kubo_berry_curvature(berrycurv_kubo,
-     &           b1,b2,b3,wklist,isp,
-     &           nband,ecut,ispinor,nplist,nbmax,npmax,
-     &           nk,nn,
-     &           nprocs,myrank,mpi_comm_earth)
-      implicit real*8 (a-h,o-z)
-      include 'mpif.h'
-      dimension nbmax(3),nplist(nk),wk(3),ener(nband)
-      real*8    berrycurv_kubo(nk),b1(3),b2(3),b3(3),wklist(3,nk)
-      real*8    berrycurv_kubo_(nk)
-!      real*8    selectivitymax(4),selectivitymin(4)
-      complex*16 ctrans_mtrx_left,ctrans_mtrx_right
-      complex*16 cinter_mtrx_x,cinter_mtrx_y
-      complex*16 coeffn(npmax),coeffm(npmax)
-      complex*8  coeff(npmax)
-      complex*16 coeffnu(npmax),coeffnd(npmax)
-      complex*16 coeffmu(npmax),coeffmd(npmax)
-      integer :: ig(3,npmax)
-!     data hbar/6.58211928e-16/ 
-      data c/2.99792458E+08/ ! constant c [m/s]
-      data hbar/6.62607004E-34/ !h/2pi [kg m^2/s]
-      data xm/9.10938356E-31/ ! electron mass [kg]
-      data eV/1.60217663E-19/ ! electron volt [kg c^2=kg m^2/s^2]
-      data ang/1.E-10/ ! Angstrom  [A = 10^-10 m]
-      data anginv/1.E+10/ ! Angstrom^-1  [A^-1 = 10^10 m^-1]
-      real*8     berrycurv_unit ! [m^2 = 10^20 A^2]
-      integer :: nprocs, myrank, mpi_comm_earth, mpierr
-      integer*4  ourjob(nprocs), ourjob_disp(0:nprocs-1)
-   
-      call mpi_job_distribution_chain(nk, ourjob, ourjob_disp, nprocs)
-
-!      berrycurv_unit=(hbar**4)/((xm*eV)**2)  ! [m^4] without b1, b1: A^-1
-!      berrycurv_unit=(hbar**4)/((xm*eV)**2)*(anginv**4)  ! [A^4] without b1, b1: A^-1
-      berrycurv_unit=(hbar**4)/((xm)**2)*(anginv**4)  ! [A^4] without b1 & eV^-2
-!      data hbar/1./ !Here, I will set hbar = 1. for the simplicity
-!      write(6,*) "start kubo routine..";stop
-      berrycurv_kubo = 0.0d0 
-      berrycurv_kubo_ = 0.0d0
-!    !do ik=1,nk
-      do ik=sum(ourjob(1:myrank))+1, sum(ourjob(1:myrank+1))
-       call ener_read(ener,isp,ik,nk,nband)      
-       !write(6,*) "start ener routine..";stop
-       !write(6,*) 'checking nn=1 energy',ener(1);stop
-       do mm=1,nband      ! band index running from 1 to N except for m=n (the # of total bands = N)
-        !if(mm.ne.nn) then 
-        if(mm.ne.nn .and. abs(ener(nn)-ener(mm)).gt.epsilon(1d0)) then 
-        cinter_mtrx_x=(0.,0.)
-        cinter_mtrx_y=(0.,0.)
-        coeff=(0.,0.)
-        coeffn=(0.,0.);coeffm=(0.,0.) ! between band indices n and m
-        coeffnu=(0.,0.);coeffmu=(0.,0.)
-        coeffnd=(0.,0.);coeffmd=(0.,0.)
-        wk(:)=wklist(:,ik)
-        np=nplist(ik)
-        call plindx(ig,ncnt, ispinor,wk,b1,b2,b3,nbmax,np,ecut,npmax)
-        !write(6,*)ik,nband,isp,nn,np;stop
-        read(10,rec=(3+(ik-1)*(nband+1)+
-     &                nk*(nband+1)*(isp-1)+nn))(coeff(i),i=1,np)
-        coeffn=coeff;coeff=(0.,0.)
-        read(10,rec=(3+(ik-1)*(nband+1)+
-     &                nk*(nband+1)*(isp-1)+mm))(coeff(i),i=1,np)
-        coeffm=coeff;coeff=(0.,0.)
-!       write(6,*) coeffn,coeffm;stop
-        do iplane=1,ncnt
-         xkgx=(wk(1)+ig(1,iplane))*b1(1)+
-     &        (wk(2)+ig(2,iplane))*b2(1)+
-     &        (wk(3)+ig(3,iplane))*b3(1)
-         xkgy=(wk(1)+ig(1,iplane))*b1(2)+
-     &        (wk(2)+ig(2,iplane))*b2(2)+
-     &        (wk(3)+ig(3,iplane))*b3(2)
-
-! computing P_x^{nm} and P_y^{nm}
-         if(ispinor .eq. 2) then
-          coeffnu(iplane)=coeffn(iplane)
-          coeffnd(iplane)=coeffn(iplane+ncnt)
-          coeffmu(iplane)=coeffm(iplane)
-          coeffmd(iplane)=coeffm(iplane+ncnt)
-          cinter_mtrx_x=cinter_mtrx_x+
-     &            conjg(coeffnu(iplane))*xkgx*coeffmu(iplane)+  
-     &            conjg(coeffnd(iplane))*xkgx*coeffmd(iplane)  
-          cinter_mtrx_y=cinter_mtrx_y+
-     &            conjg(coeffnu(iplane))*xkgy*coeffmu(iplane)+
-     &            conjg(coeffnd(iplane))*xkgy*coeffmd(iplane)
-          else if(ispinor .eq. 1) then
-          !write(6,*)coeffn(iplane), xkgx
-           cinter_mtrx_x=cinter_mtrx_x+
-     &            conjg(coeffn(iplane))*xkgx*coeffm(iplane) ! P_x^{nm}=<u_{n,k}|p_x|u_{m,k}>
-           cinter_mtrx_y=cinter_mtrx_y+
-     &            conjg(coeffn(iplane))*xkgy*coeffm(iplane) ! P_y^{nm}=<u_{n,k}|p_y|u_{m,k}>
-          endif
-       enddo ! iplane loop end
-       !stop
-       ctrans_mtrx_left  = cinter_mtrx_x + (0.,1.)*cinter_mtrx_y
-       ctrans_mtrx_right = cinter_mtrx_x - (0.,1.)*cinter_mtrx_y
-       !write(6,*) ctrans_mtrx_left
-       !write(6,*) ener(nn)-ener(mm),1./(ener(nn)-ener(mm))**2
-       berrycurv_kubo(ik) = berrycurv_kubo(ik)  
-     &  -((abs(ctrans_mtrx_left))**2 - (abs(ctrans_mtrx_right))**2)
-     & /(ener(nn)-ener(mm))**2
-     !!& *berrycurv_unit
-        endif ! if mm is not equal to nn
-       enddo ! band index mm loop end 
-       write(6,'(A,I4,4F16.6)')"# IK, K(reci), 
-     & Berry Curvature (A^2, Kubo) : ",
-     &                         ik,wk,berrycurv_kubo(ik)
-      enddo !ik loop end
-
-#ifdef MPI_USE
-      call MPI_ALLREDUCE(berrycurv_kubo, berrycurv_kubo_, nk, MPI_REAL8,
-     &                   MPI_SUM, mpi_comm_earth, mpierr)
-      berrycurv_kubo  = berrycurv_kubo_
-#endif
-
-      return
-      end subroutine kubo_berry_curvature 
 
 !!$*  subroutine for computing velocity expectation value for state psi(n,k)
       subroutine vel_expectation(a1,a2,a3,b1,b2,b3,
@@ -2250,15 +1986,13 @@
       implicit real*8(a-h,o-z)
       dimension wkk(3,5),wk(3),dk1(3),dk2(3)
       real*8 occ(nband),wnklist(3,nk*iz2)
-      real*8 ener(nband)
+      real*16 ener(nband)
       dk1=0.;dk2=0. !;ne=0 
       dk1(1)=1./real(nkx,8)  ; dk2(2)=1./real(nky,8)  !vector for k-grid
 ! asign k-loop set wklp for each k-point
       if(iz .eq. 0)then
        if(ihf .eq. 0)then
-!    !write(6,*)'xxx'
         call kread(wk,nplane,ener,occ, isp,ik,nk,nband)
-!    !write(6,*)'yyy'
        elseif(ihf .eq. 1)then
         wk(:)=wnklist(:,ik)
        endif
@@ -2475,12 +2209,10 @@
       dimension wk(3)
       complex*16 cener(nband)
       real*8 occ(nband)
-      real*8  ener(nband)
+      real*16 ener(nband)
       irec=3+(k-1)*(nband+1)+nk*(nband+1)*(isp-1)  !record addres for "k"-point
-!    !write(6,*)'mmm'
       read(10,rec=irec) xnplane,(wk(i),i=1,3),
      &(cener(nn),occ(nn),nn=1,nband)
-!    !write(6,*)'qqq'
       nplane=nint(xnplane);ener=real(cener)
       if (kpoint.gt.nk) then
        write(0,*) '*** error - selected k=',k,' > max k=',nk;stop
@@ -2488,21 +2220,6 @@
 
       return
       end subroutine kread
-
-!!$*  subroutine for finding energy(nn) in the given k index
-      subroutine ener_read(ener,isp,k,nk,nband)
-      implicit real*8(a-h,o-z)
-      dimension wk(3)
-      complex*16 cener(nband)
-      real*8 occ(nband)
-      real*8 ener(nband)
-      irec=3+(k-1)*(nband+1)+nk*(nband+1)*(isp-1)  !record addres for "k"-point
-      read(10,rec=irec) xnplane,(wk(i),i=1,3),
-     &(cener(nn),occ(nn),nn=1,nband)
-      ener=real(cener)
-!      write(6,*) 'check: nn=1 energies',real(cener(1)),ener(1),cener(1)
-      return
-      end subroutine ener_read
 
 !This function is to calculate determinant of the complex matrix
 !The source is adoped from : https://dualm.wordpress.com/2012/01/06/computing-determinant-in-fortran/
@@ -2586,55 +2303,9 @@
       return
       end subroutine getdetA
  
-      subroutine mpi_job_distribution_chain(njob, ourjob, ourjob_disp, 
-     &                                      nprocs)
-      implicit none
-      integer*4    njob
-      integer*4    mynjob, nprocs
-      integer*4    cpuid, mpierr
-      integer*4    nresidue
-#ifdef MPI_USE
-      integer*4    ourjob(nprocs)
-      integer*4    ourjob_disp(0:nprocs-1)
-#else
-      integer*4    ourjob(1)
-      integer*4    ourjob_disp(0)
-#endif
-
-      mynjob = floor ( real(njob)/real(nprocs) )
-      nresidue = nint (real(njob) - real(mynjob) * real(nprocs))
-
-      ourjob = 0
-
-      do cpuid = 1, nprocs
-        if( cpuid .le. nresidue ) then
-           ourjob(cpuid) = mynjob + 1
-        else
-           ourjob(cpuid) = mynjob
-        endif
-      enddo
-
-      ourjob_disp(0) = 0
-#ifdef MPI_USE
-      do cpuid = 1, nprocs-1
-        ourjob_disp(cpuid)= ourjob_disp(cpuid - 1) + ourjob(cpuid)
-      enddo
-#endif
-
-      endsubroutine
-
-
-      function int2str(w) result(string)
-       implicit none
-       character*20  string
-       integer*4,    intent(in)  :: w
-       write(string,*) w
-       return
-      endfunction
-
 !!$   parse command line arguments
       subroutine parse(filename,foname,nkx,nky,ispinor,icd,ixt,fbz,
-     &    ivel,ikubo,iz,ihf,nini,nmax,nn,kperiod,it,iskp,ine,ver_tag,
+     &    ivel,iz,ihf,nini,nmax,kperiod,it,iskp,ine,ver_tag,
      &    iwf,ikwf,ng,rs,imag)
       implicit real*8(a-h,o-z)
       character*75 filename,foname,fbz,ver_tag,vdirec
@@ -2644,7 +2315,7 @@
       dimension rs(3)
 
       nini=1;it=0;iskp=0;ine=0;icd=0;ixt=0;ivel=0;iz=0;ihf=0
-      iwf=0;ikwf=1;ng=0;imag=0;rs=0.;ikubo=0;nn=0
+      iwf=0;ikwf=1;ng=0;imag=0;rs=0.
       nmax=999999
       iarg=iargc()
       nargs=iarg/2
@@ -2688,10 +2359,6 @@
             read(value,*) fbz
            else if(option == "-cd") then
             read(value,*) icd
-           else if(option == "-kubo") then
-            read(value,*) ikubo
-           else if(option == "-nn") then ! band index nn
-            read(value,*) nn
            else if(option == "-vel") then
             read(value,*) ivel
            else if(option == "-z2") then
@@ -2726,8 +2393,6 @@
         foname="VEL_EXPT"
       else if (iz .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
         foname="NFIELD"
-      else if (ikubo .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
-        foname="BERRYCURV_KUBO"
       endif
 
       if(iwf .ge. 1)then
@@ -3070,7 +2735,7 @@
       write(6,*)"                  :  Default : BERRYCURV.dat          "
       write(6,*)" -kp np           : Print Berry curvature distribution"
       write(6,*)"                  : with extended BZ with 'np x np'-BZ"
-      write(6,*)"                  :  Default : 1              "
+      write(6,*)"                  :  Default : 2              "
       write(6,*)" -skp 1(or 0)     : Specify whether special K-points "
       write(6,*)"                  : will be printed in the SKP.dat "
       write(6,*)"                  : You may specify the points by hand"
@@ -3092,19 +2757,6 @@
       write(6,*)"                  : You may set -ii and -if together,"
       write(6,*)"                  : defining VBM & CBM, respectively"
       write(6,*)"                  :  Default : 0"
-      write(6,*)" -kubo  1(or 0)   : Calculate spin- and k-resolved"
-      write(6,*)"                  : Berry curvature using Kubo formula"
-      write(6,*)"                  : for nn-th band"
-      write(6,*)"                  : Note: nn can be ranged by"
-      write(6,*)"                  : -ii and -if tag "
-      write(6,*)"                  :  ex) -kubo 1 -ii 19 -if 22 "
-      write(6,*)"                  :  => from 19 to 22 th eigenstate"
-      write(6,*)"                  :     will be calculated and the"
-      write(6,*)"                  :     result will be printed out to"
-      write(6,*)"                  :     BERRYCURF_KUBO.EIG-NN.DAT and"
-      write(6,*)"                  :     total Berry curvature (19-22)"
-      write(6,*)"                  :     is in BERRYCURF_KUBO.DAT"
-      write(6,*)"                  :  Default : -kubo 0"
       write(6,*)" -ixt np -fbz f   : **For the special purpose"
       write(6,*)"                  : Read file 'f' and extend data to"
       write(6,*)"                  : np x np periodic field. Note that"
@@ -3145,6 +2797,8 @@
       write(6,*)" ex-noMPI-gfortran) gfortran -I/opt/local/include 
      &-L/opt/local/lib/lapack/ -l lapack -o vaspberry vaspberry_gfortran
      &_serial.f"
+
 !     write(6,*)" ex-MPI) mpif90 -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f "
+
       stop
       end subroutine help
