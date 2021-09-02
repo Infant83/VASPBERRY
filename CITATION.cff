@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Kim"
+  given-names: "Hyun-Jung"
+  orcid: "http://orcid.org/0000-0002-5602-1404"
+title: "VASPBERRY"
+version: 1.0
+doi: 10.5281/zenodo.1402593
+date-released: 2018-08-23
+url: "https://github.com/Infant83/VASPBERRY"
