@@ -25,7 +25,7 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
 * Berry curvature calculation and Chern number (ex, k-grid: 12x12, multiband berry curvature from 1-th to 18-th band)
 > ./vaspberry -kx 12 -ky 12 -ii 1 -if 18
 * Circular dichroism [ex, transition rate from 11-th to 12-th state by right(+) polarized light]
-> ./vaspberry -kx 12 -ky 12 -cd -ii 11 -if 12
+> ./vaspberry -kx 12 -ky 12 -cd 1 -ii 11 -if 12
 * Real space wavefunction plot [ex, to plot 18-th state with 1-st k-point (if it is gamma point), with 40x40x40 grid for density file]
 > ./vaspberry -wf 18 -k 1 -ng 40,40,40
 > NONE: current version only support gamma point for wavefunction plot. (there is some problem in boundary region in off-gamma k-point)
