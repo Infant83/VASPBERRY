@@ -27,8 +27,11 @@
 !                 usage: -kubo 1 -ii n -if m
 ! version 0.95 MPI parallelization implemented (MPI_USE)  : 2020. Sep. 02. H.-J. Kim
 !              -for Berrycurvature calculation using Kubo formula (-kubo) 
+! version 0.96 Update optical selectivity routine (-icd 2): 2020. Sep. 16. S.-W. Kim & H.-J. Kim
+!              -calculate degree of circular polarization with respect to 
+!               incident photon energy
 
-! last update and bug fixes : 2020. Sep. 07. by S.-W. Kim & H.-J. Kim 
+! last update and bug fixes : 2020. Sep. 25. by S.-W. Kim & H.-J. Kim 
 
 !#define MPI_USE
 !#undef  MPI_USE        
@@ -50,10 +53,11 @@
       real*8,    allocatable :: wnklist(:,:),xrnfield(:)
       real*8,    allocatable :: recilat(:,:),xrecilat(:,:),occ(:)
       real*8,    allocatable :: selectivity(:),xselectivity(:)
+      real*8,    allocatable :: selectivity_w(:)
+      real*8,    allocatable :: spectrum(:,:),xspectrum(:,:)
       real*8,    allocatable :: berrycurv_kubo(:),xberrycurv_kubo(:)
-      real*8,    allocatable :: berrycurv_kubo_mpi(:)
       real*8,    allocatable :: berrycurv_kubo_tot(:)
-      real*8,    allocatable :: berrycurv_kubo_tot_mpi(:)
+      real*8,    allocatable :: e_range(:) 
       real*16,   allocatable :: ener(:)
       integer,   allocatable :: ig(:,:),nplist(:)
       integer*4                 ie
@@ -69,6 +73,7 @@
       data c/0.262465831d0/ ! constant c = 2m/hbar**2 [1/eV Ang^2]
       real*8  rfield,rnnfield,rnnfield_bottom
       real*8  rnnfield_tot,rnnfield_bottom_tot
+      real*8  init_e, fina_e
       real*8, allocatable:: w_half_klist(:,:)
       integer, allocatable:: i_half_klist(:),i_trim_klist(:)
       integer :: myrank, nprocs, ierr
@@ -104,7 +109,7 @@
 !!$*  reading general informations
       call parse(filename,foname,nkx,nky,ispinor,icd,ixt,fbz,
      &   ivel,ikubo,iz,ihf,nini,nmax,nn,kperiod,it,iskp,ine,ver_tag,
-     &   iwf,ikwf,ng,rs,imag)
+     &   iwf,ikwf,ng,rs,imag,init_e,fina_e,nediv,sigma)
       if(myrank == 0)call creditinfo(ver_tag)
 
       if (ixt .ne. 0) call extendingBZ(fbz,ixt)
@@ -148,12 +153,12 @@
         if(ispin .eq. 2 .and. icd .eq. 0) nmax=ne
         if(ispin .eq. 1 .and. ispinor .eq. 2 .and. icd .eq. 0) nmax=ne
         if(ispin .eq. 1 .and. ispinor .eq. 1 .and. icd .eq. 0) nmax=ne/2
-        if(ispin .eq. 2 .and. icd .eq. 1)then;nini=ne;nmax=nini+1;endif
-        if(ispin .eq. 1 .and. ispinor .eq. 1 .and. icd .eq. 1)then
+        if(ispin .eq. 2 .and. icd .ge. 1)then;nini=ne;nmax=nini+1;endif
+        if(ispin .eq. 1 .and. ispinor .eq. 1 .and. icd .ge. 1)then
          nini=ne/2
          nmax=nini+1
         endif
-        if(ispinor .eq. 2 .and. icd .eq. 1)then
+        if(ispinor .eq. 2 .and. icd .ge. 1)then
          nini=ne
          nmax=nini+1
         endif
@@ -209,15 +214,15 @@
       nbtot=(2*nbmax(1)+2)*(2*nbmax(2)+2)*(2*nbmax(3)+1)
       allocate(coeff1u(nbtot),coeff1d(nbtot))
       allocate(coeff2u(nbtot),coeff2d(nbtot))
-      if(icd.eq.1) allocate(selectivity(nk))
-      if(icd.eq.1) allocate(xselectivity(kperiod*2*kperiod*2*nk))
+      if(icd.ge.1) allocate(selectivity(nk))
+      if(icd.ge.1) allocate(selectivity_w(nk))
+      if(icd.eq.2) allocate(spectrum(nediv,nk))
+      if(icd.ge.1) allocate(xselectivity(kperiod*2*kperiod*2*nk))
+      if(icd.eq.2) allocate(xspectrum(nediv,kperiod*2*kperiod*2*nk))
+      if(icd.eq.2) allocate(e_range(nediv))
       if(ikubo.eq.1) allocate(berrycurv_kubo(nk))
       if(ikubo.eq.1) allocate(xberrycurv_kubo(kperiod*2*kperiod*2*nk))
       if(ikubo.eq.1) allocate(berrycurv_kubo_tot(nk))
-#ifdef MPI_USE
-      if(ikubo.eq.1) allocate(berrycurv_kubo_mpi(nk))
-      berrycurv_kubo_mpi = 0d0
-#endif
       if(ivel .eq. 1 .and. myrank==0) then
         ni=nini 
         nj=nini
@@ -627,36 +632,87 @@
        endif
 
 !!! ######### LOOP for OPTICAL SELECTIVITY ###########################################
-       elseif(icd.eq.1 .and. myrank==0)then   ! calculate optical selectivity
+       elseif(icd.ge.1 )then   ! calculate optical selectivity
 #ifdef MPI_USE
         if(myrank == 0)then
          time_2=MPI_WTIME()
         endif
 #endif
-        call optical_selectivity(selectivity, 
-     &                           selectivitymax,selectivitymin,
-     &             b1,b2,b3,wklist,isp,
-     &             nband,ecut,ispinor,nplist,nbmax,npmax,nk,nini,nmax)
-        do ik=1,nk
-         do j=1,3
-          recivec(j,ik)=wklist(1,ik)*b1(j)+
-     &                  wklist(2,ik)*b2(j)+
-     &                  wklist(3,ik)*b3(j)
-          recilat(j,ik)=wklist(j,ik)
+
+        if(icd .eq. 2) then
+         do idir=0,1 ! 0: plus; 1: minus
+          spectrum = 0d0 ! initialize
+          do ival=1, ne ! ne = VBM
+          do icon=ne+1, nband
+            if(myrank.eq.0) then 
+              write(6,'(A,I0,A,I0)')" # OPTICAL TRANSITION FROM BAND-",
+     &                                      ival, ' TO BAND-', icon
+            endif
+
+            selectivity = 0d0 ;    selectivity_w = 0d0
+            ! calculate circular dichroism n(k) between band ival and icon
+            call optical_selectivity(selectivity, selectivity_w,
+     &               selectivitymax,selectivitymin,
+     &               b1,b2,b3,wklist,isp,icd+idir,
+     &               nband,ecut,ispinor,nplist,nbmax,npmax,nk,ival,icon,
+     &               nprocs,myrank,mpi_comm_earth)
+
+            ! calculate photon energy dependent circular dichroism n(w,k)
+            call get_spectrum(selectivity, selectivity_w, spectrum, 
+     &                        init_e,fina_e,nediv,nk,sigma,e_range,
+     &                        nprocs,myrank,mpi_comm_earth)
+
+
+          enddo ! icon
+          enddo ! ival
+          if(myrank.eq.0)then
+          ! write total optical transition rate summed over BZ
+           call write_result_spectrum(isp,ispin,ispinor,fonameo,foname,
+     &            filename,irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,
+     &            dSkxky,recivec,recilat,
+     &            spectrum,e_range,0,
+     &            nediv,idir,nprocs,0)
+           do ik=1,nk
+          ! k-resolved optical transition rate
+            call write_result_spectrum(isp,ispin,ispinor,fonameo,foname,
+     &            filename,irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,
+     &            dSkxky,recivec,recilat,
+     &            spectrum,e_range,ik,
+     &            nediv,idir,nprocs,1)
+           enddo ! ik
+          endif ! myrank
+         enddo ! idir
+        
+
+        elseif(icd .eq. 1) then
+            call optical_selectivity(selectivity, selectivity_w,
+     &               selectivitymax,selectivitymin,
+     &               b1,b2,b3,wklist,isp,icd,
+     &               nband,ecut,ispinor,nplist,nbmax,npmax,nk,nini,nmax,
+     &               nprocs,myrank,mpi_comm_earth)
+
+         do ik=1,nk
+          do j=1,3
+           recivec(j,ik)=wklist(1,ik)*b1(j)+
+     &                   wklist(2,ik)*b2(j)+
+     &                   wklist(3,ik)*b3(j)
+           recilat(j,ik)=wklist(j,ik)
+          enddo
          enddo
-        enddo
 
-       call get_ext_variable(xrecivec,xrecilat,xselectivity,kext,
-     &                  recivec,recilat,selectivity,nk,kperiod,nk,iz2,
-     &                  b1,b2,b3) ! extending over exteded-BZ
+         call get_ext_variable(xrecivec,xrecilat,xselectivity,kext,
+     &                 recivec,recilat,selectivity,nk,kperiod,nk,iz2,
+     &                 b1,b2,b3) ! extending over exteded-BZ
+         
+         call get_sorted_xrvari(xrecivec,xrecilat,xselectivity,
+     &                          kext,kperiod,nk,iz2) ! sorting
+         call write_result(isp,ispin,ispinor,fonameo,foname,filename,
+     &                 irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
+     &                 dSkxky,nini,nmax,xrecivec,xrecilat,kext,
+     &                 xselectivity,0,0.,selectivitymax,selectivitymin,
+     &                 iz2,icd,iz,ivel,ikubo,nprocs)
+        endif
 
-       call get_sorted_xrvari(xrecivec,xrecilat,xselectivity,
-     &                        kext,kperiod,nk,iz2) ! sorting
-       call write_result(isp,ispin,ispinor,fonameo,foname,filename,
-     &                  irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
-     &                  dSkxky,nini,nmax,xrecivec,xrecilat,kext,
-     &                  xselectivity,0,0.,selectivitymax,selectivitymin,
-     &                  iz2,icd,iz,ivel,ikubo,nprocs)
 #ifdef MPI_USE
         if(myrank == 0)then
          time_3=MPI_WTIME()
@@ -717,7 +773,7 @@
             call write_result(isp,ispin,ispinor,fonameo,foname,filename,
      &                     irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
      &                     dSkxky,ie,ie    ,xrecivec,xrecilat,kext,
-     &                     xberrycurv_kubo,chernumber,0.,0.,0.,
+     &                     xberrycurv_kubo,chernnumber,0.,0.,0.,
      &                     iz2,icd,iz,ivel,ikubo,nprocs)
            endif
          enddo ! loop ie
@@ -734,7 +790,7 @@
           call write_result(isp,ispin,ispinor,fonameo,foname,filename,
      &                    irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
      &                    dSkxky,nini,nmax,xrecivec,xrecilat,kext,
-     &                    xberrycurv_kubo,chernumber_total,0.,0.,0.,
+     &                    xberrycurv_kubo,chernnumber_total,0.,0.,0.,
      &                    iz2,icd,iz,ivel,ikubo,nprocs)
          endif
 #ifdef MPI_USE
@@ -805,8 +861,8 @@
       endif
       deallocate(occ)
       deallocate(nplist)
-      if(icd.eq.1)deallocate(selectivity)
-      if(icd.eq.1)deallocate(xselectivity)
+      if(icd.ge.1)deallocate(selectivity)
+      if(icd.ge.1)deallocate(xselectivity)
 #ifdef MPI_USE
       if(myrank == 0 .and. iz+ivel+icd+iwf .eq. 0)then
        time_4=MPI_Wtime()
@@ -819,6 +875,69 @@
       CALL MPI_FINALIZE(ierr)
 #endif
       end program
+
+!!$*  subroutine to get spectrum
+      subroutine get_spectrum(rvari,rvari_de,spectrum,
+     &                        init_e,fina_e,nediv,nk,sigma,e_range,
+     &                        nprocs,myrank,mpi_comm_earth)
+      implicit real*8 (a-h,o-z)
+      include 'mpif.h'
+      real*8          init_e, fina_e
+      integer*4       nk, nediv
+      real*8          rvari(nk), rvari_de(nk)
+      real*8          spectrum(nediv, nk)
+      real*8          spectrum_mpi(nediv, nk)
+      real*8          spectrum_single(nediv,nk)
+      real*8          delta, sigma
+      real*8          e_range(nediv)
+      
+      integer :: nprocs, myrank, mpi_comm_earth, mpierr
+      integer*4  ourjob(nprocs), ourjob_disp(0:nprocs-1)
+      
+      call mpi_job_distribution_chain(nk, ourjob, ourjob_disp, nprocs)
+
+      e_range = init_e+(/(k,k=0,nediv-1)/)*(fina_e-init_e)/dble(nediv-1)
+      delta   = e_range(2) - e_range(1)
+ 
+      spectrum_single = 0d0
+#ifdef MPI_USE
+      spectrum_mpi= 0d0
+#endif
+
+      do ik=sum(ourjob(1:myrank))+1, sum(ourjob(1:myrank+1))
+        do ie = 1, nediv
+          spectrum_single(ie,ik)=fgauss(sigma,e_range(ie)-rvari_de(ik))
+     &               / real(nk) * rvari(ik) ! I'm not quite sure whether we have to divide nk
+        enddo
+      enddo !ik
+
+#ifdef MPI_USE
+      call MPI_ALLREDUCE(spectrum_single, spectrum_mpi, nediv*nk,
+     &                   MPI_REAL8, MPI_SUM, MPI_COMM_WORLD, mpierr)
+      spectrum = spectrum + spectrum_mpi
+#else
+      spectrum = spectrum + spectrum_single
+#endif
+
+      return
+      endsubroutine
+
+!!$*  function for gaussian distribution function
+      function fgauss(sigma, x)
+      implicit real*8 (a-h,o-z)
+      real*8   pi, pi2
+      real*8   sigma,sigma2
+      real*8   x,xx
+      real*8   fgauss
+      pi = 4.d0*atan(1.d0)
+      pi2= 2.d0*pi
+      xx = x**2
+      sigma2 = sigma**2
+
+      fgauss= 1d0 / (sigma*sqrt(pi2)) * exp( -xx / (2d0*sigma2) )
+
+      return
+      endfunction
 
 !!$*  subroutine for writing results
       subroutine write_result(isp,ispin,ispinor,fonameo,foname,filename,
@@ -968,6 +1087,98 @@
        return
       end subroutine write_result
 
+!!$*  subroutine for writing results
+      subroutine write_result_spectrum(isp,ispin,ispinor,fonameo,foname,
+     &            filename,irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,
+     &            dSkxky,recivec,recilat,
+     &            rvari,e_range,ik,
+     &            nediv,idir, nprocs,imode)
+      implicit real*8 (a-h,o-z)
+      dimension b1(3),b2(3),b3(3)
+      real*8  recivec(3,nk)
+      real*8  recilat(3,nk)
+      real*8  rvari(nediv,nk)
+      real*8  e_range(nediv)
+      real*8  xb(3),xtemp
+      character*75 filename,foname,fonameo
+      character*75 foname_
+      character*20,external :: int2str
+       if(idir.eq.0) then 
+        foname_ = foname
+        write(foname_,'(A,A)')TRIM(foname),'_LEFT'
+       elseif(idir.eq.1) then 
+        foname_ = foname
+        write(foname_,'(A,A)')TRIM(foname),'_RIGHT'
+       endif
+       if(imode.eq.1) then
+        write(foname_,'(A,A,I0)')TRIM(foname_),'_KP',ik
+       endif
+       if(isp .eq. 1 .and. ispinor .eq. 1 .and. ispin.eq.2) then
+        write(fonameo,'(A,A)')TRIM(foname_),'.UP.dat'
+        else if (isp .eq. 2 .and. ispinor .eq. 1 .and. ispin.eq.2)then
+         write(fonameo,'(A,A)')TRIM(foname_),'.DN.dat'
+        else if (isp .eq. 1 .and. ispinor .eq. 2) then
+         write(fonameo,'(A,A)')TRIM(foname_),'.dat'
+        else if (isp .eq. 1 .and. ispinor .eq. 1 .and. ispin.eq.1)then
+         write(fonameo,'(A,A)')TRIM(foname_),'.dat'
+       endif
+
+       open(32,file=fonameo,status='unknown')
+       write(32,'(A,I4,A)')"# Job running on ",nprocs," total cores"
+       write(32,'(A,A)')   "# File reading...  : ",filename
+       write(32,'(A,I9)')"# TOTAL RECORD LENGTH = ",irecl
+       if (ispinor .eq. 2)then
+        write(32,'(A,I6,A)')"# ISPIN            : ",ispin,
+     &                      " (LSORBIT = .TRUE.)"
+        else
+         write(32,'(A,I6,A)')"# ISPIN            : ",ispin,
+     &                       " (LSORBIT = .FALSE.)"
+       endif
+       write(32,'(A,F11.4)')  "# ENCUT (eV)       : ",ecut
+       write(32,'(A,I6)')     "# NKPOINT          : ",nk
+       write(32,'(A,I6,A,I4)')"#  K-GRID          : ",nkx,"   X",nky
+       write(32,'(A,I6)')     "# NBANDS           : ",nband
+       write(32,'(A,3F13.6)') "# RECIVEC B1 (A^-1): ",(b1(i),i=1,3)
+       write(32,'(A,3F13.6)') "# RECIVEC B2       : ",(b2(i),i=1,3)
+       write(32,'(A,3F13.6)') "# RECIVEC B3       : ",(b3(i),i=1,3)
+       write(32,'(A,F13.6)')   "#  dk^2 = |dk1xk2| = ",dSkxky
+       write(32,*)" "
+       if(idir.eq.0) then
+        write(32,'(A)')"# Optical transition rate :
+     &  sum_{k,c,v}|P(k,s,cv,+)|^2*gaussian/w^2 "
+       elseif(idir.eq.1) then  
+        write(32,'(A)')"# Optical transition rate :
+     &  sum_{k,c,v}|P(k,s,cv,-)|^2*gaussian/w^2 "
+       endif
+       if(imode.eq.1) then
+        write(32,'(A)')"# (cart) kx        ky        kz(A^-1)
+     &  incident photon energy w (eV), spectrum(w,k),
+     &  (recip)kx        ky        kz"
+        do ie=1,nediv
+         if(e_range(ie).gt.0.00000000001) then
+          write(32,'(3F11.6,A,F11.4,A,F20.4,A,3F11.6)')
+     & (recivec(i,ik),i=1,3),
+     &        "     ",e_range(ie),"    ",rvari(ie,ik)/(e_range(ie))**2,
+     &       "            ", (recilat(i,ik),i=1,3)
+         endif
+        enddo
+       elseif(imode.eq.0) then
+        write(32,'(A)')"# incident photon energy w (eV) 
+     & spectrum(w) (a.u.)"
+        do ie=1,nediv !to do: think about conversion factor (unit)
+         if(e_range(ie).gt.0.00000000001) then
+          write(32,'(F11.4,A,F20.4)') e_range(ie),
+     &        "     ",sum(rvari(ie,:))/(e_range(ie))**2 
+         endif
+        enddo
+       endif
+
+       close(32)
+       return
+      end subroutine write_result_spectrum
+
+
+
 !!$*  subroutine for sorting
       subroutine get_sorted_xrvari(xrecivec,xrecilat,xrvari,
      &                        kext,kperiod,nk,iz2)
@@ -1012,7 +1223,52 @@
       return
       end subroutine get_sorted_xrvari
 
-!!$*  subroutine for extending data_set distribution over extended BZ: 2D array
+!!    subroutine for sorting (xvari_2D)
+      subroutine get_sorted_xrvari_2D(xrecivec,xrecilat,xrvari,
+     &                        kext,kperiod,nk,nediv,iz2)
+      implicit real*8 (a-h,o-z)
+      integer*4 nediv
+      real*8  xrecivec(3,kperiod*2*kperiod*2*nk*iz2)
+      real*8  xrecilat(3,kperiod*2*kperiod*2*nk*iz2)
+      real*8  xrvari(nediv,kperiod*2*kperiod*2*nk*iz2)
+      real*8  xb(3),xtemp(nediv)
+
+      do k=kext-1,1,-1  ! sorting kx
+       do j=1,k
+        if(xrecivec(1,j+1) .gt. xrecivec(1,j))then
+         xb(:)=xrecivec(:,j)
+         xrecivec(:,j)=xrecivec(:,j+1)
+         xrecivec(:,j+1)=xb(:)
+         xb(:)=xrecilat(:,j)
+         xrecilat(:,j)=xrecilat(:,j+1)
+         xrecilat(:,j+1)=xb(:)
+         xtemp=xrvari(:,j)
+         xrvari(:,j)=xrvari(:,j+1)
+         xrvari(:,j+1)=xtemp(:)
+        endif
+       enddo
+      enddo
+      do k=kext-1,1,-1  ! sorting ky
+       do j=1,k
+        if(xrecivec(1,j+1) .eq. xrecivec(1,j))then
+         if(xrecivec(2,j+1) .gt. xrecivec(2,j))then
+         xb(:)=xrecivec(:,j)
+         xrecivec(:,j)=xrecivec(:,j+1)
+         xrecivec(:,j+1)=xb(:)
+         xb(:)=xrecilat(:,j)
+         xrecilat(:,j)=xrecilat(:,j+1)
+         xrecilat(:,j+1)=xb(:)
+         xtemp=xrvari(:,j)
+         xrvari(:,j)=xrvari(:,j+1)
+         xrvari(:,j+1)=xtemp(:)
+         endif
+        endif
+       enddo
+      enddo
+      return
+      end subroutine get_sorted_xrvari_2D
+
+!!$*  subroutine for extending data_set distribution over extended BZ: 2D array and its related 1D variable (rvari)
       subroutine get_ext_variable(xrecivec,xrecilat,xrvari,kext, 
      &                  recivec,recilat,rvari,nnk,kperiod,nk,iz2,
      &                  b1,b2,b3) !iz2=4 for z2, other 1
@@ -1035,6 +1291,39 @@
           xrecilat(2,kk)=recilat(2,ik) +(ib2-1)
           xrecilat(3,kk)=recilat(3,ik)
           xrvari(kk)=rvari(ik)
+          kext=kk
+         enddo
+        enddo
+       enddo
+
+      return
+      end subroutine 
+
+!!$*  subroutine for extending data_set distribution over extended BZ: 2D arrayi and its related 2D variable (rvari_2D)
+      subroutine get_ext_variable_2D(xrecivec,xrecilat,xrvari,kext, 
+     &                  recivec,recilat,rvari,nnk,kperiod,nk,nediv,iz2,
+     &                  b1,b2,b3) !iz2=4 for z2, other 1
+      implicit real*8 (a-h,o-z)
+      Integer*4 nediv
+      real*8  recivec(3,nk*iz2),recilat(3,nk*iz2)
+      real*8  xrecivec(3,kperiod*2*kperiod*2*nk*iz2)
+      real*8  xrecilat(3,kperiod*2*kperiod*2*nk*iz2)
+      real*8  rvari(nediv,nk*iz2)
+      real*8  xrvari(nediv,kperiod*2*kperiod*2*nk*iz2)
+      dimension b1(3),b2(3),b3(3)
+
+       kk=0   ! extend variable distribution over extended BZ 
+       do ib2=-1*(kperiod-1)+1,kperiod
+        do ib1=-1*(kperiod-1)+1,kperiod
+         do ik=1,nnk
+          kk=kk+1
+          xrecivec(1,kk)=recivec(1,ik) +(ib1-1)*b1(1)+(ib2-1)*b2(1)
+          xrecivec(2,kk)=recivec(2,ik) +(ib1-1)*b1(2)+(ib2-1)*b2(2)
+          xrecivec(3,kk)=recivec(3,ik) +(ib1-1)*b1(3)+(ib2-1)*b2(3)
+          xrecilat(1,kk)=recilat(1,ik) +(ib1-1)
+          xrecilat(2,kk)=recilat(2,ik) +(ib2-1)
+          xrecilat(3,kk)=recilat(3,ik)
+          xrvari(:,kk)=rvari(:,ik)
           kext=kk
          enddo
         enddo
@@ -1643,26 +1932,51 @@
       end subroutine
 
 !!$*  subroutine for computing optical selectivity in the given k-point
-      subroutine optical_selectivity(selectivity,
-     &                               selectivitymax,selectivitymin,
-     &           b1,b2,b3,wklist,isp,
-     &           nband,ecut,ispinor,nplist,nbmax,npmax,nk,nini,nmax)
+      subroutine optical_selectivity(selectivity, selectivity_w,
+     &           selectivitymax,selectivitymin,
+     &           b1,b2,b3,wklist,isp,icd,
+     &           nband,ecut,ispinor,nplist,nbmax,npmax,nk,nini,nmax,
+     &           nprocs,myrank,mpi_comm_earth)
       implicit real*8 (a-h,o-z)
-      dimension nbmax(3),nplist(nk),wk(3)
+      include 'mpif.h'
+      dimension nbmax(3),nplist(nk),wk(3),ener(nband)
       real*8    selectivity(nk),b1(3),b2(3),b3(3),wklist(3,nk)
+      real*8    selectivity_w(nk)
+      real*8    selectivity_(nk),selectivity_w_(nk)
       real*8    selectivitymax(4),selectivitymin(4)
       complex*16 ctrans_mtrx_left,ctrans_mtrx_right
-      complex*16 cinter_mtrx_x,cinter_mtrx_y
+      complex*16 cinter_mtrx_x,cinter_mtrx_y,cinter_mtrx_z
       complex*16 coeffv(npmax),coeffc(npmax)
       complex*8  coeff(npmax)
       complex*16 coeffvu(npmax),coeffvd(npmax)
       complex*16 coeffcu(npmax),coeffcd(npmax)
-      integer :: ig(3,npmax)
+      complex*16 A_left(3) ! vector potential A (LCP) 
+      complex*16 A_right(3) ! vector potential A (RCP)
+      real*8     e1, e2
+      integer :: ig(3,npmax), mink(1), maxk(1)
       !data hbar/6.58211928e-16/ 
       data hbar/1./ !Here, I will set hbar = 1. for the simplicity
-      do ik=1,nk
+
+      integer :: nprocs, myrank, mpi_comm_earth, mpierr
+      integer*4  ourjob(nprocs), ourjob_disp(0:nprocs-1)
+
+      selectivity_w_=0d0
+      selectivity_=0d0
+      A_left=0d0
+      A_right=0d0
+      A_left(1)=cos(theta)cos(phi) - (0.,1.)sin(phi)
+      A_right(1)=cos(theta)cos(phi) + (0.,1.)sin(phi)
+      A_left(2)=cos(theta)sin(phi) + (0.,1.)cos(phi)
+      A_right(2)=cos(theta)sin(phi) - (0.,1.)cos(phi)
+      A_left(3)=-sin(theta)
+      A_right(3)=-sin(theta)
+      call mpi_job_distribution_chain(nk, ourjob, ourjob_disp, nprocs)
+
+      do ik=sum(ourjob(1:myrank))+1, sum(ourjob(1:myrank+1))
+       call ener_read(ener,isp,ik,nk,nband)
        cinter_mtrx_x=(0.,0.)
        cinter_mtrx_y=(0.,0.)
+       cinter_mtrx_z=(0.,0.)
        coeff=(0.,0.)
        coeffv=(0.,0.);coeffc=(0.,0.)
        coeffvu=(0.,0.);coeffcu=(0.,0.)
@@ -1670,7 +1984,7 @@
        wk(:)=wklist(:,ik)
        np=nplist(ik)
        call plindx(ig,ncnt, ispinor,wk,b1,b2,b3,nbmax,np,ecut,npmax)
-       !write(6,*)ik,nband,isp,nini,nmax;stop
+       selectivity_w(ik) = ener(nmax) - ener(nini)
        read(10,rec=(3+(ik-1)*(nband+1)+
      &                nk*(nband+1)*(isp-1)+nini))(coeff(i),i=1,np)
        coeffv=coeff;coeff=(0.,0.)
@@ -1684,6 +1998,9 @@
         xkgy=(wk(1)+ig(1,iplane))*b1(2)+
      &       (wk(2)+ig(2,iplane))*b2(2)+
      &       (wk(3)+ig(3,iplane))*b3(2)
+        xkgz=(wk(1)+ig(1,iplane))*b1(3)+
+     &       (wk(2)+ig(2,iplane))*b2(3)+
+     &       (wk(3)+ig(3,iplane))*b3(3)
         if(ispinor .eq. 2) then
          coeffvu(iplane)=coeffv(iplane)
          coeffvd(iplane)=coeffv(iplane+ncnt)
@@ -1695,43 +2012,51 @@
          cinter_mtrx_y=cinter_mtrx_y+
      &            hbar*conjg(coeffcu(iplane))*xkgy*coeffvu(iplane)+
      &            hbar*conjg(coeffcd(iplane))*xkgy*coeffvd(iplane)
+         cinter_mtrx_z=cinter_mtrx_z+
+     &            hbar*conjg(coeffcu(iplane))*xkgz*coeffvu(iplane)+
+     &            hbar*conjg(coeffcd(iplane))*xkgz*coeffvd(iplane)
          else if(ispinor .eq. 1) then
-         ! write(6,*)coeffc(iplane), xkgx
           cinter_mtrx_x=cinter_mtrx_x+
      &            hbar*conjg(coeffc(iplane))*xkgx*coeffv(iplane)
           cinter_mtrx_y=cinter_mtrx_y+
      &            hbar*conjg(coeffc(iplane))*xkgy*coeffv(iplane)
+          cinter_mtrx_z=cinter_mtrx_z+
+     &            hbar*conjg(coeffc(iplane))*xkgz*coeffv(iplane)
         endif
        enddo ! iplane loop end
-       !stop
        ctrans_mtrx_left  = cinter_mtrx_x + (0.,1.)*cinter_mtrx_y
        ctrans_mtrx_right = cinter_mtrx_x - (0.,1.)*cinter_mtrx_y
-       selectivity(ik) = 
+!       selectivity(ik) = 
+!     &   ((abs(ctrans_mtrx_left))**2 - (abs(ctrans_mtrx_right))**2)/
+!     &   ((abs(ctrans_mtrx_left))**2 + (abs(ctrans_mtrx_right))**2)
+
+       if(icd.eq.1) then  
+         selectivity(ik) = 
      &   ((abs(ctrans_mtrx_left))**2 - (abs(ctrans_mtrx_right))**2)/
      &   ((abs(ctrans_mtrx_left))**2 + (abs(ctrans_mtrx_right))**2)
-       write(6,'(A,I4,4F11.6)')"# IK, K(reci), SELECTIVITY(n) : ",
-     &                         ik,wk,selectivity(ik)
-       if (ik. eq. 1)then
-        selectivitymax(4)=selectivity(ik)
-        selectivitymax(1)=wklist(1,ik)
-        selectivitymax(2)=wklist(2,ik)
-        selectivitymax(3)=wklist(3,ik)
-        selectivitymin(4)=selectivity(ik)
-        selectivitymin(1)=wklist(1,ik)
-        selectivitymin(2)=wklist(2,ik)
-        selectivitymin(3)=wklist(3,ik)
-        else if (ik.ge.2.and.selectivity(ik).ge.selectivitymax(4))then
-         selectivitymax(4)=selectivity(ik)
-         selectivitymax(1)=wklist(1,ik)
-         selectivitymax(2)=wklist(2,ik)
-         selectivitymax(3)=wklist(3,ik)
-        else if (ik.ge.2.and.selectivity(ik).le.selectivitymin(4))then
-         selectivitymin(4)=selectivity(ik)
-         selectivitymin(1)=wklist(1,ik)
-         selectivitymin(2)=wklist(2,ik)
-         selectivitymin(3)=wklist(3,ik)
+        write(6,'(A,I4,4F11.6)')"# IK, K(reci), SELECTIVITY(n) : ",
+     &                           ik,wk,selectivity(ik)
+       elseif(icd.eq.2) then
+         selectivity(ik) = (abs(ctrans_mtrx_left))**2 ! calculate interband optical transition rate (Eq. 27) 
+       elseif(icd.eq.3) then                            ! in PRB 92, 205108 (2015)
+         selectivity(ik) = (abs(ctrans_mtrx_right))**2
        endif
       enddo !ik loop end
+#ifdef MPI_USE
+      call MPI_ALLREDUCE(selectivity, selectivity_, nk, MPI_REAL8,
+     &                   MPI_SUM, mpi_comm_earth, mpierr)
+      selectivity = selectivity_
+      call MPI_ALLREDUCE(selectivity_w, selectivity_w_, nk, MPI_REAL8,
+     &                   MPI_SUM, mpi_comm_earth, mpierr)
+      selectivity_w = selectivity_w_
+#endif
+
+      selectivitymax(4)  = maxval(selectivity)
+      selectivitymin(4)  = minval(selectivity)
+      mink = minloc(selectivity)
+      maxk = maxloc(selectivity)
+      selectivitymax(1:3)= wklist(1:3,maxk(1))
+      selectivitymin(1:3)= wklist(1:3,mink(1))
 
       return
       end subroutine optical_selectivity
@@ -1747,7 +2072,7 @@
       dimension nbmax(3),nplist(nk),wk(3),ener(nband)
       real*8    berrycurv_kubo(nk),b1(3),b2(3),b3(3),wklist(3,nk)
       real*8    berrycurv_kubo_(nk)
-!      real*8    selectivitymax(4),selectivitymin(4)
+      real*8    metertoang 
       complex*16 ctrans_mtrx_left,ctrans_mtrx_right
       complex*16 cinter_mtrx_x,cinter_mtrx_y
       complex*16 coeffn(npmax),coeffm(npmax)
@@ -1755,22 +2080,24 @@
       complex*16 coeffnu(npmax),coeffnd(npmax)
       complex*16 coeffmu(npmax),coeffmd(npmax)
       integer :: ig(3,npmax)
-!     data hbar/6.58211928e-16/ 
+!     data hbarkg/1.054571596E-34/ !h/2pi [kg m^2/s]
+!     data xm/9.1093837015E-31/ ! electron mass [kg]
+!     data eV/1.60217663E-19/ ! electron volt [kg c^2=kg m^2/s^2]
+!      data ang/1.E-10/ ! Angstrom  [A = 10^-10 m]
+!      data anginv/1.E+10/ ! Angstrom^-1  [A^-1 = 10^10 m^-1]
+      data hbar/6.582119569e-16/ 
       data c/2.99792458E+08/ ! constant c [m/s]
-      data hbar/6.62607004E-34/ !h/2pi [kg m^2/s]
-      data xm/9.10938356E-31/ ! electron mass [kg]
-      data eV/1.60217663E-19/ ! electron volt [kg c^2=kg m^2/s^2]
-      data ang/1.E-10/ ! Angstrom  [A = 10^-10 m]
-      data anginv/1.E+10/ ! Angstrom^-1  [A^-1 = 10^10 m^-1]
-      real*8     berrycurv_unit ! [m^2 = 10^20 A^2]
+      data em/0.510998950E+6/ ! electron mass (eV/c^2)
+      data metertoang/1.E+10/ ! [1 m = 10^10 A]
+      real*8     berrycurv_unit ! [A^4]  without b1, b1: A^-1
       integer :: nprocs, myrank, mpi_comm_earth, mpierr
       integer*4  ourjob(nprocs), ourjob_disp(0:nprocs-1)
    
       call mpi_job_distribution_chain(nk, ourjob, ourjob_disp, nprocs)
 
-!      berrycurv_unit=(hbar**4)/((xm*eV)**2)  ! [m^4] without b1, b1: A^-1
-!      berrycurv_unit=(hbar**4)/((xm*eV)**2)*(anginv**4)  ! [A^4] without b1, b1: A^-1
-      berrycurv_unit=(hbar**4)/((xm)**2)*(anginv**4)  ! [A^4] without b1 & eV^-2
+!      berrycurv_unit=(hbarkg**4)/((xm*eV)**2)  ! [m^4] without b1, b1: A^-1
+!      berrycurv_unit=(hbarkg**4)/((xm*eV)**2)*(anginv**4)  ! [A^4] without b1, b1: A^-1
+      berrycurv_unit=(hbar**4)/((em)**2)*(metertoang**4)*c**4  ! [A^4] without b1, b1: A^-1
 !      data hbar/1./ !Here, I will set hbar = 1. for the simplicity
 !      write(6,*) "start kubo routine..";stop
       berrycurv_kubo = 0.0d0 
@@ -1836,7 +2163,7 @@
        berrycurv_kubo(ik) = berrycurv_kubo(ik)  
      &  -((abs(ctrans_mtrx_left))**2 - (abs(ctrans_mtrx_right))**2)
      & /(ener(nn)-ener(mm))**2
-     !!& *berrycurv_unit
+     & *berrycurv_unit
         endif ! if mm is not equal to nn
        enddo ! band index mm loop end 
        write(6,'(A,I4,4F16.6)')"# IK, K(reci), 
@@ -2635,16 +2962,18 @@
 !!$   parse command line arguments
       subroutine parse(filename,foname,nkx,nky,ispinor,icd,ixt,fbz,
      &    ivel,ikubo,iz,ihf,nini,nmax,nn,kperiod,it,iskp,ine,ver_tag,
-     &    iwf,ikwf,ng,rs,imag)
+     &    iwf,ikwf,ng,rs,imag,init_e,fina_e,nediv,sigma)
       implicit real*8(a-h,o-z)
       character*75 filename,foname,fbz,ver_tag,vdirec
       real*8 x,y
       character*20 option,value
       integer iarg,narg,ia,nkx,nky,ispinor,iskp,ine,ng(3)
       dimension rs(3)
+      real*8    init_e, fina_e
 
       nini=1;it=0;iskp=0;ine=0;icd=0;ixt=0;ivel=0;iz=0;ihf=0
-      iwf=0;ikwf=1;ng=0;imag=0;rs=0.;ikubo=0;nn=0
+      iwf=0;ikwf=1;ng=0;imag=0;rs=0.;ikubo=0;nn=0;nediv=1000
+      init_e =  0.0d0;fina_e=10.0d0;sigma=0.01
       nmax=999999
       iarg=iargc()
       nargs=iarg/2
@@ -2688,6 +3017,14 @@
             read(value,*) fbz
            else if(option == "-cd") then
             read(value,*) icd
+           else if(option == "-ien") then
+            read(value,*) init_e
+           else if(option == "-fen") then
+            read(value,*) fina_e
+           else if(option == "-nediv") then
+            read(value,*) nediv
+           else if(option == "-sigma") then
+            read(value,*) sigma
            else if(option == "-kubo") then
             read(value,*) ikubo
            else if(option == "-nn") then ! band index nn
@@ -2714,10 +3051,18 @@
            call help(ver_tag)
           endif
       enddo
-      if(icd.eq.1 .and. TRIM(foname) .ne. 'BERRYCURV' )then
-       write(foname,'(A,A)')"CIRC_DICHROISM.",TRIM(foname)
-      else if (icd .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
-        foname="CIRC_DICHROISM"
+      if(icd.gt.1 .and. TRIM(foname) .ne. 'BERRYCURV' )then
+       if(icd .eq.1) then
+         write(foname,'(A,A)')"CIRC_DICHROISM.",TRIM(foname)
+       elseif(icd.eq.2) then
+         write(foname,'(A,A)')"CIRC_DICHROISM_W.",TRIM(foname)
+       endif
+      else if (icd .gt. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
+        if(icd .eq.1) then
+          foname="CIRC_DICHROISM"
+        elseif(icd.eq.2) then
+          foname="OPT_TRANS_RATE"
+        endif
       else if (icd+ivel .eq. 0 .and. TRIM(foname) .ne. 'BERRYCURV')then
         write(foname,'(A,A)')"BERRYCURV.",TRIM(foname)
       else if (ivel .eq. 1 .and. TRIM(foname) .ne. 'BERRYCURV') then
@@ -3092,6 +3437,17 @@
       write(6,*)"                  : You may set -ii and -if together,"
       write(6,*)"                  : defining VBM & CBM, respectively"
       write(6,*)"                  :  Default : 0"
+      write(6,*)"  or -cd 2        : If -cd is set to 2, total spectrum"
+      write(6,*)"     -ien init_e  : with respect to the enery will be "
+      write(6,*)"     -fen fina_e  : evaluated. In this case, "
+      write(6,*)"     -nediv ndiv  : -ien and -fen tag should be set by"
+      write(6,*)"     -sigma sigma : hand. Otherwise, default value, "
+      write(6,*)"                  : -ien  0  -fen 10 -nediv 1000 will "
+      write(6,*)"                  : be applied. The output contains"
+      write(6,*)"                  : degree of circular polarization "
+      write(6,*)"                  : with respect to photon energy "
+      write(6,*)"                  : for each k-point. Here, -sigma tag"
+      write(6,*)"                  : sets a gaussian broadning factor"
       write(6,*)" -kubo  1(or 0)   : Calculate spin- and k-resolved"
       write(6,*)"                  : Berry curvature using Kubo formula"
       write(6,*)"                  : for nn-th band"
