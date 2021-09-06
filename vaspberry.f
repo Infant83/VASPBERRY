@@ -31,7 +31,7 @@
 !              -calculate degree of circular polarization with respect to 
 !               incident photon energy
 
-! last update and bug fixes : 2020. Sep. 25. by S.-W. Kim & H.-J. Kim 
+! last update and bug fixes : 2021. Sep. 06. by H.-J. Kim 
 
 !#define MPI_USE
 !#undef  MPI_USE        
@@ -379,12 +379,12 @@
       do isp=1,ispin   ! ispin start
        if(icd+ivel+iz+iwf+ikubo.eq.0)then
         chernnumber=0.
-      if(myrank == 0)then
-        write(6,*)" "
-        if(isp.eq.1.and.ispin.eq.2) write(6,'(A,I2)')"# SPIN : UP"
-        if(isp.eq.2.and.ispin.eq.2) write(6,'(A,I2)')"# SPIN : DN"
-        write(6,*)" "
-      endif
+        if(myrank == 0)then
+          write(6,*)" "
+          if(isp.eq.1.and.ispin.eq.2) write(6,'(A,I2)')"# SPIN : UP"
+          if(isp.eq.2.and.ispin.eq.2) write(6,'(A,I2)')"# SPIN : DN"
+          write(6,*)" "
+        endif
 
 #ifdef MPI_USE
         nk_rank=nk/nprocs
@@ -409,9 +409,7 @@
         ink=1;ifk=nk
 #endif
         do ik=ink, ifk     !ik loop.
-!    !write(6,*)'ccc', nkx, nky, iz, iz2, nband, nk, ik ,isp
          call klpfind(wkk, isp,ik,nk,nband,nkx,nky,0,0,iz,iz2) !k-loop(4pts) of ik-kpoint (K)
-!    !write(6,*)'vvv'
          write(6,*)" "
          write(6,490) ik,(wkk(i,1),i=1,3)
   490    format("#* Closed loop for KPOINT",I5," : (",3F9.5,"  )")
@@ -640,6 +638,15 @@
 #endif
 
         if(icd .eq. 2) then
+         do ik=1,nk
+          do j=1,3
+           recivec(j,ik)=wklist(1,ik)*b1(j)+
+     &                   wklist(2,ik)*b2(j)+
+     &                   wklist(3,ik)*b3(j)
+           recilat(j,ik)=wklist(j,ik)
+          enddo
+         enddo
+
          do idir=0,1 ! 0: plus; 1: minus
           spectrum = 0d0 ! initialize
           do ival=1, ne ! ne = VBM
@@ -706,11 +713,13 @@
          
          call get_sorted_xrvari(xrecivec,xrecilat,xselectivity,
      &                          kext,kperiod,nk,iz2) ! sorting
-         call write_result(isp,ispin,ispinor,fonameo,foname,filename,
-     &                 irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
-     &                 dSkxky,nini,nmax,xrecivec,xrecilat,kext,
-     &                 xselectivity,0,0.,selectivitymax,selectivitymin,
-     &                 iz2,icd,iz,ivel,ikubo,nprocs)
+         if(myrank .eq. 0) then
+          call write_result(isp,ispin,ispinor,fonameo,foname,filename,
+     &                  irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
+     &                  dSkxky,nini,nmax,xrecivec,xrecilat,kext,
+     &                  xselectivity,0,0.,selectivitymax,selectivitymin,
+     &                  iz2,icd,iz,ivel,ikubo,nprocs)
+         endif
         endif
 
 #ifdef MPI_USE
@@ -1150,7 +1159,7 @@
         write(32,'(A)')"# Optical transition rate :
      &  sum_{k,c,v}|P(k,s,cv,-)|^2*gaussian/w^2 "
        endif
-       if(imode.eq.1) then
+       if(imode.eq.1) then ! k-resolved optical transition rate
         write(32,'(A)')"# (cart) kx        ky        kz(A^-1)
      &  incident photon energy w (eV), spectrum(w,k),
      &  (recip)kx        ky        kz"
@@ -1158,17 +1167,17 @@
          if(e_range(ie).gt.0.00000000001) then
           write(32,'(3F11.6,A,F11.4,A,F20.4,A,3F11.6)')
      & (recivec(i,ik),i=1,3),
-     &        "     ",e_range(ie),"    ",rvari(ie,ik)/(e_range(ie))**2,
+     &        "     ",e_range(ie),"    ",rvari(ie,ik)/(e_range(ie)**2),
      &       "            ", (recilat(i,ik),i=1,3)
          endif
         enddo
-       elseif(imode.eq.0) then
+       elseif(imode.eq.0) then ! write total optical transition rate summed over BZ
         write(32,'(A)')"# incident photon energy w (eV) 
      & spectrum(w) (a.u.)"
         do ie=1,nediv !to do: think about conversion factor (unit)
          if(e_range(ie).gt.0.00000000001) then
           write(32,'(F11.4,A,F20.4)') e_range(ie),
-     &        "     ",sum(rvari(ie,:))/(e_range(ie))**2 
+     &        "     ",sum(rvari(ie,:))/(e_range(ie)**2) 
          endif
         enddo
        endif
@@ -1950,8 +1959,8 @@
       complex*8  coeff(npmax)
       complex*16 coeffvu(npmax),coeffvd(npmax)
       complex*16 coeffcu(npmax),coeffcd(npmax)
-      complex*16 A_left(3) ! vector potential A (LCP) 
-      complex*16 A_right(3) ! vector potential A (RCP)
+!     complex*16 A_left(3) ! vector potential A (LCP) 
+!     complex*16 A_right(3) ! vector potential A (RCP)
       real*8     e1, e2
       integer :: ig(3,npmax), mink(1), maxk(1)
       !data hbar/6.58211928e-16/ 
@@ -1962,14 +1971,14 @@
 
       selectivity_w_=0d0
       selectivity_=0d0
-      A_left=0d0
-      A_right=0d0
-      A_left(1)=cos(theta)cos(phi) - (0.,1.)sin(phi)
-      A_right(1)=cos(theta)cos(phi) + (0.,1.)sin(phi)
-      A_left(2)=cos(theta)sin(phi) + (0.,1.)cos(phi)
-      A_right(2)=cos(theta)sin(phi) - (0.,1.)cos(phi)
-      A_left(3)=-sin(theta)
-      A_right(3)=-sin(theta)
+!     A_left=0d0
+!     A_right=0d0
+!     A_left(1)=cos(theta)cos(phi) - (0.,1.)sin(phi)
+!     A_right(1)=cos(theta)cos(phi) + (0.,1.)sin(phi)
+!     A_left(2)=cos(theta)sin(phi) + (0.,1.)cos(phi)
+!     A_right(2)=cos(theta)sin(phi) - (0.,1.)cos(phi)
+!     A_left(3)=-sin(theta)
+!     A_right(3)=-sin(theta)
       call mpi_job_distribution_chain(nk, ourjob, ourjob_disp, nprocs)
 
       do ik=sum(ourjob(1:myrank))+1, sum(ourjob(1:myrank+1))
@@ -2024,11 +2033,15 @@
      &            hbar*conjg(coeffc(iplane))*xkgz*coeffv(iplane)
         endif
        enddo ! iplane loop end
+
+       ! incident circularly polarized light along z direction
        ctrans_mtrx_left  = cinter_mtrx_x + (0.,1.)*cinter_mtrx_y
        ctrans_mtrx_right = cinter_mtrx_x - (0.,1.)*cinter_mtrx_y
-!       selectivity(ik) = 
-!     &   ((abs(ctrans_mtrx_left))**2 - (abs(ctrans_mtrx_right))**2)/
-!     &   ((abs(ctrans_mtrx_left))**2 + (abs(ctrans_mtrx_right))**2)
+
+       ! incident circularly polarized light along y direction (\theta=90, \phi=90)
+       ! NOTE: to see the effect of y-direction, please uncomment following two lines
+       ! ctrans_mtrx_left  = - (0.,1.)*cinter_mtrx_x - cinter_mtrx_z
+       ! ctrans_mtrx_right = + (0.,1.)*cinter_mtrx_x - cinter_mtrx_z
 
        if(icd.eq.1) then  
          selectivity(ik) = 
