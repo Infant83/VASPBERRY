@@ -1,0 +1,9 @@
+k-points along high symmetry lines
+24  ! 100 intersections
+Line-mode
+rec
+0.33333   0.666667  0.000000   K
+0.000000  0.000000  0.000000   G
+
+0.000000  0.000000  0.000000   G
+-0.33333   -0.666667  0.000000   K'
