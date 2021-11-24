@@ -1,8 +1,10 @@
 ! PROGRAM VASPBERRY Version 1.0 (f77) for VASP
-! Written by Hyun-Jung Kim (angpangmokjang@hanmail.net, Infant@kias.re.kr) 
+! Written by Hyun-Jung Kim (angpangmokjang@hanmail.net, Infant@kias.re.kr, h.kim@fz-juelich.de) 
+!  Peter Gruenberg Institute, Forschungszentrum Juelich
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
 ! Copyright 2015. Hyun-Jung Kim All rights reserved.
+! Acknowledges to Chaokai Li (PKU) for the discussion in the initial stages.
 ! Evaluate berry curvature omega(k) for a closed loop on a small patches in k-space
 ! version 0.1 rough version. not working at all           : 2015. Mar. 17. H.-J. Kim
 ! version 0.2 error fix for k-loop finding                : 2015. Mar. 18. H.-J. Kim
