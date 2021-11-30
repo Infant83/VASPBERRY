@@ -15,7 +15,7 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
 
 # Features
 * Berry curvature calculation
-* Compute Chern number for certain band(s)
+* Compute Chern number for certain band(s) which are well-isolated over the BZ
 * Circular dichroism (optical selectivity response to the circulary polarized light)
 * Wavefunction plot (Gamma point only in the current version)
 
