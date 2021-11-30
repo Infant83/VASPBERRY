@@ -1,10 +1,8 @@
 ! PROGRAM VASPBERRY Version 1.0 (f77) for VASP
-! Written by Hyun-Jung Kim (angpangmokjang@hanmail.net, Infant@kias.re.kr, h.kim@fz-juelich.de) 
-!  Peter Gruenberg Institute, Forschungszentrum Juelich
+! Written by Hyun-Jung Kim (angpangmokjang@hanmail.net, Infant@kias.re.kr) 
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
 ! Copyright 2015. Hyun-Jung Kim All rights reserved.
-! Acknowledges to Chaokai Li (PKU) for the discussion in the initial stages.
 ! Evaluate berry curvature omega(k) for a closed loop on a small patches in k-space
 ! version 0.1 rough version. not working at all           : 2015. Mar. 17. H.-J. Kim
 ! version 0.2 error fix for k-loop finding                : 2015. Mar. 18. H.-J. Kim
@@ -29,6 +27,7 @@
 !                 usage: -kubo 1 -ii n -if m
 ! version 0.95 MPI parallelization implemented (MPI_USE)  : 2020. Sep. 02. H.-J. Kim
 !              -for Berrycurvature calculation using Kubo formula (-kubo) 
+!			   -add option -kubo 2 (no sorting over BZ -> k-line mode) : 2021. Nov. 30. H.-J. Kim
 ! version 0.96 Update optical selectivity routine (-cd 2): 2020. Sep. 16. S.-W. Kim & H.-J. Kim
 !              -calculate degree of circular polarization with respect to 
 !               incident photon energy
@@ -37,8 +36,12 @@
 !              to calculate circular dichroism under unfolded spectral weight.
 !              Hence, the -sw_file option should be provided together. ! 2021. Oct. 11. H.-J. Kim
 !              For the specific usage, please mail to the developer: h.kim@fz-juelich.de
+! version 0.98 add option -atlist, read atom index to be highlighted in CD calculations.
+!              file name for atom_list should be provided.             ! 2021. Oct. 12. H.-J. Kim
+! version 0.98b add option "-theta theta -phi phi" for the incident light angle 
+!				for the circular dichroism calculations (-cd) ! 2021. Oct. 27. S.-W. Kim & H.-J. Kim 
 
-! last update and bug fixes : 2021. Oct. 11. by H.-J. Kim 
+! last update and bug fixes : 2021. Nov. 30. by H.-J. Kim 
 
 !#define MPI_USE
 !#undef  MPI_USE        
@@ -67,13 +70,16 @@
       real*8,    allocatable :: e_range(:) 
       real*16,   allocatable :: ener(:)
       integer,   allocatable :: ig(:,:),nplist(:)
+      integer*4, allocatable :: iatlist(:)! for proj band
       integer*4, allocatable :: iklist(:) ! for unfolding band
       integer*4                 nklist    ! for unfolding band
       integer*4                 jk        ! for unfolding band
+      real*8,    allocatable :: pb(:,:,:) ! projected band 
       real*8,    allocatable :: sw(:,:,:) ! sw for unfolded band
       real*8,    allocatable :: sw_recivec(:,:) ! PBZ for unfold (cartesian)
       real*8,    allocatable :: sw_recilat(:,:) ! PBZ for unfold (fractional)
-      integer*4                 ie
+      logical                   flag_atom_project
+      integer*4                 ie, natom, natlist
       dimension selectivitymax(4),selectivitymin(4)
       dimension a1(3),a2(3),a3(3),b1(3),b2(3),b3(3),a2xa3(3),sumkg(3)
       dimension wk(3),wkk(3,5),ikk(5),isgg(2,5),npl(5),itr(5),itrim(5)
@@ -81,14 +87,15 @@
       complex*16 csum1,csum2
       complex*16  detS(4),detA,detLOOP
       integer k, n, nkx, nky,nini,nmax,ns,ne,icd,ivel
-      character*75 filename,foname,fonameo,fbz,ver_tag,vdirec
-      character*75 klist_fname,sw_fname
+      character*256 filename,foname,fonameo,fbz,ver_tag,vdirec
+      character*256 klist_fname,sw_fname, atlist_fname, proj_fname
       character*20,external :: int2str
       character*20 dummy
       data c/0.262465831d0/ ! constant c = 2m/hbar**2 [1/eV Ang^2]
       real*8  rfield,rnnfield,rnnfield_bottom
       real*8  rnnfield_tot,rnnfield_bottom_tot
       real*8  init_e, fina_e
+      real*8  theta, phi ! angle of incident light (theta: along z, phi: along x )
       real*8, allocatable:: w_half_klist(:,:)
       integer, allocatable:: i_half_klist(:),i_trim_klist(:)
       integer :: myrank, nprocs, ierr, mpierr
@@ -125,7 +132,8 @@
       call parse(filename,foname,nkx,nky,ispinor,icd,ixt,fbz,
      &   ivel,ikubo,iz,ihf,nini,nmax,nn,kperiod,it,iskp,ine,ver_tag,
      &   iwf,ikwf,ng,rs,imag,init_e,fina_e,nediv,sigma,
-     &   klist_fname,sw_fname)
+     &   klist_fname,sw_fname,atlist_fname,flag_atom_project,
+     &   theta,phi)
       if(myrank == 0)call creditinfo(ver_tag)
 
       if (ixt .ne. 0) call extendingBZ(fbz,ixt)
@@ -170,13 +178,19 @@
         if(ispin .eq. 1 .and. ispinor .eq. 2 .and. icd .eq. 0) nmax=ne
         if(ispin .eq. 1 .and. ispinor .eq. 1 .and. icd .eq. 0) nmax=ne/2
         if(ispin .eq. 2 .and. icd .ge. 1)then;nini=ne;nmax=nini+1;endif
-        if(ispin .eq. 1 .and. ispinor .eq. 1 .and. icd .ge. 1)then
+        if(ispin .eq. 1 .and. ispinor .eq. 1 .and. icd .eq. 1)then
          nini=ne/2
          nmax=nini+1
+        elseif(ispin .eq. 1 .and. ispinor .eq. 1 .and. icd .gt. 1) then
+         nini=ne/2
+         nmax=nband
         endif
-        if(ispinor .eq. 2 .and. icd .ge. 1)then
+        if(ispinor .eq. 2 .and. icd .eq. 1)then
          nini=ne
          nmax=nini+1
+        elseif(ispinor .eq. 2 .and. icd .gt. 1) then
+         nini=ne
+         nmax=nband
         endif
       endif ! check multi or single ?
       ns=nmax-nini+1
@@ -236,9 +250,9 @@
       if(icd.ge.1) allocate(xselectivity(kperiod*2*kperiod*2*nk))
       if(icd.ge.2) allocate(xspectrum(nediv,kperiod*2*kperiod*2*nk))
       if(icd.ge.2) allocate(e_range(nediv))
-      if(ikubo.eq.1) allocate(berrycurv_kubo(nk))
-      if(ikubo.eq.1) allocate(xberrycurv_kubo(kperiod*2*kperiod*2*nk))
-      if(ikubo.eq.1) allocate(berrycurv_kubo_tot(nk))
+      if(ikubo.ge.1) allocate(berrycurv_kubo(nk))
+      if(ikubo.ge.1) allocate(xberrycurv_kubo(kperiod*2*kperiod*2*nk))
+      if(ikubo.ge.1) allocate(berrycurv_kubo_tot(nk))
       if(ivel .eq. 1 .and. myrank==0) then
         ni=nini 
         nj=nini
@@ -653,6 +667,29 @@
         endif
 #endif
 
+        ! read projected band structure
+        if(flag_atom_project) then
+          if(allocated(iatlist)) deallocate(iatlist)
+          if(allocated(pb)) deallocate(pb)
+          open(66,file=trim(atlist_fname),status='unknown')
+            read(66,*) proj_fname
+            read(66,*) natom
+            read(66,*) natlist
+            allocate(iatlist(natlist)) ; iatlist = 0
+            read(66,*) iatlist(1:natlist)
+          close(66)
+          open(66,file=trim(proj_fname),status='unknown')
+            allocate(pb(2+natom,nband,nk)) ; pb = 0d0
+            do ie=1,nband
+              read(66,*) dummy
+              read(66,*) dummy
+              do ik=1,nk
+                read(66,*) pb(:,ie,ik)
+              enddo
+            enddo
+          close(66)
+        endif
+
         ! read input data for unfolded spectral weight
         if(icd .eq. 3) then
           if(allocated(iklist)) deallocate(iklist)
@@ -694,7 +731,8 @@
          do idir=0,1 ! 0: plus; 1: minus
           spectrum = 0d0 ! initialize
           do ival=1, ne ! ne = VBM
-          do icon=ne+1, nband
+         !do icon=ne+1, nband
+          do icon=ne+1, nmax
             if(myrank.eq.0) then 
               write(6,'(A,I0,A,I0)')" # OPTICAL TRANSITION FROM BAND-",
      &                                      ival, ' TO BAND-', icon
@@ -703,17 +741,36 @@
             selectivity = 0d0 ;    selectivity_w = 0d0
             ! calculate circular dichroism n(k) between band ival and icon
             if(icd .eq. 2) then
-              call optical_selectivity(selectivity, selectivity_w,
+              if(flag_atom_project) then
+                call optical_selectivity_proj(selectivity,selectivity_w,
+     &            selectivitymax,selectivitymin,
+     &            b1,b2,b3,wklist,isp,icd+idir,natlist,pb,iatlist,natom,
+     &            nband,ecut,ispinor,nplist,nbmax,npmax,nk,ival,icon,
+     &            nprocs,myrank,mpi_comm_earth,theta,phi)
+              elseif(.not. flag_atom_project) then
+                call optical_selectivity(selectivity, selectivity_w,
      &              selectivitymax,selectivitymin,
      &              b1,b2,b3,wklist,isp,icd+idir,
      &              nband,ecut,ispinor,nplist,nbmax,npmax,nk,ival,icon,
-     &              nprocs,myrank,mpi_comm_earth)
+     &              nprocs,myrank,mpi_comm_earth,theta,phi)
+              endif
             elseif(icd .eq. 3) then
-              call optical_selectivity_unfold(selectivity,selectivity_w,
-     &              selectivitymax,selectivitymin,
-     &              b1,b2,b3,wklist,isp,idir,nklist,sw,iklist,
-     &              nband,ecut,ispinor,nplist,nbmax,npmax,nk,ival,icon,
-     &              nprocs,myrank,mpi_comm_earth)
+              if(flag_atom_project) then
+                call optical_selectivity_unfold_proj(
+     &               selectivity,selectivity_w,
+     &               selectivitymax,selectivitymin,
+     &               b1,b2,b3,wklist,isp,idir,nklist,sw,iklist,
+     &               natlist,pb,iatlist,natom,
+     &               nband,ecut,ispinor,nplist,nbmax,npmax,nk,ival,icon,
+     &               nprocs,myrank,mpi_comm_earth,theta,phi)
+              elseif(.not. flag_atom_project) then
+                call optical_selectivity_unfold(
+     &               selectivity,selectivity_w,
+     &               selectivitymax,selectivitymin,
+     &               b1,b2,b3,wklist,isp,idir,nklist,sw,iklist,
+     &               nband,ecut,ispinor,nplist,nbmax,npmax,nk,ival,icon,
+     &               nprocs,myrank,mpi_comm_earth,theta,phi)
+              endif
             endif
             ! calculate photon energy dependent circular dichroism n(w,k)
             call get_spectrum(selectivity, selectivity_w, spectrum, 
@@ -758,7 +815,7 @@
      &               selectivitymax,selectivitymin,
      &               b1,b2,b3,wklist,isp,icd,
      &               nband,ecut,ispinor,nplist,nbmax,npmax,nk,nini,nmax,
-     &               nprocs,myrank,mpi_comm_earth)
+     &               nprocs,myrank,mpi_comm_earth,theta,phi)
 
          do ik=1,nk
           do j=1,3
@@ -794,7 +851,7 @@
 
 !!! ######### LOOP for Berry curvature using Kubo formula ###############################
 !       elseif(ikubo.eq.1.and. myrank==0) then
-        elseif(ikubo.eq.1               ) then
+        elseif(ikubo.ge.1               ) then
 #ifdef MPI_USE
          if(myrank == 0)then
           time_2=MPI_WTIME()
@@ -838,9 +895,10 @@
      &                       kext,recivec,recilat,berrycurv_kubo,
      &                       nk,kperiod,nk,iz2,
      &                       b1,b2,b3) ! extending over exteded-BZ
-            
-            call get_sorted_xrvari(xrecivec,xrecilat,xberrycurv_kubo,
-     &                             kext,kperiod,nk,iz2) ! sorting
+            if(ikubo .eq. 1) then
+              call get_sorted_xrvari(xrecivec,xrecilat,xberrycurv_kubo,
+     &                               kext,kperiod,nk,iz2) ! sorting
+            endif
             call write_result(isp,ispin,ispinor,fonameo,foname,filename,
      &                     irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
      &                     dSkxky,ie,ie    ,xrecivec,xrecilat,kext,
@@ -855,9 +913,10 @@
      &                     recivec,recilat,berrycurv_kubo_tot,
      &                     nk,kperiod,nk,iz2,
      &                     b1,b2,b3) ! extending over exteded-BZ
-
-          call get_sorted_xrvari(xrecivec,xrecilat,xberrycurv_kubo,
-     &                           kext,kperiod,nk,iz2) ! sorting
+          if(ikubo .eq. 1) then
+            call get_sorted_xrvari(xrecivec,xrecilat,xberrycurv_kubo,
+     &                             kext,kperiod,nk,iz2) ! sorting
+          endif
           call write_result(isp,ispin,ispinor,fonameo,foname,filename,
      &                    irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
      &                    dSkxky,nini,nmax,xrecivec,xrecilat,kext,
@@ -1023,11 +1082,11 @@
       real*8  xrvari(kperiod*2*kperiod*2*nk*iz2)
       real*8  rvari,rvari2
       real*8  xb(3),xtemp,rvari3(4),rvari4(4)
-      character*75 filename,foname,fonameo
-      character*75 foname_
+      character*256 filename,foname,fonameo
+      character*256 foname_
       character*20,external :: int2str
        
-       if(ikubo .eq. 1 .and. nini .eq. nmax) then
+       if(ikubo .ge. 1 .and. nini .eq. nmax) then
          write(foname_, '(3A )')TRIM(foname),'.EIG-',
      &                          trim(ADJUSTL(int2str(nini)))
        else
@@ -1112,7 +1171,7 @@
         write(32,'(A)')"# (cart) kx        ky        kz(A^-1)
      &   selectivity(n(k)),        (recip)kx        ky        kz"
 
-       elseif(ikubo == 1)then !Berry curvature using Kubo formula
+       elseif(ikubo .ge. 1)then !Berry curvature using Kubo formula
         write(32,'(A)')"# Chern Number is sum of 
      &Berry Curvature over 1BZ"
         write(32,'(A,F16.4)')"# Chern Number =   ",rvari
@@ -1171,8 +1230,8 @@
       real*8  rvari(nediv,nk)
       real*8  e_range(nediv)
       real*8  xb(3),xtemp
-      character*75 filename,foname,fonameo
-      character*75 foname_
+      character*256 filename,foname,fonameo
+      character*256 foname_
       character*20,external :: int2str
        if(idir.eq.0) then 
         foname_ = foname
@@ -1262,8 +1321,8 @@
       real*8  rvari(nediv,nk)
       real*8  e_range(nediv)
       real*8  xb(3),xtemp
-      character*75 filename,foname,fonameo
-      character*75 foname_
+      character*256 filename,foname,fonameo
+      character*256 foname_
       character*20,external :: int2str
       integer*4 ik,jk
 
@@ -1512,7 +1571,7 @@
       integer ikk(5),isgg(2,5),npl(5),itrim(5),ig(3,npmax)
       integer nbmax(3)
       integer nk,nband,npmax,kperiod,ispin,irecl
-      character*75 filename,foname,fonameo,fonameoi
+      character*256 filename,foname,fonameo,fonameoi
       data c/0.262465831d0/ ! constant c = 2m/hbar**2 [1/eV Ang^2]
       pi=4.*atan(1.)
       pi2=pi*2.
@@ -1614,7 +1673,7 @@
         dimension a1(3),a2(3),a3(3),ikk(1),coord(3)
         dimension n_atom(10),rs(3),rss(3)
         character*4 at_name(10),const(3)
-        character*75 fonameo
+        character*256 fonameo
         character dummy
 
         !get total number of atoms : read EIGENVAL header
@@ -2099,7 +2158,7 @@
      &           selectivitymax,selectivitymin,
      &           b1,b2,b3,wklist,isp,icd,
      &           nband,ecut,ispinor,nplist,nbmax,npmax,nk,nini,nmax,
-     &           nprocs,myrank,mpi_comm_earth)
+     &           nprocs,myrank,mpi_comm_earth,theta,phi)
       implicit real*8 (a-h,o-z)
       include 'mpif.h'
       dimension nbmax(3),nplist(nk),wk(3),ener(nband)
@@ -2113,9 +2172,10 @@
       complex*8  coeff(npmax)
       complex*16 coeffvu(npmax),coeffvd(npmax)
       complex*16 coeffcu(npmax),coeffcd(npmax)
-!     complex*16 A_left(3) ! vector potential A (LCP) 
-!     complex*16 A_right(3) ! vector potential A (RCP)
       real*8     e1, e2
+      real*8     theta, phi, theta_r, phi_r, pi
+      complex*16 zi
+      complex*16 Ax, Ay, Az ! vector potential of incident circularly polarized light
       integer :: ig(3,npmax), mink(1), maxk(1)
       !data hbar/6.58211928e-16/ 
       data hbar/1./ !Here, I will set hbar = 1. for the simplicity
@@ -2123,16 +2183,12 @@
       integer :: nprocs, myrank, mpi_comm_earth, mpierr
       integer*4  ourjob(nprocs), ourjob_disp(0:nprocs-1)
 
+      pi=4.d0*atan(1.d0)
+      zi=(0.d0,1.d0)
+      theta_r = theta * pi / 180.d0
+      phi_r   = phi   * pi / 180.d0
       selectivity_w_=0d0 ! energy diff
       selectivity_=0d0   ! selectivity between i,j
-!     A_left=0d0
-!     A_right=0d0
-!     A_left(1)=cos(theta)cos(phi) - (0.,1.)sin(phi)
-!     A_right(1)=cos(theta)cos(phi) + (0.,1.)sin(phi)
-!     A_left(2)=cos(theta)sin(phi) + (0.,1.)cos(phi)
-!     A_right(2)=cos(theta)sin(phi) - (0.,1.)cos(phi)
-!     A_left(3)=-sin(theta)
-!     A_right(3)=-sin(theta)
       call mpi_job_distribution_chain(nk, ourjob, ourjob_disp, nprocs)
 
       do ik=sum(ourjob(1:myrank))+1, sum(ourjob(1:myrank+1))
@@ -2169,6 +2225,9 @@
          coeffvd(iplane)=coeffv(iplane+ncnt)
          coeffcu(iplane)=coeffc(iplane)
          coeffcd(iplane)=coeffc(iplane+ncnt)
+         ! cinter_mtrx_x = <psi_n | vx | phi_m>, vx = -i*hbar*d/dx
+         ! cinter_mtrx_y = <psi_n | vy | phi_m>, vy = -i*hbar*d/dy
+         ! cinter_mtrx_z = <psi_n | vz | phi_m>, vz = -i*hbar*d/dz
          cinter_mtrx_x=cinter_mtrx_x+
      &            hbar*conjg(coeffcu(iplane))*xkgx*coeffvu(iplane)+
      &            hbar*conjg(coeffcd(iplane))*xkgx*coeffvd(iplane)
@@ -2188,9 +2247,21 @@
         endif
        enddo ! iplane loop end
 
+       ! incident circularly polarized light with angle (theta,phi)
+       Ax = (cos(theta_r)*cos(phi_r) + zi*sin(phi_r))
+       Ay = (cos(theta_r)*sin(phi_r) - zi*cos(phi_r))
+       Az = -sin(theta_r)
+       ctrans_mtrx_right= Ax * cinter_mtrx_x + Ay * cinter_mtrx_y +
+     &                    Az * cinter_mtrx_z
+       Ax = (cos(theta_r)*cos(phi_r) - zi*sin(phi_r))
+       Ay = (cos(theta_r)*sin(phi_r) + zi*cos(phi_r))
+       Az = -sin(theta_r)
+       ctrans_mtrx_left = Ax * cinter_mtrx_x + Ay * cinter_mtrx_y +
+     &                    Az * cinter_mtrx_z
+
        ! incident circularly polarized light along z direction
-       ctrans_mtrx_left  = cinter_mtrx_x + (0.,1.)*cinter_mtrx_y
-       ctrans_mtrx_right = cinter_mtrx_x - (0.,1.)*cinter_mtrx_y
+      !ctrans_mtrx_left  = cinter_mtrx_x + (0.,1.)*cinter_mtrx_y
+      !ctrans_mtrx_right = cinter_mtrx_x - (0.,1.)*cinter_mtrx_y
 
        ! incident circularly polarized light along y direction (\theta=90, \phi=90)
        ! NOTE: to see the effect of y-direction, please uncomment following two lines
@@ -2228,12 +2299,153 @@
       return
       end subroutine optical_selectivity
 
+!!$*  subroutine for computing optical selectivity in the given k-point with orbital projection
+      subroutine optical_selectivity_proj(selectivity, selectivity_w,
+     &           selectivitymax,selectivitymin,
+     &           b1,b2,b3,wklist,isp,icd,natlist,pb,iatlist,natom,
+     &           nband,ecut,ispinor,nplist,nbmax,npmax,nk,ival,icon,
+     &           nprocs,myrank,mpi_comm_earth,theta,phi)
+      implicit real*8 (a-h,o-z)
+      include 'mpif.h'
+      dimension nbmax(3),nplist(nk),wk(3),ener(nband)
+      real*8    selectivity(nk),b1(3),b2(3),b3(3),wklist(3,nk)
+      real*8    selectivity_w(nk)
+      real*8    selectivity_(nk),selectivity_w_(nk)
+      real*8    selectivitymax(4),selectivitymin(4)
+      complex*16 ctrans_mtrx_left,ctrans_mtrx_right
+      complex*16 cinter_mtrx_x,cinter_mtrx_y,cinter_mtrx_z
+      complex*16 coeffv(npmax),coeffc(npmax)
+      complex*8  coeff(npmax)
+      complex*16 coeffvu(npmax),coeffvd(npmax)
+      complex*16 coeffcu(npmax),coeffcd(npmax)
+      real*8     e1, e2
+      integer*4  ival, icon, natlist, natom
+      integer*4  iatlist(natlist)
+      real*8     pb(2+natom,nband,nk)
+      real*8     ldos_i, ldos_f, ldos_fi
+      real*8     theta, phi, theta_r, phi_r, pi
+      complex*16 zi
+      complex*16 Ax, Ay, Az ! vector potential of incident circularly polarized light
+      integer :: ig(3,npmax), mink(1), maxk(1)
+      !data hbar/6.58211928e-16/ 
+      data hbar/1./ !Here, I will set hbar = 1. for the simplicity
+
+      integer :: nprocs, myrank, mpi_comm_earth, mpierr
+      integer*4  ourjob(nprocs), ourjob_disp(0:nprocs-1)
+
+      pi=4.d0*atan(1.d0)
+      zi=(0.d0,1.d0)
+      theta_r = theta * pi / 180.d0
+      phi_r   = phi   * pi / 180.d0
+      selectivity_w_=0d0 ! energy diff
+      selectivity_=0d0   ! selectivity between i,j
+      call mpi_job_distribution_chain(nk, ourjob, ourjob_disp, nprocs)
+
+      do ik=sum(ourjob(1:myrank))+1, sum(ourjob(1:myrank+1))
+       call ener_read(ener,isp,ik,nk,nband)
+
+       ldos_i = sum(pb(2+iatlist,ival, ik))
+       ldos_f = sum(pb(2+iatlist,icon, ik))
+       ldos_fi= ldos_i * ldos_f
+
+       cinter_mtrx_x=(0.,0.)
+       cinter_mtrx_y=(0.,0.)
+       cinter_mtrx_z=(0.,0.)
+       coeff=(0.,0.)
+       coeffv=(0.,0.);coeffc=(0.,0.)
+       coeffvu=(0.,0.);coeffcu=(0.,0.)
+       coeffvd=(0.,0.);coeffcd=(0.,0.)
+       wk(:)=wklist(:,ik)
+       np=nplist(ik)
+       call plindx(ig,ncnt, ispinor,wk,b1,b2,b3,nbmax,np,ecut,npmax)
+       selectivity_w(ik) = ener(icon) - ener(ival)
+       read(10,rec=(3+(ik-1)*(nband+1)+
+     &                nk*(nband+1)*(isp-1)+ival))(coeff(i),i=1,np)
+       coeffv=coeff;coeff=(0.,0.)
+       read(10,rec=(3+(ik-1)*(nband+1)+
+     &                nk*(nband+1)*(isp-1)+icon))(coeff(i),i=1,np)
+       coeffc=coeff;coeff=(0.,0.)
+       do iplane=1,ncnt
+        xkgx=(wk(1)+ig(1,iplane))*b1(1)+
+     &       (wk(2)+ig(2,iplane))*b2(1)+ (wk(3)+ig(3,iplane))*b3(1)
+        xkgy=(wk(1)+ig(1,iplane))*b1(2)+
+     &       (wk(2)+ig(2,iplane))*b2(2)+ (wk(3)+ig(3,iplane))*b3(2)
+        xkgz=(wk(1)+ig(1,iplane))*b1(3)+
+     &       (wk(2)+ig(2,iplane))*b2(3)+ (wk(3)+ig(3,iplane))*b3(3)
+        if(ispinor .eq. 2) then
+         coeffvu(iplane)=coeffv(iplane)
+         coeffvd(iplane)=coeffv(iplane+ncnt)
+         coeffcu(iplane)=coeffc(iplane)
+         coeffcd(iplane)=coeffc(iplane+ncnt)
+         cinter_mtrx_x=cinter_mtrx_x+
+     &            hbar*conjg(coeffcu(iplane))*xkgx*coeffvu(iplane)+
+     &            hbar*conjg(coeffcd(iplane))*xkgx*coeffvd(iplane)
+         cinter_mtrx_y=cinter_mtrx_y+
+     &            hbar*conjg(coeffcu(iplane))*xkgy*coeffvu(iplane)+
+     &            hbar*conjg(coeffcd(iplane))*xkgy*coeffvd(iplane)
+         cinter_mtrx_z=cinter_mtrx_z+
+     &            hbar*conjg(coeffcu(iplane))*xkgz*coeffvu(iplane)+
+     &            hbar*conjg(coeffcd(iplane))*xkgz*coeffvd(iplane)
+         else if(ispinor .eq. 1) then
+          cinter_mtrx_x=cinter_mtrx_x+
+     &            hbar*conjg(coeffc(iplane))*xkgx*coeffv(iplane)
+          cinter_mtrx_y=cinter_mtrx_y+
+     &            hbar*conjg(coeffc(iplane))*xkgy*coeffv(iplane)
+          cinter_mtrx_z=cinter_mtrx_z+
+     &            hbar*conjg(coeffc(iplane))*xkgz*coeffv(iplane)
+        endif
+       enddo ! iplane loop end
+
+       ! incident circularly polarized light with angle (theta,phi)
+       Ax = (cos(theta_r)*cos(phi_r) - zi*sin(phi_r))
+       Ay = (cos(theta_r)*sin(phi_r) + zi*cos(phi_r))
+       Az = -sin(theta_r)
+       ctrans_mtrx_left = Ax * cinter_mtrx_x + Ay * cinter_mtrx_y +
+     &                    Az * cinter_mtrx_z
+       Ax = (cos(theta_r)*cos(phi_r) + zi*sin(phi_r))
+       Ay = (cos(theta_r)*sin(phi_r) - zi*cos(phi_r))
+       ctrans_mtrx_right= Ax * cinter_mtrx_x + Ay * cinter_mtrx_y +
+     &                    Az * cinter_mtrx_z
+
+       ! incident circularly polarized light along z direction
+      !ctrans_mtrx_left  = cinter_mtrx_x + (0.,1.)*cinter_mtrx_y
+      !ctrans_mtrx_right = cinter_mtrx_x - (0.,1.)*cinter_mtrx_y
+
+       ! incident circularly polarized light along y direction (\theta=90, \phi=90)
+       ! NOTE: to see the effect of y-direction, please uncomment following two lines
+       ! ctrans_mtrx_left  = - (0.,1.)*cinter_mtrx_x - cinter_mtrx_z
+       ! ctrans_mtrx_right = + (0.,1.)*cinter_mtrx_x - cinter_mtrx_z
+
+       if(icd.eq.2) then
+         selectivity(ik) = (abs(ctrans_mtrx_left))**2 * ldos_fi ! calculate interband optical transition rate (Eq. 27) 
+       elseif(icd.eq.3) then                            ! in PRB 92, 205108 (2015)
+         selectivity(ik) = (abs(ctrans_mtrx_right))**2 * ldos_fi
+       endif
+      enddo !ik loop end
+#ifdef MPI_USE
+      call MPI_ALLREDUCE(selectivity, selectivity_, nk, MPI_REAL8,
+     &                   MPI_SUM, mpi_comm_earth, mpierr)
+      selectivity = selectivity_
+      call MPI_ALLREDUCE(selectivity_w, selectivity_w_, nk, MPI_REAL8,
+     &                   MPI_SUM, mpi_comm_earth, mpierr)
+      selectivity_w = selectivity_w_
+#endif
+
+      selectivitymax(4)  = maxval(selectivity)
+      selectivitymin(4)  = minval(selectivity)
+      mink = minloc(selectivity)
+      maxk = maxloc(selectivity)
+      selectivitymax(1:3)= wklist(1:3,maxk(1))
+      selectivitymin(1:3)= wklist(1:3,mink(1))
+      return
+      end subroutine 
+
 !!$*  subroutine for computing optical selectivity in the given k-point with unfolding feature(icd=3)
       subroutine optical_selectivity_unfold(selectivity, selectivity_w,
      &           selectivitymax,selectivitymin,
      &           b1,b2,b3,wklist,isp,idir,nklist,sw,iklist,
      &           nband,ecut,ispinor,nplist,nbmax,npmax,nk,ival,icon,
-     &           nprocs,myrank,mpi_comm_earth)
+     &           nprocs,myrank,mpi_comm_earth,theta,phi)
       implicit real*8 (a-h,o-z)
       include 'mpif.h'
       dimension nbmax(3),nplist(nk),wk(3),ener(nband)
@@ -2251,12 +2463,19 @@
       real*8     sw(3,nband,nklist),sw_i, sw_f
       real*8     sw_fi ! transition rate from i->f
       real*8     e1, e2
+      real*8     theta, phi, theta_r, phi_r, pi
+      complex*16 zi
+      complex*16 Ax, Ay, Az ! vector potential of incident circularly polarized light
       integer :: ig(3,npmax), mink(1), maxk(1)
       !data hbar/6.58211928e-16/ 
       data hbar/1./ !Here, I will set hbar = 1. for the simplicity
       integer :: nprocs, myrank, mpi_comm_earth, mpierr
       integer*4  ourjob(nprocs), ourjob_disp(0:nprocs-1)
       integer*4  jk
+      pi=4.d0*atan(1.d0)
+      zi=(0.d0,1.d0)
+      theta_r = theta * pi / 180.d0
+      phi_r   = phi   * pi / 180.d0
       selectivity_w_=0d0
       selectivity_=0d0
 
@@ -2288,14 +2507,11 @@
         coeffc=coeff;coeff=(0.,0.)
         do iplane=1,ncnt
          xkgx=(wk(1)+ig(1,iplane))*b1(1)+
-     &        (wk(2)+ig(2,iplane))*b2(1)+
-     &        (wk(3)+ig(3,iplane))*b3(1)
+     &        (wk(2)+ig(2,iplane))*b2(1)+ (wk(3)+ig(3,iplane))*b3(1)
          xkgy=(wk(1)+ig(1,iplane))*b1(2)+
-     &        (wk(2)+ig(2,iplane))*b2(2)+
-     &        (wk(3)+ig(3,iplane))*b3(2)
+     &        (wk(2)+ig(2,iplane))*b2(2)+ (wk(3)+ig(3,iplane))*b3(2)
          xkgz=(wk(1)+ig(1,iplane))*b1(3)+
-     &        (wk(2)+ig(2,iplane))*b2(3)+
-     &        (wk(3)+ig(3,iplane))*b3(3)
+     &        (wk(2)+ig(2,iplane))*b2(3)+ (wk(3)+ig(3,iplane))*b3(3)
          if(ispinor .eq. 2) then
           coeffvu(iplane)=coeffv(iplane)
           coeffvd(iplane)=coeffv(iplane+ncnt)
@@ -2320,14 +2536,174 @@
          endif
         enddo ! iplane loop end
       
+        ! incident circularly polarized light with angle (theta,phi)
+        Ax = (cos(theta_r)*cos(phi_r) - zi*sin(phi_r))
+        Ay = (cos(theta_r)*sin(phi_r) + zi*cos(phi_r))
+        Az = -sin(theta_r)
+        ctrans_mtrx_left = Ax * cinter_mtrx_x + Ay * cinter_mtrx_y +
+     &                     Az * cinter_mtrx_z
+        Ax = (cos(theta_r)*cos(phi_r) + zi*sin(phi_r))
+        Ay = (cos(theta_r)*sin(phi_r) - zi*cos(phi_r))
+        ctrans_mtrx_right= Ax * cinter_mtrx_x + Ay * cinter_mtrx_y +
+     &                     Az * cinter_mtrx_z
+
         ! incident circularly polarized light along z direction
-        ctrans_mtrx_left  = cinter_mtrx_x + (0.,1.)*cinter_mtrx_y
-        ctrans_mtrx_right = cinter_mtrx_x - (0.,1.)*cinter_mtrx_y
+       !ctrans_mtrx_left  = cinter_mtrx_x + (0.,1.)*cinter_mtrx_y
+       !ctrans_mtrx_right = cinter_mtrx_x - (0.,1.)*cinter_mtrx_y
 
        if(idir.eq.0) then
          selectivity(ik) = (abs(ctrans_mtrx_left))**2 * sw_fi ! calculate interband optical transition rate (Eq. 27) 
        elseif(idir.eq.1) then                            ! in PRB 92, 205108 (2015)
          selectivity(ik) = (abs(ctrans_mtrx_right))**2 * sw_fi
+       endif
+
+      enddo ! ik
+
+#ifdef MPI_USE
+      call MPI_ALLREDUCE(selectivity, selectivity_, nk, MPI_REAL8,
+     &                   MPI_SUM, mpi_comm_earth, mpierr)
+      selectivity = selectivity_
+      call MPI_ALLREDUCE(selectivity_w, selectivity_w_, nk, MPI_REAL8,
+     &                   MPI_SUM, mpi_comm_earth, mpierr)
+      selectivity_w = selectivity_w_
+#endif
+
+      selectivitymax(4)  = maxval(selectivity)
+      selectivitymin(4)  = minval(selectivity)
+      mink = minloc(selectivity)
+      maxk = maxloc(selectivity)
+      selectivitymax(1:3)= wklist(1:3,maxk(1))
+      selectivitymin(1:3)= wklist(1:3,mink(1))
+
+      return
+      endsubroutine
+
+!!$*  subroutine for computing optical selectivity in the given k-point with unfolding feature(icd=3)
+!!    with atom projection
+      subroutine optical_selectivity_unfold_proj(
+     &           selectivity, selectivity_w,
+     &           selectivitymax,selectivitymin,
+     &           b1,b2,b3,wklist,isp,idir,nklist,sw,iklist,
+     &           natlist,pb,iatlist,natom,
+     &           nband,ecut,ispinor,nplist,nbmax,npmax,nk,ival,icon,
+     &           nprocs,myrank,mpi_comm_earth,theta,phi)
+      implicit real*8 (a-h,o-z)
+      include 'mpif.h'
+      dimension nbmax(3),nplist(nk),wk(3),ener(nband)
+      real*8    selectivity(nk),b1(3),b2(3),b3(3),wklist(3,nk)
+      real*8    selectivity_w(nk)
+      real*8    selectivity_(nk),selectivity_w_(nk)
+      real*8    selectivitymax(4),selectivitymin(4)
+      complex*16 ctrans_mtrx_left,ctrans_mtrx_right
+      complex*16 cinter_mtrx_x,cinter_mtrx_y,cinter_mtrx_z
+      complex*16 coeffv(npmax),coeffc(npmax)
+      complex*8  coeff(npmax)
+      complex*16 coeffvu(npmax),coeffvd(npmax)
+      complex*16 coeffcu(npmax),coeffcd(npmax)
+      integer*4  iklist(nklist), ival, icon, idir
+      real*8     sw(3,nband,nklist),sw_i, sw_f
+      real*8     sw_fi ! transition rate from i->f
+      real*8     e1, e2
+      integer*4  natom, natlist
+      integer*4  iatlist(natlist)
+      real*8     pb(2+natom,nband,nk)
+      real*8     ldos_i, ldos_f, ldos_fi
+      real*8     theta, phi, theta_r, phi_r, pi
+      complex*16 zi
+      complex*16 Ax, Ay, Az ! vector potential of incident circularly polarized light
+      integer :: ig(3,npmax), mink(1), maxk(1)
+      !data hbar/6.58211928e-16/ 
+      data hbar/1./ !Here, I will set hbar = 1. for the simplicity
+      integer :: nprocs, myrank, mpi_comm_earth, mpierr
+      integer*4  ourjob(nprocs), ourjob_disp(0:nprocs-1)
+      integer*4  jk
+      pi=4.d0*atan(1.d0)
+      zi=(0.d0,1.d0)
+      theta_r = theta * pi / 180.d0
+      phi_r   = phi   * pi / 180.d0
+      selectivity_w_=0d0
+      selectivity_=0d0
+
+      call mpi_job_distribution_chain(nk, ourjob, ourjob_disp, nprocs)
+      do ik=sum(ourjob(1:myrank))+1, sum(ourjob(1:myrank+1))
+        call ener_read(ener,isp,ik,nk,nband)
+        call find_jk(nklist,iklist,ik, jk)
+        sw_i = sw(3,ival,jk)
+        sw_f = sw(3,icon,jk)
+        sw_fi= sw_i * sw_f
+        
+        ldos_i = sum(pb(2+iatlist,ival,jk))
+        ldos_f = sum(pb(2+iatlist,icon,jk))
+        ldos_fi= ldos_f * ldos_i
+
+        cinter_mtrx_x=(0.,0.)
+        cinter_mtrx_y=(0.,0.)
+        cinter_mtrx_z=(0.,0.)
+        coeff=(0.,0.)
+        coeffv=(0.,0.);coeffc=(0.,0.)
+        coeffvu=(0.,0.);coeffcu=(0.,0.)
+        coeffvd=(0.,0.);coeffcd=(0.,0.)
+        wk(:)=wklist(:,ik)
+        np=nplist(ik)
+        call plindx(ig,ncnt, ispinor,wk,b1,b2,b3,nbmax,np,ecut,npmax)
+        selectivity_w(ik) = ener(icon) - ener(ival)
+
+        read(10,rec=(3+(ik-1)*(nband+1)+
+     &                 nk*(nband+1)*(isp-1)+ival))(coeff(i),i=1,np)
+        coeffv=coeff;coeff=(0.,0.)
+        read(10,rec=(3+(ik-1)*(nband+1)+
+     &                 nk*(nband+1)*(isp-1)+icon))(coeff(i),i=1,np)
+        coeffc=coeff;coeff=(0.,0.)
+        do iplane=1,ncnt
+         xkgx=(wk(1)+ig(1,iplane))*b1(1)+
+     &        (wk(2)+ig(2,iplane))*b2(1)+ (wk(3)+ig(3,iplane))*b3(1)
+         xkgy=(wk(1)+ig(1,iplane))*b1(2)+
+     &        (wk(2)+ig(2,iplane))*b2(2)+ (wk(3)+ig(3,iplane))*b3(2)
+         xkgz=(wk(1)+ig(1,iplane))*b1(3)+
+     &        (wk(2)+ig(2,iplane))*b2(3)+ (wk(3)+ig(3,iplane))*b3(3)
+         if(ispinor .eq. 2) then
+          coeffvu(iplane)=coeffv(iplane)
+          coeffvd(iplane)=coeffv(iplane+ncnt)
+          coeffcu(iplane)=coeffc(iplane)
+          coeffcd(iplane)=coeffc(iplane+ncnt)
+          cinter_mtrx_x=cinter_mtrx_x+
+     &             hbar*conjg(coeffcu(iplane))*xkgx*coeffvu(iplane)+
+     &             hbar*conjg(coeffcd(iplane))*xkgx*coeffvd(iplane)
+          cinter_mtrx_y=cinter_mtrx_y+
+     &             hbar*conjg(coeffcu(iplane))*xkgy*coeffvu(iplane)+
+     &             hbar*conjg(coeffcd(iplane))*xkgy*coeffvd(iplane)
+          cinter_mtrx_z=cinter_mtrx_z+
+     &             hbar*conjg(coeffcu(iplane))*xkgz*coeffvu(iplane)+
+     &             hbar*conjg(coeffcd(iplane))*xkgz*coeffvd(iplane)
+          else if(ispinor .eq. 1) then
+           cinter_mtrx_x=cinter_mtrx_x+
+     &             hbar*conjg(coeffc(iplane))*xkgx*coeffv(iplane)
+           cinter_mtrx_y=cinter_mtrx_y+
+     &             hbar*conjg(coeffc(iplane))*xkgy*coeffv(iplane)
+           cinter_mtrx_z=cinter_mtrx_z+
+     &             hbar*conjg(coeffc(iplane))*xkgz*coeffv(iplane)
+         endif
+        enddo ! iplane loop end
+
+        ! incident circularly polarized light with angle (theta,phi)
+        Ax = (cos(theta_r)*cos(phi_r) - zi*sin(phi_r))
+        Ay = (cos(theta_r)*sin(phi_r) + zi*cos(phi_r))
+        Az = -sin(theta_r)
+        ctrans_mtrx_left = Ax * cinter_mtrx_x + Ay * cinter_mtrx_y +
+     &                     Az * cinter_mtrx_z
+        Ax = (cos(theta_r)*cos(phi_r) + zi*sin(phi_r))
+        Ay = (cos(theta_r)*sin(phi_r) - zi*cos(phi_r))
+        ctrans_mtrx_right= Ax * cinter_mtrx_x + Ay * cinter_mtrx_y +
+     &                     Az * cinter_mtrx_z
+
+        ! incident circularly polarized light along z direction
+       !ctrans_mtrx_left  = cinter_mtrx_x + (0.,1.)*cinter_mtrx_y
+       !ctrans_mtrx_right = cinter_mtrx_x - (0.,1.)*cinter_mtrx_y
+
+       if(idir.eq.0) then
+         selectivity(ik) = (abs(ctrans_mtrx_left))**2 * sw_fi * ldos_fi ! calculate interband optical transition rate (Eq. 27) 
+       elseif(idir.eq.1) then                            ! in PRB 92, 205108 (2015)
+         selectivity(ik) = (abs(ctrans_mtrx_right))**2 * sw_fi * ldos_fi
        endif
 
       enddo ! ik
@@ -2491,7 +2867,7 @@
       dimension wk(3),nbmax(3),xb(3)
       integer ig(3,npmax),nplist(nk)
       integer ni,nj,ne,nk,nband,np,npmax,kperiod,ispin,irecl
-      character*75 filename,foname,fonameo
+      character*256 filename,foname,fonameo
       data c/0.262465831d0/ ! constant c = 2m/hbar**2 [1/eV Ang^2]
       data hbar/6.58211928E-16/ !h/2pi [eV * s]
       data xm/0.510998910E+6/ ! electron mass (eV/c^2)
@@ -3264,27 +3640,32 @@
       subroutine parse(filename,foname,nkx,nky,ispinor,icd,ixt,fbz,
      &    ivel,ikubo,iz,ihf,nini,nmax,nn,kperiod,it,iskp,ine,ver_tag,
      &    iwf,ikwf,ng,rs,imag,init_e,fina_e,nediv,sigma,
-     &    klist_fname,sw_fname)
+     &    klist_fname,sw_fname,atlist_fname,flag_atom_project,
+     &    theta,phi)
       implicit real*8(a-h,o-z)
-      character*75 filename,foname,fbz,ver_tag,vdirec
-      character*75 klist_fname, sw_fname
+      character*256 filename,foname,fbz,ver_tag,vdirec
+      character*256 klist_fname, sw_fname, atlist_fname
       real*8 x,y
-      character*20 option,value
+      character*256 option,value
       integer iarg,narg,ia,nkx,nky,ispinor,iskp,ine,ng(3)
       dimension rs(3)
       real*8    init_e, fina_e
-
+      real*8    theta, phi
+      logical   flag_atom_project
       nini=1;it=0;iskp=0;ine=0;icd=0;ixt=0;ivel=0;iz=0;ihf=0
       iwf=0;ikwf=1;ng=0;imag=0;rs=0.;ikubo=0;nn=0;nediv=1000
       init_e =  0.0d0;fina_e=10.0d0;sigma=0.01
+      theta = 0.0d0 ; phi = 0.0d0
       nmax=999999
       iarg=iargc()
       nargs=iarg/2
       filename="WAVECAR"
       klist_fname="sw_klist.dat"
+      atlist_fname="sw_atoms.dat"
       sw_fname="sw_spin0.dat" ! note that collinear case is not supported yet. 09.Oct. 2021, HJ Kim
       foname="BERRYCURV"
       fbz="BERRYCURV.tot.dat"
+      flag_atom_project = .false.
       if(iarg.ne.2*nargs) then
          call help(ver_tag)
       endif
@@ -3292,7 +3673,8 @@
          call getarg(2*ia-1,option)
          call getarg(2*ia,value)
          if(option == "-f") then
-            read(value,*) filename
+           !read(value,*) filename
+            filename = trim(value)
            else if(option == "-o") then
             read(value,*) foname
            else if(option == "-kx") then
@@ -3326,10 +3708,17 @@
             read(value,*) klist_fname
            else if(option =="-sw_file") then
             read(value,*) sw_fname
+           else if(option =="-atlist") then
+            flag_atom_project = .true.
+            read(value,*) atlist_fname
            else if(option == "-ien") then
             read(value,*) init_e
            else if(option == "-fen") then
             read(value,*) fina_e
+           else if(option == "-theta") then
+            read(value,*) theta
+           else if(option == "-phi") then
+            read(value,*) phi
            else if(option == "-nediv") then
             read(value,*) nediv
            else if(option == "-sigma") then
@@ -3382,7 +3771,7 @@
         foname="VEL_EXPT"
       else if (iz .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
         foname="NFIELD"
-      else if (ikubo .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
+      else if (ikubo .ge. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
         foname="BERRYCURV_KUBO"
       endif
 
@@ -3421,7 +3810,7 @@
 !!$*  subroutine for reading basic information
       subroutine inforead(irecl,ispin,nk,nband,ecut,a1,a2,a3,filename)
       implicit real*8(a-h,o-z)
-      character*75 filename
+      character*256 filename
       dimension a1(3),a2(3),a3(3)
 
       irecl=24
@@ -3447,7 +3836,7 @@
       end subroutine inforead
 
       subroutine creditinfo(ver_tag)
-      character*75 ver_tag
+      character*256 ver_tag
 
       write(6,*)ver_tag
       write(6,*)"#This program calculates (1)berry curvature omega(k) "
@@ -3537,7 +3926,7 @@
 
       subroutine extendingBZ(fbz,ixt)
       implicit real*8 (a-h, o-z)
-      character*75  fbz
+      character*256  fbz
       character*200  A,S,P
       dimension b1(3),b2(3),b3(3),xb(3)
       real*8, allocatable :: xrecivec(:,:),xrecilat(:,:),xdata_(:)
@@ -3657,7 +4046,7 @@
       subroutine test
       implicit real*8 (a-h, o-z)
       complex*8   a,b,c,d
-      character*75  foname
+      character*256  foname
        a=(2.2,-1.3)
        b=(3.2,-5.4)
       
@@ -3673,7 +4062,7 @@
       end subroutine test
 
       subroutine help(ver_tag)
-      character*75 ver_tag
+      character*256 ver_tag
       write(6,*)"          **** PROGRAM INSTRUCTION ***"
       write(6,*)" "
       write(6,*)ver_tag
@@ -3771,9 +4160,38 @@
       write(6,*)"                    option -sw ."
       write(6,*)"                    Note: use sw_file generated by"
       write(6,*)"                          VaspBandUnfolding" 
+      write(6,*)"     -atlist afile: 'afile' contains information for"
+      write(6,*)"                  : atom_projected band structure file"
+      write(6,*)"                  : name. Total number of atom to be "
+      write(6,*)"                  : highlighted, and atom indices"
+      write(6,*)"                  : It works with -cd 2 and 3 only." 
+      write(6,*)"                  : EX)  in afile, it read as follows"
+      write(6,*)"                    DOS_atom_projected.dat "
+      write(6,*)"                    6   # total atom in system   "
+      write(6,*)"                    3   # total atom to read     "
+      write(6,*)"                    1 2 5   # atom indices to read"
+      write(6,*)" *** Angle resolved CD calculations: *****************"
+      write(6,*)" * -theta theta   : angle along x-axis describing"
+      write(6,*)" *					 the direction of the injecting light"
+      write(6,*)" *					  Default: 0"
+      write(6,*)" * -phi   phi     : angle along z-axis describing"
+      write(6,*)" *					 the direction of the injecting light"
+      write(6,*)" *					  Default: 0"
+      write(6,*)" *					 "
+      write(6,*)" *					 Example:"
+      write(6,*)" * 				  Light from z-axis(surface normal):"
+      write(6,*)" * 				   (theta,phi) = (0.0,0.0)"
+      write(6,*)" * 				  Light from x-axis "
+      write(6,*)" * 				   (theta,phi) = (90.0,0.0)"
+      write(6,*)" * 				  Light from y-axis "
+      write(6,*)" * 				   (theta,phi) = (90.0,90.0)"
+      write(6,*)" *****************************************************"
       write(6,*)" -kubo  1(or 0)   : Calculate spin- and k-resolved"
-      write(6,*)"                  : Berry curvature using Kubo formula"
+      write(6,*)"         (or 2)   : Berry curvature using Kubo formula"
       write(6,*)"                  : for nn-th band"
+      write(6,*)"                  : If it is set by 2, line-mode is"
+      write(6,*)"                  : assumed so that the result will"
+      write(6,*)"                  : not be sorted over the BZ. "    
       write(6,*)"                  : Note: nn can be ranged by"
       write(6,*)"                  : -ii and -if tag "
       write(6,*)"                  :  ex) -kubo 1 -ii 19 -if 22 "
@@ -3783,7 +4201,7 @@
       write(6,*)"                  :     BERRYCURF_KUBO.EIG-NN.DAT and"
       write(6,*)"                  :     total Berry curvature (19-22)"
       write(6,*)"                  :     is in BERRYCURF_KUBO.DAT"
-      write(6,*)"                  :  Default : -kubo 0"
+      write(6,*)"                  :  Default : -kubo 0 (no calc.)"
       write(6,*)" -ixt np -fbz f   : **For the special purpose"
       write(6,*)"                  : Read file 'f' and extend data to"
       write(6,*)"                  : np x np periodic field. Note that"
@@ -3824,6 +4242,7 @@
       write(6,*)" ex-noMPI-gfortran) gfortran -I/opt/local/include 
      &-L/opt/local/lib/lapack/ -l lapack -o vaspberry vaspberry_gfortran
      &_serial.f"
-!     write(6,*)" ex-MPI) mpif90 -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f "
+!     write(6,*)" ex-MPI) mpif90   -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f "
+!     write(6,*)" ex-MPI) mpiifort -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f "
       stop
       end subroutine help

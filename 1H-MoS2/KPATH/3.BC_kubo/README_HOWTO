@@ -1,7 +1,9 @@
 # 1. copy WAVECAR file from ../2.band/WAVECAR
 
 # 2. run berry curvature calculation with -kubo option
-vaspberry -kubo 1 -s 2
+#    Note1: -kubo 2 option indicates that your k-point file is line mode.
+#    Note2: -kp 1   option indicates that your result will not be repeated along the path
+vaspberry -f "../2.band/WAVECAR" -kubo 2 -s 2 -kp 1
 
 # 3. the results will be written in BERRYCURV_KUBO_... files.
 #    Note that in BERRYCURV_KUBO.dat file contains total berry curvature.
