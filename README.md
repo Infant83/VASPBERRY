@@ -39,3 +39,6 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
 # Contributors
 * Hyun-Jung Kim: Main developer (h.kim@fz-juelich.de, PGI-1/IAS-1, Forschungszentrum Jülich)
 * Sun-Woo Kim: Circular dichroism, Kubo formular (kimsunwoo821@gmail.com, Department of Physics, Sungkyunkwan University)
+
+# Citation of the code:
+@software{Kim_VASPBERRY_2018,author = {Kim, Hyun-Jung},doi = {10.5281/zenodo.1402593},month = {8},title = {{VASPBERRY}},url = {https://github.com/Infant83/VASPBERRY},version = {1.0},year = {2018}}
