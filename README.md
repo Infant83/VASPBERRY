@@ -35,6 +35,7 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
 # Example
 * 1H-MoS2 : Berry curvature and Chern number
 * Quantum Anomalous Hall effect (Trypheny-lead lattice) : See H.-J. Kim, C. Li, J. Feng, J.-H. Cho, and Z. Zhang, PRB 93, 041404(R) (2016) (the example files will be provided upon request)
+* Circular dichroism : See S.-W. Kim, H.-J. Kim, S. Cheon, and T.-H. Kim, Phys. Rev. Lett. accepted (2021) (the example will be provided upon reasonable request).
 
 # Contributors
 * Hyun-Jung Kim: Main developer (h.kim@fz-juelich.de, PGI-1/IAS-1, Forschungszentrum Jülich)
