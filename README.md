@@ -46,3 +46,19 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
 
 # Citation of the code:
 @software{Kim_VASPBERRY_2018,author = {Kim, Hyun-Jung},doi = {10.5281/zenodo.1402593},month = {8},title = {{VASPBERRY}},url = {https://github.com/Infant83/VASPBERRY},version = {1.0},year = {2018}}
+@article{PhysRevLett.128.046401,
+  title = {Circular Dichroism of Emergent Chiral Stacking Orders in Quasi-One-Dimensional Charge Density Waves},
+  author = {Kim, Sun-Woo and Kim, Hyun-Jung and Cheon, Sangmo and Kim, Tae-Hwan},
+  journal = {Phys. Rev. Lett.},
+  volume = {128},
+  issue = {4},
+  pages = {046401},
+  numpages = {6},
+  year = {2022},
+  month = {Jan},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevLett.128.046401},
+  url = {https://link.aps.org/doi/10.1103/PhysRevLett.128.046401}
+}
+
+
