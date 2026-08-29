@@ -2295,6 +2295,9 @@
       character*75 filename
       dimension a1(3),a2(3),a3(3)
 
+! The WAVECAR header stores VASP's logical direct-access record length.
+! VASPBERRY must use the same RECL unit as the VASP writer.
+! With ifort, byte RECL requires -assume byterecl for both programs.
       irecl=24
       open(unit=10,file=filename,access='direct',recl=irecl,
      & iostat=iost,status='old')
@@ -2649,8 +2652,21 @@
      &-kp 1"
       write(6,*)"* here, VBM is valence band maximum"
       write(6,*)" "
-      write(6,*)"*Compilation:  gfortran or ifort. "
-      write(6,*)" Flag '-assume byterecl' is required for ifort."
+      write(6,*)"*Compilation: gfortran or ifort."
+      write(6,*)"*WAVECAR compatibility:"
+      write(6,*)" VASP and VASPBERRY must use the same direct-access"
+      write(6,*)" RECL unit. Byte RECL is recommended."
+      write(6,*)" With ifort, compile both VASP and VASPBERRY using"
+      write(6,*)" '-assume byterecl'. The supplied gfortran version"
+      write(6,*)" uses byte RECL."
+      write(6,*)" A RECL mismatch may leave the first WAVECAR header"
+      write(6,*)" valid, but give zero/invalid NKPOINT, NBANDS,"
+      write(6,*)" ENCUT, or NaN lattice vectors."
+      write(6,*)" Preferred fix: rebuild VASP with byte RECL and"
+      write(6,*)" regenerate WAVECAR."
+      write(6,*)" A VASPBERRY built without '-assume byterecl' may"
+      write(6,*)" read such a legacy WAVECAR, but use it only for"
+      write(6,*)" files written with that same RECL convention."
       write(6,*)" for OSX,  -Wl,-stack_size,0x80000000 may be required"
       write(6,*)" ex-noMPI)ifort -fpp -assume byterecl -mkl 
      &-o vaspberry vaspberry.f"

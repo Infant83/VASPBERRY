@@ -3,7 +3,7 @@ Berry curvature and Chern number calculations with the output (WAVECAR) of VASP 
 VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., WAVECAR the Bloch wavefunction information. VASPBERRY can compute Berry curvature and Chern number via Fukui's method [See J. Phys. Soc. Jap. 74, 1674 (2005)]. In addition Circular dichroism also can be evaluated. Since it directly reads the wavefunction coefficients, one can also obtain real space wavefunction character psi_nk(r) by simple command.
 
 # Download Git version
-* git clone --branch master  https://github.com/Infant83/TBFIT.git
+* git clone --branch master  https://github.com/Infant83/VASPBERRY.git
 
 # Compile
 * Serial version : 
@@ -15,6 +15,14 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
     For gfortran, please use vaspberry_gfortran_serial.f for the compilation. This only support non-parallel calculations.
     For the compilation, for example
     > gfortran -L/usr/local/lib/lapack/ -l lapack -o vaspberry vaspberry_gfortran_serial.f
+
+> **WAVECAR compatibility:** The VASP writer and VASPBERRY reader must
+> use the same direct-access `RECL` convention. Byte-based `RECL` is
+> recommended; with Intel Fortran, compile both using
+> `-assume byterecl`. If the first WAVECAR header is readable but
+> `NKPOINT`, `NBANDS`, or `ENCUT` is zero/invalid, or the lattice
+> vectors are `NaN`, suspect a 4-byte `RECL` mismatch. Rebuilding VASP
+> with byte `RECL` and regenerating `WAVECAR` is the preferred fix.
 
 # Features
 * Berry curvature calculation
