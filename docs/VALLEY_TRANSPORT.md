@@ -276,6 +276,17 @@ Map plots preserve that offset in both their image extent and periodic K/K'
 markers. `--min-pw-coverage` (default 0.90) is a hard guard on the common
 plane-wave fraction of every neighboring overlap.
 
+The default `--plot-domain fractional` retains the historical rectangular
+(q_1,q_2) display of one reciprocal primitive parallelogram. The opt-in
+`--plot-domain first-bz` constructs the two-dimensional Wigner--Seitz cell from
+the actual reciprocal vectors, folds the same plaquette values into it, and
+uses Cartesian inverse-Angstrom axes. For a hexagonal reciprocal lattice this
+is the familiar hexagon; all closed-cell boundary representatives are shown,
+so the corners alternate between three equivalent K images and three
+equivalent K' images. **This option changes only the visualization.** Fukui
+loops, Chern sums, valley masks, and conductivity integrations remain on the
+periodic (q_1,q_2) torus, avoiding boundary double counting.
+
 The default map ranges follow `--energy-band N` dynamically: 1:`N-1`, 1:`N`,
 1:`N+1`, `N`, and `N`:`N+1`. Raw export and plotting require band `N+1` for
 the reported upper energy/gap and pair maps. `--transport-t0` additionally
@@ -305,6 +316,81 @@ python tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 \
   --valley-kp 0.3333333,0.6666667,0 --plot
 ```
 
+### Full represented-band energy scan, including VBM holes
+
+The three-manifold `--transport-t0` path intentionally assumes that 1:`N-1`
+is fully occupied. It must not be extended into the valence bands. To scan
+holes through every represented valence band, use the separate opt-in form
+`--transport-full-t0 MAX_BAND`. For example, if band 18 is the VBM and band 19
+is the CBM:
+
+```bash
+python tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 \
+  --energy-band 18 --output-dir full_valence_scan \
+  --transport-full-t0 18 --mu-min -8.0 --mu-max 0.40 --mu-num 1001 \
+  --valley-k 0.6666667,0.3333333,0 \
+  --valley-kp 0.3333333,0.6666667,0 --plot --plot-domain first-bz
+```
+
+This command calculates the determinant-link Fukui flux `Phi_n` of every
+leading subspace 1:`n`, for `n=1,...,MAX_BAND`. At each plaquette vertex it
+counts all represented eigenvalues satisfying `E_n(k) <= mu` and evaluates
+
+\[
+\bar\phi_p(\mu)=\frac{1}{4}\sum_{i=1}^4
+\phi_p^{\left(1:N_{\rm occ}(\mathbf{k}_i,\mu)\right)},\qquad
+\frac{\sigma_{xy}(\mu)}{e^2/h}=-\frac{1}{2\pi}\sum_p\bar\phi_p(\mu).
+\]
+
+This is a cumulative occupied-subspace calculation, not a sum of arbitrarily
+defined single-band curvatures. An exactly degenerate group enters together.
+Internal crossings inside 1:`n` are allowed, while a small or zero gap across
+the active `n | n+1` boundary makes that subspace invalid. The implementation
+forms the full 1:`MAX_BAND` overlap once per directed link and obtains each
+leading determinant block without rereading all lower-band coefficients.
+
+Band `MAX_BAND+1` is mandatory as an unoccupied sentinel, and `mu_max` must be
+strictly below its global minimum. The diagnostics also report whether the
+requested range reaches a positive indirect-gap plateau above `MAX_BAND`. On
+that plateau the result must reproduce the fully occupied 1:`MAX_BAND` Chern
+number exactly. The CSV includes both absolute conductivity and conductivity
+relative to that full-bundle baseline, which is the useful hole-induced change
+when `MAX_BAND` is the VBM.
+
+Quality is not checked only at the requested uniform `mu` points. The code also
+audits every exact occupation interval `[E_n,E_(n+1))` intersecting the
+continuous requested energy range. This catches narrow unsafe intervals that a
+1 meV grid could step over. Rejection uses nonfinite/singular links, link
+singular values, boundary gaps, and each selected cumulative plaquette phase.
+Opposite-sign but individually branch-safe phases are not rejected merely
+because their span is large. Diagnostics identify the occupied count, cell,
+vertex, and exact half-open occupation interval. The full `MAX_BAND` bundle is
+separately required to be a finite, nonsingular, branch-safe reference for the
+relative curves. The default refuses `transport_full_t0.csv` if that reference,
+a sampled point, or any intervening occupation-event interval fails.
+`--allow-invalid-transport` writes only an explicitly labeled diagnostic curve
+and shades rejected intervals red; it cannot manufacture a relative baseline
+when the `MAX_BAND` phase itself is undefined.
+
+The output quantities must be distinguished:
+
+- `transport_full_t0.csv` and `wavecar_fukui_sigma_full_mu.png` are the
+  implemented **cumulative** `sigma_xy(mu)` scan. The figure separates the
+  absolute total/K/K'/contrast curves from a second panel showing their change
+  relative to the fully occupied `MAX_BAND` bundle, so a near-VBM hole response
+  is not hidden under the full-valence valley baseline;
+- a spectral density such as `d sigma_xy / d mu` is **not** currently
+  implemented. Numerically differentiating a zero-temperature 12x12 result
+  produces mesh-dependent steps or spikes and must not be presented as a
+  smooth physical spectrum;
+- a selected-`mu` k-resolved transport-density map is also not emitted by this
+  full-scan mode. The fixed-subspace `fukui_*.csv` maps are Berry-flux maps, not
+  a Fermi-weighted spectral conductivity density.
+
+`MAX_BAND` refers to bands represented in the WAVECAR. Frozen PAW core states
+are not reconstructed. A 12x12 scan is a diagnostic calculation; quantitative
+valley transport requires a full-BZ mesh-convergence study.
+
 The K coordinates above are only examples. With no radius, every nontied cell is
 assigned to the nearest periodic K or K' center. `--valley-radius R` instead
 creates disjoint K/K'/outside masks in inverse Angstrom.
@@ -317,6 +403,10 @@ valley contains no plaquette center.
 Periodic distances and the K-to-K' line image use an exact two-dimensional
 closest-lattice-vector search after Gauss reduction, so highly skew or
 non-reduced reciprocal bases are not limited to an unsafe fixed image stencil.
+Consequently, this line is the **shortest periodic-image K-to-K' cut**. In a
+hexagonal BZ it normally joins adjacent K and K' corners and is not the
+opposite-corner high-symmetry \(K-\Gamma-K'\) path. Use a separately declared
+multi-segment path when the latter is the intended observable.
 
 The transport command first treats the fully occupied 1:`N-1` valence manifold
 as a hard global baseline. Its minimum link singular value, minimum direct gap
@@ -359,8 +449,8 @@ With `--plot`, the direct tool writes:
 - `wavecar_fukui_kresolved.png`: energy, cumulative curvature, link quality,
   and neighbor-gap maps with K/K' marked. Every diverging curvature panel uses
   symmetric limits about zero so white always means zero;
-- `wavecar_fukui_line_K_Kp.png`: the periodic shortest K-to-K' energy and
-  curvature line cut;
+- `wavecar_fukui_line_K_Kp.png`: the shortest periodic-image K-to-K' energy and
+  curvature cut, not an implied \(K-\Gamma-K'\) high-symmetry path;
 - `wavecar_fukui_sigma_mu.png`: the T=0 net/K/K'/contrast scan. Rejected
   chemical potentials are drawn with dotted low-alpha curves and red markers.
 

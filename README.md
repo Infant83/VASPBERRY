@@ -54,13 +54,24 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
   To request a guarded zero-temperature chemical-potential scan, add for example:
 > python tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 --energy-band 19 --output-dir direct_transport --transport-t0 --mu-min 0.40 --mu-max 0.55 --mu-num 151 --valley-k 0.6666667,0.3333333,0 --valley-kp 0.3333333,0.6666667,0 --plot
 
+  To scan every represented occupied subspace through a VBM at band 18,
+  including hole occupations, use the separate full-window mode. Band 19 is
+  retained as the mandatory unoccupied sentinel:
+> python tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 --energy-band 18 --output-dir full_valence_scan --transport-full-t0 18 --mu-min -8.0 --mu-max 0.40 --mu-num 1001 --valley-k 0.6666667,0.3333333,0 --valley-kp 0.3333333,0.6666667,0 --plot --plot-domain first-bz
+
+  This output is cumulative `sigma_xy(mu)`. It does not claim a smooth
+  `d sigma_xy/d mu` spectral density or a selected-mu k-resolved transport map;
+  on a 12x12 mesh those require separate convergence and representation work.
+
   See the [valley-transport guide](docs/VALLEY_TRANSPORT.md) before interpreting
   a single-band or transport result. The
   guarded transport path refuses active plaquettes with nearly singular links,
-  insufficient band isolation, or branch-risk phases. It also validates the
-  fully occupied valence baseline globally and requires the chemical-potential
-  window to remain above the VBM and below the first unrepresented band.
-  Existing Fortran output and default calculations are unchanged.
+  insufficient band isolation, or branch-risk phases. The three-manifold mode
+  validates its fully occupied valence baseline globally and keeps its window
+  above the VBM. The full-window mode instead validates the `MAX_BAND` reference
+  bundle globally and keeps `mu_max` below the `MAX_BAND+1` sentinel.
+  Existing Fortran Fukui output and default calculations are unchanged; the
+  opt-in spin-polarized Kubo path includes an independent accumulator fix.
 
 # Example
 * 1H-MoS2 : Berry curvature and Chern number

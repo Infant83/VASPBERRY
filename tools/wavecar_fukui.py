@@ -37,6 +37,16 @@ TRANSPORT_OUTPUT_NAMES = (
     "transport_t0_diagnostics.json",
     "wavecar_fukui_sigma_mu.png",
 )
+SHORTEST_K_KP_LINE_TITLE = (
+    "Shortest periodic-image K$\\rightarrow$K' cut "
+    "(not the K$\\rightarrow\\Gamma\\rightarrow$K' path); "
+    "V+1 is diagnostic if link quality fails"
+)
+FULL_TRANSPORT_OUTPUT_NAMES = (
+    "transport_full_t0.csv",
+    "transport_full_t0_diagnostics.json",
+    "wavecar_fukui_sigma_full_mu.png",
+)
 
 
 def json_safe(value: object) -> object:
@@ -504,6 +514,88 @@ def compute_band_map(wavecar: Wavecar, grid: Grid, bands: Sequence[int]) -> tupl
     return plaquette_flux(xlinks, ylinks, grid), xlinks, ylinks
 
 
+def _empty_link_set(shape: tuple[int, int]) -> LinkSet:
+    """Allocate one link container used by the cumulative-band batch path."""
+
+    return LinkSet(
+        phase=np.empty(shape),
+        logabs=np.empty(shape),
+        min_singular=np.empty(shape),
+        max_singular=np.empty(shape),
+        coverage_left=np.empty(shape),
+        coverage_right=np.empty(shape),
+    )
+
+
+def compute_cumulative_links(
+    wavecar: Wavecar,
+    grid: Grid,
+    max_band: int,
+    axis: int,
+) -> dict[int, LinkSet]:
+    """Compute links for every leading subspace 1:n in one WAVECAR pass.
+
+    Reading the overlap matrix for bands 1 through ``max_band`` once per link
+    avoids rereading the same coefficient records for every cumulative
+    subspace.  The leading principal block is the overlap matrix for 1:n.
+    Internal degeneracies are therefore kept inside the determinant subspace;
+    isolation from band n+1 is checked later wherever that subspace is used.
+    """
+
+    if axis not in (0, 1):
+        raise ValueError("cumulative link axis must be 0 or 1")
+    if not (1 <= max_band <= wavecar.header.nbands):
+        raise ValueError(
+            f"cumulative max band {max_band} is outside 1:{wavecar.header.nbands}"
+        )
+    shape = (grid.nx, grid.ny)
+    result = {band: _empty_link_set(shape) for band in range(1, max_band + 1)}
+    bands = list(range(1, max_band + 1))
+    step = np.zeros(3)
+    step[axis] = 1.0 / (grid.nx if axis == 0 else grid.ny)
+    for ix in range(grid.nx):
+        for iy in range(grid.ny):
+            ik_left = int(grid.index[ix, iy])
+            jx = (ix + 1) % grid.nx if axis == 0 else ix
+            jy = (iy + 1) % grid.ny if axis == 1 else iy
+            ik_right = int(grid.index[jx, jy])
+            desired_right = wavecar.kpoints[ik_left] + step
+            matrix, coverage_left, coverage_right = link_matrix(
+                wavecar, ik_left, ik_right, bands, desired_right
+            )
+            for band, links in result.items():
+                block = matrix[:band, :band]
+                sign, logabs = np.linalg.slogdet(block)
+                if sign == 0:
+                    links.phase[ix, iy] = np.nan
+                    links.logabs[ix, iy] = -np.inf
+                else:
+                    links.phase[ix, iy] = float(np.angle(sign))
+                    links.logabs[ix, iy] = float(logabs)
+                singular = np.linalg.svd(block, compute_uv=False)
+                links.min_singular[ix, iy] = float(singular[-1])
+                links.max_singular[ix, iy] = float(singular[0])
+                links.coverage_left[ix, iy] = coverage_left
+                links.coverage_right[ix, iy] = coverage_right
+    return result
+
+
+def compute_cumulative_band_maps(
+    wavecar: Wavecar,
+    grid: Grid,
+    max_band: int,
+) -> dict[int, tuple[np.ndarray, LinkSet, LinkSet]]:
+    """Return Fukui maps for every gauge-covariant subspace 1:n, n<=N."""
+
+    xlinks = compute_cumulative_links(wavecar, grid, max_band, axis=0)
+    ylinks = compute_cumulative_links(wavecar, grid, max_band, axis=1)
+    return {
+        band: (plaquette_flux(xlinks[band], ylinks[band], grid),
+               xlinks[band], ylinks[band])
+        for band in range(1, max_band + 1)
+    }
+
+
 def vertex_indices(grid: Grid, ix: int, iy: int) -> tuple[int, int, int, int]:
     ix1, iy1 = (ix + 1) % grid.nx, (iy + 1) % grid.ny
     return (
@@ -961,6 +1053,59 @@ def cumulative_t0_effective_phi(
     return effective_phi, count0, count1, count2
 
 
+def full_cumulative_t0_effective_phi(
+    phi_by_occupied_count: np.ndarray,
+    band_energy_vertices: np.ndarray,
+    mu_ev: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Average cumulative-subspace phases selected at all four vertices.
+
+    ``phi_by_occupied_count[n]`` is the plaquette phase of bands 1:n and
+    index zero is the exact empty-subspace phase.  ``band_energy_vertices``
+    has shape ``(max_band, nx, ny, 4)``.  Counting all energies ``E <= mu``
+    makes an exactly degenerate group enter together and never forms an
+    arbitrary band-by-band Berry-curvature sum inside that group.
+    """
+
+    if not math.isfinite(float(mu_ev)):
+        raise ValueError("chemical potential must be finite")
+    if (
+        phi_by_occupied_count.ndim != 3
+        or band_energy_vertices.ndim != 4
+        or band_energy_vertices.shape[0] + 1 != phi_by_occupied_count.shape[0]
+        or band_energy_vertices.shape[1:3] != phi_by_occupied_count.shape[1:]
+        or band_energy_vertices.shape[3] != 4
+    ):
+        raise ValueError(
+            "full cumulative transport requires phases 0:N and four energy "
+            "vertices for bands 1:N"
+        )
+    if not np.all(np.isfinite(band_energy_vertices)):
+        raise ValueError("full cumulative transport band energies must be finite")
+    if not np.all(phi_by_occupied_count[0] == 0.0):
+        raise ValueError("empty occupied subspace must have exactly zero phase")
+    if np.any(np.diff(band_energy_vertices, axis=0) < 0.0):
+        raise ValueError("band energies must be nondecreasing at every vertex")
+
+    occupied_count = np.sum(
+        band_energy_vertices <= float(mu_ev), axis=0, dtype=np.int64
+    )
+    nx, ny = phi_by_occupied_count.shape[1:]
+    ix = np.arange(nx)[:, None]
+    iy = np.arange(ny)[None, :]
+    effective_phi = np.zeros((nx, ny), dtype=float)
+    for vertex in range(4):
+        # A nonfinite map is permitted to exist outside the requested
+        # occupation window. If selected, the writer's active-cell quality
+        # gate records and refuses it instead of treating NaN as a passing
+        # comparison.
+        effective_phi += phi_by_occupied_count[
+            occupied_count[:, :, vertex], ix, iy
+        ]
+    effective_phi /= 4.0
+    return effective_phi, occupied_count
+
+
 def remove_stale_transport_outputs(output_dir: Path) -> None:
     """Remove only transport artifacts that could be mistaken for this run."""
 
@@ -979,6 +1124,7 @@ def planned_output_names(
     maps: Sequence[tuple[str, Sequence[int]]],
     plot: bool,
     transport_t0: bool,
+    transport_full_t0: bool = False,
 ) -> set[str]:
     """Return every fixed artifact name that this invocation can overwrite."""
 
@@ -991,6 +1137,9 @@ def planned_output_names(
     if transport_t0:
         # The sigma plot is removed as stale even when this run omits --plot.
         names.update(TRANSPORT_OUTPUT_NAMES)
+    if transport_full_t0:
+        # Likewise, never leave an old full-window curve after a refused run.
+        names.update(FULL_TRANSPORT_OUTPUT_NAMES)
     return names
 
 
@@ -1312,6 +1461,623 @@ def write_t0_transport(
         writer.writerows(rows)
 
 
+def write_full_t0_transport(
+    output_dir: Path,
+    wavecar: Wavecar,
+    grid: Grid,
+    max_band: int,
+    mu_min: float,
+    mu_max: float,
+    mu_num: int,
+    valley_k: np.ndarray,
+    valley_kp: np.ndarray,
+    valley_radius: float | None,
+    min_link_sv: float,
+    min_neighbor_gap_ev: float,
+    min_pw_coverage: float,
+    max_abs_phi: float,
+    allow_invalid: bool,
+) -> None:
+    """Write absolute T=0 sigma(mu) from all cumulative subspaces 1:n.
+
+    Band ``max_band + 1`` is a mandatory unoccupied sentinel.  The method can
+    therefore span any represented valence bands, an insulating gap, and
+    selected conduction bands without assigning Berry curvature to individual
+    members of a degenerate group.
+    """
+
+    wavecar_path = getattr(wavecar, "path", None)
+    if wavecar_path is not None:
+        validate_input_output_collision(
+            Path(wavecar_path), output_dir, FULL_TRANSPORT_OUTPUT_NAMES
+        )
+    remove_planned_outputs(output_dir, FULL_TRANSPORT_OUTPUT_NAMES)
+    if not (1 <= max_band < wavecar.header.nbands):
+        raise ValueError(
+            "--transport-full-t0 MAX_BAND requires 1 <= MAX_BAND < NBANDS "
+            "because MAX_BAND+1 is the upper occupation sentinel"
+        )
+    if not (math.isfinite(mu_min) and math.isfinite(mu_max)):
+        raise ValueError("mu_min and mu_max must be finite")
+    if mu_num < 2 or mu_max <= mu_min:
+        raise ValueError("full transport requires mu_num>=2 and mu_max>mu_min")
+    for option, value in (
+        ("min_link_sv", min_link_sv),
+        ("min_neighbor_gap_ev", min_neighbor_gap_ev),
+        ("min_pw_coverage", min_pw_coverage),
+        ("max_abs_phi", max_abs_phi),
+    ):
+        if not math.isfinite(value):
+            raise ValueError(f"{option} must be finite")
+    if min_link_sv < 0.0 or min_neighbor_gap_ev < 0.0:
+        raise ValueError("link and neighbor-gap thresholds must be nonnegative")
+    if not (0.0 <= min_pw_coverage <= 1.0):
+        raise ValueError("min_pw_coverage must be in [0, 1]")
+    if not (0.0 < max_abs_phi < np.pi):
+        raise ValueError("max_abs_phi must be in (0, pi)")
+
+    represented_energies = np.asarray(
+        wavecar.energies[:, : max_band + 1], dtype=float
+    )
+    if not np.all(np.isfinite(represented_energies)):
+        raise ValueError("full transport energy window contains nonfinite band energies")
+    if np.any(np.diff(represented_energies, axis=1) < 0.0):
+        raise ValueError("WAVECAR band energies are not nondecreasing")
+    sentinel_min = float(np.min(represented_energies[:, max_band]))
+    max_bundle_energy_max = float(
+        np.max(represented_energies[:, max_band - 1])
+    )
+    indirect_gap_above_max_bundle = sentinel_min - max_bundle_energy_max
+    if mu_max >= sentinel_min:
+        raise ValueError(
+            f"mu_max={mu_max:.9g} eV reaches sentinel band {max_band + 1} "
+            f"(minimum {sentinel_min:.9g} eV); increase MAX_BAND before "
+            "extending the transport window"
+        )
+    cumulative_maps = compute_cumulative_band_maps(wavecar, grid, max_band)
+    phi_by_count = np.zeros((max_band + 1, grid.nx, grid.ny), dtype=float)
+    link_by_count = np.full_like(phi_by_count, math.inf)
+    gap_by_count = np.full_like(phi_by_count, math.inf)
+    phase_abs_by_count = np.zeros_like(phi_by_count)
+    finite_by_count = np.ones_like(phi_by_count, dtype=bool)
+    map_summaries: list[dict[str, object]] = []
+    cumulative_map_numeric_issues: list[dict[str, object]] = []
+    minimum_coverage = math.inf
+    nonfinite_coverage = False
+    for band in range(1, max_band + 1):
+        flux, xlinks, ylinks = cumulative_maps[band]
+        phi_by_count[band] = flux
+        link_by_count[band] = cell_min_link_singular_value(xlinks, ylinks, grid)
+        phase_abs_by_count[band] = np.abs(flux)
+        for ix in range(grid.nx):
+            for iy in range(grid.ny):
+                vertices = vertex_indices(grid, ix, iy)
+                gap_by_count[band, ix, iy] = min(
+                    float(
+                        wavecar.energies[ik, band]
+                        - wavecar.energies[ik, band - 1]
+                    )
+                    for ik in vertices
+                )
+        finite_by_count[band] = (
+            np.isfinite(flux)
+            & np.isfinite(link_by_count[band])
+            & (link_by_count[band] > 0.0)
+        )
+        bad_cells = np.argwhere(~finite_by_count[band])
+        if len(bad_cells):
+            cumulative_map_numeric_issues.append(
+                {
+                    "occupied_band_count": band,
+                    "invalid_cell_count": int(len(bad_cells)),
+                    "invalid_cell_ids": [
+                        int(iy * grid.nx + ix + 1)
+                        for ix, iy in bad_cells[:20]
+                    ],
+                }
+            )
+        coverage_values = np.concatenate(
+            (
+                xlinks.coverage_left.ravel(), xlinks.coverage_right.ravel(),
+                ylinks.coverage_left.ravel(), ylinks.coverage_right.ravel(),
+            )
+        )
+        nonfinite_coverage = nonfinite_coverage or not bool(
+            np.all(np.isfinite(coverage_values))
+        )
+        finite_coverage = coverage_values[np.isfinite(coverage_values)]
+        if finite_coverage.size:
+            minimum_coverage = min(
+                minimum_coverage, float(np.min(finite_coverage))
+            )
+        with np.errstate(divide="ignore", invalid="ignore"):
+            summary = map_summary(
+                f"occ_{band}", list(range(1, band + 1)), flux,
+                xlinks, ylinks, min_pw_coverage
+            )
+        map_summaries.append(summary)
+
+    max_bundle_phase_finite = bool(
+        np.all(np.isfinite(phi_by_count[max_band]))
+    )
+    max_bundle_link_finite_nonzero = bool(
+        np.all(np.isfinite(link_by_count[max_band]))
+        and np.all(link_by_count[max_band] > 0.0)
+    )
+    max_bundle_min_link = float(np.min(link_by_count[max_band]))
+    max_bundle_min_gap = float(np.min(gap_by_count[max_band]))
+    max_bundle_max_abs_phi = float(np.max(phase_abs_by_count[max_band]))
+    max_bundle_quality = {
+        "phase_finite": max_bundle_phase_finite,
+        "links_finite_and_nonsingular": max_bundle_link_finite_nonzero,
+        "min_link_singular_value": max_bundle_min_link,
+        "min_link_pass": bool(
+            max_bundle_link_finite_nonzero
+            and max_bundle_min_link >= min_link_sv
+        ),
+        "min_gap_to_sentinel_ev": max_bundle_min_gap,
+        "min_gap_to_sentinel_pass": bool(
+            math.isfinite(max_bundle_min_gap)
+            and max_bundle_min_gap >= min_neighbor_gap_ev
+        ),
+        "max_abs_phi_rad": max_bundle_max_abs_phi,
+        "principal_branch_margin_pass": bool(
+            math.isfinite(max_bundle_max_abs_phi)
+            and max_bundle_max_abs_phi <= max_abs_phi
+        ),
+    }
+    max_bundle_quality_pass = bool(
+        max_bundle_quality["phase_finite"]
+        and max_bundle_quality["min_link_pass"]
+        and max_bundle_quality["min_gap_to_sentinel_pass"]
+        and max_bundle_quality["principal_branch_margin_pass"]
+    )
+    max_bundle_quality["quality_pass"] = max_bundle_quality_pass
+
+    diagnostics_path = output_dir / "transport_full_t0_diagnostics.json"
+    if nonfinite_coverage:
+        write_strict_json(
+            diagnostics_path,
+            {
+                "method": "all-band Sawahata-style T=0 cumulative-subspace average",
+                "max_cumulative_band": max_band,
+                "validated": False,
+                "failure": "nonfinite common plane-wave coverage",
+                "cumulative_map_numeric_issues": cumulative_map_numeric_issues,
+                "max_bundle_quality": max_bundle_quality,
+                "cumulative_maps": map_summaries,
+            },
+        )
+        raise RuntimeError(
+            "full cumulative transport encountered nonfinite common plane-wave "
+            f"coverage; {diagnostics_path.name} was written but output was refused"
+        )
+    if minimum_coverage < min_pw_coverage:
+        write_strict_json(
+            diagnostics_path,
+            {
+                "method": "all-band Sawahata-style T=0 cumulative-subspace average",
+                "max_cumulative_band": max_band,
+                "minimum_plane_wave_coverage": minimum_coverage,
+                "required_plane_wave_coverage": min_pw_coverage,
+                "validated": False,
+                "failure": "plane-wave coverage below threshold",
+                "cumulative_map_numeric_issues": cumulative_map_numeric_issues,
+                "max_bundle_quality": max_bundle_quality,
+                "cumulative_maps": map_summaries,
+            },
+        )
+        raise RuntimeError(
+            "full cumulative transport failed the common plane-wave coverage "
+            f"gate ({minimum_coverage:.6g} < {min_pw_coverage:.6g}); "
+            f"{diagnostics_path.name} was written but transport output was refused"
+        )
+    if not max_bundle_phase_finite:
+        write_strict_json(
+            diagnostics_path,
+            {
+                "method": (
+                    "all-band Sawahata-style T=0 cumulative-subspace average"
+                ),
+                "max_cumulative_band": max_band,
+                "validated": False,
+                "failure": (
+                    "full MAX_BAND reference bundle has undefined/nonfinite "
+                    "plaquette phase"
+                ),
+                "cumulative_map_numeric_issues": cumulative_map_numeric_issues,
+                "max_bundle_quality": max_bundle_quality,
+                "cumulative_maps": map_summaries,
+            },
+        )
+        raise RuntimeError(
+            "full cumulative transport has an undefined/nonfinite MAX_BAND "
+            "reference phase; the relative conductivity baseline cannot be "
+            f"formed, so {diagnostics_path.name} was written and output was refused"
+        )
+
+    energy_vertices = np.empty((max_band, grid.nx, grid.ny, 4), dtype=float)
+    for band in range(max_band):
+        for ix in range(grid.nx):
+            for iy in range(grid.ny):
+                vertices = vertex_indices(grid, ix, iy)
+                energy_vertices[band, ix, iy] = [
+                    wavecar.energies[ik, band] for ik in vertices
+                ]
+
+    mask_k, mask_kp, mask_outside, distance_k, distance_kp = make_valley_partition(
+        wavecar, grid, valley_k, valley_kp, valley_radius
+    )
+    if not np.all(
+        mask_k.astype(np.int8)
+        + mask_kp.astype(np.int8)
+        + mask_outside.astype(np.int8)
+        == 1
+    ):
+        raise RuntimeError("full-transport valley masks are not exclusive and exhaustive")
+
+    # A uniform mu grid can step over a very narrow avoided crossing.  Audit
+    # every occupation-event interval in the requested continuous range, in
+    # addition to validating the explicitly sampled chemical potentials.
+    continuous_invalid_events: list[dict[str, object]] = []
+    invalid_interval_fragments: list[tuple[float, float]] = []
+    for band in range(1, max_band + 1):
+        finite_failure_for_band = ~finite_by_count[band]
+        link_failure_for_band = link_by_count[band] < min_link_sv
+        gap_failure_for_band = gap_by_count[band] < min_neighbor_gap_ev
+        phase_failure_for_band = phase_abs_by_count[band] > max_abs_phi
+        failed_cells = np.argwhere(
+            finite_failure_for_band
+            | link_failure_for_band
+            | gap_failure_for_band
+            | phase_failure_for_band
+        )
+        for ix, iy in failed_cells:
+            lower = energy_vertices[band - 1, ix, iy]
+            if band < max_band:
+                upper = energy_vertices[band, ix, iy]
+            else:
+                vertices = vertex_indices(grid, int(ix), int(iy))
+                upper = np.asarray(
+                    [wavecar.energies[ik, max_band] for ik in vertices],
+                    dtype=float,
+                )
+            for vertex in range(4):
+                # Occupation count n is selected on [E_n, E_(n+1)).  The
+                # requested scan interval is closed at both endpoints.
+                if (
+                    lower[vertex] < upper[vertex]
+                    and mu_max >= lower[vertex]
+                    and mu_min < upper[vertex]
+                ):
+                    lo = max(mu_min, float(lower[vertex]))
+                    hi = min(mu_max, float(upper[vertex]))
+                    if lo <= hi:
+                        invalid_interval_fragments.append((lo, hi))
+                        continuous_invalid_events.append(
+                            {
+                                "occupied_band_count": band,
+                                "cell_id": int(iy * grid.nx + ix + 1),
+                                "vertex": vertex,
+                                "mu_interval_lower_ev": lo,
+                                "mu_interval_upper_ev": hi,
+                                "lower_bound_inclusive": True,
+                                "upper_bound_inclusive": bool(
+                                    hi == mu_max and mu_max < upper[vertex]
+                                ),
+                                "occupation_interval_convention": "[E_n,E_(n+1))",
+                                "nonfinite_or_singular_failure": bool(
+                                    finite_failure_for_band[ix, iy]
+                                ),
+                                "link_failure": bool(link_failure_for_band[ix, iy]),
+                                "gap_failure": bool(gap_failure_for_band[ix, iy]),
+                                "phase_failure": bool(phase_failure_for_band[ix, iy]),
+                                "min_link_sv": float(link_by_count[band, ix, iy]),
+                                "min_neighbor_gap_ev": float(gap_by_count[band, ix, iy]),
+                                "abs_phi_rad": float(phase_abs_by_count[band, ix, iy]),
+                            }
+                        )
+
+    merged_invalid_intervals: list[list[float]] = []
+    for lo, hi in sorted(invalid_interval_fragments):
+        if not merged_invalid_intervals or lo > merged_invalid_intervals[-1][1]:
+            merged_invalid_intervals.append([lo, hi])
+        else:
+            merged_invalid_intervals[-1][1] = max(
+                merged_invalid_intervals[-1][1], hi
+            )
+    continuous_range_validated = not continuous_invalid_events
+
+    rows: list[dict[str, float | int | str]] = []
+    invalid_rows: list[dict[str, object]] = []
+    two_pi = 2.0 * np.pi
+    max_bundle_chern = float(np.sum(phi_by_count[max_band]) / two_pi)
+    max_bundle_chern_k = float(np.sum(phi_by_count[max_band][mask_k]) / two_pi)
+    max_bundle_chern_kp = float(np.sum(phi_by_count[max_band][mask_kp]) / two_pi)
+    max_bundle_chern_outside = float(
+        np.sum(phi_by_count[max_band][mask_outside]) / two_pi
+    )
+    max_bundle_chern_nearest_integer = int(round(max_bundle_chern))
+    max_bundle_chern_nearest_integer_residual = abs(
+        max_bundle_chern - max_bundle_chern_nearest_integer
+    )
+    max_bundle_sigma = -max_bundle_chern
+    max_bundle_sigma_k = -max_bundle_chern_k
+    max_bundle_sigma_kp = -max_bundle_chern_kp
+    max_bundle_sigma_outside = -max_bundle_chern_outside
+    max_bundle_sigma_valley_contrast = max_bundle_sigma_k - max_bundle_sigma_kp
+    for mu in np.linspace(mu_min, mu_max, mu_num):
+        effective_phi, occupied_count = full_cumulative_t0_effective_phi(
+            phi_by_count, energy_vertices, float(mu)
+        )
+        used = np.zeros_like(phi_by_count, dtype=bool)
+        for band in range(max_band + 1):
+            used[band] = np.any(occupied_count == band, axis=2)
+        used_nonempty = used[1:]
+        finite_failure = np.any(
+            used_nonempty & ~finite_by_count[1:], axis=0
+        )
+        link_failure = np.any(
+            used_nonempty & (link_by_count[1:] < min_link_sv), axis=0
+        )
+        gap_failure = np.any(
+            used_nonempty & (gap_by_count[1:] < min_neighbor_gap_ev), axis=0
+        )
+        phase_failure = np.any(
+            used_nonempty & (phase_abs_by_count[1:] > max_abs_phi), axis=0
+        )
+        invalid_cells = finite_failure | link_failure | gap_failure | phase_failure
+        quality_pass = not bool(np.any(invalid_cells))
+
+        selected_links = np.where(used_nonempty, link_by_count[1:], math.inf)
+        selected_gaps = np.where(used_nonempty, gap_by_count[1:], math.inf)
+        selected_phases = np.where(used_nonempty, phase_abs_by_count[1:], 0.0)
+        worst_link = float(np.min(selected_links))
+        worst_gap = float(np.min(selected_gaps))
+        worst_phi = float(np.max(selected_phases))
+        if not quality_pass:
+            ids = np.argwhere(invalid_cells)
+            invalid_rows.append(
+                {
+                    "mu_ev": float(mu),
+                    "worst_link_sv": worst_link,
+                    "worst_neighbor_gap_ev": worst_gap,
+                    "max_abs_phi_rad": worst_phi,
+                    "link_failure_cell_count": int(np.count_nonzero(link_failure)),
+                    "gap_failure_cell_count": int(np.count_nonzero(gap_failure)),
+                    "phase_failure_cell_count": int(np.count_nonzero(phase_failure)),
+                    "nonfinite_or_singular_failure_cell_count": int(
+                        np.count_nonzero(finite_failure)
+                    ),
+                    "invalid_cell_count": int(len(ids)),
+                    "invalid_cell_ids": [
+                        int(iy * grid.nx + ix + 1) for ix, iy in ids[:20]
+                    ],
+                }
+            )
+
+        transport_finite = bool(np.all(np.isfinite(effective_phi)))
+        if transport_finite:
+            chern_total = float(np.sum(effective_phi) / two_pi)
+            chern_k = float(np.sum(effective_phi[mask_k]) / two_pi)
+            chern_kp = float(np.sum(effective_phi[mask_kp]) / two_pi)
+            chern_outside = float(np.sum(effective_phi[mask_outside]) / two_pi)
+        else:
+            chern_total = chern_k = chern_kp = chern_outside = None
+
+        def finite_difference(value: float | None, baseline: float) -> float | str:
+            if value is None or not math.isfinite(baseline):
+                return ""
+            return value - baseline
+
+        rows.append(
+            {
+                "mu_eV": float(mu),
+                "quality": "PASS" if quality_pass else "INVALID",
+                "continuous_scan_quality": (
+                    "PASS" if continuous_range_validated
+                    else "CONTAINS_INVALID_SUBINTERVALS"
+                ),
+                "occupied_band_count_min": int(np.min(occupied_count)),
+                "occupied_band_count_max": int(np.max(occupied_count)),
+                "active_cell_count": int(np.count_nonzero(np.any(used_nonempty, axis=0))),
+                "nonfinite_or_singular_active_cell_count": int(
+                    np.count_nonzero(finite_failure)
+                ),
+                "link_failure_active_cell_count": int(
+                    np.count_nonzero(link_failure)
+                ),
+                "gap_failure_active_cell_count": int(
+                    np.count_nonzero(gap_failure)
+                ),
+                "phase_failure_active_cell_count": int(
+                    np.count_nonzero(phase_failure)
+                ),
+                "worst_active_link_sv": (
+                    worst_link if math.isfinite(worst_link) else ""
+                ),
+                "worst_active_neighbor_gap_eV": (
+                    worst_gap if math.isfinite(worst_gap) else ""
+                ),
+                "max_active_abs_phi_rad": (
+                    worst_phi if math.isfinite(worst_phi) else ""
+                ),
+                "chern_total": chern_total if chern_total is not None else "",
+                "sigma_total_e2_over_h": (
+                    -chern_total if chern_total is not None else ""
+                ),
+                "chern_K": chern_k if chern_k is not None else "",
+                "chern_Kp": chern_kp if chern_kp is not None else "",
+                "chern_outside": chern_outside if chern_outside is not None else "",
+                "sigma_K_e2_over_h": -chern_k if chern_k is not None else "",
+                "sigma_Kp_e2_over_h": -chern_kp if chern_kp is not None else "",
+                "sigma_outside_e2_over_h": (
+                    -chern_outside if chern_outside is not None else ""
+                ),
+                "sigma_valley_contrast_e2_over_h": (
+                    -chern_k + chern_kp if chern_k is not None else ""
+                ),
+                "sigma_relative_to_full_max_bundle_e2_over_h": (
+                    finite_difference(
+                        -chern_total if chern_total is not None else None,
+                        max_bundle_sigma,
+                    )
+                ),
+                "sigma_K_relative_to_full_max_bundle_e2_over_h": (
+                    finite_difference(
+                        -chern_k if chern_k is not None else None,
+                        max_bundle_sigma_k,
+                    )
+                ),
+                "sigma_Kp_relative_to_full_max_bundle_e2_over_h": (
+                    finite_difference(
+                        -chern_kp if chern_kp is not None else None,
+                        max_bundle_sigma_kp,
+                    )
+                ),
+                "sigma_outside_relative_to_full_max_bundle_e2_over_h": (
+                    finite_difference(
+                        -chern_outside if chern_outside is not None else None,
+                        max_bundle_sigma_outside,
+                    )
+                ),
+                "sigma_valley_contrast_relative_to_full_max_bundle_e2_over_h": (
+                    finite_difference(
+                        (-chern_k + chern_kp) if chern_k is not None else None,
+                        max_bundle_sigma_valley_contrast,
+                    )
+                ),
+            }
+        )
+
+    plateau_rows = [
+        row for row in rows
+        if row["occupied_band_count_min"] == max_band
+        and row["occupied_band_count_max"] == max_band
+    ]
+    plateau_validated_rows = [
+        row for row in plateau_rows
+        if row["quality"] == "PASS" and row["chern_total"] != ""
+    ]
+    plateau_max_chern_error = (
+        max(
+            abs(float(row["chern_total"]) - max_bundle_chern)
+            for row in plateau_validated_rows
+        )
+        if plateau_validated_rows else None
+    )
+    plateau_quality_pass = (
+        bool(plateau_rows)
+        and len(plateau_validated_rows) == len(plateau_rows)
+        and max_bundle_quality_pass
+    )
+    validation_failure_reasons: list[str] = []
+    if not max_bundle_quality_pass:
+        validation_failure_reasons.append("MAX_BAND reference bundle quality gate")
+    if invalid_rows:
+        validation_failure_reasons.append("sampled active-cell quality gate")
+    if continuous_invalid_events:
+        validation_failure_reasons.append(
+            "continuous occupation-event interval quality gate"
+        )
+    diagnostics = {
+        "method": "all-band Sawahata-style T=0 cumulative-subspace plaquette average",
+        "occupation_convention": "E <= mu is occupied",
+        "gauge_treatment": (
+            "determinant links of cumulative subspaces 1:n; no isolated-band "
+            "Berry-curvature weighting inside degeneracies"
+        ),
+        "max_cumulative_band": max_band,
+        "sentinel_band": max_band + 1,
+        "sentinel_min_ev": sentinel_min,
+        "max_bundle_energy_max_ev": max_bundle_energy_max,
+        "indirect_gap_above_max_bundle_ev": indirect_gap_above_max_bundle,
+        "positive_indirect_gap_above_max_bundle": (
+            indirect_gap_above_max_bundle > 0.0
+        ),
+        "max_bundle_plateau_in_requested_range": (
+            indirect_gap_above_max_bundle > 0.0
+            and mu_max >= max_bundle_energy_max
+        ),
+        "max_bundle_plateau_sample_count": len(plateau_rows),
+        "max_bundle_plateau_validated_sample_count": len(
+            plateau_validated_rows
+        ),
+        "max_bundle_plateau_quality_pass": plateau_quality_pass,
+        "max_bundle_chern": max_bundle_chern,
+        "max_bundle_chern_nearest_integer": max_bundle_chern_nearest_integer,
+        "max_bundle_chern_nearest_integer_residual": (
+            max_bundle_chern_nearest_integer_residual
+        ),
+        "max_bundle_sigma_e2_over_h": max_bundle_sigma,
+        "max_bundle_sigma_valley_contrast_e2_over_h": (
+            max_bundle_sigma_valley_contrast
+        ),
+        "max_bundle_plateau_max_chern_error": plateau_max_chern_error,
+        "mu_range_ev": [mu_min, mu_max, mu_num],
+        "mu_max_below_sentinel_min": mu_max < sentinel_min,
+        "quality_thresholds": {
+            "min_link_singular_value": min_link_sv,
+            "min_neighbor_gap_ev": min_neighbor_gap_ev,
+            "min_plane_wave_coverage": min_pw_coverage,
+            "max_abs_phi_rad": max_abs_phi,
+        },
+        "minimum_plane_wave_coverage": minimum_coverage,
+        "max_bundle_quality": max_bundle_quality,
+        "cumulative_map_numeric_issues": cumulative_map_numeric_issues,
+        "cumulative_maps": map_summaries,
+        "valley_partition": {
+            "K_fractional": valley_k.tolist(),
+            "Kp_fractional": valley_kp.tolist(),
+            "radius_inv_angstrom": valley_radius,
+            "mode": "radius" if valley_radius is not None else "nearest-center Voronoi",
+            "K_cell_count": int(np.count_nonzero(mask_k)),
+            "Kp_cell_count": int(np.count_nonzero(mask_kp)),
+            "outside_cell_count": int(np.count_nonzero(mask_outside)),
+            "min_center_distance_K_inv_angstrom": float(np.min(distance_k)),
+            "min_center_distance_Kp_inv_angstrom": float(np.min(distance_kp)),
+        },
+        "validation_scope": (
+            "all requested discrete mu points plus every occupation-event "
+            "subinterval in the closed requested mu range"
+        ),
+        "validated": (
+            max_bundle_quality_pass
+            and continuous_range_validated
+            and not invalid_rows
+        ),
+        "validation_failure_reasons": validation_failure_reasons,
+        "max_bundle_reference_validated": max_bundle_quality_pass,
+        "requested_mu_points_validated": not invalid_rows,
+        "continuous_mu_range_validated": continuous_range_validated,
+        "continuous_invalid_event_count": len(continuous_invalid_events),
+        "continuous_invalid_events": continuous_invalid_events,
+        "merged_invalid_mu_intervals_ev": merged_invalid_intervals,
+        "invalid_mu_count": len(invalid_rows),
+        "invalid_mu": invalid_rows,
+    }
+    write_strict_json(diagnostics_path, diagnostics)
+    if (
+        not max_bundle_quality_pass
+        or invalid_rows
+        or continuous_invalid_events
+    ) and not allow_invalid:
+        raise RuntimeError(
+            "full cumulative transport validation failed for the MAX_BAND "
+            "reference, at sampled mu points, or within an occupation-event "
+            "subinterval; "
+            f"{diagnostics_path.name} was written but transport_full_t0.csv was "
+            "refused. Use --allow-invalid-transport only for explicitly "
+            "unvalidated diagnostics."
+        )
+    with (output_dir / "transport_full_t0.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
 def periodic_bilinear_sample(
     values: np.ndarray,
     qpoints: np.ndarray,
@@ -1376,6 +2142,292 @@ def fractional_plot_extent(grid_offset: np.ndarray) -> tuple[float, float, float
     )
 
 
+def reciprocal_plane_frame(reciprocal: np.ndarray) -> np.ndarray:
+    """Return an oriented orthonormal frame spanning reciprocal b1 and b2.
+
+    Rows of the returned 2x3 array are the Cartesian axes used for physical
+    first-Brillouin-zone plots.  This keeps the plotting geometry valid even
+    when the two-dimensional reciprocal plane is not the Cartesian xy plane.
+    """
+
+    basis = np.asarray(reciprocal, dtype=float)
+    if basis.shape != (3, 3) or not np.all(np.isfinite(basis)):
+        raise ValueError("reciprocal basis must be a finite 3x3 array")
+    vector_x = basis[0]
+    norm_x = float(np.linalg.norm(vector_x))
+    normal = np.cross(basis[0], basis[1])
+    norm_normal = float(np.linalg.norm(normal))
+    if norm_x <= 0.0 or norm_normal <= np.finfo(float).eps * norm_x * max(
+        float(np.linalg.norm(basis[1])), 1.0
+    ):
+        raise ValueError("in-plane reciprocal basis must be rank two")
+    vector_x = vector_x / norm_x
+    normal = normal / norm_normal
+    vector_y = np.cross(normal, vector_x)
+    # The cross-product construction should already orient b2 along +y.  Keep
+    # that convention explicit so K/K' plots are deterministic under roundoff.
+    if float(np.dot(basis[1], vector_y)) < 0.0:
+        vector_y = -vector_y
+    return np.stack((vector_x, vector_y))
+
+
+def polygon_signed_area(vertices: np.ndarray) -> float:
+    """Signed area of a two-dimensional polygon."""
+
+    polygon = np.asarray(vertices, dtype=float)
+    if polygon.ndim != 2 or polygon.shape[1] != 2 or polygon.shape[0] < 3:
+        raise ValueError("polygon must contain at least three 2D vertices")
+    return 0.5 * float(
+        np.sum(
+            polygon[:, 0] * np.roll(polygon[:, 1], -1)
+            - polygon[:, 1] * np.roll(polygon[:, 0], -1)
+        )
+    )
+
+
+def clip_convex_polygon_halfplane(
+    vertices: np.ndarray,
+    normal: np.ndarray,
+    limit: float,
+    tolerance: float,
+) -> np.ndarray:
+    """Clip a convex polygon to points satisfying dot(point, normal)<=limit."""
+
+    polygon = np.asarray(vertices, dtype=float)
+    clipped: list[np.ndarray] = []
+    for start, stop in zip(polygon, np.roll(polygon, -1, axis=0)):
+        start_value = float(np.dot(start, normal) - limit)
+        stop_value = float(np.dot(stop, normal) - limit)
+        start_inside = start_value <= tolerance
+        stop_inside = stop_value <= tolerance
+        if start_inside:
+            clipped.append(start)
+        if start_inside != stop_inside:
+            denominator = start_value - stop_value
+            if abs(denominator) <= np.finfo(float).tiny:
+                continue
+            fraction = start_value / denominator
+            clipped.append(start + fraction * (stop - start))
+    if not clipped:
+        return np.empty((0, 2), dtype=float)
+    result = np.asarray(clipped, dtype=float)
+    scale = float(np.max(np.linalg.norm(result, axis=1)))
+    if not math.isfinite(scale) or scale <= 0.0:
+        raise RuntimeError("half-plane clipping produced a degenerate polygon")
+    keep = np.ones(result.shape[0], dtype=bool)
+    for index in range(result.shape[0]):
+        duplicate_tolerance = 64.0 * np.finfo(float).eps * scale
+        if np.linalg.norm(result[index] - result[index - 1]) <= duplicate_tolerance:
+            keep[index] = False
+    return result[keep]
+
+
+def wigner_seitz_polygon_2d(reciprocal: np.ndarray) -> np.ndarray:
+    """Construct the first 2D Brillouin zone as a Wigner--Seitz polygon.
+
+    The reciprocal basis is first Gauss-reduced.  In two dimensions the
+    Voronoi-relevant vectors are contained among short combinations of a
+    reduced basis; the [-2,2]^2 enumeration also supplies redundant guards and
+    is independent of how skew the input b1,b2 happen to be.
+    """
+
+    reciprocal = np.asarray(reciprocal, dtype=float)
+    frame = reciprocal_plane_frame(reciprocal)
+    reduced_cartesian = gauss_reduce_2d_lattice_basis(reciprocal[:2])
+    reduced = reduced_cartesian @ frame.T
+    scale = float(np.max(np.linalg.norm(reduced, axis=1)))
+    if not math.isfinite(scale) or scale <= 0.0:
+        raise ValueError("in-plane reciprocal basis must be finite and rank two")
+    radius = 4.0 * scale
+    polygon = np.asarray(
+        ((-radius, -radius), (radius, -radius), (radius, radius), (-radius, radius)),
+        dtype=float,
+    )
+    candidates: list[np.ndarray] = []
+    for first in range(-2, 3):
+        for second in range(-2, 3):
+            if first == 0 and second == 0:
+                continue
+            vector = first * reduced[0] + second * reduced[1]
+            candidates.append(vector)
+    candidates.sort(key=lambda vector: float(np.dot(vector, vector)))
+    tolerance = 256.0 * np.finfo(float).eps * scale * scale
+    for vector in candidates:
+        limit = 0.5 * float(np.dot(vector, vector))
+        polygon = clip_convex_polygon_halfplane(
+            polygon, vector, limit, tolerance
+        )
+        if polygon.shape[0] < 3:
+            raise RuntimeError("Wigner--Seitz half-plane intersection became empty")
+    area = polygon_signed_area(polygon)
+    if area < 0.0:
+        polygon = polygon[::-1].copy()
+        area = -area
+    expected_area = float(np.linalg.norm(np.cross(reciprocal[0], reciprocal[1])))
+    area_tolerance = 256.0 * np.finfo(float).eps * expected_area
+    if not math.isclose(
+        area, expected_area, rel_tol=2.0e-10, abs_tol=area_tolerance
+    ):
+        raise RuntimeError(
+            "Wigner--Seitz polygon area does not match the reciprocal primitive "
+            f"cell ({area:.12g} versus {expected_area:.12g} A^-2)"
+        )
+    return polygon
+
+
+def fold_fractional_to_first_bz(
+    fractional_point: np.ndarray, reciprocal: np.ndarray
+) -> np.ndarray:
+    """Fold a fractional reciprocal point into the first 2D Brillouin zone."""
+
+    point = np.asarray(fractional_point, dtype=float)
+    if point.shape != (3,) or not np.all(np.isfinite(point)):
+        raise ValueError(
+            "fractional reciprocal point must have three finite components"
+        )
+    reciprocal = np.asarray(reciprocal, dtype=float)
+    frame = reciprocal_plane_frame(reciprocal)
+    reduced = gauss_reduce_2d_lattice_basis(reciprocal[:2])
+    in_plane_cartesian = point[:2] @ reciprocal[:2]
+    folded_cartesian = closest_2d_lattice_residual(
+        -in_plane_cartesian, reduced
+    )
+    return folded_cartesian @ frame.T
+
+
+def periodic_images_in_first_bz(
+    fractional_point: np.ndarray,
+    reciprocal: np.ndarray,
+    polygon: np.ndarray | None = None,
+) -> np.ndarray:
+    """Return every periodically equivalent image lying in the closed first BZ.
+
+    An interior point has one image.  Points on Wigner--Seitz edges or vertices
+    have multiple closed-cell representatives; for a hexagonal reciprocal
+    lattice a K class therefore appears at three alternating BZ corners.
+    """
+
+    reciprocal = np.asarray(reciprocal, dtype=float)
+    if polygon is None:
+        polygon = wigner_seitz_polygon_2d(reciprocal)
+    else:
+        polygon = np.asarray(polygon, dtype=float)
+    frame = reciprocal_plane_frame(reciprocal)
+    reduced = gauss_reduce_2d_lattice_basis(reciprocal[:2]) @ frame.T
+    representative = fold_fractional_to_first_bz(
+        fractional_point, reciprocal
+    )
+    lattice_scale = float(np.max(np.linalg.norm(reduced, axis=1)))
+    if not math.isfinite(lattice_scale) or lattice_scale <= 0.0:
+        raise ValueError("in-plane reciprocal basis must be finite and rank two")
+    length_tolerance = 2.0e-10 * lattice_scale
+    # point_in_convex_polygon_2d compares a 2D cross product, so its tolerance
+    # has reciprocal-area dimensions rather than reciprocal-length dimensions.
+    area_tolerance = 2.0e-10 * lattice_scale * lattice_scale
+    images: list[np.ndarray] = []
+    for first in range(-2, 3):
+        for second in range(-2, 3):
+            candidate = representative + first * reduced[0] + second * reduced[1]
+            if not bool(
+                point_in_convex_polygon_2d(
+                    candidate, polygon, tolerance=area_tolerance
+                )
+            ):
+                continue
+            if any(
+                np.linalg.norm(candidate - existing) <= length_tolerance
+                for existing in images
+            ):
+                continue
+            images.append(candidate)
+    if not images:
+        raise RuntimeError("no periodic representative was found in the first BZ")
+    result = np.asarray(images)
+    angles = np.arctan2(result[:, 1], result[:, 0])
+    return result[np.argsort(angles)]
+
+
+def point_in_convex_polygon_2d(
+    points: np.ndarray,
+    polygon: np.ndarray,
+    tolerance: float | None = None,
+) -> np.ndarray:
+    """Return a mask for points inside or on a counter-clockwise polygon."""
+
+    values = np.asarray(points, dtype=float)
+    vertices = np.asarray(polygon, dtype=float)
+    edges = np.roll(vertices, -1, axis=0) - vertices
+    if tolerance is None:
+        edge_scale = float(np.max(np.linalg.norm(edges, axis=1)))
+        tolerance = 64.0 * np.finfo(float).eps * edge_scale * edge_scale
+    if not math.isfinite(tolerance) or tolerance < 0.0:
+        raise ValueError("polygon cross-product tolerance must be finite and nonnegative")
+    relative = values[..., None, :] - vertices
+    cross = edges[:, 0] * relative[..., :, 1] - edges[:, 1] * relative[..., :, 0]
+    return np.all(cross >= -tolerance, axis=-1)
+
+
+def first_bz_display_grid(
+    data: np.ndarray,
+    grid: Grid,
+    reciprocal: np.ndarray,
+    polygon: np.ndarray,
+    maximum_pixels: int = 420,
+) -> tuple[np.ndarray, tuple[float, float, float, float]]:
+    """Rasterize plaquette data periodically in Cartesian first-BZ coordinates.
+
+    Each display pixel receives the value of the plaquette containing its
+    inverse-mapped fractional coordinate.  No interpolation is used, so this
+    changes only the display domain and not the underlying nx-by-ny data.
+    """
+
+    values = np.asarray(data, dtype=float)
+    if values.shape != (grid.nx, grid.ny):
+        raise ValueError("first-BZ display data must match the uniform grid")
+    frame = reciprocal_plane_frame(reciprocal)
+    basis_2d = np.asarray(reciprocal[:2], dtype=float) @ frame.T
+    determinant = float(np.linalg.det(basis_2d))
+    if abs(determinant) <= np.finfo(float).eps:
+        raise ValueError("in-plane reciprocal basis must be rank two")
+    x_min, y_min = np.min(polygon, axis=0)
+    x_max, y_max = np.max(polygon, axis=0)
+    width, height = float(x_max - x_min), float(y_max - y_min)
+    longest = max(width, height)
+    pixels_x = max(2, int(round(maximum_pixels * width / longest)))
+    pixels_y = max(2, int(round(maximum_pixels * height / longest)))
+    x = np.linspace(x_min, x_max, pixels_x, endpoint=False) + 0.5 * width / pixels_x
+    y = np.linspace(y_min, y_max, pixels_y, endpoint=False) + 0.5 * height / pixels_y
+    xx, yy = np.meshgrid(x, y, indexing="xy")
+    plane_points = np.stack((xx, yy), axis=-1)
+    fractional = plane_points @ np.linalg.inv(basis_2d)
+    ix = np.floor(
+        np.mod(fractional[..., 0] - grid.offset[0], 1.0) * grid.nx
+    ).astype(int)
+    iy = np.floor(
+        np.mod(fractional[..., 1] - grid.offset[1], 1.0) * grid.ny
+    ).astype(int)
+    raster = values[ix, iy]
+    raster[~point_in_convex_polygon_2d(plane_points, polygon)] = np.nan
+    return raster, (float(x_min), float(x_max), float(y_min), float(y_max))
+
+
+def padded_cartesian_plot_limits(
+    extent: tuple[float, float, float, float], padding_fraction: float = 0.05
+) -> tuple[tuple[float, float], tuple[float, float]]:
+    """Add display-only padding around a Cartesian reciprocal-space extent."""
+
+    x_min, x_max, y_min, y_max = (float(value) for value in extent)
+    if not all(math.isfinite(value) for value in (x_min, x_max, y_min, y_max)):
+        raise ValueError("Cartesian plot extent must be finite")
+    if x_max <= x_min or y_max <= y_min:
+        raise ValueError("Cartesian plot extent must have positive width and height")
+    if not math.isfinite(padding_fraction) or padding_fraction < 0.0:
+        raise ValueError("Cartesian plot padding must be finite and nonnegative")
+    pad_x = padding_fraction * (x_max - x_min)
+    pad_y = padding_fraction * (y_max - y_min)
+    return ((x_min - pad_x, x_max + pad_x), (y_min - pad_y, y_max + pad_y))
+
+
 def symmetric_finite_color_limits(values: np.ndarray) -> tuple[float, float]:
     """Return zero-centered limits, with a safe fallback for all-zero data."""
 
@@ -1394,6 +2446,7 @@ def plot_k_resolved_maps(
     energy_band: int,
     valley_k: np.ndarray,
     valley_kp: np.ndarray,
+    plot_domain: str = "fractional",
 ) -> Path:
     plt = _matplotlib_pyplot()
     by_range = {
@@ -1429,30 +2482,67 @@ def plot_k_resolved_maps(
         (np.log10(np.maximum(link_quality, 1e-300)), "V+1 log10(min link singular value)", "magma"),
         (np.log10(np.maximum(min_gap, 1e-300)), f"log10 min E{energy_band + 1}-E{energy_band} (eV)", "magma"),
     )
-    plot_extent = fractional_plot_extent(grid.offset)
-    plot_k = periodic_image_in_plot_domain(valley_k, grid.offset)
-    plot_kp = periodic_image_in_plot_domain(valley_kp, grid.offset)
+    if plot_domain not in ("fractional", "first-bz"):
+        raise ValueError("plot_domain must be 'fractional' or 'first-bz'")
+    if plot_domain == "fractional":
+        plot_extent = fractional_plot_extent(grid.offset)
+        plot_k_images = periodic_image_in_plot_domain(
+            valley_k, grid.offset
+        )[None, :2]
+        plot_kp_images = periodic_image_in_plot_domain(
+            valley_kp, grid.offset
+        )[None, :2]
+        bz_polygon = None
+    else:
+        bz_polygon = wigner_seitz_polygon_2d(wavecar.header.reciprocal)
+        plot_extent = None
+        plot_k_images = periodic_images_in_first_bz(
+            valley_k, wavecar.header.reciprocal, bz_polygon
+        )
+        plot_kp_images = periodic_images_in_first_bz(
+            valley_kp, wavecar.header.reciprocal, bz_polygon
+        )
     fig, axes = plt.subplots(2, 3, figsize=(14, 8), constrained_layout=True)
     for axis, (data, title, cmap) in zip(axes.flat, panels):
         color_limits = (
             symmetric_finite_color_limits(data) if cmap == "RdBu_r" else (None, None)
         )
+        if plot_domain == "fractional":
+            display_data = data.T
+            display_extent = plot_extent
+        else:
+            assert bz_polygon is not None
+            display_data, display_extent = first_bz_display_grid(
+                data, grid, wavecar.header.reciprocal, bz_polygon
+            )
         image = axis.imshow(
-            data.T,
+            display_data,
             origin="lower",
             interpolation="nearest",
             aspect="equal",
             cmap=cmap,
-            extent=plot_extent,
+            extent=display_extent,
             vmin=color_limits[0],
             vmax=color_limits[1],
         )
         axis.set_title(title)
-        axis.set_xlabel("fractional $q_1$")
-        axis.set_ylabel("fractional $q_2$")
+        if plot_domain == "fractional":
+            axis.set_xlabel("fractional $q_1$")
+            axis.set_ylabel("fractional $q_2$")
+        else:
+            assert bz_polygon is not None
+            boundary = np.vstack((bz_polygon, bz_polygon[0]))
+            axis.plot(boundary[:, 0], boundary[:, 1], color="black", linewidth=1.0)
+            axis.set_xlabel(r"$k_x$ ($\AA^{-1}$)")
+            axis.set_ylabel(r"$k_y$ ($\AA^{-1}$)")
+            assert display_extent is not None
+            x_limits, y_limits = padded_cartesian_plot_limits(display_extent)
+            axis.set_xlim(*x_limits)
+            axis.set_ylim(*y_limits)
+            axis.set_aspect("equal", adjustable="box")
         axis.scatter(
-            [plot_k[0]],
-            [plot_k[1]],
+            plot_k_images[:, 0],
+            plot_k_images[:, 1],
             marker="*",
             s=70,
             color="gold",
@@ -1460,17 +2550,45 @@ def plot_k_resolved_maps(
             linewidth=0.5,
         )
         axis.scatter(
-            [plot_kp[0]],
-            [plot_kp[1]],
+            plot_kp_images[:, 0],
+            plot_kp_images[:, 1],
             marker="x",
             s=50,
             color="black",
             linewidth=1.2,
         )
-        axis.annotate("K", (plot_k[0], plot_k[1]), xytext=(4, 4), textcoords="offset points")
-        axis.annotate("K'", (plot_kp[0], plot_kp[1]), xytext=(4, 4), textcoords="offset points")
+        for label, markers in (("K", plot_k_images), ("K'", plot_kp_images)):
+            for marker in markers:
+                if plot_domain == "fractional":
+                    annotation_offset = (4.0, 4.0)
+                else:
+                    # Boundary labels point inward toward Gamma, avoiding axes
+                    # clipping and making the alternating K/K' corners clear.
+                    marker_norm = float(np.linalg.norm(marker))
+                    annotation_offset = (
+                        tuple(-10.0 * marker / marker_norm)
+                        if marker_norm > 0.0
+                        else (4.0, 4.0)
+                    )
+                axis.annotate(
+                    label,
+                    (marker[0], marker[1]),
+                    xytext=annotation_offset,
+                    textcoords="offset points",
+                    ha="center",
+                    va="center",
+                    zorder=6,
+                )
         fig.colorbar(image, ax=axis, shrink=0.82)
-    fig.suptitle("WAVECAR-direct Fukui maps (raw maps include quality diagnostics)")
+    domain_title = (
+        "fractional reciprocal primitive cell"
+        if plot_domain == "fractional"
+        else "Cartesian first Brillouin zone"
+    )
+    fig.suptitle(
+        "WAVECAR-direct Fukui maps in " + domain_title
+        + " (raw maps include quality diagnostics)"
+    )
     output = output_dir / "wavecar_fukui_kresolved.png"
     fig.savefig(output, dpi=180)
     plt.close(fig)
@@ -1540,7 +2658,7 @@ def plot_k_to_kp_line(
     axes[1].set_xlabel(r"periodic shortest-path distance K$\rightarrow$K' ($\AA^{-1}$)")
     axes[1].legend()
     axes[1].grid(alpha=0.25)
-    fig.suptitle("K to K' line cut; V+1 is diagnostic if link quality fails")
+    fig.suptitle(SHORTEST_K_KP_LINE_TITLE)
     output = output_dir / "wavecar_fukui_line_K_Kp.png"
     fig.savefig(output, dpi=180)
     plt.close(fig)
@@ -1600,6 +2718,151 @@ def plot_transport_csv(csv_path: Path, output_path: Path) -> Path:
     axis.set_ylabel(r"$\Delta\sigma_{xy}$ ($e^2/h$)")
     axis.grid(alpha=0.25)
     axis.legend(ncol=2)
+    fig.savefig(output_path, dpi=180)
+    plt.close(fig)
+    return output_path
+
+
+def plot_full_transport_csv(
+    csv_path: Path,
+    output_path: Path,
+    diagnostics_path: Path | None = None,
+) -> Path:
+    """Plot absolute and full-bundle-relative sigma(mu) with quality marks."""
+
+    plt = _matplotlib_pyplot()
+    with csv_path.open(encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    if not rows:
+        raise ValueError("full transport CSV contains no rows")
+
+    def optional_float(row: dict[str, str], field: str) -> float:
+        value = row[field].strip()
+        return float(value) if value else math.nan
+
+    mu = np.asarray([float(row["mu_eV"]) for row in rows])
+    total = np.asarray(
+        [optional_float(row, "sigma_total_e2_over_h") for row in rows]
+    )
+    kpart = np.asarray(
+        [optional_float(row, "sigma_K_e2_over_h") for row in rows]
+    )
+    kppart = np.asarray(
+        [optional_float(row, "sigma_Kp_e2_over_h") for row in rows]
+    )
+    contrast = np.asarray(
+        [
+            optional_float(row, "sigma_valley_contrast_e2_over_h")
+            for row in rows
+        ]
+    )
+    relative_total = np.asarray(
+        [
+            optional_float(
+                row, "sigma_relative_to_full_max_bundle_e2_over_h"
+            )
+            for row in rows
+        ]
+    )
+    relative_k = np.asarray(
+        [
+            optional_float(
+                row, "sigma_K_relative_to_full_max_bundle_e2_over_h"
+            )
+            for row in rows
+        ]
+    )
+    relative_kp = np.asarray(
+        [
+            optional_float(
+                row, "sigma_Kp_relative_to_full_max_bundle_e2_over_h"
+            )
+            for row in rows
+        ]
+    )
+    relative_contrast = np.asarray(
+        [
+            optional_float(
+                row,
+                "sigma_valley_contrast_relative_to_full_max_bundle_e2_over_h",
+            )
+            for row in rows
+        ]
+    )
+    invalid = np.asarray([row["quality"] != "PASS" for row in rows])
+    continuous_bad = rows[0]["continuous_scan_quality"] != "PASS"
+    diagnostics_bad = False
+    invalid_intervals: list[list[float]] = []
+    if diagnostics_path is not None and diagnostics_path.exists():
+        with diagnostics_path.open(encoding="utf-8") as handle:
+            payload = json.load(handle)
+        diagnostics_bad = not bool(payload.get("validated", False))
+        invalid_intervals = payload.get("merged_invalid_mu_intervals_ev", [])
+
+    fig, axes = plt.subplots(
+        2, 1, figsize=(10, 9), sharex=True, constrained_layout=True
+    )
+    panels = (
+        (
+            axes[0],
+            (total, kpart, kppart, contrast),
+            r"absolute $\sigma_{xy}$ ($e^2/h$)",
+            "Absolute conductivity of represented occupied bands",
+        ),
+        (
+            axes[1],
+            (relative_total, relative_k, relative_kp, relative_contrast),
+            r"$\Delta\sigma_{xy}$ from full MAX_BAND bundle ($e^2/h$)",
+            "Hole/electron change relative to the fully occupied MAX_BAND bundle",
+        ),
+    )
+    styles = (
+        ("black", "net", "-"),
+        ("tab:blue", "K", "-"),
+        ("tab:orange", "K'", "-"),
+        ("tab:green", "K - K' contrast", "--"),
+    )
+    for axis, values_set, ylabel, title in panels:
+        for values, (color, label, style) in zip(values_set, styles):
+            axis.plot(
+                mu, np.where(~invalid, values, np.nan), color=color,
+                linestyle=style, label=label,
+            )
+            if np.any(invalid):
+                axis.plot(
+                    mu, np.where(invalid, values, np.nan), color=color,
+                    linestyle=":", alpha=0.45,
+                )
+        for index, interval in enumerate(invalid_intervals):
+            lo, hi = (float(interval[0]), float(interval[1]))
+            label = "INVALID occupation-event interval" if index == 0 else None
+            if hi > lo:
+                axis.axvspan(lo, hi, color="red", alpha=0.10, label=label)
+            else:
+                axis.axvline(
+                    lo, color="red", alpha=0.25, linewidth=1.0, label=label
+                )
+        if np.any(invalid):
+            ymin, ymax = axis.get_ylim()
+            axis.scatter(
+                mu[invalid],
+                np.full(
+                    np.count_nonzero(invalid), ymin + 0.03 * (ymax - ymin)
+                ),
+                marker="x", color="red", s=18,
+                label="INVALID sampled mu", zorder=5,
+            )
+        axis.set_title(title)
+        axis.set_ylabel(ylabel)
+        axis.grid(alpha=0.25)
+        axis.legend(ncol=2)
+    axes[1].set_xlabel("chemical potential (eV)")
+    if diagnostics_bad or continuous_bad or np.any(invalid):
+        fig.suptitle(
+            "UNVALIDATED DIAGNOSTIC: rejected points/intervals shown in red"
+        )
+    else:
+        fig.suptitle("Validated all-band T=0 cumulative-subspace transport")
     fig.savefig(output_path, dpi=180)
     plt.close(fig)
     return output_path
@@ -1716,9 +2979,30 @@ def main() -> None:
         help="evaluate guarded T=0 cumulative-subspace transport",
     )
     parser.add_argument(
+        "--transport-full-t0",
+        type=int,
+        metavar="MAX_BAND",
+        help=(
+            "evaluate absolute T=0 sigma(mu) using every cumulative subspace "
+            "1:n through MAX_BAND; MAX_BAND+1 is an unoccupied sentinel"
+        ),
+    )
+    parser.add_argument(
         "--plot",
         action="store_true",
-        help="write k-resolved, K-to-K' line, and (with transport) sigma plots",
+        help=(
+            "write k-resolved, shortest-periodic-image K-to-K' line, and "
+            "(with transport) sigma plots"
+        ),
+    )
+    parser.add_argument(
+        "--plot-domain",
+        choices=("fractional", "first-bz"),
+        default="fractional",
+        help=(
+            "k-resolved map domain: legacy fractional q1/q2 primitive cell "
+            "(default), or the Cartesian Wigner-Seitz first BZ"
+        ),
     )
     parser.add_argument("--mu-min", type=float, default=0.40)
     parser.add_argument("--mu-max", type=float, default=0.55)
@@ -1746,8 +3030,17 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    if args.energy_band < 2:
+    full_only_no_legacy_maps = (
+        args.transport_full_t0 is not None
+        and args.maps is None
+        and not args.plot
+    )
+    if not full_only_no_legacy_maps and args.energy_band < 2:
         parser.error("target energy band must be at least 2")
+    if args.transport_t0 and args.transport_full_t0 is not None:
+        parser.error("--transport-t0 and --transport-full-t0 are mutually exclusive")
+    if args.transport_full_t0 is not None and args.transport_full_t0 < 1:
+        parser.error("--transport-full-t0 MAX_BAND must be positive")
     if not (math.isfinite(args.mu_min) and math.isfinite(args.mu_max)):
         parser.error("--mu-min and --mu-max must be finite")
     if args.valley_radius is not None and not math.isfinite(args.valley_radius):
@@ -1767,8 +3060,18 @@ def main() -> None:
     if not (0.0 < args.max_abs_phi < np.pi):
         parser.error("--max-abs-phi must be in (0, pi)")
     try:
-        maps = args.maps or default_map_specifications(args.energy_band)
-        output_names = planned_output_names(maps, args.plot, args.transport_t0)
+        if args.maps is not None:
+            maps = args.maps
+        elif full_only_no_legacy_maps:
+            # Full transport builds its cumulative maps in one batched pass.
+            # Avoid repeating the five legacy/raw maps unless explicitly asked.
+            maps = []
+        else:
+            maps = default_map_specifications(args.energy_band)
+        output_names = planned_output_names(
+            maps, args.plot, args.transport_t0,
+            args.transport_full_t0 is not None,
+        )
         validate_input_output_collision(
             args.wavecar,
             args.output_dir,
@@ -1782,16 +3085,27 @@ def main() -> None:
     )
     grid = infer_uniform_grid(wavecar.kpoints, args.nx, args.ny)
     try:
-        validate_map_specifications(
-            maps,
-            args.energy_band,
-            wavecar.header.nbands,
-            args.plot or args.transport_t0,
-            args.transport_t0,
-        )
-        if args.plot or args.transport_t0:
+        if not full_only_no_legacy_maps:
+            validate_map_specifications(
+                maps,
+                args.energy_band,
+                wavecar.header.nbands,
+                args.plot or args.transport_t0,
+                args.transport_t0,
+            )
+        if (
+            args.transport_full_t0 is not None
+            and args.transport_full_t0 >= wavecar.header.nbands
+        ):
+            raise ValueError(
+                "--transport-full-t0 MAX_BAND must be below WAVECAR NBANDS "
+                "so MAX_BAND+1 can serve as the upper occupation sentinel"
+            )
+        if args.plot or args.transport_t0 or args.transport_full_t0 is not None:
             if args.valley_k is None or args.valley_kp is None:
-                raise ValueError("--plot/--transport-t0 requires --valley-k and --valley-kp")
+                raise ValueError(
+                    "plot/transport requires --valley-k and --valley-kp"
+                )
             validate_valley_definition(
                 args.valley_k,
                 args.valley_kp,
@@ -1825,9 +3139,20 @@ def main() -> None:
         )
         map_results[label] = (bands, flux, xlinks, ylinks)
 
-    band = args.energy_band - 1
-    gap_below = wavecar.energies[:, band] - wavecar.energies[:, band - 1]
-    gap_above = wavecar.energies[:, band + 1] - wavecar.energies[:, band]
+    energy_diagnostics: dict[str, object] | None = None
+    if not full_only_no_legacy_maps:
+        band = args.energy_band - 1
+        gap_below = wavecar.energies[:, band] - wavecar.energies[:, band - 1]
+        gap_above = wavecar.energies[:, band + 1] - wavecar.energies[:, band]
+        energy_diagnostics = {
+            "band": args.energy_band,
+            "energy_min_ev": float(np.min(wavecar.energies[:, band])),
+            "energy_max_ev": float(np.max(wavecar.energies[:, band])),
+            "min_gap_below_ev": float(np.min(gap_below)),
+            "min_gap_below_k_index": int(np.argmin(gap_below) + 1),
+            "min_gap_above_ev": float(np.min(gap_above)),
+            "min_gap_above_k_index": int(np.argmin(gap_above) + 1),
+        }
     diagnostics = {
         "wavecar": str(args.wavecar),
         "logical_recl": wavecar.header.logical_recl,
@@ -1844,18 +3169,11 @@ def main() -> None:
         "encut_ev": wavecar.header.encut_ev,
         "grid": [grid.nx, grid.ny],
         "grid_offset_fractional": grid.offset.tolist(),
+        "plot_domain": args.plot_domain if args.plot else None,
         "lattice_angstrom": wavecar.header.lattice.tolist(),
         "reciprocal_inv_angstrom": wavecar.header.reciprocal.tolist(),
         "nbmax": list(wavecar.nbmax),
-        "energy_diagnostics": {
-            "band": args.energy_band,
-            "energy_min_ev": float(np.min(wavecar.energies[:, band])),
-            "energy_max_ev": float(np.max(wavecar.energies[:, band])),
-            "min_gap_below_ev": float(np.min(gap_below)),
-            "min_gap_below_k_index": int(np.argmin(gap_below) + 1),
-            "min_gap_above_ev": float(np.min(gap_above)),
-            "min_gap_above_k_index": int(np.argmin(gap_above) + 1),
-        },
+        "energy_diagnostics": energy_diagnostics,
         "maps": summaries,
         "plane_wave_coverage_validated": all(
             bool(item["plane_wave_coverage_pass"]) for item in summaries
@@ -1884,6 +3202,7 @@ def main() -> None:
             args.energy_band,
             args.valley_k,
             args.valley_kp,
+            args.plot_domain,
         )
         plot_k_to_kp_line(
             args.output_dir,
@@ -1920,6 +3239,34 @@ def main() -> None:
             plot_transport_csv(
                 args.output_dir / "transport_t0.csv",
                 args.output_dir / "wavecar_fukui_sigma_mu.png",
+            )
+    if args.transport_full_t0 is not None:
+        if args.valley_k is None or args.valley_kp is None:
+            parser.error("--transport-full-t0 requires --valley-k and --valley-kp")
+        if args.mu_num < 2 or args.mu_max <= args.mu_min:
+            parser.error("full transport requires mu_num>=2 and mu_max>mu_min")
+        write_full_t0_transport(
+            args.output_dir,
+            wavecar,
+            grid,
+            args.transport_full_t0,
+            args.mu_min,
+            args.mu_max,
+            args.mu_num,
+            args.valley_k,
+            args.valley_kp,
+            args.valley_radius,
+            args.min_link_sv,
+            args.min_neighbor_gap_ev,
+            args.min_pw_coverage,
+            args.max_abs_phi,
+            args.allow_invalid_transport,
+        )
+        if args.plot:
+            plot_full_transport_csv(
+                args.output_dir / "transport_full_t0.csv",
+                args.output_dir / "wavecar_fukui_sigma_full_mu.png",
+                args.output_dir / "transport_full_t0_diagnostics.json",
             )
     print(json.dumps(json_safe(diagnostics), indent=2, allow_nan=False))
 
