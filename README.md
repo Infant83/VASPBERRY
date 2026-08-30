@@ -49,9 +49,13 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
   four vertex energies, adjacent-band gaps, and link-quality diagnostics from
   the same full-mesh WAVECAR:
 > python -m pip install -r requirements-transport.txt
-> python tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 --output-dir direct_raw --valley-k 0.6666667,0.3333333,0 --valley-kp 0.3333333,0.6666667,0 --plot
+> python tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 --energy-band 19 --output-dir direct_raw --valley-k 0.6666667,0.3333333,0 --valley-kp 0.3333333,0.6666667,0 --plot
 
-  See `docs/VALLEY_TRANSPORT.md` before interpreting a single-band result. The
+  To request a guarded zero-temperature chemical-potential scan, add for example:
+> python tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 --energy-band 19 --output-dir direct_transport --transport-t0 --mu-min 0.40 --mu-max 0.55 --mu-num 151 --valley-k 0.6666667,0.3333333,0 --valley-kp 0.3333333,0.6666667,0 --plot
+
+  See the [valley-transport guide](docs/VALLEY_TRANSPORT.md) before interpreting
+  a single-band or transport result. The
   guarded transport path refuses active plaquettes with nearly singular links,
   insufficient band isolation, or branch-risk phases. It also validates the
   fully occupied valence baseline globally and requires the chemical-potential

@@ -113,8 +113,11 @@ C_{\mathrm{occ}}(\mu,T)=C_{\mathrm{core}}+
 \sum_{n\in\mathrm{active}}\Delta C_n(\mu,T).
 \]
 
-Use `--core-chern` for this baseline. This avoids recomputing every deep valence
-band separately. A scalar baseline is included only in the **total** response;
+Use `--core-chern` for this baseline. When the first active band is greater than
+1, the option is mandatory even when the established baseline is zero
+(`--core-chern 0.0`). The value must lie within 0.005 of an integer. This avoids
+silently assuming that omitted occupied bands have zero Chern number. A scalar
+baseline is included only in the **total** response;
 it cannot be assigned to K or K' without a corresponding spatially resolved
 valence-manifold curvature map.
 
@@ -187,6 +190,16 @@ Before integration, `tools/vaspberry_transport.py` checks:
   branch boundary; otherwise a denser mesh is required;
 - every requested active band passes the numerical isolation check.
 
+For `sigma`, the selected active bands must also form one consecutive band
+window. At the lowest requested chemical potential, all lower bands represented
+by `--core-chern` must have Fermi occupation at least
+`1 - --occupation-tolerance`; at the highest chemical potential, the first band
+above the active window must have occupation at most that tolerance. The default
+tolerance is `1e-8`. The sentinel band above the active window must therefore be
+present in EIGENVAL. These checks prevent an incomplete band sum from being
+labeled as the total conductivity. At zero temperature the tools use the
+declared finite-mesh convention that `E <= mu` is occupied.
+
 Nonfinite coordinates, curvature, energies, occupations, k weights, chemical
 potentials, temperature, and numerical thresholds are rejected before plotting
 or integration. The `map` and `cut` commands require a two-dimensional full-BZ
@@ -251,7 +264,10 @@ columns are:
 energy gaps, full-occupation Chern sums, phase range, and worst conditioning.
 The direct reader rejects nonpositive plane-wave counts and nonfinite k points,
 energies, occupations, or wave-function coefficients before they can enter an
-overlap. JSON diagnostics are emitted in strict form; a diagnostic nonfinite
+overlap. Although standard WAVECAR coefficients are stored as complex64, the
+overlap products and reductions are evaluated in complex128 to match the
+precision of the legacy Fortran work arrays. JSON diagnostics are emitted in
+strict form; a diagnostic nonfinite
 value is represented as `null`, never the nonstandard `NaN` or `Infinity`.
 The mesh detector accepts a uniform shifted Monkhorst mesh and records its
 fractional offset. It rejects line-mode, incomplete, duplicate, or nonuniform
@@ -289,14 +305,15 @@ python tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 \
   --valley-kp 0.3333333,0.6666667,0 --plot
 ```
 
-The K coordinates above are only examples. With no radius, every cell is
+The K coordinates above are only examples. With no radius, every nontied cell is
 assigned to the nearest periodic K or K' center. `--valley-radius R` instead
 creates disjoint K/K'/outside masks in inverse Angstrom.
 K and K' must be finite and periodically distinct. Exact Voronoi ties are put
 in the outside mask rather than assigned by floating-point accident; their
 count and the exclusive/exhaustive mask totals are written to
 `transport_t0_diagnostics.json`. A radius partition is rejected if its two
-masks overlap or if either valley contains no plaquette center.
+masks overlap. Both radius and nearest-center modes are rejected if either
+valley contains no plaquette center.
 Periodic distances and the K-to-K' line image use an exact two-dimensional
 closest-lattice-vector search after Gauss reduction, so highly skew or
 non-reduced reciprocal bases are not limited to an unsafe fixed image stencil.
@@ -310,7 +327,10 @@ quality thresholds at every cell. This baseline gate cannot be bypassed by
 Because that baseline is held fully occupied, `--mu-min` must be strictly above
 the global maximum of band `N-1`; otherwise the requested window contains holes
 that the three-manifold formula does not represent. Similarly, `--mu-max` must
-stay below the global minimum of band `N+2`.
+stay below the global minimum of band `N+2`. These bounds and their pass/fail
+booleans are recorded under `energy_window` in
+`transport_t0_diagnostics.json`. At exactly zero temperature, `E <= mu` is
+treated as occupied in both transport tools.
 
 After the baseline passes, the command checks active-cell link singular values,
 adjacent-band gaps, and the principal-branch phase margin. If a plaquette uses
@@ -323,11 +343,12 @@ cell fails, the command writes `transport_t0_diagnostics.json` but refuses
 `transport_t0.csv`. The
 `--allow-invalid-transport` switch exists only to inspect an explicitly labeled
 `INVALID` diagnostic scan; such a file is not a validated physical result.
-Before a transport attempt, the tool removes only its three prior transport
-artifacts (`transport_t0.csv`, `transport_t0_diagnostics.json`, and
-`wavecar_fukui_sigma_mu.png`) so a rejected rerun cannot leave an older scan or
-plot masquerading as the new result. All chemical-potential, valley, radius,
-and quality-threshold inputs are checked for finite values before use.
+Before a run, the tool removes only the exact fixed artifacts planned for that
+invocation, including raw maps, diagnostics, and requested plots. Thus a rejected
+rerun cannot mix new tables with stale figures, while unrelated files are left
+untouched. All chemical-potential, valley, radius, and quality-threshold inputs
+are checked for finite values before use. The phase guard is strictly below
+the principal-log boundary, `0 < max_abs_phi < pi`.
 Before deleting or writing anything, it also compares the resolved WAVECAR path
 with every output planned for that invocation (raw CSVs, diagnostics, plots,
 and transport files) and refuses any collision, preventing the input from being
@@ -372,6 +393,10 @@ python tools/vaspberry_transport.py cut \
   --output valley_cut.png
 ```
 
+The cut uses periodic bilinear interpolation on the validated uniform reciprocal
+torus. It therefore remains finite even when the shortest Cartesian path crosses
+fractional images outside a fixed 3x3 tiling of a highly skew reciprocal basis.
+
 Calculate the active CBM contribution and add a fully occupied valence baseline:
 
 ```bash
@@ -402,6 +427,8 @@ quantitative transport reference.
 Before any full-grid legacy Kubo result is used quantitatively, its degeneracy
 regularization, normalization, PAW/nonlocal/SOC velocity terms, unoccupied-band
 convergence, and agreement with Fukui/Wannier benchmarks must be established.
+For collinear `ISPIN=2`, the total Kubo accumulator is reset inside each spin
+branch before the band loop; a source regression protects this separation.
 
 ## 11. Test coverage
 

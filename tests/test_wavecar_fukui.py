@@ -182,6 +182,31 @@ class WavecarFukuiUnitTests(unittest.TestCase):
         pairs = [(tuple(left[i]), tuple(right[j] - (1, 0, 0))) for i, j in zip(il, ir)]
         self.assertEqual(pairs, [((0, 0, 0), (0, 0, 0)), ((1, 0, 0), (1, 0, 0)), ((-1, 0, 0), (-1, 0, 0))])
 
+    def test_link_overlap_reduction_is_performed_in_complex128(self):
+        class FakeWavecar:
+            spinor_components = 1
+            kpoints = np.zeros((2, 3))
+
+            @staticmethod
+            def g_vectors(_ik):
+                return np.asarray([(0, 0, 0), (1, 0, 0), (2, 0, 0)])
+
+            @staticmethod
+            def coefficients(ik, _bands):
+                values = (
+                    np.ones(3, dtype=np.complex64)
+                    if ik == 0
+                    else np.asarray((1.0e8, 1.0, -1.0e8), dtype=np.complex64)
+                )
+                return values.reshape(1, 1, 3)
+
+        overlap, coverage_left, coverage_right = MODULE.link_matrix(
+            FakeWavecar(), 0, 1, [1], np.zeros(3)
+        )
+        self.assertEqual(overlap.dtype, np.dtype(np.complex128))
+        self.assertEqual(overlap[0, 0], 1.0 + 0.0j)
+        self.assertEqual((coverage_left, coverage_right), (1.0, 1.0))
+
     def test_cumulative_t0_vertex_selection_formula(self):
         phi_v = np.asarray([[0.4]])
         phi_v1 = np.asarray([[1.2]])
@@ -194,6 +219,18 @@ class WavecarFukuiUnitTests(unittest.TestCase):
         # Vertices select V+2, V+1, V, V respectively.
         self.assertAlmostEqual(float(effective[0, 0]), (2.0 + 1.2 + 0.4 + 0.4) / 4)
         self.assertEqual((int(n0[0, 0]), int(n1[0, 0]), int(n2[0, 0])), (2, 1, 1))
+
+    def test_cumulative_t0_treats_energy_equal_to_mu_as_occupied(self):
+        phi_v = np.asarray([[0.0]])
+        phi_v1 = np.asarray([[1.0]])
+        phi_v2 = np.asarray([[2.0]])
+        energy1 = np.ones((1, 1, 4))
+        energy2 = np.full((1, 1, 4), 2.0)
+        effective, n0, n1, n2 = MODULE.cumulative_t0_effective_phi(
+            phi_v, phi_v1, phi_v2, energy1, energy2, 1.0
+        )
+        self.assertEqual((int(n0[0, 0]), int(n1[0, 0]), int(n2[0, 0])), (0, 4, 0))
+        self.assertEqual(float(effective[0, 0]), 1.0)
 
     def test_cumulative_state_count_invariant_rejects_inverted_energies(self):
         phi = np.zeros((1, 1))
@@ -318,7 +355,42 @@ class WavecarFukuiUnitTests(unittest.TestCase):
         with self.assertRaises(argparse.ArgumentTypeError):
             MODULE.parse_fractional_vector("nan,0,0")
 
-    def test_voronoi_exact_tie_is_outside(self):
+    def test_voronoi_exact_ties_are_outside_when_both_valleys_are_represented(self):
+        nx, ny = 4, 2
+        fake = SimpleNamespace(
+            header=SimpleNamespace(reciprocal=np.eye(3)),
+            kpoints=np.asarray(
+                [
+                    (ix / nx, iy / ny, 0.0)
+                    for ix in range(nx)
+                    for iy in range(ny)
+                ]
+            ),
+        )
+        grid = MODULE.Grid(
+            nx, ny, np.arange(nx * ny).reshape(nx, ny), np.zeros(3)
+        )
+        mask_k, mask_kp, outside, _, _ = MODULE.make_valley_partition(
+            fake,
+            grid,
+            np.asarray((0.125, 0.25, 0.0)),
+            np.asarray((0.625, 0.25, 0.0)),
+            None,
+        )
+        self.assertTrue(outside[1, 0])
+        self.assertFalse(mask_k[1, 0])
+        self.assertFalse(mask_kp[1, 0])
+        self.assertTrue(np.any(mask_k))
+        self.assertTrue(np.any(mask_kp))
+        self.assertTrue(np.all(mask_k | mask_kp | outside))
+        self.assertTrue(
+            np.all(
+                mask_k.astype(int) + mask_kp.astype(int) + outside.astype(int)
+                == 1
+            )
+        )
+
+    def test_voronoi_partition_rejects_all_tie_mesh(self):
         fake = SimpleNamespace(
             header=SimpleNamespace(reciprocal=np.eye(3)),
             kpoints=np.asarray(
@@ -327,23 +399,14 @@ class WavecarFukuiUnitTests(unittest.TestCase):
             ),
         )
         grid = MODULE.Grid(2, 2, np.asarray([[0, 1], [2, 3]]), np.zeros(3))
-        mask_k, mask_kp, outside, _, _ = MODULE.make_valley_partition(
-            fake,
-            grid,
-            np.asarray((0.0, 0.25, 0.0)),
-            np.asarray((0.5, 0.25, 0.0)),
-            None,
-        )
-        self.assertTrue(outside[0, 0])
-        self.assertFalse(mask_k[0, 0])
-        self.assertFalse(mask_kp[0, 0])
-        self.assertTrue(np.all(mask_k | mask_kp | outside))
-        self.assertTrue(
-            np.all(
-                mask_k.astype(int) + mask_kp.astype(int) + outside.astype(int)
-                == 1
+        with self.assertRaisesRegex(ValueError, "selects no plaquette centers"):
+            MODULE.make_valley_partition(
+                fake,
+                grid,
+                np.asarray((0.0, 0.25, 0.0)),
+                np.asarray((0.5, 0.25, 0.0)),
+                None,
             )
-        )
 
     def test_skew_reciprocal_basis_finds_distant_integer_image(self):
         reciprocal = np.asarray(
@@ -448,6 +511,66 @@ class WavecarFukuiUnitTests(unittest.TestCase):
             for name in MODULE.TRANSPORT_OUTPUT_NAMES:
                 self.assertFalse((output / name).exists(), name)
 
+    def test_main_removes_only_stale_planned_outputs_before_early_failure(self):
+        maps = MODULE.default_map_specifications(2)
+        names = MODULE.planned_output_names(maps, plot=True, transport_t0=True)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "output"
+            output.mkdir()
+            for name in names:
+                (output / name).write_text("stale", encoding="utf-8")
+            unrelated = output / "keep-me.txt"
+            unrelated.write_text("unrelated", encoding="utf-8")
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "tools" / "wavecar_fukui.py"),
+                    str(root / "missing-WAVECAR"),
+                    "--nx", "2", "--ny", "2",
+                    "--energy-band", "2",
+                    "--output-dir", str(output),
+                    "--plot",
+                    "--transport-t0",
+                    "--valley-k", "0,0,0",
+                    "--valley-kp", "0.25,0.25,0",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 2)
+            for name in names:
+                self.assertFalse((output / name).exists(), name)
+            self.assertEqual(unrelated.read_text(encoding="utf-8"), "unrelated")
+
+    def test_max_abs_phi_must_be_strictly_below_pi(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(ValueError, r"must be in \(0, pi\)"):
+                MODULE.write_t0_transport(
+                    Path(directory), SimpleNamespace(), None, {}, 2, 0.0, 0.1, 2,
+                    np.zeros(3), np.ones(3), None,
+                    1e-3, 1e-5, np.pi, False,
+                )
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "tools" / "wavecar_fukui.py"),
+                "missing-WAVECAR",
+                "--nx", "2", "--ny", "2",
+                "--energy-band", "2",
+                "--output-dir", "unused",
+                "--max-abs-phi", str(np.pi),
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 2)
+        self.assertIn("must be in (0, pi)", completed.stderr)
+
     def test_wavecar_input_cannot_collide_with_any_planned_output(self):
         maps = [("V", [1]), ("VC", [1, 2])]
         names = MODULE.planned_output_names(maps, plot=True, transport_t0=True)
@@ -476,18 +599,22 @@ class WavecarFukuiUnitTests(unittest.TestCase):
             self.assertEqual(collision.read_bytes(), b"input must survive")
 
     def test_transport_refuses_low_quality_active_cell(self):
+        kpoints = np.asarray(
+            [(0.0, 0.0, 0.0), (0.0, 0.5, 0.0),
+             (0.5, 0.0, 0.0), (0.5, 0.5, 0.0)]
+        )
         fake = SimpleNamespace(
             header=SimpleNamespace(nbands=4, reciprocal=np.eye(3)),
-            energies=np.asarray([[-1.0, 0.0, 0.5, 10.0]]),
-            kpoints=np.zeros((1, 3)),
+            energies=np.tile(np.asarray([[-1.0, 0.0, 0.5, 10.0]]), (4, 1)),
+            kpoints=kpoints,
         )
-        grid = MODULE.Grid(1, 1, np.asarray([[0]]), np.zeros(3))
+        grid = MODULE.Grid(2, 2, np.asarray([[0, 1], [2, 3]]), np.zeros(3))
 
         def links(minimum):
-            one = np.ones((1, 1))
+            one = np.ones((2, 2))
             return MODULE.LinkSet(
-                phase=np.zeros((1, 1)),
-                logabs=np.zeros((1, 1)),
+                phase=np.zeros((2, 2)),
+                logabs=np.zeros((2, 2)),
                 min_singular=one * minimum,
                 max_singular=one,
                 coverage_left=one,
@@ -496,19 +623,33 @@ class WavecarFukuiUnitTests(unittest.TestCase):
 
         stable, unstable = links(1.0), links(1.0e-6)
         maps = {
-            "V": ([1], np.asarray([[0.0]]), stable, stable),
-            "V1": ([1, 2], np.asarray([[0.2]]), unstable, unstable),
-            "V2": ([1, 2, 3], np.asarray([[0.4]]), stable, stable),
+            "V": ([1], np.full((2, 2), 0.0), stable, stable),
+            "V1": ([1, 2], np.full((2, 2), 0.2), unstable, unstable),
+            "V2": ([1, 2, 3], np.full((2, 2), 0.4), stable, stable),
         }
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
             with self.assertRaisesRegex(RuntimeError, "transport validation failed"):
                 MODULE.write_t0_transport(
                     output, fake, grid, maps, 2, 0.1, 0.2, 2,
-                    np.zeros(3), np.ones(3) * 0.5, None,
+                    np.zeros(3), np.asarray((0.25, 0.25, 0.0)), None,
                     1e-3, 1e-5, 0.8 * np.pi, False,
                 )
-            self.assertTrue((output / "transport_t0_diagnostics.json").exists())
+            diagnostics = json.loads(
+                (output / "transport_t0_diagnostics.json").read_text()
+            )
+            self.assertEqual(
+                diagnostics["energy_window"]["next_unrepresented_band_index"], 4
+            )
+            self.assertEqual(
+                diagnostics["energy_window"]["next_unrepresented_band_min_ev"],
+                10.0,
+            )
+            self.assertTrue(
+                diagnostics["energy_window"][
+                    "mu_max_below_next_unrepresented_band_min"
+                ]
+            )
             self.assertFalse((output / "transport_t0.csv").exists())
 
     def test_v1_flux_checks_gap_at_all_four_vertices(self):
@@ -558,13 +699,17 @@ class WavecarFukuiUnitTests(unittest.TestCase):
             self.assertFalse((output / "transport_t0.csv").exists())
 
     def test_valence_baseline_link_gap_and_phase_are_hard_gates(self):
-        grid = MODULE.Grid(1, 1, np.asarray([[0]]), np.zeros(3))
+        grid = MODULE.Grid(2, 2, np.asarray([[0, 1], [2, 3]]), np.zeros(3))
+        kpoints = np.asarray(
+            [(0.0, 0.0, 0.0), (0.0, 0.5, 0.0),
+             (0.5, 0.0, 0.0), (0.5, 0.5, 0.0)]
+        )
 
         def links(minimum):
-            one = np.ones((1, 1))
+            one = np.ones((2, 2))
             return MODULE.LinkSet(
-                phase=np.zeros((1, 1)),
-                logabs=np.zeros((1, 1)),
+                phase=np.zeros((2, 2)),
+                logabs=np.zeros((2, 2)),
                 min_singular=one * minimum,
                 max_singular=one,
                 coverage_left=one,
@@ -581,19 +726,19 @@ class WavecarFukuiUnitTests(unittest.TestCase):
             with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
                 fake = SimpleNamespace(
                     header=SimpleNamespace(nbands=4, reciprocal=np.eye(3)),
-                    energies=energies,
-                    kpoints=np.zeros((1, 3)),
+                    energies=np.tile(energies, (4, 1)),
+                    kpoints=kpoints,
                 )
                 maps = {
-                    "V": ([1], np.asarray([[baseline_phi]]), baseline_links, baseline_links),
-                    "V1": ([1, 2], np.asarray([[0.2]]), stable, stable),
-                    "V2": ([1, 2, 3], np.asarray([[0.4]]), stable, stable),
+                    "V": ([1], np.full((2, 2), baseline_phi), baseline_links, baseline_links),
+                    "V1": ([1, 2], np.full((2, 2), 0.2), stable, stable),
+                    "V2": ([1, 2, 3], np.full((2, 2), 0.4), stable, stable),
                 }
                 output = Path(directory)
                 with self.assertRaisesRegex(RuntimeError, "valence baseline failed"):
                     MODULE.write_t0_transport(
                         output, fake, grid, maps, 2, 0.1, 0.2, 2,
-                        np.zeros(3), np.ones(3) * 0.5, None,
+                        np.zeros(3), np.asarray((0.25, 0.25, 0.0)), None,
                         1e-3, 1e-5, 0.8 * np.pi, True,
                     )
                 diagnostics = json.loads(

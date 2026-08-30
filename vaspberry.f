@@ -858,6 +858,7 @@
           time_2=MPI_WTIME()
          endif
 #endif
+         berrycurv_kubo_tot=0d0
          chernnumber_total=0d0
          do ie=nini, nmax
            if(myrank .eq. 0) then

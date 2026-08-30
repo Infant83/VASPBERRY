@@ -1,4 +1,5 @@
 import unittest
+import json
 from contextlib import redirect_stderr
 from io import StringIO
 from pathlib import Path
@@ -65,6 +66,24 @@ def synthetic_eigenval(nx=12, ny=10, band_energy=0.0, weights=None, shift=(0.0, 
     )
 
 
+def synthetic_window_eigenval(energies):
+    energy_array = np.atleast_2d(np.asarray(energies, dtype=float))
+    nk, nband = energy_array.shape
+    frac = np.zeros((nk, 3), dtype=float)
+    if nk > 1:
+        frac[:, 0] = np.arange(nk) / nk
+    return vt.EigenvalData(
+        frac=frac,
+        energies=energy_array,
+        occupations=np.zeros_like(energy_array),
+        weights=np.full(nk, 1.0 / nk),
+        nelect=0,
+        nk=nk,
+        nband=nband,
+        source=Path("synthetic-window-EIGENVAL"),
+    )
+
+
 def nine_reciprocal_copies(data):
     frac_blocks = []
     cart_blocks = []
@@ -89,6 +108,162 @@ def nine_reciprocal_copies(data):
 
 
 class TransportTests(unittest.TestCase):
+    def test_zero_temperature_uses_closed_occupied_side(self):
+        mu = 0.5
+        energies = np.array([mu - 5.0e-13, mu, mu + 5.0e-13])
+        np.testing.assert_array_equal(
+            vt.fermi_dirac(energies, mu, temperature=0.0),
+            [1.0, 1.0, 0.0],
+        )
+
+    def test_energy_column_accepts_only_available_extra_columns(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "curvature.dat"
+            path.write_text("0 0 0 1 0 0 0 2 3\n", encoding="utf-8")
+            self.assertEqual(vt.read_vaspberry(path, energy_column=7).energy[0], 2.0)
+            self.assertEqual(vt.read_vaspberry(path, energy_column=8).energy[0], 3.0)
+            self.assertEqual(vt.read_vaspberry(path).energy[0], 2.0)
+            for column in (-1, 6, 9):
+                with self.subTest(column=column), self.assertRaisesRegex(
+                    ValueError, "available extra.*energy column"
+                ):
+                    vt.read_vaspberry(path, energy_column=column)
+
+            stderr = StringIO()
+            with self.assertRaises(SystemExit), redirect_stderr(stderr):
+                vt.main([
+                    "line", "--input", str(path), "--energy-column", "9",
+                    "--output", str(Path(directory) / "line.png"),
+                ])
+            self.assertNotIn("Traceback", stderr.getvalue())
+            self.assertIn("error:", stderr.getvalue())
+
+    def test_legacy_energy_window_completeness_and_provenance(self):
+        eig = synthetic_window_eigenval([
+            [0.10, 0.45, 1.00, 1.50],
+            [0.15, 0.55, 1.10, 1.60],
+        ])
+        validation = vt.validate_legacy_sigma_energy_window(
+            eig, [2], np.array([0.2, 0.8]), 0.0,
+            occupation_tolerance=1.0e-8, core_chern=-1.0,
+        )
+        self.assertTrue(validation["validated"])
+        self.assertEqual(validation["active_window"], [2, 2])
+        self.assertEqual(validation["core_bands"], [1])
+        self.assertEqual(validation["next_unrepresented_band"], 3)
+        self.assertEqual(validation["minimum_core_occupation"], 1.0)
+        self.assertEqual(validation["maximum_next_band_occupation"], 0.0)
+        self.assertEqual(validation["occupation_tolerance"], 1.0e-8)
+        self.assertEqual(validation["zero_temperature_convention"], "E <= mu is occupied")
+
+    def test_legacy_energy_window_rejects_incomplete_band_sets_and_tails(self):
+        eig = synthetic_window_eigenval([[0.10, 0.45, 1.00, 1.50, 2.00]])
+        with self.assertRaisesRegex(ValueError, "must be consecutive"):
+            vt.validate_legacy_sigma_energy_window(eig, [2, 4], np.array([0.2]), 0.0)
+        with self.assertRaisesRegex(ValueError, "core band 1 is not fully occupied"):
+            vt.validate_legacy_sigma_energy_window(eig, [2], np.array([0.05, 0.8]), 0.0)
+        with self.assertRaisesRegex(ValueError, "unrepresented band 3 is occupied"):
+            vt.validate_legacy_sigma_energy_window(eig, [2], np.array([0.2, 1.0]), 0.0)
+        with self.assertRaisesRegex(ValueError, "final band"):
+            vt.validate_legacy_sigma_energy_window(eig, [5], np.array([1.9]), 0.0)
+
+        finite_temperature = synthetic_window_eigenval([[-1.0, 0.0, 0.2]])
+        with self.assertRaisesRegex(ValueError, "unrepresented band 3 is occupied"):
+            vt.validate_legacy_sigma_energy_window(
+                finite_temperature, [2], np.array([0.0]), 300.0,
+                occupation_tolerance=1.0e-8,
+            )
+        accepted = vt.validate_legacy_sigma_energy_window(
+            finite_temperature, [2], np.array([0.0]), 300.0,
+            occupation_tolerance=1.0e-3,
+        )
+        self.assertLessEqual(accepted["maximum_next_band_occupation"], 1.0e-3)
+
+    def test_core_chern_must_match_omitted_integer_manifold(self):
+        eig = synthetic_window_eigenval([[-1.0, 0.0, 1.0]])
+        with self.assertRaisesRegex(ValueError, "not within 0.005 of an integer"):
+            vt.validate_legacy_sigma_energy_window(
+                eig, [2], np.array([0.0]), 0.0, core_chern=0.01
+            )
+        with self.assertRaisesRegex(ValueError, "starts at band 1"):
+            vt.validate_legacy_sigma_energy_window(
+                eig, [1], np.array([-0.5]), 0.0, core_chern=1.0
+            )
+
+    def test_sigma_cli_records_energy_window_validation_in_summary(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            nx = ny = 4
+            band = synthetic_uniform_band(nx=nx, ny=ny, chern=1.0)
+            band.metadata["band"] = 2
+            curvature_path = root / "BERRYCURV.dat"
+            rows = np.column_stack([band.cart, band.omega, band.frac])
+            header = (
+                f"# NKPOINT : {nx * ny}\n"
+                "# NBANDS : 3\n"
+                f"# K-GRID : {nx} X {ny}\n"
+                "# RECIVEC B1 (A^-1) : 6.283185307179586 0 0\n"
+                "# RECIVEC B2 (A^-1) : 0 6.283185307179586 0\n"
+                "# Chern Number for the BAND : 2\n"
+            )
+            curvature_path.write_text(
+                header + "\n".join(" ".join(f"{value:.16g}" for value in row) for row in rows) + "\n",
+                encoding="utf-8",
+            )
+
+            eig = synthetic_eigenval(nx=nx, ny=ny, band_energy=0.0)
+            eig.energies = np.column_stack([
+                np.full(eig.nk, -1.0), np.zeros(eig.nk), np.full(eig.nk, 2.0)
+            ])
+            eig.occupations = np.column_stack([
+                np.ones(eig.nk), np.zeros(eig.nk), np.zeros(eig.nk)
+            ])
+            eig.nband = 3
+            eigenval_path = root / "EIGENVAL"
+            eigenval_lines = ["header"] * 5 + [f"1 {eig.nk} {eig.nband}"]
+            for kpoint, weight, energies, occupations in zip(
+                eig.frac, eig.weights, eig.energies, eig.occupations, strict=True
+            ):
+                eigenval_lines.append("")
+                eigenval_lines.append(
+                    " ".join(str(value) for value in (*kpoint, weight))
+                )
+                eigenval_lines.extend(
+                    f"{index} {energy} {occupation}"
+                    for index, (energy, occupation) in enumerate(
+                        zip(energies, occupations, strict=True), start=1
+                    )
+                )
+            eigenval_path.write_text("\n".join(eigenval_lines) + "\n", encoding="utf-8")
+
+            summary_path = root / "summary.json"
+            exit_code = vt.main([
+                "sigma", "--input", str(curvature_path), "--bands", "2",
+                "--eigenval", str(eigenval_path), "--mu-min", "-0.5", "--mu-max", "1.0",
+                "--mu-points", "3", "--occupation-tolerance", "1e-7",
+                "--core-chern", "0.0",
+                "--csv", str(root / "sigma.csv"), "--plot", str(root / "sigma.png"),
+                "--summary", str(summary_path),
+            ])
+            self.assertEqual(exit_code, 0)
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+            self.assertEqual(summary["occupation_tolerance"], 1.0e-7)
+            self.assertTrue(summary["energy_window_validation"]["validated"])
+            self.assertEqual(summary["energy_window_validation"]["active_window"], [2, 2])
+            self.assertEqual(summary["zero_temperature_occupation"], "E <= mu is occupied")
+            self.assertEqual(summary["core_chern_provenance"], "explicit CLI input")
+
+            stderr = StringIO()
+            with self.assertRaises(SystemExit), redirect_stderr(stderr):
+                vt.main([
+                    "sigma", "--input", str(curvature_path), "--bands", "2",
+                    "--eigenval", str(eigenval_path), "--mu-min", "-0.5",
+                    "--mu-max", "1.0", "--mu-points", "3",
+                    "--csv", str(root / "missing-core.csv"),
+                    "--plot", str(root / "missing-core.png"),
+                ])
+            self.assertIn("--core-chern must be supplied explicitly", stderr.getvalue())
+
     def test_sigma_mesh_requires_two_dimensions(self):
         for shape in ((1, 1), (1, 4), (4, 1)):
             with self.subTest(shape=shape), self.assertRaisesRegex(ValueError, "genuinely two-dimensional"):
@@ -420,6 +595,39 @@ class TransportTests(unittest.TestCase):
         )
         np.testing.assert_allclose(extended, [-1.99, 1.06])
 
+    def test_periodic_cut_interpolation_is_finite_for_highly_skew_basis(self):
+        data = synthetic_uniform_band(nx=8, ny=6)
+        basis = np.array([[1.0, 0.0, 0.0], [1.9, 0.1, 0.0]])
+        data.metadata["b1"] = basis[0]
+        data.metadata["b2"] = basis[1]
+        data.cart = data.frac[:, :2] @ basis
+        data.omega = np.sin(2.0 * np.pi * data.frac[:, 0]) + np.cos(
+            2.0 * np.pi * data.frac[:, 1]
+        )
+        data.energy = 0.2 * data.omega
+
+        start = np.array([0.0, 0.0])
+        end = np.array([-0.99, -0.94])
+        delta = vt.shortest_reciprocal_delta(start, end, basis)
+        self.assertGreater(np.max(np.abs(delta)), 1.0)
+        samples = start + np.linspace(0.0, 1.0, 401)[:, None] * delta
+        omega_cut = vt.periodic_bilinear_interpolate(data, data.omega, samples)
+        energy_cut = vt.periodic_bilinear_interpolate(data, data.energy, samples)
+        self.assertTrue(np.all(np.isfinite(omega_cut)))
+        self.assertTrue(np.all(np.isfinite(energy_cut)))
+
+        translated_mesh = data.frac[:, :2] + np.array([10.0, -7.0])
+        np.testing.assert_allclose(
+            vt.periodic_bilinear_interpolate(data, data.omega, translated_mesh),
+            data.omega,
+            atol=2.0e-14,
+        )
+        with TemporaryDirectory() as directory:
+            output = Path(directory) / "skew-cut.png"
+            vt.plot_valley_cut(data, start, end, output, samples=401)
+            self.assertTrue(output.is_file())
+            self.assertGreater(output.stat().st_size, 0)
+
     def test_nonfinite_inputs_are_rejected_early_and_after_mutation(self):
         base = synthetic_uniform_band(nx=4, ny=4)
         constructor_cases = {
@@ -524,6 +732,7 @@ class TransportTests(unittest.TestCase):
 
     def test_core_chern_adds_constant_total_baseline_only(self):
         data = synthetic_uniform_band(energy=2.0, chern=1.0)
+        data.metadata["band"] = 2
         result = vt.integrate_sigma([data], np.array([0.0]), 0.0, core_chern=-1.0)
         self.assertAlmostEqual(result["chern_weight_total"][0], -1.0)
         self.assertAlmostEqual(result["sigma_xy_total_e2_over_h"][0], 1.0)

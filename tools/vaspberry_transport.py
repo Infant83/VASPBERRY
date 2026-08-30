@@ -32,7 +32,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.interpolate import LinearNDInterpolator
 
 
 KB_EV_PER_K = 8.617333262145e-5
@@ -217,6 +216,18 @@ def read_vaspberry(path: str | Path, energy_column: int | None = None) -> Curvat
         raise ValueError(f"{source}: expected at least 7 numeric columns, got {raw.shape[1]}")
     if energy_column is None and raw.shape[1] >= 8:
         energy_column = 7
+    if energy_column is not None:
+        if not isinstance(energy_column, (int, np.integer)):
+            raise ValueError("energy_column must be a zero-based integer column index")
+        if energy_column < 7 or energy_column >= raw.shape[1]:
+            available = (
+                f"7..{raw.shape[1] - 1}" if raw.shape[1] >= 8
+                else "none (the file has only the seven required columns)"
+            )
+            raise ValueError(
+                f"{source}: energy_column {energy_column} is not an available extra "
+                f"zero-based energy column; valid range: {available}"
+            )
     energy = None if energy_column is None else raw[:, energy_column]
     return CurvatureData(
         cart=raw[:, 0:3],
@@ -354,6 +365,123 @@ def validate_unique_active_bands(bands: Sequence[int]) -> None:
         raise ValueError(
             f"duplicate active band inputs {sorted(duplicates)} would double-count transport"
         )
+
+
+def validate_core_chern(core_chern: float, active_bands: Sequence[int]) -> int:
+    """Validate the integer Chern baseline assigned to omitted occupied bands."""
+
+    if not np.isfinite(core_chern):
+        raise ValueError("core Chern baseline must be finite")
+    nearest = int(np.rint(core_chern))
+    if abs(core_chern - nearest) > 5.0e-3:
+        raise ValueError(
+            f"core Chern baseline {core_chern:.9g} is not within 0.005 of an integer "
+            f"(nearest {nearest})"
+        )
+    if active_bands and min(active_bands) == 1 and core_chern != 0.0:
+        raise ValueError(
+            "a nonzero core Chern baseline is invalid when the active window starts at band 1"
+        )
+    return nearest
+
+
+def validate_legacy_sigma_energy_window(
+    eigenval: EigenvalData,
+    active_bands: Sequence[int],
+    mu_values: np.ndarray,
+    temperature: float,
+    occupation_tolerance: float = 1.0e-8,
+    core_chern: float = 0.0,
+) -> dict[str, object]:
+    """Require a complete finite band window for legacy EIGENVAL transport.
+
+    Bands below the active window are represented only by ``core_chern`` and
+    therefore must be fully occupied throughout the requested (mu, T) range.
+    The first band above the active window must remain unoccupied. Active bands
+    may be partially occupied, but must form one consecutive window.
+    """
+
+    bands = [int(band) for band in active_bands]
+    if not bands:
+        raise ValueError("at least one active band is required")
+    validate_unique_active_bands(bands)
+    ordered = sorted(bands)
+    if ordered[0] < 1 or ordered[-1] > eigenval.nband:
+        raise ValueError(
+            f"active bands {ordered} are outside EIGENVAL range 1..{eigenval.nband}"
+        )
+    expected = list(range(ordered[0], ordered[-1] + 1))
+    if ordered != expected:
+        raise ValueError(
+            f"active bands must be consecutive; got {ordered}, expected the complete "
+            f"window {expected}"
+        )
+    if not np.isfinite(occupation_tolerance) or not 0.0 <= occupation_tolerance < 0.5:
+        raise ValueError("occupation tolerance must be finite and in the range [0, 0.5)")
+    mu = np.asarray(mu_values, dtype=float)
+    if mu.ndim != 1 or len(mu) == 0 or not np.all(np.isfinite(mu)):
+        raise ValueError("chemical-potential grid must be a nonempty finite one-dimensional array")
+    if not np.isfinite(temperature) or temperature < 0.0:
+        raise ValueError("temperature must be finite and nonnegative")
+
+    nearest_core_chern = validate_core_chern(core_chern, ordered)
+    first, last = ordered[0], ordered[-1]
+    if last >= eigenval.nband:
+        raise ValueError(
+            f"active window ends at EIGENVAL's final band {last}; band {last + 1} is "
+            "required to verify that omitted higher bands remain unoccupied"
+        )
+
+    mu_min = float(np.min(mu))
+    mu_max = float(np.max(mu))
+    core_bands = list(range(1, first))
+    minimum_core_occupation: float | None = None
+    if core_bands:
+        core_occupation = fermi_dirac(
+            eigenval.energies[:, : first - 1], mu_min, temperature
+        )
+        minimum_core_occupation = float(np.min(core_occupation))
+        if minimum_core_occupation < 1.0 - occupation_tolerance:
+            location = np.unravel_index(int(np.argmin(core_occupation)), core_occupation.shape)
+            failed_band = int(location[1]) + 1
+            failed_energy = float(eigenval.energies[location[0], location[1]])
+            raise ValueError(
+                f"omitted core band {failed_band} is not fully occupied over the requested "
+                f"window: min f={minimum_core_occupation:.9g} at E={failed_energy:.9g} eV, "
+                f"mu_min={mu_min:.9g} eV, T={temperature:.9g} K; require f >= "
+                f"{1.0 - occupation_tolerance:.9g}"
+            )
+
+    next_band = last + 1
+    next_occupation = fermi_dirac(
+        eigenval.energies[:, next_band - 1], mu_max, temperature
+    )
+    maximum_next_occupation = float(np.max(next_occupation))
+    if maximum_next_occupation > occupation_tolerance:
+        failed_k = int(np.argmax(next_occupation))
+        failed_energy = float(eigenval.energies[failed_k, next_band - 1])
+        raise ValueError(
+            f"unrepresented band {next_band} is occupied over the requested window: "
+            f"max f={maximum_next_occupation:.9g} at E={failed_energy:.9g} eV, "
+            f"mu_max={mu_max:.9g} eV, T={temperature:.9g} K; require f <= "
+            f"{occupation_tolerance:.9g}"
+        )
+
+    return {
+        "validated": True,
+        "active_bands": ordered,
+        "active_window": [first, last],
+        "core_bands": core_bands,
+        "next_unrepresented_band": next_band,
+        "occupation_tolerance": occupation_tolerance,
+        "minimum_core_occupation": minimum_core_occupation,
+        "maximum_next_band_occupation": maximum_next_occupation,
+        "core_chern_input": core_chern,
+        "core_chern_nearest_integer": nearest_core_chern,
+        "mu_range_eV": [mu_min, mu_max],
+        "temperature_K": temperature,
+        "zero_temperature_convention": "E <= mu is occupied",
+    }
 
 
 def _canonical_xy(frac: np.ndarray, tolerance: float) -> np.ndarray:
@@ -730,10 +858,7 @@ def fermi_dirac(energy: np.ndarray, mu: float, temperature: float) -> np.ndarray
     if temperature < 0.0:
         raise ValueError("temperature must be nonnegative")
     if temperature == 0.0:
-        out = np.zeros_like(energy, dtype=float)
-        out[energy < mu] = 1.0
-        out[np.isclose(energy, mu, atol=1.0e-12, rtol=0.0)] = 0.5
-        return out
+        return np.asarray(energy <= mu, dtype=float)
     x = (energy - mu) / (KB_EV_PER_K * temperature)
     out = np.empty_like(x)
     out[x > 40.0] = np.exp(-x[x > 40.0])
@@ -883,6 +1008,15 @@ def integrate_sigma(
         raise ValueError("isolation tolerance must be finite and nonnegative")
     if not np.isfinite(core_chern):
         raise ValueError("core Chern baseline must be finite")
+    active_bands = [
+        int(data.metadata["band"])
+        for data in datasets
+        if data.metadata.get("band") is not None
+    ]
+    if len(active_bands) == len(datasets):
+        validate_core_chern(core_chern, active_bands)
+    elif abs(core_chern - np.rint(core_chern)) > 5.0e-3:
+        raise ValueError("core Chern baseline must be within 0.005 of an integer")
     reference = datasets[0]
     for data in datasets:
         validate_finite_curvature(data)
@@ -1175,6 +1309,60 @@ def plot_path(data: CurvatureData, output: str | Path, title: str | None = None)
     plt.close(fig)
 
 
+def periodic_bilinear_interpolate(
+    data: CurvatureData,
+    values: np.ndarray,
+    sample_frac: np.ndarray,
+    tolerance: float = 2.0e-5,
+) -> np.ndarray:
+    """Interpolate a scalar field on a validated uniform 2D reciprocal torus."""
+
+    grid = uniform_grid(data.frac, tolerance, "cut interpolation mesh")
+    if grid.nx < 2 or grid.ny < 2:
+        raise ValueError(
+            f"cut interpolation requires Nx,Ny >= 2; got {grid.nx}x{grid.ny}"
+        )
+    field = np.asarray(values, dtype=float)
+    samples = np.asarray(sample_frac, dtype=float)
+    if field.shape != (len(data.omega),):
+        raise ValueError("cut interpolation values must have shape (N,)")
+    if samples.ndim != 2 or samples.shape[1] != 2:
+        raise ValueError("cut interpolation samples must have shape (M, 2)")
+    if not np.all(np.isfinite(field)) or not np.all(np.isfinite(samples)):
+        raise ValueError("cut interpolation inputs contain NaN or infinity")
+
+    x_keys = np.sort(grid.x_keys)
+    y_keys = np.sort(grid.y_keys)
+    x_rank = {int(key): index for index, key in enumerate(x_keys)}
+    y_rank = {int(key): index for index, key in enumerate(y_keys)}
+    value_grid = np.empty((grid.nx, grid.ny), dtype=float)
+    for row, key in enumerate(grid.keys):
+        value_grid[x_rank[int(key[0])], y_rank[int(key[1])]] = field[row]
+
+    canonical = _canonical_xy(data.frac, tolerance)
+    x0 = float(np.mean(canonical[grid.keys[:, 0] == x_keys[0], 0]))
+    y0 = float(np.mean(canonical[grid.keys[:, 1] == y_keys[0], 1]))
+    scaled_x = np.mod(samples[:, 0] - x0, 1.0) * grid.nx
+    scaled_y = np.mod(samples[:, 1] - y0, 1.0) * grid.ny
+    ix0_unwrapped = np.floor(scaled_x).astype(int)
+    iy0_unwrapped = np.floor(scaled_y).astype(int)
+    tx = scaled_x - ix0_unwrapped
+    ty = scaled_y - iy0_unwrapped
+    ix0 = np.mod(ix0_unwrapped, grid.nx)
+    iy0 = np.mod(iy0_unwrapped, grid.ny)
+    ix1 = (ix0 + 1) % grid.nx
+    iy1 = (iy0 + 1) % grid.ny
+    interpolated = (
+        (1.0 - tx) * (1.0 - ty) * value_grid[ix0, iy0]
+        + tx * (1.0 - ty) * value_grid[ix1, iy0]
+        + (1.0 - tx) * ty * value_grid[ix0, iy1]
+        + tx * ty * value_grid[ix1, iy1]
+    )
+    if not np.all(np.isfinite(interpolated)):
+        raise ValueError("periodic cut interpolation produced NaN or infinity")
+    return interpolated
+
+
 def plot_valley_cut(
     data: CurvatureData,
     k_center: Sequence[float],
@@ -1190,19 +1378,7 @@ def plot_valley_cut(
     t = np.linspace(0.0, 1.0, samples)
     cut_frac = k0[None, :] + t[:, None] * delta[None, :]
 
-    base_frac = data.frac[:, :2]
-    tiled_frac = []
-    tiled_omega = []
-    tiled_energy = []
-    for sx in (-1, 0, 1):
-        for sy in (-1, 0, 1):
-            tiled_frac.append(base_frac + np.array([sx, sy]))
-            tiled_omega.append(data.omega)
-            if data.energy is not None:
-                tiled_energy.append(data.energy)
-    coords = np.vstack(tiled_frac)
-    omega = np.concatenate(tiled_omega)
-    omega_cut = LinearNDInterpolator(coords, omega)(cut_frac)
+    omega_cut = periodic_bilinear_interpolate(data, data.omega, cut_frac)
     cart_cut = cut_frac @ basis
     distance = _path_distance(cart_cut)
 
@@ -1214,8 +1390,7 @@ def plot_valley_cut(
     axes_array[0].axhline(0.0, color="0.55", lw=0.7)
     axes_array[0].set_ylabel(r"$\Omega_z$ ($\AA^2$)")
     if data.energy is not None:
-        energy = np.concatenate(tiled_energy)
-        energy_cut = LinearNDInterpolator(coords, energy)(cut_frac)
+        energy_cut = periodic_bilinear_interpolate(data, data.energy, cut_frac)
         axes_array[1].plot(distance, energy_cut, color="#174f78", lw=1.7)
         axes_array[1].set_ylabel("Energy (eV)")
     axes_array[-1].set_xlabel(r"K $\rightarrow$ K' path length ($\AA^{-1}$)")
@@ -1332,8 +1507,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="reject a nominal single band when its direct gap to another band is below this value (eV)",
     )
     sigma_parser.add_argument(
-        "--core-chern", type=float, default=0.0,
-        help="constant Chern baseline of a fully occupied valence manifold",
+        "--core-chern", type=float,
+        help=(
+            "integer Chern baseline of fully occupied bands below the active "
+            "window; must be supplied explicitly when the first active band is >1"
+        ),
+    )
+    sigma_parser.add_argument(
+        "--occupation-tolerance", type=float, default=1.0e-8,
+        help=(
+            "maximum allowed Fermi-Dirac occupation tail in omitted bands "
+            "(default: 1e-8)"
+        ),
     )
     sigma_parser.add_argument("--k-center", nargs=2, type=float, metavar=("K1", "K2"))
     sigma_parser.add_argument("--kp-center", nargs=2, type=float, metavar=("KP1", "KP2"))
@@ -1377,6 +1562,15 @@ def main(argv: Sequence[str] | None = None) -> int:
                 raise ValueError("--mu-points must be at least 1")
             if not np.isfinite(args.mu_min) or not np.isfinite(args.mu_max):
                 raise ValueError("chemical-potential bounds must be finite")
+            if args.mu_max < args.mu_min:
+                raise ValueError("--mu-max must be greater than or equal to --mu-min")
+            if (
+                not np.isfinite(args.occupation_tolerance)
+                or not 0.0 <= args.occupation_tolerance < 0.5
+            ):
+                raise ValueError(
+                    "--occupation-tolerance must be finite and in the range [0, 0.5)"
+                )
             eigenval = read_eigenval(args.eigenval, args.spin)
             raw_datasets = [read_vaspberry(path) for path in args.input]
             for data in raw_datasets:
@@ -1392,12 +1586,30 @@ def main(argv: Sequence[str] | None = None) -> int:
                     raise ValueError(f"cannot infer band for {data.source}; provide --bands")
                 bands.append(int(band))
             validate_unique_active_bands(bands)
+            if args.core_chern is None:
+                if min(bands) > 1:
+                    raise ValueError(
+                        "--core-chern must be supplied explicitly when active bands "
+                        "start above band 1 (use --core-chern 0.0 when zero has been "
+                        "established)"
+                    )
+                core_chern = 0.0
+            else:
+                core_chern = float(args.core_chern)
+            mu = np.linspace(args.mu_min, args.mu_max, args.mu_points)
+            energy_window_validation = validate_legacy_sigma_energy_window(
+                eigenval,
+                bands,
+                mu,
+                args.temperature,
+                args.occupation_tolerance,
+                core_chern,
+            )
             for data, band in zip(datasets, bands, strict=True):
                 attach_fukui_vertex_energies(data, eigenval, int(band))
-            mu = np.linspace(args.mu_min, args.mu_max, args.mu_points)
             columns = integrate_sigma(
                 datasets, mu, args.temperature, args.k_center, args.kp_center,
-                args.valley_radius, args.isolation_tolerance, args.core_chern,
+                args.valley_radius, args.isolation_tolerance, core_chern,
             )
             write_csv(args.csv, columns)
             plot_sigma(columns, args.plot)
@@ -1435,8 +1647,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "minimum_direct_band_gaps_eV": [
                         data.metadata.get("min_direct_band_gap_eV") for data in datasets
                     ],
-                    "core_chern": args.core_chern,
+                    "core_chern": core_chern,
+                    "core_chern_provenance": "explicit CLI input" if args.core_chern is not None else "no omitted lower bands",
+                    "occupation_tolerance": args.occupation_tolerance,
+                    "energy_window_validation": energy_window_validation,
                     "sign_convention": "sigma_xy/(e^2/h) = - occupied_Chern_weight",
+                    "zero_temperature_occupation": "E <= mu is occupied",
                     "energy_quadrature": "mean Fermi occupation at four Fukui plaquette vertices",
                     "model_scope": "intrinsic 2D Berry-curvature term; rigid-band occupations",
                 }

@@ -94,6 +94,32 @@ class FortranSourceRegressionTests(unittest.TestCase):
         )
         self.assertRegex(self.source, allocation_and_initialization)
 
+    def test_kubo_total_is_reset_for_each_spin_before_band_loop(self):
+        spin_loop_match = re.search(
+            r"(?ims)^\s*do\s+isp\s*=\s*1\s*,\s*ispin\s*!\s*ispin start\s*$"
+            r"(?P<body>.*?)"
+            r"^\s*enddo\s*!\s*ispin loop over\s*$",
+            self.source,
+        )
+        self.assertIsNotNone(spin_loop_match)
+        spin_loop = spin_loop_match.group("body")
+
+        kubo_branch_match = re.search(
+            r"(?ims)^\s*elseif\s*\(\s*ikubo\.ge\.1\s*\)\s*then\s*$"
+            r"(?P<body>.*?)"
+            r"^\s*endif\s*!\s*icd over\s*$",
+            spin_loop,
+        )
+        self.assertIsNotNone(kubo_branch_match)
+        kubo_branch = kubo_branch_match.group("body")
+
+        reset_before_band_loop = re.compile(
+            r"(?ims)^\s*berrycurv_kubo_tot\s*=\s*0d0\s*$"
+            r".*?"
+            r"^\s*do\s+ie\s*=\s*nini\s*,\s*nmax\s*$"
+        )
+        self.assertRegex(kubo_branch, reset_before_band_loop)
+
     def test_legacy_fukui_formula_and_chern_accumulation_are_unchanged(self):
         compact = re.sub(r"\s+", "", self.source).lower()
         self.assertIn(

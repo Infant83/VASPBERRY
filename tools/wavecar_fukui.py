@@ -374,7 +374,13 @@ def link_matrix(
     right = wavecar.coefficients(ik_right, bands)
     overlap = np.zeros((len(bands), len(bands)), dtype=np.complex128)
     for component in range(wavecar.spinor_components):
-        overlap += left[:, component, il].conj() @ right[:, component, ir].T
+        # WAVECAR coefficients are complex64, but link overlaps can contain
+        # severe cancellation across plane waves.  Cast both operands before
+        # matrix multiplication so products and their reduction are evaluated
+        # in complex128 rather than merely accumulated into a complex128 array.
+        left_component = left[:, component, il].astype(np.complex128, copy=False)
+        right_component = right[:, component, ir].astype(np.complex128, copy=False)
+        overlap += left_component.conj() @ right_component.T
     coverage_left = il.size / g_left.shape[0]
     coverage_right = ir.size / g_right.shape[0]
     return overlap, coverage_left, coverage_right
@@ -880,12 +886,15 @@ def make_valley_partition(
                     )
                 mask_k[ix, iy], mask_kp[ix, iy] = in_k, in_kp
                 mask_outside[ix, iy] = not (in_k or in_kp)
-    if radius_inv_angstrom is not None and (
-        not np.any(mask_k) or not np.any(mask_kp)
-    ):
+    if not np.any(mask_k) or not np.any(mask_kp):
+        mode = (
+            "--valley-radius"
+            if radius_inv_angstrom is not None
+            else "nearest-center Voronoi partition"
+        )
         raise ValueError(
-            "--valley-radius selects no plaquette centers for K or K'; "
-            "increase the radius or use a denser mesh"
+            f"{mode} selects no plaquette centers for K or K'; "
+            "adjust the valley definition or use a denser mesh"
         )
     return mask_k, mask_kp, mask_outside, distance_k, distance_kp
 
@@ -955,8 +964,14 @@ def cumulative_t0_effective_phi(
 def remove_stale_transport_outputs(output_dir: Path) -> None:
     """Remove only transport artifacts that could be mistaken for this run."""
 
+    remove_planned_outputs(output_dir, TRANSPORT_OUTPUT_NAMES)
+
+
+def remove_planned_outputs(output_dir: Path, output_names: Iterable[str]) -> None:
+    """Remove the exact fixed outputs planned for one invocation, and no others."""
+
     output_dir.mkdir(parents=True, exist_ok=True)
-    for name in TRANSPORT_OUTPUT_NAMES:
+    for name in output_names:
         (output_dir / name).unlink(missing_ok=True)
 
 
@@ -1032,8 +1047,8 @@ def write_t0_transport(
             raise ValueError(f"{option} must be finite")
     if min_link_sv < 0.0 or min_neighbor_gap_ev < 0.0:
         raise ValueError("link and neighbor-gap thresholds must be nonnegative")
-    if not (0.0 < max_abs_phi <= np.pi):
-        raise ValueError("max_abs_phi must be in (0, pi]")
+    if not (0.0 < max_abs_phi < np.pi):
+        raise ValueError("max_abs_phi must be in (0, pi)")
     if energy_band + 2 > wavecar.header.nbands:
         raise ValueError("T=0 cumulative transport needs target and target+1 bands")
     if not np.all(
@@ -1223,6 +1238,18 @@ def write_t0_transport(
         "maps": {"V": label_v, "V_plus_1": label_v1, "V_plus_2": label_v2},
         "energy_band": energy_band,
         "mu_range_ev": [mu_min, mu_max, mu_num],
+        "energy_window": {
+            "valence_band_index": energy_band - 1,
+            "valence_band_max_ev": valence_band_max,
+            "mu_min_ev": mu_min,
+            "mu_min_above_valence_max": mu_min > valence_band_max,
+            "next_unrepresented_band_index": energy_band + 2,
+            "next_unrepresented_band_min_ev": next_unrepresented_min,
+            "mu_max_ev": mu_max,
+            "mu_max_below_next_unrepresented_band_min": (
+                mu_max < next_unrepresented_min
+            ),
+        },
         "baseline_chern": baseline_chern,
         "baseline_quality": {
             "pass": baseline_quality_pass,
@@ -1737,20 +1764,19 @@ def main() -> None:
         parser.error("--min-link-sv and --min-neighbor-gap-ev must be nonnegative")
     if not (0.0 <= args.min_pw_coverage <= 1.0):
         parser.error("--min-pw-coverage must be in [0, 1]")
-    if not (0.0 < args.max_abs_phi <= np.pi):
-        parser.error("--max-abs-phi must be in (0, pi]")
+    if not (0.0 < args.max_abs_phi < np.pi):
+        parser.error("--max-abs-phi must be in (0, pi)")
     try:
         maps = args.maps or default_map_specifications(args.energy_band)
+        output_names = planned_output_names(maps, args.plot, args.transport_t0)
         validate_input_output_collision(
             args.wavecar,
             args.output_dir,
-            planned_output_names(maps, args.plot, args.transport_t0),
+            output_names,
         )
+        remove_planned_outputs(args.output_dir, output_names)
     except ValueError as error:
         parser.error(str(error))
-    if args.transport_t0:
-        args.output_dir.mkdir(parents=True, exist_ok=True)
-        remove_stale_transport_outputs(args.output_dir)
     wavecar = Wavecar(
         args.wavecar, spinor_components=args.spinor_components, spin=args.spin
     )
