@@ -253,6 +253,7 @@
       if(ikubo.ge.1) allocate(berrycurv_kubo(nk))
       if(ikubo.ge.1) allocate(xberrycurv_kubo(kperiod*2*kperiod*2*nk))
       if(ikubo.ge.1) allocate(berrycurv_kubo_tot(nk))
+      if(ikubo.ge.1) berrycurv_kubo_tot=0d0
       if(ivel .eq. 1 .and. myrank==0) then
         ni=nini 
         nj=nini
@@ -4230,6 +4231,17 @@
       write(6,*)"                  : -im option: plot imaginary?"
       write(6,*)"                  : -ishift: shift origin with respect"
       write(6,*)"                  :  to the direct coord. rx,ry,rz"
+      write(6,*)" "
+      write(6,*)"*VALLEY TRANSPORT POSTPROCESSING:"
+      write(6,*)" Use the opt-in Python tools."
+      write(6,*)" Legacy outputs and defaults are unchanged."
+      write(6,*)" python3 tools/vaspberry_transport.py -h"
+      write(6,*)" python3 tools/wavecar_fukui.py -h"
+      write(6,*)" A full uniform 2D BZ is required for transport."
+      write(6,*)" Line-mode data are for plotting only."
+      write(6,*)" Do not use a line for BZ integration."
+      write(6,*)" A CBM-only result is an incremental contribution."
+      write(6,*)" Total sigma_xy also needs the valence manifold."
       write(6,*)" "
       write(6,*)"* default: -f WAVECAR -kx 2 -ky 2 -s 2 -ii 1 -if VBM 
      &-kp 1"

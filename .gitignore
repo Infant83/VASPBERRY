@@ -1,1 +1,6 @@
 .DS_Store
+__pycache__/
+*.py[cod]
+
+# Generated from user-supplied WAVECAR; keep out of the source repository.
+validation/supplied_wavecar/

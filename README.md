@@ -29,6 +29,7 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
 * Compute Chern number for certain band(s) which are well-isolated over the BZ
 * Circular dichroism (optical selectivity response to the circulary polarized light)
 * Wavefunction plot (Gamma point only in the current version)
+* Guarded WAVECAR-direct Fukui export and valley-transport analysis (Python)
 
 # Usage
 * Instruction and possible options
@@ -42,6 +43,20 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
 > NOTE: current version only support gamma point for wavefunction plot. (there is some problem in boundary region in off-gamma k-point)
 * If your system is semimetallic, there can be following error messages: "error. !!! ne(k) /= ne(k') !!!". This is due to that the number of occupied states for certain k-point (ne(k)) counted based on the calculated Fermi level is differ over the Brillouin zone. In this case, one can explicitly specify the number of electrons (NE) of your system, so that VASPBERRY calculate berry curvature with "NE" bands. 
 > ./vaspberry -kx 12 -ky 12 -ii 1 -if 18 -ne 18
+
+* Energy-resolved and valley-resolved Hall transport is available through the
+  opt-in Python 3.10+ tools. The direct reader exports high-precision plaquette flux,
+  four vertex energies, adjacent-band gaps, and link-quality diagnostics from
+  the same full-mesh WAVECAR:
+> python -m pip install -r requirements-transport.txt
+> python tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 --output-dir direct_raw --valley-k 0.6666667,0.3333333,0 --valley-kp 0.3333333,0.6666667,0 --plot
+
+  See `docs/VALLEY_TRANSPORT.md` before interpreting a single-band result. The
+  guarded transport path refuses active plaquettes with nearly singular links,
+  insufficient band isolation, or branch-risk phases. It also validates the
+  fully occupied valence baseline globally and requires the chemical-potential
+  window to remain above the VBM and below the first unrepresented band.
+  Existing Fortran output and default calculations are unchanged.
 
 # Example
 * 1H-MoS2 : Berry curvature and Chern number
@@ -69,5 +84,3 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
   doi = {10.1103/PhysRevLett.128.046401},
   url = {https://link.aps.org/doi/10.1103/PhysRevLett.128.046401}
 }
-
-
