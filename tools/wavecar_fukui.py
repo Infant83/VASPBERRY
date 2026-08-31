@@ -3154,7 +3154,9 @@ def main() -> None:
             "min_gap_above_k_index": int(np.argmin(gap_above) + 1),
         }
     diagnostics = {
-        "wavecar": str(args.wavecar),
+        # Keep shareable diagnostics independent of the caller's local
+        # directory layout while retaining the input filename as provenance.
+        "wavecar": args.wavecar.name,
         "logical_recl": wavecar.header.logical_recl,
         "physical_record_bytes": wavecar.header.stride_bytes,
         "legacy_four_byte_word_recl": (
