@@ -168,10 +168,11 @@ class FortranSourceRegressionTests(unittest.TestCase):
             source = source_path.read_text(encoding="utf-8", errors="strict")
             compact = re.sub(r"\s+", "", source).lower()
             with self.subTest(source=source_path.name):
-                self.assertNotIn("itrim(ilp+1).ge.0", compact)
-                self.assertIn("itrim(ilp+1).eq.0", compact)
-                self.assertNotIn("elseif(ispinor.eq.0)then", compact)
-                self.assertIn("elseif(ispinor.eq.2)then", compact)
+                self.assertIn("if(itrim(iilp).ge.1.and.mod(nni,2).eq.0)then", compact)
+                self.assertIn("source_band=nni-1", compact)
+                self.assertIn("itheta=1", compact)
+                self.assertIn("coeffu(idx)=-conjg(raw(i+nsource))", compact)
+                self.assertIn("coeffd(idx)=conjg(raw(i))", compact)
 
     def test_z2_accumulators_are_reset_inside_each_spin_loop(self):
         reset_sequence = re.compile(
@@ -264,12 +265,13 @@ class FortranSourceRegressionTests(unittest.TestCase):
             with self.subTest(source=source_path.name):
                 self.assertTrue(error_indices)
                 for index in error_indices:
-                    following = next(
+                    following_lines = (
                         line.strip().lower()
                         for line in lines[index + 1 :]
                         if line.strip()
+                        and not line.lstrip().startswith("&")
                     )
-                    self.assertEqual(following, "call vaspberry_fail")
+                    self.assertEqual(next(following_lines), "call vaspberry_fail")
 
                 self.assertRegex(
                     source,
@@ -280,12 +282,54 @@ class FortranSourceRegressionTests(unittest.TestCase):
         mpi_source = SOURCE_PATH.read_text(encoding="utf-8", errors="strict")
         self.assertIn("call MPI_ABORT(MPI_COMM_WORLD,1,ierr)", mpi_source)
 
-    def test_fortran_version_banner_is_1_1_0(self):
+    def test_z2_uses_exact_folded_reciprocal_mapping_and_flux_schema(self):
+        required = (
+            "subroutine z2_map_gvector",
+            "delta=-wks(j)-wkt(j)",
+            "gt(j)=-gs(j)+ishift",
+            "source_band=nni-1",
+            "coeffu(idx)=-conjg(raw(i+nsource))",
+            "coeffd(idx)=conjg(raw(i))",
+            "rflux=-wilson_phase",
+            "pi=4d0*datan(1d0)",
+            "WAVECAR_PSEUDO_NO_PAW_AUGMENTATION",
+            "physical_tr_rule=berry_flux(-k)",
+            "nfield_note=gauge_and_log_branch_dependent",
+            "max_flux_tr_odd_residual_rad",
+        )
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            compact = re.sub(r"\s+", "", source).lower()
+            with self.subTest(source=source_path.name):
+                for fragment in required:
+                    self.assertIn(
+                        re.sub(r"\s+", "", fragment).lower(),
+                        compact,
+                    )
+
+    def test_z2_field_writer_checks_partner_map_without_gating_nfield_pairs(self):
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            writer = re.search(
+                r"(?ims)^\s*subroutine\s+write_z2_field_csv\b"
+                r".*?^\s*end\s+subroutine\s+write_z2_field_csv\s*$",
+                source,
+            )
+            self.assertIsNotNone(writer)
+            body = re.sub(r"\s+", "", writer.group(0)).lower()
+            self.assertIn("recilat(m,i)+recilat(m,j)", body)
+            self.assertIn("partner(partner(i)).ne.i", body)
+            self.assertIn("maxfluxres.gt.1d-5", body)
+            self.assertIn("maxnres.gt.1d-10", body)
+            self.assertNotIn("maxnpairres.gt.", body)
+            self.assertIn("i=1,nnk", body)
+
+    def test_fortran_version_banner_is_1_1_1(self):
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
             source = source_path.read_text(encoding="utf-8", errors="strict")
             with self.subTest(source=source_path.name):
-                self.assertIn("PROGRAM VASPBERRY Version 1.1.0", source)
-                self.assertIn("# VASPBERRY (Ver 1.1.0)", source)
+                self.assertIn("PROGRAM VASPBERRY Version 1.1.1", source)
+                self.assertIn("# VASPBERRY (Ver 1.1.1)", source)
 
 
 if __name__ == "__main__":

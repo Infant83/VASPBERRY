@@ -45,7 +45,7 @@ except ImportError:  # pragma: no cover - permits package-style imports in tests
     )
 
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 DEFAULT_CSV = "z2_wilson_wcc.csv"
 DEFAULT_JSON = "z2_diagnostics.json"

@@ -40,13 +40,14 @@ jobs:
           sudo apt-get install -y gfortran libblas-dev liblapack-dev openmpi-bin libopenmpi-dev
       - name: Compile serial source
         run: >-
-          gfortran -cpp -O2 -ffixed-line-length-none -fallow-argument-mismatch
+          gfortran -cpp -O2 -fcheck=all -ffixed-line-length-none
+          -fallow-argument-mismatch
           -o vaspberry_gfortran_serial vaspberry_gfortran_serial.f
           -llapack -lblas
       - name: Verify serial help and version
         run: |
           ./vaspberry_gfortran_serial -h > vaspberry-help.txt
-          grep -F "Ver 1.1.0" vaspberry-help.txt
+          grep -F "Ver 1.1.1" vaspberry-help.txt
       - name: Compile MPI source
         run: >-
           mpifort -cpp -DMPI_USE -O2 -ffixed-line-length-none

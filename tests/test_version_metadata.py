@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_VERSION = "1.1.0"
+EXPECTED_VERSION = "1.1.1"
 ARCHIVED_V1_DOI = "10.5281/zenodo.1402593"
 
 
@@ -26,6 +26,9 @@ class VersionMetadataTests(unittest.TestCase):
 
     def test_changelog_records_scientific_release_boundaries(self):
         changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        self.assertIn("## [1.1.1] - 2026-08-31", changelog)
+        self.assertIn("reciprocal-G", changelog)
+        self.assertIn("WAVECAR_PSEUDO_NO_PAW_AUGMENTATION", changelog)
         self.assertIn("## [1.1.0] - 2026-08-31", changelog)
         self.assertIn("legacy Z2 candidate", changelog)
         self.assertIn("unconverged mesh", changelog)
@@ -42,7 +45,7 @@ class VersionMetadataTests(unittest.TestCase):
         self.assertIn("python -m unittest discover -s tests -v", workflow)
         self.assertIn("vaspberry_gfortran_serial.f", workflow)
         self.assertEqual(workflow.count("-fallow-argument-mismatch"), 2)
-        self.assertIn('grep -F "Ver 1.1.0"', workflow)
+        self.assertIn('grep -F "Ver 1.1.1"', workflow)
         self.assertIn("mpifort -cpp -DMPI_USE", workflow)
         self.assertIn("vaspberry.f", workflow)
 
@@ -50,8 +53,8 @@ class VersionMetadataTests(unittest.TestCase):
         for name in ("vaspberry.f", "vaspberry_gfortran_serial.f"):
             with self.subTest(source=name):
                 source = (ROOT / name).read_text(encoding="utf-8", errors="replace")
-                self.assertIn("Version 1.1.0", source)
-                self.assertIn("Ver 1.1.0", source)
+                self.assertIn("Version 1.1.1", source)
+                self.assertIn("Ver 1.1.1", source)
 
     def test_python_tools_report_current_version(self):
         for relative in (

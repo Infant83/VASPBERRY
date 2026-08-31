@@ -8,7 +8,55 @@ when all gap, time-reversal, link-quality, topology, and fixed-grid checks pass.
 The existing Fortran `-z2` routine and its `NFIELD.dat` output are retained for
 compatibility. `NFIELD.dat` is gauge-dependent and its parity is a **legacy Z2
 candidate**, not a validated invariant. A successful run of this Python tool is
-the reportable path in version 1.1.0.
+the reportable path in version 1.1.1.
+
+
+## Fortran field-path correction in 1.1.1
+
+The legacy `-z2 1` path now maps every spinor coefficient into a common
+reciprocal basis before forming link determinants. For a direct image,
+
+\[
+\mathbf G_t=\mathbf G_s+
+\operatorname{round}(\mathbf k_s-\mathbf k_t),
+\]
+
+whereas a time-reversed image uses
+
+\[
+\mathbf G_t=-\mathbf G_s+
+\operatorname{round}(-\mathbf k_s-\mathbf k_t).
+\]
+
+At a represented TRIM \(\Lambda\), this becomes
+\(\mathbf G_t=-\mathbf G_s-2\Lambda\). The old shift-free rule was
+therefore correct at Gamma but not at the three nonzero M points.
+
+A passing calculation writes `Z2_FIELD.csv` on the fundamental mesh. It
+contains the physical Berry flux and curvature separately from the Fukui
+integer n-field. Time reversal is tested on the flux,
+\(\Phi(-\mathbf k)=-\Phi(\mathbf k)\). The pointwise n-field is
+gauge- and logarithm-branch-dependent, so its pair residual is reported but
+is not used as a physical hard gate; the half-zone parity is checked instead.
+No post-hoc symmetrization is applied.
+
+The overlap backend is explicitly recorded as
+`WAVECAR_PSEUDO_NO_PAW_AUGMENTATION`. WAVECAR contains the
+plane-wave-expanded pseudo orbitals, so finite-neighbor overlaps omit the PAW
+augmentation term. This is a quantitative limitation, but the missing
+\(-2\Lambda\) reciprocal shift occurs before any PAW correction and is the
+identified cause of the former M-point-only asymmetry. For PAW-aware
+cross-checks, prefer VASP-generated Bloch overlaps such as
+`wannier90.mmn`. For noncollinear calculations made with older VASP
+versions, note the documented AMN/MMN spinor-rotation issue: VASP 6.4.3 fixed
+it, while `ISYM=-1` is the documented workaround for affected versions.
+
+Primary references:
+
+- [Fukui and Hatsugai, JPSJ 76, 053702 (2007)](https://doi.org/10.1143/JPSJ.76.053702)
+- [VASP PAW formalism](https://vasp.at/wiki/Projector-augmented-wave_formalism)
+- [VASP WAVECAR documentation](https://vasp.at/wiki/WAVECAR)
+- [VASP known issues](https://vasp.at/wiki/Known_issues)
 
 ## Run
 

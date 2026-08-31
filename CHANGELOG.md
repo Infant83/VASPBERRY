@@ -2,6 +2,47 @@
 
 All notable changes to VASPBERRY are recorded here.
 
+## [1.1.1] - 2026-08-31
+
+### Fixed
+
+- Corrected spinor time-reversal reconstruction at nonzero TRIMs by mapping
+  reciprocal labels with
+  `G_target = round(-k_source-k_target)-G_source`. The previous shift-free
+  `-G` rule was valid at Gamma but not at the three folded M points.
+- Replaced coefficient-position assumptions with an explicit source-to-target
+  G-vector bijection and hard checks for missing, duplicate, noninteger, or
+  norm-changing mappings.
+- Separated the physical Berry flux from the gauge- and logarithm-branch-
+  dependent Fukui integer n-field, using double-precision pi and guarded link
+  determinants.
+- Restricted MPI receive-buffer use to rank zero and reduced the new flux
+  array explicitly before validation.
+
+### Added
+
+- `Z2_FIELD.csv` on the fundamental mesh, with reciprocal-cell centers,
+  time-reversal partners, Berry flux and curvature, n-field values, and
+  numerical residuals.
+- Hard validation for partner-map bijection/involution, odd Berry flux under
+  time reversal, integer n-field residual, phase margin, zero total Chern
+  number, balanced half zones, and matching half-zone parity.
+- Synthetic Gamma/M1/M2/M3 regression tests that distinguish the exact
+  folded-TRIM mapping from the former shift-free reconstruction.
+
+### Scientific scope
+
+- The direct WAVECAR overlap backend is labelled
+  `WAVECAR_PSEUDO_NO_PAW_AUGMENTATION`. Missing PAW augmentation is a
+  quantitative limitation, but it is not the identified cause of the
+  M-point-only asymmetry fixed here.
+- Pointwise n-field symmetry is diagnostic rather than a hard physical gate;
+  the physical time-reversal test is
+  `berry_flux(-k) = -berry_flux(k)`.
+- The Fortran result remains a legacy Z2 candidate. A full-mesh WAVECAR,
+  convergence checks, and the guarded Wilson-loop workflow are still required
+  before reporting an invariant.
+
 ## [1.1.0] - 2026-08-31
 
 ### Added

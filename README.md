@@ -31,6 +31,31 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
 * Wavefunction plot (Gamma point only in the current version)
 * Guarded WAVECAR-direct Fukui export and valley-transport analysis (Python)
 
+
+## Legacy Fortran Z2 field diagnostics (version 1.1.1)
+
+The `-z2 1` path now reconstructs spinor time reversal in the actual
+plane-wave G basis. At a represented TRIM `Lambda`, the Kramers partner uses
+`G_target = -G_source - 2*Lambda`; the additional reciprocal-lattice shift
+is essential at the three M points. A validated run writes `Z2_FIELD.csv`
+for the fundamental mesh and keeps the older `NFIELD.dat` compatibility
+output.
+
+`Z2_FIELD.csv` separates the physical Berry flux, which must obey
+`F(-k) = -F(k)`, from the Fukui integer n-field, whose pointwise pattern
+depends on gauge and logarithm branch. The file is rejected if its TR partner
+map, flux oddness, integer residual, phase margin, total Chern number, or
+half-zone parity checks fail.
+
+This direct reader uses pseudo-wavefunction coefficients from `WAVECAR`;
+the CSV therefore records
+`WAVECAR_PSEUDO_NO_PAW_AUGMENTATION`. For quantitative PAW-corrected
+neighbor overlaps, use a VASP-generated Bloch-overlap route such as
+`wannier90.mmn` and verify the VASP version and symmetry settings. The
+Fortran parity remains a legacy candidate; the guarded
+`tools/wavecar_z2.py` Wilson-loop result is the reportable route only when
+all diagnostics and mesh-convergence checks pass.
+
 # Usage
 * Instruction and possible options
 > ./vaspberry -h
