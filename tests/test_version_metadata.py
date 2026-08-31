@@ -10,6 +10,15 @@ EXPECTED_VERSION = "1.1.1"
 ARCHIVED_V1_DOI = "10.5281/zenodo.1402593"
 
 
+V110_HISTORY = """! version 1.1.0 safety fixes for the legacy Z2 candidate
+!               and a validated Wilson-loop companion
+!               : 2026. Aug. 31. H.-J. Kim"""
+
+V111_HISTORY = """! version 1.1.1 correct TRIM reciprocal-G mapping and
+!               separate physical flux from gauge-dependent n-field
+!               : 2026. Aug. 31. H.-J. Kim"""
+
+
 class VersionMetadataTests(unittest.TestCase):
     def test_version_file_is_authoritative(self):
         self.assertEqual(
@@ -44,10 +53,12 @@ class VersionMetadataTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
         self.assertIn("python -m unittest discover -s tests -v", workflow)
         self.assertIn("vaspberry_gfortran_serial.f", workflow)
-        self.assertEqual(workflow.count("-fallow-argument-mismatch"), 2)
+        self.assertEqual(workflow.count("-fallow-argument-mismatch"), 4)
         self.assertIn('grep -F "Ver 1.1.1"', workflow)
         self.assertIn("mpifort -cpp -DMPI_USE", workflow)
         self.assertIn("vaspberry.f", workflow)
+        self.assertIn("test_z2_helpers.f90", workflow)
+        self.assertIn("objcopy --redefine-sym", workflow)
 
     def test_fortran_sources_report_current_version(self):
         for name in ("vaspberry.f", "vaspberry_gfortran_serial.f"):
@@ -55,6 +66,19 @@ class VersionMetadataTests(unittest.TestCase):
                 source = (ROOT / name).read_text(encoding="utf-8", errors="replace")
                 self.assertIn("Version 1.1.1", source)
                 self.assertIn("Ver 1.1.1", source)
+
+
+    def test_fortran_version_history_is_preserved_exactly(self):
+        for name in ("vaspberry.f", "vaspberry_gfortran_serial.f"):
+            source = (ROOT / name).read_text(
+                encoding="utf-8", errors="strict"
+            )
+            with self.subTest(source=name):
+                self.assertEqual(source.count(V110_HISTORY), 1)
+                self.assertEqual(source.count(V111_HISTORY), 1)
+                self.assertLess(
+                    source.index(V110_HISTORY), source.index(V111_HISTORY)
+                )
 
     def test_python_tools_report_current_version(self):
         for relative in (

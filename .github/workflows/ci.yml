@@ -54,3 +54,32 @@ jobs:
           -fallow-argument-mismatch
           -o vaspberry_mpi vaspberry.f
           -llapack -lblas
+      - name: Run actual-source Fortran Z2 helper tests
+        run: |
+          mkdir -p build/z2-test
+          gfortran -cpp -O0 -g -fcheck=all -fbacktrace \
+            -ffpe-trap=invalid,zero,overflow \
+            -ffixed-line-length-none -fallow-argument-mismatch \
+            -c vaspberry_gfortran_serial.f \
+            -o build/z2-test/vaspberry_serial.o
+          objcopy --redefine-sym \
+            main=vaspberry_serial_embedded_main \
+            build/z2-test/vaspberry_serial.o
+          gfortran -O0 -g -fcheck=all -fbacktrace \
+            tests/fortran/test_z2_helpers.f90 \
+            build/z2-test/vaspberry_serial.o \
+            -llapack -lblas -o build/z2-test/test_z2_serial
+          build/z2-test/test_z2_serial
+
+          mpifort -cpp -DMPI_USE -O0 -g -fcheck=all -fbacktrace \
+            -ffpe-trap=invalid,zero,overflow \
+            -ffixed-line-length-none -fallow-argument-mismatch \
+            -c vaspberry.f -o build/z2-test/vaspberry_mpi.o
+          objcopy --redefine-sym \
+            main=vaspberry_mpi_embedded_main \
+            build/z2-test/vaspberry_mpi.o
+          mpifort -O0 -g -fcheck=all -fbacktrace \
+            tests/fortran/test_z2_helpers.f90 \
+            build/z2-test/vaspberry_mpi.o \
+            -llapack -lblas -o build/z2-test/test_z2_mpi
+          build/z2-test/test_z2_mpi

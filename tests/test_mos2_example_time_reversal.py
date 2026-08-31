@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import math
 import unittest
+from collections import defaultdict
 from pathlib import Path
 
 
@@ -40,10 +41,41 @@ class MoS2ExampleTimeReversalTests(unittest.TestCase):
             rows.append(values)
 
         self.assertEqual(len(rows), 1296)
-        fundamental: dict[tuple[float, float], float] = {}
+        groups: dict[
+            tuple[float, float], list[tuple[int, int, float]]
+        ] = defaultdict(list)
         for values in rows:
-            fundamental.setdefault(_key(values[4], values[5]), values[3])
-        self.assertEqual(len(fundamental), 144)
+            q1, q2 = values[4], values[5]
+            folded_q1, folded_q2 = _mod1(q1), _mod1(q2)
+            shift_q1 = int(round(q1 - folded_q1))
+            shift_q2 = int(round(q2 - folded_q2))
+            self.assertAlmostEqual(q1, folded_q1 + shift_q1, delta=1.0e-12)
+            self.assertAlmostEqual(q2, folded_q2 + shift_q2, delta=1.0e-12)
+            groups[_key(q1, q2)].append(
+                (shift_q1, shift_q2, values[3])
+            )
+        self.assertEqual(len(groups), 144)
+
+        fundamental: dict[tuple[float, float], float] = {}
+        for key, copies in groups.items():
+            with self.subTest(cell=key):
+                self.assertEqual(len(copies), 9)
+                shifts = {(sx, sy) for sx, sy, _ in copies}
+                x_images = {sx for sx, _, _ in copies}
+                y_images = {sy for _, sy, _ in copies}
+                self.assertEqual(len(x_images), 3)
+                self.assertEqual(len(y_images), 3)
+                self.assertEqual(
+                    shifts,
+                    {
+                        (sx, sy)
+                        for sx in x_images
+                        for sy in y_images
+                    },
+                )
+                curvatures = {curvature for _, _, curvature in copies}
+                self.assertEqual(len(curvatures), 1)
+                fundamental[key] = copies[0][2]
 
         residuals = []
         for (q1, q2), curvature in fundamental.items():

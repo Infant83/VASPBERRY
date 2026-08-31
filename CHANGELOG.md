@@ -6,42 +6,69 @@ All notable changes to VASPBERRY are recorded here.
 
 ### Fixed
 
-- Corrected spinor time-reversal reconstruction at nonzero TRIMs by mapping
-  reciprocal-G labels with
-  `G_target = round(-k_source-k_target)-G_source`. The previous shift-free
-  `-G` rule was valid at Gamma but not at the three folded M points.
-- Replaced coefficient-position assumptions with an explicit source-to-target
-  G-vector bijection and hard checks for missing, duplicate, noninteger, or
+- Corrected spinor time-reversal reconstruction at nonzero TRIMs with
+  `G_target = round(-k_source-k_target)-G_source`. At a represented TRIM,
+  this is `G_target=-G_source-2*TRIM`; the old shift-free rule was valid
+  only at Gamma.
+- Replaced coefficient-position assumptions with an explicit reciprocal-G
+  bijection and hard checks for missing, duplicate, noninteger, or
   norm-changing mappings.
-- Separated the physical Berry flux from the gauge- and logarithm-branch-
-  dependent Fukui integer n-field, using double-precision pi and guarded link
-  determinants.
-- Restricted MPI receive-buffer use to rank zero and reduced the new flux
-  array explicitly before validation.
+- Applied the spin-1/2 operation
+  `Theta(C_up,C_down)=(-conjg(C_down),conjg(C_up))` through a shared helper
+  and retained the preceding odd state as the source of an even TRIM Kramers
+  partner.
+- Promoted the real and imaginary parts of single-precision WAVECAR
+  coefficients before norm squaring, avoiding false failures from
+  single-precision `abs` rounding.
+- Replaced the rank-dependent `abs(det S)>1e-14` gate with a `ZGESVD`
+  minimum-singular-value measurement. Determinant phases now come from a
+  separate `ZGETRF` copy, including pivot parity, without determinant
+  multiplication.
+- Corrected the sign and units in the legacy `NFIELD.dat` explanation.
 
 ### Added
 
-- `Z2_FIELD.csv` on the fundamental mesh, with reciprocal-cell centers,
-  time-reversal partners, Berry flux and curvature, n-field values, and
-  numerical residuals.
-- Hard validation for partner-map bijection/involution, odd Berry flux under
-  time reversal, integer n-field residual, phase margin, zero total Chern
-  number, balanced half zones, and matching half-zone parity.
-- Synthetic Gamma/M1/M2/M3 regression tests that distinguish the exact
-  folded-TRIM mapping from the former shift-free reconstruction.
+- `Z2_FIELD.csv` on the fundamental mesh for PASS results, and
+  `Z2_FIELD.invalid.csv` for INVALID or INCOMPLETE runs. Same-directory
+  temporary output and C/POSIX `rename()` prevent partial publication;
+  stale PASS files are removed before WAVECAR processing.
+- Version, grid, band range, spinor rank, overlap backend, numerical
+  thresholds, minimum link singular values, per-plaquette status, and an
+  explicit check-scope statement in the field CSV.
+- Production-linked Fortran regression tests for Γ/M1/M2/M3 reciprocal
+  mapping, `Theta^2=-1`, complex*8 norm accumulation, LU pivot phase, and
+  minimum singular values. Serial and MPI sources are both linked and run.
+- Public 1H-MoS₂ regression coverage that verifies all nine periodic copies
+  of each of the 144 fundamental plaquettes before checking the wrapped
+  time-reversal-odd Berry curvature and zero occupied-subspace Chern number.
 
 ### Scientific scope
 
-- The direct WAVECAR overlap backend is labelled
-  `WAVECAR_PSEUDO_NO_PAW_AUGMENTATION`. Missing PAW augmentation is a
-  quantitative limitation, but it is not the identified cause of the
-  M-point-only asymmetry fixed here.
-- Pointwise n-field symmetry is diagnostic rather than a hard physical gate;
-  the physical time-reversal test is
-  `berry_flux(-k) = -berry_flux(k)`.
-- The Fortran result remains a legacy Z2 candidate. A full-mesh WAVECAR,
-  convergence checks, and the guarded Wilson-loop workflow are still required
-  before reporting an invariant.
+- The fixed reciprocal-G shift is an independently verified code-level
+  defect. Quantitative attribution of a previously observed MoS₂ Z2-field
+  asymmetry requires a new corrected run on the corresponding full-mesh
+  WAVECAR; that private input is not present in CI.
+- The Fortran B-minus and even-TRIM states are constructed with time reversal.
+  Its flux oddness and zero-Chern checks therefore test reconstruction
+  self-consistency, not the raw WAVECAR's physical time-reversal symmetry.
+  The CSV records `input_trs_independently_verified=0`.
+- The direct overlap backend remains
+  `WAVECAR_PSEUDO_NO_PAW_AUGMENTATION`. PAW augmentation can affect
+  quantitative finite-neighbor overlaps, but it is not the source of the
+  omitted reciprocal-G shift.
+- The pointwise Fukui n-field remains gauge- and logarithm-branch-dependent.
+  The physical relation is the wrapped flux condition
+  `wrap[flux(-k)+flux(k)]=0` modulo `2*pi`.
+- Thresholds are conservative diagnostic policies and can yield false
+  rejection on a coarse mesh. The guarded Wilson-loop workflow and mesh
+  convergence remain required before reporting an invariant.
+
+### Distribution status
+
+- Version 1.1.1 identifies the reviewed source-tree candidate. It does not
+  create a Git tag, GitHub Release archive, or Zenodo record.
+- The archived DOI `10.5281/zenodo.1402593` remains specific to VASPBERRY
+  V1.0 (2018).
 
 ## [1.1.0] - 2026-08-31
 

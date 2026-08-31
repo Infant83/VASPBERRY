@@ -34,27 +34,61 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
 
 ## Legacy Fortran Z2 field diagnostics (version 1.1.1)
 
-The `-z2 1` path now reconstructs spinor time reversal in the actual
-plane-wave G basis. At a represented TRIM `Lambda`, the Kramers partner uses
-`G_target = -G_source - 2*Lambda`; the additional reciprocal-lattice shift
-is essential at the three M points. A validated run writes `Z2_FIELD.csv`
-for the fundamental mesh and keeps the older `NFIELD.dat` compatibility
-output.
+The `-z2 1` path reconstructs spinor time reversal in the actual
+plane-wave reciprocal-G basis. For a time-reversed image,
 
-`Z2_FIELD.csv` separates the physical Berry flux, which must obey
-`F(-k) = -F(k)`, from the Fukui integer n-field, whose pointwise pattern
-depends on gauge and logarithm branch. The file is rejected if its TR partner
-map, flux oddness, integer residual, phase margin, total Chern number, or
-half-zone parity checks fail.
+\[
+\mathbf G_t=-\mathbf G_s+
+\operatorname{round}(-\mathbf k_s-\mathbf k_t).
+\]
 
-This direct reader uses pseudo-wavefunction coefficients from `WAVECAR`;
-the CSV therefore records
-`WAVECAR_PSEUDO_NO_PAW_AUGMENTATION`. For quantitative PAW-corrected
-neighbor overlaps, use a VASP-generated Bloch-overlap route such as
-`wannier90.mmn` and verify the VASP version and symmetry settings. The
-Fortran parity remains a legacy candidate; the guarded
-`tools/wavecar_z2.py` Wilson-loop result is the reportable route only when
-all diagnostics and mesh-convergence checks pass.
+At a represented TRIM \(\Lambda\), this becomes
+\(\mathbf G_t=-\mathbf G_s-2\Lambda\). The reciprocal-lattice shift is
+therefore required at nonzero two-dimensional TRIMs (the M points of
+hexagonal MoS₂); the former shift-free \(-G\) rule was valid only at Gamma.
+This is an independently confirmed code-level defect. Quantitatively
+attributing a previously observed MoS₂ field asymmetry to it still requires
+rerunning this corrected path on the corresponding full-mesh WAVECAR.
+
+Each link is now checked by its minimum singular value rather than by
+`abs(det S)`, which depends exponentially on band rank. Determinant phases
+are accumulated from a separate LU factorization without multiplying the
+determinant, and the single-precision WAVECAR coefficient norm is accumulated
+after promoting its real and imaginary components to double precision.
+
+A run that passes the legacy reconstruction checks atomically publishes
+`Z2_FIELD.csv`; a completed rejection writes
+`Z2_FIELD.invalid.csv`. An early failure leaves an `INCOMPLETE` sentinel,
+so a stale PASS file cannot be mistaken for the current result. The CSV
+contains the wrapped Berry flux, curvature, minimum link singular value,
+Fukui integer n-field, thresholds, and per-plaquette diagnostics on the
+fundamental mesh. The physical flux check is
+
+\[
+\operatorname{wrap}[\Phi(-\mathbf k)+\Phi(\mathbf k)]=0
+\quad(\mathrm{mod}\ 2\pi).
+\]
+
+The pointwise n-field remains gauge- and logarithm-branch-dependent; only its
+integer consistency and half-zone parity are used.
+
+These checks test the numerical self-consistency of the time-reversal gauge
+constructed by the legacy routine. Because the B-minus states and the even
+TRIM partners are generated with the time-reversal operator, they do not
+independently establish time-reversal symmetry of the input WAVECAR. Raw
+\(E(\mathbf k)-E(-\mathbf k)\), TRIM Kramers splitting, occupied-projector
+residuals, the occupied-unoccupied gap, and mesh convergence must be checked
+separately. The guarded `tools/wavecar_z2.py` workflow performs those tests
+and reports an invariant only when every guard passes.
+
+The direct reader uses pseudo-wavefunction coefficients from `WAVECAR`;
+the CSV records `WAVECAR_PSEUDO_NO_PAW_AUGMENTATION`. Missing PAW
+augmentation can quantitatively change finite-neighbor overlaps, but it does
+not generate the omitted reciprocal-G shift. For a PAW-aware cross-check, use
+VASP-generated Bloch overlaps such as `wannier90.mmn`, with a VASP version
+and symmetry setup appropriate for noncollinear spinors. See
+[Ferretti et al.](https://doi.org/10.1088/0953-8984/19/3/036215) and the
+[VASP PAW formalism](https://vasp.at/wiki/Projector-augmented-wave_formalism).
 
 # Usage
 * Instruction and possible options
