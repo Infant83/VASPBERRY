@@ -44,7 +44,8 @@ The spinor operation is
 \]
 
 Production-linked Fortran tests now exercise this identity, the four TRIM
-reciprocal mappings, and coefficient-norm accumulation. The norm calculation
+reciprocal mappings, an integrated M1 `get_z2_state` reconstruction, and
+coefficient-norm accumulation. The norm calculation
 promotes the real and imaginary parts of the single-precision WAVECAR values
 before squaring; the former single-precision `abs` could falsely fail the
 \(10^{-10}\) norm guard.

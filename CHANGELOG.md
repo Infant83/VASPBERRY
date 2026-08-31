@@ -39,7 +39,8 @@ All notable changes to VASPBERRY are recorded here.
   thresholds, minimum link singular values, per-plaquette status, and an
   explicit check-scope statement in the field CSV.
 - Production-linked Fortran regression tests for Γ/M1/M2/M3 reciprocal
-  mapping, `Theta^2=-1`, complex*8 norm accumulation, LU pivot phase,
+  mapping, `Theta^2=-1`, an integrated M1 `get_z2_state`
+  coefficient reconstruction, complex*8 norm accumulation, LU pivot phase,
   minimum singular values, canonical-path aliases, and owned-output guards.
   Both production objects are linked into and exercised by helper drivers;
   MPI communication ordering is source-checked.
