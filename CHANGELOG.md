@@ -7,7 +7,7 @@ All notable changes to VASPBERRY are recorded here.
 ### Fixed
 
 - Corrected spinor time-reversal reconstruction at nonzero TRIMs by mapping
-  reciprocal labels with
+  reciprocal-G labels with
   `G_target = round(-k_source-k_target)-G_source`. The previous shift-free
   `-G` rule was valid at Gamma but not at the three folded M points.
 - Replaced coefficient-position assumptions with an explicit source-to-target

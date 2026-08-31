@@ -970,8 +970,8 @@
          do ie=nini, nmax
            if(myrank .eq. 0) then
              write(6,'(A  )')" "
-             write(6,'(A,I)')"# BERRY CURVATURE FOR BAND INDEX n= ", ie
-             write(6,'(A,I)')"#                     SPIN INDEX s= ", isp
+             write(6,'(A,I0)')"# BERRY CURVATURE FOR BAND INDEX n= ", ie
+             write(6,'(A,I0)')"#                     SPIN INDEX s= ", isp
              write(6,'(A  )')" "
            endif
 #ifdef MPI_USE

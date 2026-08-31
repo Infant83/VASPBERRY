@@ -63,7 +63,7 @@ def random_unitary(rank: int, rng: np.random.Generator) -> np.ndarray:
 
 class Z2ModelTests(unittest.TestCase):
     def test_version_is_release_version(self):
-        self.assertEqual(Z2.__version__, "1.1.0")
+        self.assertEqual(Z2.__version__, "1.1.1")
 
     def test_polar_unitary_is_unitary_and_preserves_singular_values(self):
         matrix = np.asarray(((1.0 + 0.2j, 0.3), (-0.4j, 0.8 - 0.1j)))
