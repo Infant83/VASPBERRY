@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+__version__ = "1.1.0"
 KB_EV_PER_K = 8.617333262145e-5
 TWO_PI = 2.0 * math.pi
 
@@ -1487,6 +1488,7 @@ def _pair_values(values: Iterable[Sequence[float]] | None) -> Sequence[float] | 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     common = argparse.ArgumentParser(add_help=False)

@@ -163,6 +163,130 @@ class FortranSourceRegressionTests(unittest.TestCase):
                 with self.subTest(source=source_path.name, fragment=fragment):
                     self.assertIn(fragment, source)
 
+    def test_z2_kramers_partner_branches_are_reachable(self):
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            compact = re.sub(r"\s+", "", source).lower()
+            with self.subTest(source=source_path.name):
+                self.assertNotIn("itrim(ilp+1).ge.0", compact)
+                self.assertIn("itrim(ilp+1).eq.0", compact)
+                self.assertNotIn("elseif(ispinor.eq.0)then", compact)
+                self.assertIn("elseif(ispinor.eq.2)then", compact)
+
+    def test_z2_accumulators_are_reset_inside_each_spin_loop(self):
+        reset_sequence = re.compile(
+            r"(?ims)^\s*do\s+isp\s*=\s*1\s*,\s*ispin\s*!\s*ispin start\s*$"
+            r".*?^\s*recivec\s*=\s*0d0\s*$"
+            r"\n^\s*recilat\s*=\s*0d0\s*$"
+            r".*?^\s*rnnfield\s*=\s*0d0\s*$"
+            r"\n^\s*rnnfield_bottom\s*=\s*0d0\s*$"
+            r".*?^\s*rnfield\s*=\s*0d0\s*$"
+        )
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            with self.subTest(source=source_path.name):
+                self.assertRegex(source, reset_sequence)
+
+    def test_z2_guards_reject_unsupported_inputs(self):
+        required = (
+            "Z2 option must be 0 or 1",
+            "legacy Z2 needs a full k mesh",
+            "legacy Z2 needs ISPIN=1 spinors",
+            "legacy Z2 grid must be at least 4x4",
+            "legacy Z2 grid must be even",
+            "legacy Z2 needs the full 2D mesh",
+            "legacy Z2 needs one of each TRIM",
+            "legacy Z2 needs 2 <= NE < NBANDS",
+            "legacy Z2 needs bands 1 through NE",
+            "legacy Z2 needs an even band rank",
+        )
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            for fragment in required:
+                with self.subTest(source=source_path.name, fragment=fragment):
+                    self.assertIn(fragment, source)
+
+    def test_z2_index_and_lapack_failures_are_guarded(self):
+        required = (
+            "incomplete five-point k loop",
+            "selected k outside range",
+            "ZGETRF failed, INFO=",
+        )
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            compact = re.sub(r"\s+", "", source).lower()
+            for fragment in required:
+                with self.subTest(source=source_path.name, fragment=fragment):
+                    self.assertIn(fragment, source)
+            self.assertNotIn("kpoint.gt.nk", compact)
+            self.assertRegex(
+                source,
+                r"(?is)call\s+zgetrf\s*\(.*?\)\s*"
+                r"if\s*\(\s*info\s*\.ne\.\s*0\s*\)\s*then",
+            )
+
+    def test_z2_parity_uses_nonnegative_modulo(self):
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            candidate_lines = [
+                line
+                for line in source.splitlines()
+                if "modulo(nint(rnnfield" in line
+                or "modulo(nint(rvari" in line
+            ]
+            with self.subTest(source=source_path.name):
+                self.assertEqual(len(candidate_lines), 4)
+
+    def test_legacy_z2_output_is_explicitly_a_candidate(self):
+        required = (
+            "Legacy Z2 candidate",
+            "Do not report it as an invariant.",
+            "tools/wavecar_z2.py",
+            "Z2 only when diagnostics PASS.",
+        )
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            for fragment in required:
+                with self.subTest(source=source_path.name, fragment=fragment):
+                    self.assertIn(fragment, source)
+
+    def test_new_z2_failures_return_nonzero_status(self):
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            lines = source.splitlines()
+            error_indices = [
+                index
+                for index, line in enumerate(lines)
+                if "*** error - Z2" in line
+                or "*** error - legacy Z2" in line
+                or "*** error - incomplete five-point" in line
+            ]
+            with self.subTest(source=source_path.name):
+                self.assertTrue(error_indices)
+                for index in error_indices:
+                    following = next(
+                        line.strip().lower()
+                        for line in lines[index + 1 :]
+                        if line.strip()
+                    )
+                    self.assertEqual(following, "call vaspberry_fail")
+
+                self.assertRegex(
+                    source,
+                    r"(?im)^\s*subroutine\s+vaspberry_fail\s*$",
+                )
+                self.assertRegex(source, r"(?im)^\s*stop\s+1\s*$")
+
+        mpi_source = SOURCE_PATH.read_text(encoding="utf-8", errors="strict")
+        self.assertIn("call MPI_ABORT(MPI_COMM_WORLD,1,ierr)", mpi_source)
+
+    def test_fortran_version_banner_is_1_1_0(self):
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            with self.subTest(source=source_path.name):
+                self.assertIn("PROGRAM VASPBERRY Version 1.1.0", source)
+                self.assertIn("# VASPBERRY (Ver 1.1.0)", source)
+
 
 if __name__ == "__main__":
     unittest.main()

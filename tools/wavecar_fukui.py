@@ -30,6 +30,7 @@ from typing import Iterable, Sequence
 import numpy as np
 
 
+__version__ = "1.1.0"
 KINETIC_C = 0.262465831  # 2 m_e / hbar^2, 1/(eV Angstrom^2)
 VALLEY_DISTANCE_TIE_ATOL = 1.0e-12  # inverse Angstrom
 TRANSPORT_OUTPUT_NAMES = (
@@ -2952,6 +2953,7 @@ def validate_map_specifications(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("wavecar", type=Path)
     parser.add_argument("--nx", type=int, required=True)
     parser.add_argument("--ny", type=int, required=True)

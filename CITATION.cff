@@ -1,11 +1,18 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+message: >-
+  If you use VASPBERRY 1.1.0, cite this repository and the scientific method
+  references appropriate to the calculation you performed.
+title: VASPBERRY
+type: software
+version: 1.1.0
+date-released: 2026-08-31
 authors:
-- family-names: "Kim"
-  given-names: "Hyun-Jung"
-  orcid: "http://orcid.org/0000-0002-5602-1404"
-title: "VASPBERRY"
-version: 1.0
-doi: 10.5281/zenodo.1402593
-date-released: 2018-08-23
+  - family-names: Kim
+    given-names: Hyun-Jung
+    orcid: "https://orcid.org/0000-0002-5602-1404"
+repository-code: "https://github.com/Infant83/VASPBERRY"
 url: "https://github.com/Infant83/VASPBERRY"
+abstract: >-
+  VASPBERRY reads VASP WAVECAR wavefunctions to calculate Berry curvature,
+  Chern numbers, circular dichroism, guarded energy- and valley-resolved Hall
+  transport, and a validation-gated class-AII Wilson-loop Z2 invariant.

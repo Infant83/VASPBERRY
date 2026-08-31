@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [master, "feature/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements-transport.txt
+      - name: Install Python dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements-transport.txt
+      - name: Run unit and regression tests
+        env:
+          MPLBACKEND: Agg
+          PYTHONPATH: tools
+        run: python -m unittest discover -s tests -v
+
+  fortran-builds:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GNU Fortran, BLAS, LAPACK, and Open MPI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran libblas-dev liblapack-dev openmpi-bin libopenmpi-dev
+      - name: Compile serial source
+        run: >-
+          gfortran -cpp -O2 -ffixed-line-length-none
+          -o vaspberry_gfortran_serial vaspberry_gfortran_serial.f
+          -llapack -lblas
+      - name: Verify serial help and version
+        run: |
+          ./vaspberry_gfortran_serial -h > vaspberry-help.txt
+          grep -F "Ver 1.1.0" vaspberry-help.txt
+      - name: Compile MPI source
+        run: >-
+          mpifort -cpp -DMPI_USE -O2 -ffixed-line-length-none
+          -o vaspberry_mpi vaspberry.f
+          -llapack -lblas
