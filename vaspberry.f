@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.0 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.1.0 (f77) for VASP
 ! Written by Hyun-Jung Kim (angpangmokjang@hanmail.net, Infant@kias.re.kr) 
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -41,7 +41,11 @@
 ! version 0.98b add option "-theta theta -phi phi" for the incident light angle 
 !				for the circular dichroism calculations (-cd) ! 2021. Oct. 27. S.-W. Kim & H.-J. Kim 
 
-! last update and bug fixes : 2021. Nov. 30. by H.-J. Kim 
+! version 1.1.0 safety fixes for the legacy Z2 candidate
+!               and a validated Wilson-loop companion
+!               : 2026. Aug. 31. H.-J. Kim
+
+! last update and bug fixes : 2026. Aug. 31. by H.-J. Kim
 
 !#define MPI_USE
 !#undef  MPI_USE        
@@ -119,7 +123,8 @@
       mpi_comm_earth = 0
 #endif
 
-      ver_tag="# VASPBERRY (Ver 1.0), by Hyun-Jung Kim. 2018. Aug. 23."
+      ver_tag="# VASPBERRY (Ver 1.1.0), by Hyun-Jung Kim."//
+     &        " 2026. Aug. 31."
       pi=4.*atan(1.)
 
       !default settings
@@ -134,6 +139,10 @@
      &   iwf,ikwf,ng,rs,imag,init_e,fina_e,nediv,sigma,
      &   klist_fname,sw_fname,atlist_fname,flag_atom_project,
      &   theta,phi)
+      if(iz .ne. 0 .and. iz .ne. 1)then
+       write(0,*) '*** error - Z2 option must be 0 or 1'
+       call vaspberry_fail
+      endif
       if(myrank == 0)call creditinfo(ver_tag)
 
       if (ixt .ne. 0) call extendingBZ(fbz,ixt)
@@ -141,6 +150,28 @@
       if(myrank == 0)write(6,'(A,A)')"# File reading... : ",filename
       call inforead(irecl,ispin,nk,nband,ecut,a1,a2,a3,filename)
       if (ispin .eq. 2) ispinor=1
+      if(iz .eq. 1)then
+       if(ihf .ne. 0)then
+        write(0,*) '*** error - legacy Z2 needs a full k mesh'
+        call vaspberry_fail
+       endif
+       if(ispin .ne. 1 .or. ispinor .ne. 2)then
+        write(0,*) '*** error - legacy Z2 needs ISPIN=1 spinors'
+        call vaspberry_fail
+       endif
+       if(nkx .lt. 4 .or. nky .lt. 4)then
+        write(0,*) '*** error - legacy Z2 grid must be at least 4x4'
+        call vaspberry_fail
+       endif
+       if(mod(nkx,2) .ne. 0 .or. mod(nky,2) .ne. 0)then
+        write(0,*) '*** error - legacy Z2 grid must be even'
+        call vaspberry_fail
+       endif
+       if(nk .ne. nkx*nky)then
+        write(0,*) '*** error - legacy Z2 needs the full 2D mesh'
+        call vaspberry_fail
+       endif
+      endif
       allocate(cener(nband),ener(nband),occ(nband))
       if(myrank == 0)write(6,'(A,I9)')"# TOTAL RECORD LENGTH = ",irecl
       allocate(wklist(3,nk),nplist(nk))
@@ -166,9 +197,27 @@
        nplist(ik)=nint(xnplane)
        do n=1,nband; ne=ne+nint(occ(n)); enddo
        if(ik .gt. 1 .and. ne_temp0 .ne. ne .and. ine .eq. 0) then
-         write(6,*)"error. !!! ne(K) /= ne(K') !!!",ne,ne_temp0,ik ;stop
+         write(0,*) '*** error - inconsistent occupations',
+     &              ne,ne_temp0,ik
+         call vaspberry_fail
        endif
       enddo
+      if(iz .eq. 1)then
+       del=1d-6
+       ntrim0=count(abs(wklist(1,:)) .le. del .and.
+     &              abs(wklist(2,:)) .le. del)
+       ntrim1=count(abs(wklist(1,:)-0.5d0) .le. del .and.
+     &              abs(wklist(2,:)) .le. del)
+       ntrim2=count(abs(wklist(1,:)) .le. del .and.
+     &              abs(wklist(2,:)-0.5d0) .le. del)
+       ntrim3=count(abs(wklist(1,:)-0.5d0) .le. del .and.
+     &              abs(wklist(2,:)-0.5d0) .le. del)
+       if(ntrim0 .ne. 1 .or. ntrim1 .ne. 1 .or.
+     &    ntrim2 .ne. 1 .or. ntrim3 .ne. 1)then
+        write(0,*) '*** error - legacy Z2 needs one of each TRIM'
+        call vaspberry_fail
+       endif
+      endif
       if(ine .ne. 0) ne=ine ! manually specified ne ; useful for the semimetal
       ! check whether multi or single band calculation is performed
       if((nini.eq.nmax))then
@@ -194,6 +243,25 @@
         endif
       endif ! check multi or single ?
       ns=nmax-nini+1
+      if(iz .eq. 1)then
+       if(ne .lt. 2 .or. ne .ge. nband)then
+        write(0,*) '*** error - legacy Z2 needs 2 <= NE < NBANDS'
+        call vaspberry_fail
+       endif
+       if(nini .ne. 1 .or. nmax .ne. ne)then
+        write(0,*) '*** error - legacy Z2 needs bands 1 through NE'
+        call vaspberry_fail
+       endif
+       if(mod(ns,2) .ne. 0)then
+        write(0,*) '*** error - legacy Z2 needs an even band rank'
+        call vaspberry_fail
+       endif
+      endif
+      if(iwf .ge. 1 .and.
+     &   (ikwf .lt. 1 .or. ikwf .gt. nk))then
+       write(0,*) '*** error - selected k is outside WAVECAR'
+       call vaspberry_fail
+      endif
       if(myrank == 0)then
        write(6,'(A,I6)')   "# NELECT     : ",ne*ispin
        if (ispinor .eq. 2)then
@@ -284,7 +352,7 @@
 
       endif !iwf end
       
-      if(iz .eq. 1) then  !get Z2 invariant using Fukui's method
+      if(iz .eq. 1) then  !get legacy Z2 candidate by Fukui method
        del=1E-6 ! criterion for k-point find
        call set_BZ_fukui(nnk,wnklist,w_half_klist,i_half_klist,
      &                   i_trim_klist,nhf, ispin,wklist,del,nk,iz2)
@@ -296,6 +364,16 @@
        if(isp.eq.2.and.ispin.eq.2) write(6,'(A,I2)')"# SPIN : DN"
        write(6,*)" "
       endif
+       recivec=0d0
+       recilat=0d0
+       recivec_tot=0d0
+       recilat_tot=0d0
+       rnnfield=0d0
+       rnnfield_bottom=0d0
+       rnnfield_tot=0d0
+       rnnfield_bottom_tot=0d0
+       rnfield_tot=0d0
+       rnfield=0d0
 #ifdef MPI_USE
        nk_rank=nnk/nprocs
        nk_rank_mod=mod(nnk,nprocs)
@@ -308,16 +386,6 @@
            ifk=(myrank+1)*nk_rank+nk_rank_mod
        endif
 
-       recivec=0.
-       recilat=0.
-       recivec_tot=0.
-       recilat_tot=0.
-       rnnfield=0.
-       rnnfield_bottom=0.
-       rnnfield_tot=0.
-       rnnfield_bottom_tot=0.
-       rnfield_tot=0.
-       rnfield=0.
 #else
        ink=1;ifk=nnk
 #endif
@@ -380,15 +448,16 @@
          write(6,'(A)')"# DONE!"
          
          if(nini .eq. nmax) then
-          write(6,'(A,I4)')"# Z2 invariant for the BAND : ",nini
+          write(6,'(A,I4)')"# Legacy Z2 candidate BAND : ",nini
          else
-          write(6,'(A,I4,A,I4)')"# Z2 invariant for the BANDS : ",nini
+          write(6,'(A,I4,A,I4)')"# Legacy Z2 candidate BANDS: ",nini
      &                                                       ," - ",nmax
          endif
-         write(6,'(A,I2)')"# Z2 Invariant =    ",
-     &                    mod((nint(rnnfield)),2)
-         write(6,'(A,I2)')"# Z2 Invariant(bottom) =    ",
-     &                    mod((nint(rnnfield_bottom)),2)
+         write(6,'(A,I2)')"# Legacy Z2 candidate = ",
+     &                    modulo(nint(rnnfield),2)
+         write(6,'(A,I2)')"# Legacy Z2 candidate(bottom) = ",
+     &                    modulo(nint(rnnfield_bottom),2)
+         write(6,'(A)')"# Validate with tools/wavecar_z2.py."
         
          call get_ext_variable(xrecivec,xrecilat,xrnfield,kext,
      &                    recivec,recilat,rnfield,nnk,kperiod,nk,iz2,
@@ -492,8 +561,9 @@
             enddo   !loop for ig2
            enddo    !loop for ig3
            if (ispinor*ncnt.ne.npl(ilp)) then
-            write(0,*) '*ni error - computed NPL=',2*ncnt,
-     &                 ' != input nplane=',npl(ilp);stop
+            write(0,*) '*** error - computed NPL=',2*ncnt,
+     &                 ' != input nplane=',npl(ilp)
+            call vaspberry_fail
            endif
         
            do nj=nini, nmax
@@ -520,8 +590,9 @@
              enddo    !loop for ig2
             enddo     !loop for ig3
             if (ispinor*ncnt.ne.npl(ilp+1)) then
-             write(0,*) '*nj error - computed NPL=',2*ncnt,
-     &                  ' != input nplane=',npl(ilp+1);stop
+             write(0,*) '*** error - computed NPL=',2*ncnt,
+     &                  ' != input nplane=',npl(ilp+1)
+             call vaspberry_fail
             endif
             if(ispinor .eq. 2)then
              Siju(ni-nmax+ns,nj-nmax+ns)=dot_product(coeff1u,coeff2u)
@@ -1128,13 +1199,13 @@
 
        if(nini .eq. nmax) then
         if(iz == 1)then
-         write(32,'(A,I4)')"# Z2 invariant for the BAND : ",nini
+         write(32,'(A,I4)')"# Legacy Z2 candidate BAND : ",nini
         elseif(iz+ivel+icd .eq. 0)then
           write(32,'(A,I4)')"# Chern Number for the BAND : ",nmax
         endif
        else
         if(iz == 1)then
-         write(32,'(A,I4,A,I4)')"# Z2 invariant for the BANDS : ",nini,
+         write(32,'(A,I4,A,I4)')"# Legacy Z2 candidate BANDS: ",nini,
      &                         " - ",nmax
         elseif(iz+ivel+icd .eq. 0)then
           write(32,'(A,I4,A,I4)')"# Chern Number for the BANDS : ",nini,
@@ -1142,11 +1213,12 @@
         endif
        endif
  
-       if(iz == 1)then !Z2 INVARIANT
-        write(32,'(A,I2)')"# Z2 Invariant (top) =    ",
-     &                  mod((nint(rvari)),2)
-        write(32,'(A,I2)')"# Z2 Invariant (bottom) =    ",
-     &                  mod((nint(rvari2)),2)
+       if(iz == 1)then !legacy Z2 candidate
+        write(32,'(A,I2)')"# Legacy Z2 candidate (top) = ",
+     &                  modulo(nint(rvari),2)
+        write(32,'(A,I2)')"# Legacy Z2 candidate (bottom) = ",
+     &                  modulo(nint(rvari2),2)
+        write(32,'(A)')"# Validate with tools/wavecar_z2.py."
         write(32,'(A)')"# Berry Curvature F (A^2) :
      &  -Im[logPI_S(det(S(K_s,K_s+1)))]/dk^2"
         write(32,'(A)')"# N-field strength       :
@@ -1962,8 +2034,8 @@
           enddo   !loop for ig2
          enddo    !loop for ig3
          if (ispinor*ncnt.ne.npl(ilp)) then
-          write(0,*) '*ni error - computed NPL=',2*ncnt,
-     &               ' != input nplane=',npl(ilp);stop
+          write(0,*) '*** error - Z2 NPL mismatch',ilp
+          call vaspberry_fail
          endif
          do nj=nini, nmax
           ncnt=0;coeff2u=(0.,0.);coeff2d=(0.,0.);coeff=(0.,0.)
@@ -1983,7 +2055,7 @@
 
              if(ispinor .eq. 2)then  !spinor-dn
               if(itr(ilp+1) .eq. 0)then
-               if(itrim(ilp+1) .ge. 0)then
+               if(itrim(ilp+1) .eq. 0)then
                 coeff2d(incnt)=coeff(ncnt+npl(ilp+1)/2) !c(dn,n)
                elseif(itrim(ilp+1) .ge. 1 .and. mod(nj,2) .eq. 1)then
                 coeff2d(incnt)=coeff(ncnt+npl(ilp+1)/2) !c(dn,n)
@@ -2003,7 +2075,7 @@
               elseif(itrim(ilp+1) .ge. 1 .and. mod(nj,2) .eq. 0)then
                if(ispinor .eq. 1)then
                 coeff2u(incnt)=conjg(coeff(ncnt))  !c(n-1)*
-               elseif(ispinor .eq. 0)then
+               elseif(ispinor .eq. 2)then
                 coeff2u(incnt)=-conjg(coeff(ncnt+npl(ilp+1)/2)) !-c*(dn,n-1)
                endif
               endif
@@ -2020,8 +2092,8 @@
            enddo    !loop for ig2
           enddo     !loop for ig3
           if (ispinor*ncnt.ne.npl(ilp+1)) then
-           write(0,*) '*nj error - computed NPL=',2*ncnt,
-     &                ' != input nplane=',npl(ilp+1);stop
+           write(0,*) '*** error - Z2 NPL mismatch',ilp+1
+           call vaspberry_fail
           endif
           if(ispinor .eq. 2)then
            Siju(ni-nmax+ns,nj-nmax+ns)=dot_product(coeff1u,coeff2u)
@@ -3234,7 +3306,8 @@
       enddo
       if (ispinor*ncnt.ne.np) then
        write(0,*) '*** error - computed ispinor*ncnt=',ispinor*ncnt,
-     &            ' != input nplane=',np;stop
+     &            ' != input nplane=',np
+       call vaspberry_fail
       endif
       return
       end subroutine plindx
@@ -3461,6 +3534,14 @@
        enddo !ilp
       endif
 
+      do ilp=1,5
+       if(ikk(ilp) .lt. 1 .or. ikk(ilp) .gt. nk .or.
+     &    npl(ilp) .lt. 1)then
+        write(0,*) '*** error - incomplete five-point k loop',ilp
+        call vaspberry_fail
+       endif
+      enddo
+
       return
       end subroutine kindxfind
 
@@ -3471,16 +3552,16 @@
       complex*16 cener(nband)
       real*8 occ(nband)
       real*8  ener(nband)
+      if(k .lt. 1 .or. k .gt. nk)then
+       write(0,*) '*** error - selected k outside range',k,nk
+       call vaspberry_fail
+      endif
       irec=3+(k-1)*(nband+1)+nk*(nband+1)*(isp-1)  !record addres for "k"-point
 !    !write(6,*)'mmm'
       read(10,rec=irec) xnplane,(wk(i),i=1,3),
      &(cener(nn),occ(nn),nn=1,nband)
 !    !write(6,*)'qqq'
       nplane=nint(xnplane);ener=real(cener)
-      if (kpoint.gt.nk) then
-       write(0,*) '*** error - selected k=',k,' > max k=',nk;stop
-      endif
-
       return
       end subroutine kread
 
@@ -3512,6 +3593,10 @@
         
          ipiv = 0
          call zgetrf(N, N, mat, N, ipiv, info)
+         if(info .ne. 0)then
+          write(0,*) '*** error - ZGETRF failed, INFO=',info
+          call vaspberry_fail
+         endif
         
          determinant = (1d0,0d0)
          do i = 1, N
@@ -3827,7 +3912,8 @@
       close(10)
       irecl=nint(xirecl);ispin=nint(xispin);iprec=nint(xiprec) ! set to integer
       if(iprec.eq.45210) then
-       write(0,*) '*** error - WAVECAR_double requires complex*16';stop
+       write(0,*) '*** error - WAVECAR_double needs complex*16'
+       call vaspberry_fail
       endif
       open(unit=10,file=filename,access='direct',recl=irecl,
      &iostat=iost,status='old')
@@ -4215,13 +4301,13 @@
       write(6,*)" -vel 1 -is n     : **For the special purpose"
       write(6,*)"                  : Calculate velocity expectation "
       write(6,*)"                  : vaule (v_x, v_y) of n-th state"
-      write(6,*)" -z2  1           : Calculate Z2 invariant   "
-      write(6,*)"                  : Using Fukui's method (JSPJ 76,"
-      write(6,*)"                  : 053702 2007) which is lattice "
-      write(6,*)"                  : version of Fu and Kane method"
-      write(6,*)"                  : (PRB 74, 195312 2006) "
-      write(6,*)" -hf  1           : Use half BZ, ISYM=1 or 2, "
-      write(6,*)"                  : currently only works with -z2 1"
+      write(6,*)" -z2  1           : Legacy Fukui Z2 candidate"
+      write(6,*)"                  : Requires a full even 2D mesh,"
+      write(6,*)"                  : ISPIN=1 spinors, and bands 1:NE."
+      write(6,*)"                  : Do not report it as an invariant."
+      write(6,*)"                  : Run tools/wavecar_z2.py; report"
+      write(6,*)"                  : Z2 only when diagnostics PASS."
+      write(6,*)" -hf  1           : Rejected for legacy Z2 safety."
       write(6,*)" -wf nb -k nk     : **For the special purpose"
       write(6,*)"  -ng nx,ny,nz    : Calculate real-space wavefunction"
       write(6,*)"  -im 1           : output will be written in "
@@ -4275,3 +4361,12 @@
 !     write(6,*)" ex-MPI) mpiifort -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f "
       stop
       end subroutine help
+
+      subroutine vaspberry_fail
+#ifdef MPI_USE
+      include 'mpif.h'
+      integer ierr
+      call MPI_ABORT(MPI_COMM_WORLD,1,ierr)
+#endif
+      stop 1
+      end subroutine vaspberry_fail
