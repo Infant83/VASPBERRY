@@ -41,6 +41,7 @@ class VersionMetadataTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
         self.assertIn("python -m unittest discover -s tests -v", workflow)
         self.assertIn("vaspberry_gfortran_serial.f", workflow)
+        self.assertEqual(workflow.count("-fallow-argument-mismatch"), 2)
         self.assertIn('grep -F "Ver 1.1.0"', workflow)
         self.assertIn("mpifort -cpp -DMPI_USE", workflow)
         self.assertIn("vaspberry.f", workflow)
