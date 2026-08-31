@@ -74,8 +74,19 @@ jobs:
             tests/fortran/test_z2_output_guard.f90 \
             build/z2-test/vaspberry_serial.o \
             -llapack -lblas -o build/z2-test/test_z2_output_guard
+          gfortran -O0 -g -fcheck=all -fbacktrace \
+            tests/fortran/test_z2_legacy_atomic.f90 \
+            build/z2-test/vaspberry_serial.o \
+            -llapack -lblas -o build/z2-test/test_z2_legacy_atomic
+          gfortran -O0 -g -fcheck=all -fbacktrace \
+            tests/fortran/test_z2_finalize_guard.f90 \
+            build/z2-test/vaspberry_serial.o \
+            -llapack -lblas -o build/z2-test/test_z2_finalize_guard
+          build/z2-test/test_z2_legacy_atomic
 
           guard="$PWD/build/z2-test/test_z2_output_guard"
+          atomic="$PWD/build/z2-test/test_z2_legacy_atomic"
+          finalize="$PWD/build/z2-test/test_z2_finalize_guard"
           cases=build/z2-test/output-guard
           mkdir -p "$cases"
           for mode in direct relative absolute symlink hardlink; do
@@ -117,6 +128,65 @@ jobs:
             exit 1
           fi
           cmp "$unowned/expected.bin" "$unowned/Z2_FIELD.csv"
+
+          long_name="$cases/long-name"
+          mkdir -p "$long_name"
+          printf 'independent input bytes\n' > "$long_name/WAVECAR"
+          cp "$long_name/WAVECAR" "$long_name/expected.bin"
+          long_base="$(printf 'x%.0s' {1..72})"
+          if (cd "$long_name" &&
+              "$guard" WAVECAR "$long_base"); then
+            echo "truncating Z2 output base was accepted" >&2
+            exit 1
+          fi
+          cmp "$long_name/expected.bin" "$long_name/WAVECAR"
+          test ! -e "$long_name/Z2_FIELD.csv"
+          test ! -e "$long_name/Z2_FIELD.invalid.csv"
+
+          legacy_fail="$cases/legacy-rename-fail"
+          mkdir -p "$legacy_fail/NFIELD.dat"
+          if (cd "$legacy_fail" && "$atomic"); then
+            echo "legacy rename failure published PASS" >&2
+            exit 1
+          fi
+          test -f "$legacy_fail/Z2_FIELD.invalid.csv"
+          test -f "$legacy_fail/Z2_FIELD.tmp"
+          test ! -f "$legacy_fail/Z2_FIELD.csv"
+          test -f "$legacy_fail/NFIELD.tmp"
+
+          missing_legacy="$cases/missing-legacy"
+          mkdir -p "$missing_legacy"
+          printf '# schema=VASPBERRY_Z2_FIELD\n' \
+            > "$missing_legacy/Z2_FIELD.invalid.csv"
+          printf '# schema=VASPBERRY_Z2_FIELD\n' \
+            > "$missing_legacy/Z2_FIELD.tmp"
+          if (cd "$missing_legacy" && "$finalize" NFIELD); then
+            echo "missing legacy output published PASS" >&2
+            exit 1
+          fi
+          test -f "$missing_legacy/Z2_FIELD.invalid.csv"
+          test -f "$missing_legacy/Z2_FIELD.tmp"
+          test ! -e "$missing_legacy/Z2_FIELD.csv"
+
+          pass_fail="$cases/pass-rename-fail"
+          mkdir -p "$pass_fail/Z2_FIELD.csv"
+          printf 'block replacement\n' \
+            > "$pass_fail/Z2_FIELD.csv/keep"
+          printf '# schema=VASPBERRY_Z2_FIELD\n' \
+            > "$pass_fail/Z2_FIELD.invalid.csv"
+          printf '# schema=VASPBERRY_Z2_FIELD\n' \
+            > "$pass_fail/Z2_FIELD.tmp"
+          printf '# Legacy Z2 candidate BANDS: 1 - 18\n' \
+            > "$pass_fail/NFIELD.dat"
+          printf '# NFIELD.dat stores the gauge-dependent\n' \
+            >> "$pass_fail/NFIELD.dat"
+          if (cd "$pass_fail" && "$finalize" NFIELD); then
+            echo "failed final rename reported PASS" >&2
+            exit 1
+          fi
+          test ! -f "$pass_fail/Z2_FIELD.csv"
+          test -f "$pass_fail/Z2_FIELD.tmp"
+          test ! -e "$pass_fail/Z2_FIELD.invalid.csv"
 
           safe="$cases/safe"
           mkdir -p "$safe"

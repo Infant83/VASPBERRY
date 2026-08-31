@@ -521,6 +521,7 @@
      &                     dSkxky,nini,nmax,xrecivec,xrecilat,kext,
      &                     xrnfield,rnnfield,rnnfield_bottom,0,0,
      &                     iz2,icd,iz,ivel,ikubo,nprocs)
+         call finalize_z2_pass(foname)
         endif !myrank ==0
        enddo !ispin end
 
@@ -1311,6 +1312,27 @@
       return
       end subroutine z2_output_deletable
 
+      subroutine z2_legacy_paths(base,target,temp,ok)
+      implicit none
+      character*(*) base,target,temp
+      integer nbase
+      logical ok
+
+      target=' '
+      temp=' '
+      ok=.false.
+      nbase=len_trim(base)
+      if(nbase.le.0)return
+      if(nbase+4.gt.len(target) .or.
+     &   nbase+4.gt.len(temp))return
+      target(1:nbase)=base(1:nbase)
+      target(nbase+1:nbase+4)='.dat'
+      temp(1:nbase)=base(1:nbase)
+      temp(nbase+1:nbase+4)='.tmp'
+      ok=.true.
+      return
+      end subroutine z2_legacy_paths
+
       subroutine z2_legacy_deletable(filename,deletable)
       implicit none
       character*(*) filename
@@ -1371,14 +1393,60 @@
       return
       end subroutine delete_z2_legacy_file
 
+      subroutine finalize_z2_pass(legacybase)
+      implicit none
+      character*(*) legacybase
+      character*75 legacyfile,legacytmp
+      logical pathok,owned,lexist
+      integer ios
+
+      call z2_legacy_paths(legacybase,legacyfile,legacytmp,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - legacy Z2 output name too long'
+       call vaspberry_fail
+      endif
+      inquire(file='Z2_FIELD.tmp',exist=lexist)
+      call z2_output_deletable('Z2_FIELD.tmp',owned)
+      if(.not.lexist .or. .not.owned)then
+       write(0,*) '*** error - missing staged Z2 PASS field'
+       call vaspberry_fail
+      endif
+      inquire(file='Z2_FIELD.invalid.csv',exist=lexist)
+      call z2_output_deletable('Z2_FIELD.invalid.csv',owned)
+      if(.not.lexist .or. .not.owned)then
+       write(0,*) '*** error - missing Z2 INCOMPLETE sentinel'
+       call vaspberry_fail
+      endif
+      inquire(file=trim(legacyfile),exist=lexist)
+      call z2_legacy_deletable(legacyfile,owned)
+      if(.not.lexist .or. .not.owned)then
+       write(0,*) '*** error - incomplete legacy Z2 output'
+       call vaspberry_fail
+      endif
+
+! Z2_FIELD.csv is the final commit marker: remove INCOMPLETE first.
+      call delete_z2_file('Z2_FIELD.invalid.csv')
+      call z2_atomic_replace('Z2_FIELD.tmp','Z2_FIELD.csv',ios)
+      if(ios.ne.0)then
+       write(0,*) '*** error - legacy Z2 PASS publish failed',ios
+       call vaspberry_fail
+      endif
+      write(6,'(A)')'# Z2 field diagnostic file: Z2_FIELD.csv'
+      return
+      end subroutine finalize_z2_pass
+
       subroutine begin_z2_field_outputs(filename,legacybase)
       implicit none
       character*(*) filename,legacybase
-      character*512 legacyfile
+      character*75 legacyfile,legacytmp
       integer ios,i,ibase,nfile
-      logical same,pathok,safe1,safe2,safe3,safe4
+      logical same,pathok,safe1,safe2,safe3,safe4,safe5
 
-      legacyfile=trim(legacybase)//'.dat'
+      call z2_legacy_paths(legacybase,legacyfile,legacytmp,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - legacy Z2 output name too long'
+       call vaspberry_fail
+      endif
       nfile=len_trim(filename)
       ibase=1
       do i=1,nfile
@@ -1429,12 +1497,22 @@
        write(0,*) '*** error - legacy Z2 input-output alias'
        call vaspberry_fail
       endif
+      call z2_paths_same(filename,legacytmp,same,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - cannot resolve legacy temp path'
+       call vaspberry_fail
+      endif
+      if(same)then
+       write(0,*) '*** error - legacy Z2 input-output alias'
+       call vaspberry_fail
+      endif
       call z2_output_deletable('Z2_FIELD.csv',safe1)
       call z2_output_deletable('Z2_FIELD.invalid.csv',safe2)
       call z2_output_deletable('Z2_FIELD.tmp',safe3)
       call z2_legacy_deletable(legacyfile,safe4)
+      call z2_legacy_deletable(legacytmp,safe5)
       if(.not.safe1 .or. .not.safe2 .or. .not.safe3 .or.
-     &   .not.safe4)then
+     &   .not.safe4 .or. .not.safe5)then
        write(0,*) '*** error - refusing to delete non-Z2 output'
        call vaspberry_fail
       endif
@@ -1442,6 +1520,7 @@
       call delete_z2_file('Z2_FIELD.invalid.csv')
       call delete_z2_file('Z2_FIELD.tmp')
       call delete_z2_legacy_file(legacyfile)
+      call delete_z2_legacy_file(legacytmp)
       open(unit=94,file='Z2_FIELD.invalid.csv',status='new',
      &     action='write',iostat=ios)
       if(ios.ne.0)then
@@ -1756,14 +1835,17 @@
        write(0,*) '*** error - legacy Z2 temporary output close',ios
        call vaspberry_fail
       endif
-      call z2_atomic_replace('Z2_FIELD.tmp',trim(outname),ios)
-      if(ios.ne.0)then
-       write(0,*) '*** error - legacy Z2 atomic output replace',ios
-       call vaspberry_fail
+      if(ifieldok.eq.0)then
+       call z2_atomic_replace('Z2_FIELD.tmp',trim(outname),ios)
+       if(ios.ne.0)then
+        write(0,*) '*** error - legacy Z2 invalid publish',ios
+        call vaspberry_fail
+       endif
+       write(6,'(A,A)')'# Z2 field diagnostic file: ',
+     &                  trim(outname)
+      else
+       write(6,'(A)')'# Z2 PASS field staged; awaiting legacy output'
       endif
-      if(fieldok)call delete_z2_file('Z2_FIELD.invalid.csv')
-
-      write(6,'(A,A)')'# Z2 field diagnostic file: ',trim(outname)
       write(6,'(A,ES13.5)')'# Z2 field total Chern: ',totalchern
       write(6,'(A,ES13.5)')'# Z2 field minimum link s.v.: ',minsv
       write(6,'(A,ES13.5)')'# Z2 field max TR flux residual: ',
@@ -1793,7 +1875,9 @@
       real*8  xb(3),xtemp,rvari3(4),rvari4(4)
       character*256 filename,foname,fonameo
       character*256 foname_
+      character*75 z2legacy,z2legacytmp
       character*20,external :: int2str
+      logical z2pathok
        
        if(ikubo .ge. 1 .and. nini .eq. nmax) then
          write(foname_, '(3A )')TRIM(foname),'.EIG-',
@@ -1812,7 +1896,22 @@
          write(fonameo,'(A,A)')TRIM(foname_),'.dat'
        endif
 
-       open(32,file=fonameo,status='unknown')
+       if(iz.eq.1)then
+        call z2_legacy_paths(foname,z2legacy,z2legacytmp,z2pathok)
+        if(.not.z2pathok)then
+         write(0,*) '*** error - legacy Z2 output name too long'
+         call vaspberry_fail
+        endif
+        fonameo=z2legacytmp
+        open(32,file=trim(fonameo),status='replace',
+     &       action='write',iostat=ios)
+        if(ios.ne.0)then
+         write(0,*) '*** error - legacy Z2 temp open',ios
+         call vaspberry_fail
+        endif
+       else
+        open(32,file=fonameo,status='unknown')
+       endif
        write(32,'(A,I4,A)')"# Job running on ",nprocs," total cores"
        write(32,'(A,A)')   "# File reading...  : ",filename
        write(32,'(A,I9)')"# TOTAL RECORD LENGTH = ",irecl
@@ -1923,7 +2022,20 @@
      &        (xrecilat(i,ik),i=1,3)
        enddo
 
-       close(32)
+       if(iz.eq.1)then
+        close(32,iostat=ios)
+        if(ios.ne.0)then
+         write(0,*) '*** error - legacy Z2 temp close',ios
+         call vaspberry_fail
+        endif
+        call z2_atomic_replace(z2legacytmp,z2legacy,ios)
+        if(ios.ne.0)then
+         write(0,*) '*** error - legacy Z2 output publish',ios
+         call vaspberry_fail
+        endif
+       else
+        close(32)
+       endif
        return
       end subroutine write_result
 

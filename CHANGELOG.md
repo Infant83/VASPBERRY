@@ -33,15 +33,19 @@ All notable changes to VASPBERRY are recorded here.
   temporary output and C/POSIX `rename()` prevent partial publication.
   Reserved basenames and POSIX `realpath()` checks reject direct, relative,
   absolute, and symbolic-link input aliases. Schema/marker preflight refuses
-  to delete unowned files, and stale PASS plus legacy NFIELD products are
-  removed before WAVECAR processing.
+  to delete unowned files. After successful preflight, stale PASS plus legacy
+  NFIELD products are removed before WAVECAR processing. Legacy output is
+  closed and atomically published first; the INCOMPLETE sentinel is removed
+  next; `Z2_FIELD.csv` is the final PASS commit marker. Z2 `-o` bases longer
+  than 71 characters are rejected before cleanup to prevent path truncation.
 - Version, grid, band range, spinor rank, overlap backend, numerical
   thresholds, minimum link singular values, per-plaquette status, and an
   explicit check-scope statement in the field CSV.
 - Production-linked Fortran regression tests for Γ/M1/M2/M3 reciprocal
   mapping, `Theta^2=-1`, an integrated M1 `get_z2_state`
   coefficient reconstruction, complex*8 norm accumulation, LU pivot phase,
-  minimum singular values, canonical-path aliases, and owned-output guards.
+  minimum singular values, canonical-path aliases, owned-output guards,
+  legacy/final atomic commit failures, and output-name length boundaries.
   Both production objects are linked into and exercised by helper drivers;
   MPI communication ordering is source-checked.
 - Public 1H-MoS₂ regression coverage that verifies all nine periodic copies

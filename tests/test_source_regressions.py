@@ -421,13 +421,26 @@ class FortranSourceRegressionTests(unittest.TestCase):
                 "callbegin_z2_field_outputs(filename,foname)"
             )
             input_read = main.index("callinforead(")
+            field_stage = main.index("callwrite_z2_field_csv(")
+            legacy_write = main.index("callwrite_result(", field_stage)
+            pass_commit = main.index(
+                "callfinalize_z2_pass(foname)", legacy_write
+            )
             self.assertLess(begin, input_read)
+            self.assertLess(field_stage, legacy_write)
+            self.assertLess(legacy_write, pass_commit)
 
             prepare = compact_fortran(
                 fortran_subroutine(source, "begin_z2_field_outputs")
             )
             writer = compact_fortran(
                 fortran_subroutine(source, "write_z2_field_csv")
+            )
+            finalizer = compact_fortran(
+                fortran_subroutine(source, "finalize_z2_pass")
+            )
+            path_builder = compact_fortran(
+                fortran_subroutine(source, "z2_legacy_paths")
             )
             same_path = compact_fortran(
                 fortran_subroutine(source, "z2_paths_same")
@@ -438,8 +451,16 @@ class FortranSourceRegressionTests(unittest.TestCase):
             owned_legacy = compact_fortran(
                 fortran_subroutine(source, "z2_legacy_deletable")
             )
+            legacy_writer = compact_fortran(
+                fortran_subroutine(source, "write_result")
+            )
             with self.subTest(source=source_path.name):
                 self.assertIn("filename(i:i).eq.'/'", prepare)
+                self.assertIn(
+                    "callz2_legacy_paths(legacybase,legacyfile,"
+                    "legacytmp,pathok)",
+                    prepare,
+                )
                 self.assertIn(
                     "trim(filename(ibase:nfile)).eq.'z2_field.csv'",
                     prepare,
@@ -451,6 +472,10 @@ class FortranSourceRegressionTests(unittest.TestCase):
                 )
                 self.assertIn(
                     "callz2_paths_same(filename,legacyfile,same,pathok)",
+                    prepare,
+                )
+                self.assertIn(
+                    "callz2_paths_same(filename,legacytmp,same,pathok)",
                     prepare,
                 )
                 self.assertIn("if(.not.pathok)then", prepare)
@@ -466,10 +491,21 @@ class FortranSourceRegressionTests(unittest.TestCase):
                     prepare,
                 )
                 self.assertIn(
+                    "callz2_legacy_deletable(legacytmp,safe5)",
+                    prepare,
+                )
+                self.assertIn(
                     "calldelete_z2_legacy_file(legacyfile)", prepare
+                )
+                self.assertIn(
+                    "calldelete_z2_legacy_file(legacytmp)", prepare
                 )
                 self.assertIn("#result_status=incomplete", prepare)
                 self.assertIn("#legacy_output=", prepare)
+
+                self.assertIn("nbase+4.gt.len(target)", path_builder)
+                self.assertIn("target(nbase+1:nbase+4)='.dat'", path_builder)
+                self.assertIn("temp(nbase+1:nbase+4)='.tmp'", path_builder)
                 self.assertIn("bind(c,name='realpath')", same_path)
                 self.assertIn(
                     "c_realpath(cpath1,c_null_ptr)", same_path
@@ -479,18 +515,41 @@ class FortranSourceRegressionTests(unittest.TestCase):
                 self.assertIn(
                     "#schema=vaspberry_z2_field", owned_csv
                 )
-                self.assertIn(
-                    "#legacyz2candidate", owned_legacy
-                )
+                self.assertIn("#legacyz2candidate", owned_legacy)
                 self.assertIn(
                     "#nfield.datstoresthegauge-dependent",
                     owned_legacy,
                 )
+
                 self.assertIn("file='z2_field.tmp'", writer)
-                self.assertIn("callz2_atomic_replace(", writer)
+                invalid_branch = writer.index("if(ifieldok.eq.0)then")
+                invalid_publish = writer.index(
+                    "callz2_atomic_replace('z2_field.tmp',"
+                    "trim(outname),ios)"
+                )
+                self.assertLess(invalid_branch, invalid_publish)
+                self.assertNotIn(
+                    "calldelete_z2_file('z2_field.invalid.csv')",
+                    writer,
+                )
                 self.assertIn("#result_status=pass", writer)
                 self.assertIn("#result_status=invalid", writer)
                 self.assertIn("#reportable_invariant=0", writer)
+
+                self.assertIn("status='replace'", legacy_writer)
+                self.assertIn("close(32,iostat=ios)", legacy_writer)
+                self.assertIn(
+                    "callz2_atomic_replace(z2legacytmp,z2legacy,ios)",
+                    legacy_writer,
+                )
+                sentinel_delete = finalizer.index(
+                    "calldelete_z2_file('z2_field.invalid.csv')"
+                )
+                pass_publish = finalizer.index(
+                    "callz2_atomic_replace('z2_field.tmp',"
+                    "'z2_field.csv',ios)"
+                )
+                self.assertLess(sentinel_delete, pass_publish)
                 self.assertIn(
                     "#input_trs_independently_verified=0", writer
                 )
@@ -524,8 +583,10 @@ class FortranSourceRegressionTests(unittest.TestCase):
         )
         for name in (
             "z2_paths_same",
+            "z2_legacy_paths",
             "z2_output_deletable",
             "z2_legacy_deletable",
+            "finalize_z2_pass",
             "begin_z2_field_outputs",
             "delete_z2_file",
             "delete_z2_legacy_file",

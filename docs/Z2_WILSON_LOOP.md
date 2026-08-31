@@ -59,15 +59,21 @@ conservative numerical policy and may reject a coarse but otherwise usable
 mesh.
 
 A passing run writes `Z2_FIELD.csv` on the fundamental mesh. A completed
-rejection writes `Z2_FIELD.invalid.csv`, and an unexpected early stop leaves
-an `INCOMPLETE` invalid sentinel. Both final states are written through a
-same-directory temporary file and C/POSIX `rename()`, so a partial file is
-not published as the new result. Before cleanup, reserved basenames and POSIX
-`realpath()` identities reject direct, relative, absolute, and symbolic-link
-aliases of the input WAVECAR. Existing files must carry the Z2 schema or the
-legacy NFIELD markers before deletion; an unrecognized file stops the run
-unchanged. Stale PASS and legacy NFIELD products are removed together before
-WAVECAR processing.
+rejection writes `Z2_FIELD.invalid.csv`. After path/ownership preflight
+succeeds, stale products are removed and an unexpected early stop leaves an
+`INCOMPLETE` invalid sentinel. The legacy NFIELD is closed and atomically
+renamed first; the sentinel is removed next; `Z2_FIELD.csv` is atomically
+renamed last and is the PASS commit marker. Thus an I/O failure cannot expose
+a regular PASS CSV before its legacy companion is complete.
+
+Before cleanup, reserved basenames and POSIX `realpath()` identities reject
+direct, relative, absolute, and symbolic-link aliases of the input WAVECAR.
+Existing files must carry the Z2 schema or the legacy NFIELD markers before
+deletion. If preflight rejects an alias or unrecognized file, it modifies
+nothing; any older product is not associated with that rejected run. A Z2
+`-o` base longer than 71 characters is rejected before cleanup, keeping the
+checked `.dat` and `.tmp` paths byte-identical to those written. Concurrent
+Z2 runs in the same working directory are not supported.
 
 The CSV separates wrapped Berry flux and curvature from the Fukui integer
 n-field. Its flux relation is

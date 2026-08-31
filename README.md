@@ -58,15 +58,19 @@ after promoting its real and imaginary components to double precision.
 
 A run that passes the legacy reconstruction checks atomically publishes
 `Z2_FIELD.csv`; a completed rejection writes
-`Z2_FIELD.invalid.csv`. An early failure leaves an `INCOMPLETE` sentinel,
-so a stale PASS file cannot be mistaken for the current result. Before
-cleanup, reserved basenames and POSIX `realpath()` identities reject direct,
-relative, absolute, and symbolic-link aliases of the input WAVECAR. Existing
-files are deleted only after their Z2 schema or legacy NFIELD markers are
-recognized; otherwise the run stops without modifying them. This also keeps a
+`Z2_FIELD.invalid.csv`. After path/ownership preflight succeeds, stale
+products are removed and an early failure leaves an `INCOMPLETE` sentinel.
+The legacy NFIELD is first completed as a temporary file, then the sentinel is
+removed, and `Z2_FIELD.csv` is published last as the PASS commit marker.
+Before cleanup, reserved basenames and POSIX `realpath()` identities reject
+direct, relative, absolute, and symbolic-link aliases of the input WAVECAR.
+Existing files are deleted only after their Z2 schema or legacy NFIELD markers
+are recognized; otherwise preflight stops without modifying any file. In that
+case, any older output is not a result of the rejected run. This also keeps a
 hard-linked binary input from being mistaken for a deletable Z2 product. The
-legacy `NFIELD.dat` (or the selected legacy `.dat` name) is cleared before
-a new run, so an INVALID result cannot leave an older candidate behind. The CSV
+Z2 `-o` base is limited to 71 characters so the checked `.dat` and `.tmp`
+paths cannot truncate. Concurrent Z2 runs in one working directory are not
+supported. The CSV
 contains the wrapped Berry flux, curvature, minimum link singular value,
 Fukui integer n-field, thresholds, and per-plaquette diagnostics on the
 fundamental mesh. The physical flux check is

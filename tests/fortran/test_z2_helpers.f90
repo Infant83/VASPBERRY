@@ -15,7 +15,8 @@ program test_z2_helpers
   integer :: basis_max(3)
   real(8) :: loop_coord(3,5), mesh_coord(3,1)
   real(8) :: rb1(3), rb2(3), rb3(3), fixture_ecut
-  logical :: same_file, path_ok, deletable, exists
+  logical :: same_file, path_ok, deletable, exists, name_ok
+  character(75) :: legacy_target, legacy_temp
   character(4096) :: cwd
 
   pi = 4.0_8 * atan(1.0_8)
@@ -147,6 +148,20 @@ program test_z2_helpers
   call require(info == 0, "high-rank link factorization failed")
   call require(abs(smin-0.1_8) < 1.0e-13_8, &
                "well-conditioned high-rank link was misclassified")
+
+  call z2_legacy_paths(repeat("a",71), legacy_target, &
+                       legacy_temp, name_ok)
+  call require(name_ok, "71-character Z2 output base was rejected")
+  call require(len_trim(legacy_target) == 75, &
+               "legacy target path length is inconsistent")
+  call require(legacy_target(72:75) == ".dat", &
+               "legacy target suffix is inconsistent")
+  call require(legacy_temp(72:75) == ".tmp", &
+               "legacy temporary suffix is inconsistent")
+  call z2_legacy_paths(repeat("b",72), legacy_target, &
+                       legacy_temp, name_ok)
+  call require(.not. name_ok, &
+               "truncating 72-character Z2 output base was accepted")
 
   open(newunit=file_unit, file="z2_same_file_target.tmp", &
        status="replace", action="write")
