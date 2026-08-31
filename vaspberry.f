@@ -149,7 +149,7 @@
        call vaspberry_fail
       endif
       if(iz.eq.1 .and. myrank.eq.0)then
-       call begin_z2_field_outputs(filename)
+       call begin_z2_field_outputs(filename,foname)
       endif
 #ifdef MPI_USE
       if(iz.eq.1)call MPI_BARRIER(MPI_COMM_WORLD,ierr)
@@ -1198,20 +1198,250 @@
       endfunction
 
 !!$*  initialize safe legacy Z2 output state
-      subroutine begin_z2_field_outputs(filename)
+      subroutine z2_paths_same(path1,path2,same,ok)
+      use iso_c_binding
+      implicit none
+      character*(*) path1,path2
+      logical same,ok,exist1,exist2
+      character(kind=c_char),allocatable::cpath1(:),cpath2(:)
+      character(kind=c_char),pointer::rpath1(:),rpath2(:)
+      type(c_ptr) p1,p2
+      integer(c_size_t) nl1,nl2
+      integer i,n1,n2
+      interface
+       function c_realpath(path,resolved) bind(C,name='realpath')
+     & result(ptr)
+        import c_char,c_ptr
+        implicit none
+        character(kind=c_char),intent(in)::path(*)
+        type(c_ptr),value::resolved
+        type(c_ptr) ptr
+       end function c_realpath
+       function c_strlen(str) bind(C,name='strlen') result(n)
+        import c_ptr,c_size_t
+        implicit none
+        type(c_ptr),value::str
+        integer(c_size_t) n
+       end function c_strlen
+       subroutine c_free(ptr) bind(C,name='free')
+        import c_ptr
+        implicit none
+        type(c_ptr),value::ptr
+       end subroutine c_free
+      end interface
+
+      same=.false.
+      ok=.false.
+      nullify(rpath1,rpath2)
+      inquire(file=trim(path1),exist=exist1)
+      if(.not.exist1)return
+      n1=len_trim(path1)
+      if(n1.le.0)return
+      allocate(cpath1(n1+1))
+      cpath1=c_null_char
+      do i=1,n1
+       cpath1(i)=path1(i:i)
+      enddo
+      p1=c_realpath(cpath1,c_null_ptr)
+      deallocate(cpath1)
+      if(.not.c_associated(p1))return
+
+      inquire(file=trim(path2),exist=exist2)
+      if(.not.exist2)then
+       ok=.true.
+       call c_free(p1)
+       return
+      endif
+      n2=len_trim(path2)
+      if(n2.le.0)then
+       call c_free(p1)
+       return
+      endif
+      allocate(cpath2(n2+1))
+      cpath2=c_null_char
+      do i=1,n2
+       cpath2(i)=path2(i:i)
+      enddo
+      p2=c_realpath(cpath2,c_null_ptr)
+      deallocate(cpath2)
+      if(.not.c_associated(p2))then
+       call c_free(p1)
+       return
+      endif
+
+      nl1=c_strlen(p1)
+      nl2=c_strlen(p2)
+      if(nl1.eq.nl2)then
+       call c_f_pointer(p1,rpath1,(/int(nl1)+1/))
+       call c_f_pointer(p2,rpath2,(/int(nl2)+1/))
+       same=.true.
+       do i=1,int(nl1)
+        if(rpath1(i).ne.rpath2(i))same=.false.
+       enddo
+      endif
+      ok=.true.
+      call c_free(p1)
+      call c_free(p2)
+      nullify(rpath1,rpath2)
+      return
+      end subroutine z2_paths_same
+
+      subroutine z2_output_deletable(filename,deletable)
       implicit none
       character*(*) filename
+      character*256 header
+      logical deletable,lexist
+      integer ios,iosclose
+
+      deletable=.false.
+      inquire(file=trim(filename),exist=lexist)
+      if(.not.lexist)then
+       deletable=.true.
+       return
+      endif
+      open(unit=94,file=trim(filename),status='old',
+     &     action='read',form='formatted',iostat=ios)
+      if(ios.ne.0)return
+      header=' '
+      read(94,'(A)',iostat=ios)header
+      close(94,iostat=iosclose)
+      if(ios.ne.0 .or. iosclose.ne.0)return
+      if(trim(header).eq.'# schema=VASPBERRY_Z2_FIELD')
+     & deletable=.true.
+      return
+      end subroutine z2_output_deletable
+
+      subroutine z2_legacy_deletable(filename,deletable)
+      implicit none
+      character*(*) filename
+      character*256 line
+      logical deletable,lexist,found_candidate,found_nfield
+      integer ios,iosclose,i
+
+      deletable=.false.
+      inquire(file=trim(filename),exist=lexist)
+      if(.not.lexist)then
+       deletable=.true.
+       return
+      endif
+      open(unit=93,file=trim(filename),status='old',
+     &     action='read',form='formatted',iostat=ios)
+      if(ios.ne.0)return
+      found_candidate=.false.
+      found_nfield=.false.
+      do i=1,128
+       line=' '
+       read(93,'(A)',iostat=ios)line
+       if(ios.ne.0)exit
+       if(index(line,'# Legacy Z2 candidate').gt.0)
+     &  found_candidate=.true.
+       if(index(line,'# NFIELD.dat stores the gauge-dependent')
+     &  .gt.0)found_nfield=.true.
+      enddo
+      close(93,iostat=iosclose)
+      if(iosclose.ne.0)return
+      if(found_candidate .and. found_nfield)deletable=.true.
+      return
+      end subroutine z2_legacy_deletable
+
+      subroutine delete_z2_legacy_file(filename)
+      implicit none
+      character*(*) filename
+      logical lexist,deletable
       integer ios
 
-      if(trim(filename).eq.'Z2_FIELD.csv' .or.
-     &   trim(filename).eq.'Z2_FIELD.invalid.csv' .or.
-     &   trim(filename).eq.'Z2_FIELD.tmp')then
-       write(0,*) '*** error - legacy Z2 input-output collision'
+      call z2_legacy_deletable(filename,deletable)
+      if(.not.deletable)then
+       write(0,*) '*** error - refusing to delete non-Z2 legacy file'
+       call vaspberry_fail
+      endif
+      inquire(file=trim(filename),exist=lexist)
+      if(lexist)then
+       open(unit=93,file=trim(filename),status='old',iostat=ios)
+       if(ios.ne.0)then
+        write(0,*) '*** error - legacy output open',ios
+        call vaspberry_fail
+       endif
+       close(93,status='delete',iostat=ios)
+       if(ios.ne.0)then
+        write(0,*) '*** error - legacy output delete',ios
+        call vaspberry_fail
+       endif
+      endif
+      return
+      end subroutine delete_z2_legacy_file
+
+      subroutine begin_z2_field_outputs(filename,legacybase)
+      implicit none
+      character*(*) filename,legacybase
+      character*512 legacyfile
+      integer ios,i,ibase,nfile
+      logical same,pathok,safe1,safe2,safe3,safe4
+
+      legacyfile=trim(legacybase)//'.dat'
+      nfile=len_trim(filename)
+      ibase=1
+      do i=1,nfile
+       if(filename(i:i).eq.'/')ibase=i+1
+      enddo
+      if(ibase.le.nfile)then
+       if(trim(filename(ibase:nfile)).eq.'Z2_FIELD.csv' .or.
+     &    trim(filename(ibase:nfile)).eq.'Z2_FIELD.invalid.csv' .or.
+     &    trim(filename(ibase:nfile)).eq.'Z2_FIELD.tmp')then
+        write(0,*) '*** error - legacy Z2 reserved input basename'
+        call vaspberry_fail
+       endif
+      endif
+      call z2_paths_same(filename,'Z2_FIELD.csv',same,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - cannot resolve legacy Z2 input path'
+       call vaspberry_fail
+      endif
+      if(same)then
+       write(0,*) '*** error - legacy Z2 input-output alias'
+       call vaspberry_fail
+      endif
+      call z2_paths_same(filename,'Z2_FIELD.invalid.csv',
+     &                   same,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - cannot resolve legacy Z2 output path'
+       call vaspberry_fail
+      endif
+      if(same)then
+       write(0,*) '*** error - legacy Z2 input-output alias'
+       call vaspberry_fail
+      endif
+      call z2_paths_same(filename,'Z2_FIELD.tmp',same,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - cannot resolve legacy Z2 output path'
+       call vaspberry_fail
+      endif
+      if(same)then
+       write(0,*) '*** error - legacy Z2 input-output alias'
+       call vaspberry_fail
+      endif
+      call z2_paths_same(filename,legacyfile,same,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - cannot resolve legacy output path'
+       call vaspberry_fail
+      endif
+      if(same)then
+       write(0,*) '*** error - legacy Z2 input-output alias'
+       call vaspberry_fail
+      endif
+      call z2_output_deletable('Z2_FIELD.csv',safe1)
+      call z2_output_deletable('Z2_FIELD.invalid.csv',safe2)
+      call z2_output_deletable('Z2_FIELD.tmp',safe3)
+      call z2_legacy_deletable(legacyfile,safe4)
+      if(.not.safe1 .or. .not.safe2 .or. .not.safe3 .or.
+     &   .not.safe4)then
+       write(0,*) '*** error - refusing to delete non-Z2 output'
        call vaspberry_fail
       endif
       call delete_z2_file('Z2_FIELD.csv')
       call delete_z2_file('Z2_FIELD.invalid.csv')
       call delete_z2_file('Z2_FIELD.tmp')
+      call delete_z2_legacy_file(legacyfile)
       open(unit=94,file='Z2_FIELD.invalid.csv',status='new',
      &     action='write',iostat=ios)
       if(ios.ne.0)then
@@ -1224,6 +1454,7 @@
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
+      write(94,'(2A)')'# legacy_output=',trim(legacyfile)
       close(94,iostat=ios)
       if(ios.ne.0)then
        write(0,*) '*** error - legacy Z2 sentinel close',ios
@@ -1236,9 +1467,14 @@
       subroutine delete_z2_file(filename)
       implicit none
       character*(*) filename
-      logical lexist
+      logical lexist,deletable
       integer ios
 
+      call z2_output_deletable(filename,deletable)
+      if(.not.deletable)then
+       write(0,*) '*** error - refusing to delete non-Z2 output'
+       call vaspberry_fail
+      endif
       inquire(file=trim(filename),exist=lexist)
       if(lexist)then
        open(unit=94,file=trim(filename),status='old',iostat=ios)
@@ -1429,7 +1665,7 @@
       write(94,'(A)')'# plaquette_orientation=POSITIVE_B1_CROSS_B2'
       write(94,'(A)')'# nfield_definition='//
      & '[(sum_link_arg)-wrap(sum_link_arg)]/(2*pi)'
-      write(94,'(2A)')'# overlap_backend=
+      write(94,'(2A)')'# overlap_backend=',
      & 'WAVECAR_PSEUDO_NO_PAW_AUGMENTATION'
       write(94,'(A)')'# input_trs_assumed=1'
       write(94,'(A)')'# input_trs_independently_verified=0'

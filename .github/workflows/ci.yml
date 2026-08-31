@@ -70,6 +70,71 @@ jobs:
             build/z2-test/vaspberry_serial.o \
             -llapack -lblas -o build/z2-test/test_z2_serial
           build/z2-test/test_z2_serial
+          gfortran -O0 -g -fcheck=all -fbacktrace \
+            tests/fortran/test_z2_output_guard.f90 \
+            build/z2-test/vaspberry_serial.o \
+            -llapack -lblas -o build/z2-test/test_z2_output_guard
+
+          guard="$PWD/build/z2-test/test_z2_output_guard"
+          cases=build/z2-test/output-guard
+          mkdir -p "$cases"
+          for mode in direct relative absolute symlink hardlink; do
+            case_dir="$cases/$mode"
+            mkdir -p "$case_dir"
+            printf 'private input bytes without Z2 schema\n' \
+              > "$case_dir/Z2_FIELD.csv"
+            cp "$case_dir/Z2_FIELD.csv" "$case_dir/expected.bin"
+            case "$mode" in
+              direct) input_arg="Z2_FIELD.csv" ;;
+              relative) input_arg="./Z2_FIELD.csv" ;;
+              absolute) input_arg="$PWD/$case_dir/Z2_FIELD.csv" ;;
+              symlink)
+                ln -s Z2_FIELD.csv "$case_dir/WAVECAR_ALIAS"
+                input_arg="WAVECAR_ALIAS"
+                ;;
+              hardlink)
+                ln "$case_dir/Z2_FIELD.csv" "$case_dir/WAVECAR_HARDLINK"
+                input_arg="WAVECAR_HARDLINK"
+                ;;
+            esac
+            if (cd "$case_dir" &&
+                "$guard" \
+                  "$input_arg" NFIELD); then
+              echo "collision guard accepted $mode alias" >&2
+              exit 1
+            fi
+            cmp "$case_dir/expected.bin" "$case_dir/Z2_FIELD.csv"
+          done
+
+          unowned="$cases/unowned"
+          mkdir -p "$unowned"
+          printf 'independent input bytes\n' > "$unowned/WAVECAR"
+          printf 'unowned user data\n' > "$unowned/Z2_FIELD.csv"
+          cp "$unowned/Z2_FIELD.csv" "$unowned/expected.bin"
+          if (cd "$unowned" &&
+              "$guard" WAVECAR NFIELD); then
+            echo "unowned output was accepted for deletion" >&2
+            exit 1
+          fi
+          cmp "$unowned/expected.bin" "$unowned/Z2_FIELD.csv"
+
+          safe="$cases/safe"
+          mkdir -p "$safe"
+          printf 'independent input bytes\n' > "$safe/WAVECAR"
+          printf '# schema=VASPBERRY_Z2_FIELD\n# result_status=PASS\n' \
+            > "$safe/Z2_FIELD.csv"
+          printf '# Legacy Z2 candidate BANDS: 1 - 18\n' \
+            > "$safe/NFIELD.dat"
+          printf '# NFIELD.dat stores the gauge-dependent\n' \
+            >> "$safe/NFIELD.dat"
+          (cd "$safe" &&
+            "$guard" WAVECAR NFIELD)
+          test ! -e "$safe/Z2_FIELD.csv"
+          test ! -e "$safe/NFIELD.dat"
+          grep -F '# schema=VASPBERRY_Z2_FIELD' \
+            "$safe/Z2_FIELD.invalid.csv"
+          grep -F '# result_status=INCOMPLETE' \
+            "$safe/Z2_FIELD.invalid.csv"
 
           mpifort -cpp -DMPI_USE -O0 -g -fcheck=all -fbacktrace \
             -ffpe-trap=invalid,zero,overflow \

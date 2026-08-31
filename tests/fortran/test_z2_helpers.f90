@@ -1,7 +1,7 @@
 program test_z2_helpers
   implicit none
 
-  integer :: i, ierr, info
+  integer :: i, ierr, info, file_unit
   integer :: gs(3), gt(3), gtback(3), expected(3)
   real(8) :: ks(3), kt(3), trims(3,4), phase, smin, pi
   real(8) :: norm_value, norm_reference, norm_legacy
@@ -9,6 +9,8 @@ program test_z2_helpers
   complex(8) :: up, down, theta_up, theta_down
   complex(8) :: twice_up, twice_down
   complex(8) :: s1(1,1), s2(2,2), s18(18,18)
+  logical :: same_file, path_ok, deletable, exists
+  character(4096) :: cwd
 
   pi = 4.0_8 * atan(1.0_8)
   trims = reshape((/ &
@@ -98,6 +100,62 @@ program test_z2_helpers
   call require(info == 0, "high-rank link factorization failed")
   call require(abs(smin-0.1_8) < 1.0e-13_8, &
                "well-conditioned high-rank link was misclassified")
+
+  open(newunit=file_unit, file="z2_same_file_target.tmp", &
+       status="replace", action="write")
+  write(file_unit,'(A)') "identity fixture"
+  close(file_unit)
+  call z2_paths_same("z2_same_file_target.tmp", &
+                     "./z2_same_file_target.tmp", same_file, path_ok)
+  call require(path_ok .and. same_file, &
+               "relative alias was not recognized as the same file")
+  call get_environment_variable("PWD", cwd, status=ierr)
+  call require(ierr == 0, "PWD is unavailable for absolute-path test")
+  call z2_paths_same("z2_same_file_target.tmp", &
+                     trim(cwd)//"/z2_same_file_target.tmp", &
+                     same_file, path_ok)
+  call require(path_ok .and. same_file, &
+               "absolute alias was not recognized as the same file")
+  call execute_command_line( &
+       "ln -sf z2_same_file_target.tmp z2_same_file_link.tmp", &
+       exitstat=ierr)
+  call require(ierr == 0, "could not create same-file symlink fixture")
+  call z2_paths_same("z2_same_file_target.tmp", &
+                     "z2_same_file_link.tmp", same_file, path_ok)
+  call require(path_ok .and. same_file, &
+               "symlink alias was not recognized as the same file")
+  call z2_paths_same("z2_same_file_target.tmp", &
+                     "z2_missing_output.tmp", same_file, path_ok)
+  call require(path_ok .and. .not. same_file, &
+               "missing output path was not safely classified")
+  call z2_paths_same("z2_missing_input.tmp", &
+                     "z2_same_file_target.tmp", same_file, path_ok)
+  call require(.not. path_ok, &
+               "unresolvable input path did not fail closed")
+
+  open(newunit=file_unit, file="z2_owned_output.tmp", &
+       status="replace", action="write")
+  write(file_unit,'(A)') "# schema=VASPBERRY_Z2_FIELD"
+  close(file_unit)
+  call z2_output_deletable("z2_owned_output.tmp", deletable)
+  call require(deletable, "owned Z2 output was not recognized")
+  call delete_z2_file("z2_owned_output.tmp")
+  inquire(file="z2_owned_output.tmp", exist=exists)
+  call require(.not. exists, "owned Z2 output was not deleted")
+
+  open(newunit=file_unit, file="z2_unowned_output.tmp", &
+       status="replace", action="write")
+  write(file_unit,'(A)') "not a VASPBERRY Z2 output"
+  close(file_unit)
+  call z2_output_deletable("z2_unowned_output.tmp", deletable)
+  call require(.not. deletable, "unowned output was marked deletable")
+  inquire(file="z2_unowned_output.tmp", exist=exists)
+  call require(exists, "unowned output was modified")
+
+  call execute_command_line( &
+       "rm -f z2_same_file_link.tmp z2_same_file_target.tmp " // &
+       "z2_unowned_output.tmp", exitstat=ierr)
+  call require(ierr == 0, "could not clean path-safety fixtures")
 
 contains
 

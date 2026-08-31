@@ -59,7 +59,14 @@ after promoting its real and imaginary components to double precision.
 A run that passes the legacy reconstruction checks atomically publishes
 `Z2_FIELD.csv`; a completed rejection writes
 `Z2_FIELD.invalid.csv`. An early failure leaves an `INCOMPLETE` sentinel,
-so a stale PASS file cannot be mistaken for the current result. The CSV
+so a stale PASS file cannot be mistaken for the current result. Before
+cleanup, reserved basenames and POSIX `realpath()` identities reject direct,
+relative, absolute, and symbolic-link aliases of the input WAVECAR. Existing
+files are deleted only after their Z2 schema or legacy NFIELD markers are
+recognized; otherwise the run stops without modifying them. This also keeps a
+hard-linked binary input from being mistaken for a deletable Z2 product. The
+legacy `NFIELD.dat` (or the selected legacy `.dat` name) is cleared before
+a new run, so an INVALID result cannot leave an older candidate behind. The CSV
 contains the wrapped Berry flux, curvature, minimum link singular value,
 Fukui integer n-field, thresholds, and per-plaquette diagnostics on the
 fundamental mesh. The physical flux check is

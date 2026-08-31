@@ -44,7 +44,7 @@ The spinor operation is
 \]
 
 Production-linked Fortran tests now exercise this identity, the four TRIM
-reciprocal mappings, and coefficient-norm preservation. The norm calculation
+reciprocal mappings, and coefficient-norm accumulation. The norm calculation
 promotes the real and imaginary parts of the single-precision WAVECAR values
 before squaring; the former single-precision `abs` could falsely fail the
 \(10^{-10}\) norm guard.
@@ -60,9 +60,13 @@ mesh.
 A passing run writes `Z2_FIELD.csv` on the fundamental mesh. A completed
 rejection writes `Z2_FIELD.invalid.csv`, and an unexpected early stop leaves
 an `INCOMPLETE` invalid sentinel. Both final states are written through a
-same-directory temporary file and C/POSIX `rename()`, so an old PASS file is
-removed before WAVECAR processing and a partial file is not published as the
-new result.
+same-directory temporary file and C/POSIX `rename()`, so a partial file is
+not published as the new result. Before cleanup, reserved basenames and POSIX
+`realpath()` identities reject direct, relative, absolute, and symbolic-link
+aliases of the input WAVECAR. Existing files must carry the Z2 schema or the
+legacy NFIELD markers before deletion; an unrecognized file stops the run
+unchanged. Stale PASS and legacy NFIELD products are removed together before
+WAVECAR processing.
 
 The CSV separates wrapped Berry flux and curvature from the Fukui integer
 n-field. Its flux relation is

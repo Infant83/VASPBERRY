@@ -14,6 +14,12 @@ def source_text() -> str:
     return SOURCE_PATH.read_text(encoding="utf-8", errors="strict")
 
 
+def compact_fortran(text: str) -> str:
+    """Normalize fixed-form continuations and whitespace."""
+    without_continuations = re.sub(r"(?m)^ {5}&[ \t]*", "", text)
+    return re.sub(r"\s+", "", without_continuations).lower()
+
+
 def parse_subroutine(source: str) -> str:
     match = re.search(
         r"(?ims)^\s*subroutine\s+parse\b.*?^\s*end\s+subroutine\s+parse\s*$",
@@ -134,7 +140,7 @@ class FortranSourceRegressionTests(unittest.TestCase):
         self.assertRegex(kubo_branch, reset_before_band_loop)
 
     def test_legacy_fukui_formula_and_chern_accumulation_are_unchanged(self):
-        compact = re.sub(r"\s+", "", self.source).lower()
+        compact = compact_fortran(self.source)
         self.assertIn(
             "berrycurv(ik)=-1.*aimag(log(detloop))/dskxky",
             compact,
@@ -179,15 +185,15 @@ class FortranSourceRegressionTests(unittest.TestCase):
     def test_z2_kramers_partner_branches_are_reachable(self):
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
             source = source_path.read_text(encoding="utf-8", errors="strict")
-            compact = re.sub(r"\s+", "", source).lower()
+            compact = compact_fortran(source)
             with self.subTest(source=source_path.name):
                 self.assertIn("if(itrim(iilp).ge.1.and.mod(nni,2).eq.0)then", compact)
                 self.assertIn("source_band=nni-1", compact)
                 self.assertIn("itheta=1", compact)
                 self.assertIn("callz2_apply_theta(", compact)
-                theta = re.sub(
-                    r"\s+", "", fortran_subroutine(source, "z2_apply_theta")
-                ).lower()
+                theta = compact_fortran(
+                    fortran_subroutine(source, "z2_apply_theta")
+                )
                 self.assertIn("coutup=-conjg(cindn)", theta)
                 self.assertIn("coutdn=conjg(cinup)", theta)
 
@@ -232,7 +238,7 @@ class FortranSourceRegressionTests(unittest.TestCase):
         )
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
             source = source_path.read_text(encoding="utf-8", errors="strict")
-            compact = re.sub(r"\s+", "", source).lower()
+            compact = compact_fortran(source)
             for fragment in required:
                 with self.subTest(source=source_path.name, fragment=fragment):
                     self.assertIn(fragment, source)
@@ -312,16 +318,17 @@ class FortranSourceRegressionTests(unittest.TestCase):
             "pi=4d0*datan(1d0)",
             "WAVECAR_PSEUDO_NO_PAW_AUGMENTATION",
             "physical_tr_rule=",
-            "nfield_note=gauge_and_log_branch_dependent",
+            "nfield_note=",
+            "gauge_and_log_branch_dependent",
             "max_flux_tr_odd_residual_rad",
         )
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
             source = source_path.read_text(encoding="utf-8", errors="strict")
-            compact = re.sub(r"\s+", "", source).lower()
+            compact = compact_fortran(source)
             with self.subTest(source=source_path.name):
                 for fragment in required:
                     self.assertIn(
-                        re.sub(r"\s+", "", fragment).lower(),
+                        compact_fortran(fragment),
                         compact,
                     )
 
@@ -334,7 +341,7 @@ class FortranSourceRegressionTests(unittest.TestCase):
                 source,
             )
             self.assertIsNotNone(writer)
-            body = re.sub(r"\s+", "", writer.group(0)).lower()
+            body = compact_fortran(writer.group(0))
             self.assertIn("recilat(m,i)+recilat(m,j)", body)
             self.assertIn("partner(partner(i)).ne.i", body)
             self.assertIn("maxfluxres.gt.fluxtol", body)
@@ -354,9 +361,9 @@ class FortranSourceRegressionTests(unittest.TestCase):
 
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
             source = source_path.read_text(encoding="utf-8", errors="strict")
-            helper = re.sub(
-                r"\s+", "", fortran_subroutine(source, "z2_raw_norm")
-            ).lower()
+            helper = compact_fortran(
+                fortran_subroutine(source, "z2_raw_norm")
+            )
             with self.subTest(source=source_path.name):
                 self.assertIn(
                     "norm=norm+dble(real(raw(i)))**2"
@@ -383,19 +390,15 @@ class FortranSourceRegressionTests(unittest.TestCase):
     def test_z2_link_quality_uses_svd_and_robust_lu_phase(self):
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
             source = source_path.read_text(encoding="utf-8", errors="strict")
-            helper = re.sub(
-                r"\s+",
-                "",
-                fortran_subroutine(source, "z2_link_svd_phase"),
-            ).lower()
-            nfield = re.sub(
-                r"\s+", "", fortran_subroutine(source, "get_nfield")
-            ).lower()
-            writer = re.sub(
-                r"\s+",
-                "",
-                fortran_subroutine(source, "write_z2_field_csv"),
-            ).lower()
+            helper = compact_fortran(
+                fortran_subroutine(source, "z2_link_svd_phase")
+            )
+            nfield = compact_fortran(
+                fortran_subroutine(source, "get_nfield")
+            )
+            writer = compact_fortran(
+                fortran_subroutine(source, "write_z2_field_csv")
+            )
             with self.subTest(source=source_path.name):
                 self.assertIn("callzgesvd(", helper)
                 self.assertIn("asvd=sijt", helper)
@@ -413,27 +416,76 @@ class FortranSourceRegressionTests(unittest.TestCase):
             source = source_path.read_text(encoding="utf-8", errors="strict")
             main_end = re.search(r"(?im)^\s*end\s+program\b", source)
             self.assertIsNotNone(main_end)
-            main = re.sub(r"\s+", "", source[: main_end.start()]).lower()
-            begin = main.index("callbegin_z2_field_outputs(filename)")
+            main = compact_fortran(source[: main_end.start()])
+            begin = main.index(
+                "callbegin_z2_field_outputs(filename,foname)"
+            )
             input_read = main.index("callinforead(")
             self.assertLess(begin, input_read)
 
-            prepare = re.sub(
-                r"\s+",
-                "",
-                fortran_subroutine(source, "begin_z2_field_outputs"),
-            ).lower()
-            writer = re.sub(
-                r"\s+",
-                "",
-                fortran_subroutine(source, "write_z2_field_csv"),
-            ).lower()
+            prepare = compact_fortran(
+                fortran_subroutine(source, "begin_z2_field_outputs")
+            )
+            writer = compact_fortran(
+                fortran_subroutine(source, "write_z2_field_csv")
+            )
+            same_path = compact_fortran(
+                fortran_subroutine(source, "z2_paths_same")
+            )
+            owned_csv = compact_fortran(
+                fortran_subroutine(source, "z2_output_deletable")
+            )
+            owned_legacy = compact_fortran(
+                fortran_subroutine(source, "z2_legacy_deletable")
+            )
             with self.subTest(source=source_path.name):
+                self.assertIn("filename(i:i).eq.'/'", prepare)
                 self.assertIn(
-                    "trim(filename).eq.'z2_field.csv'", prepare
+                    "trim(filename(ibase:nfile)).eq.'z2_field.csv'",
+                    prepare,
                 )
-                self.assertIn("call delete_z2_file('z2_field.csv')", prepare)
+                self.assertIn(
+                    "callz2_paths_same(filename,'z2_field.csv',"
+                    "same,pathok)",
+                    prepare,
+                )
+                self.assertIn(
+                    "callz2_paths_same(filename,legacyfile,same,pathok)",
+                    prepare,
+                )
+                self.assertIn("if(.not.pathok)then", prepare)
+                preflight = prepare.index(
+                    "callz2_output_deletable('z2_field.csv',safe1)"
+                )
+                delete = prepare.index(
+                    "calldelete_z2_file('z2_field.csv')"
+                )
+                self.assertLess(preflight, delete)
+                self.assertIn(
+                    "callz2_legacy_deletable(legacyfile,safe4)",
+                    prepare,
+                )
+                self.assertIn(
+                    "calldelete_z2_legacy_file(legacyfile)", prepare
+                )
                 self.assertIn("#result_status=incomplete", prepare)
+                self.assertIn("#legacy_output=", prepare)
+                self.assertIn("bind(c,name='realpath')", same_path)
+                self.assertIn(
+                    "c_realpath(cpath1,c_null_ptr)", same_path
+                )
+                self.assertIn("c_associated(p1)", same_path)
+                self.assertIn("callc_free(p1)", same_path)
+                self.assertIn(
+                    "#schema=vaspberry_z2_field", owned_csv
+                )
+                self.assertIn(
+                    "#legacyz2candidate", owned_legacy
+                )
+                self.assertIn(
+                    "#nfield.datstoresthegauge-dependent",
+                    owned_legacy,
+                )
                 self.assertIn("file='z2_field.tmp'", writer)
                 self.assertIn("callz2_atomic_replace(", writer)
                 self.assertIn("#result_status=pass", writer)
@@ -447,7 +499,7 @@ class FortranSourceRegressionTests(unittest.TestCase):
         source = SOURCE_PATH.read_text(encoding="utf-8", errors="strict")
         main_end = re.search(r"(?im)^\s*end\s+program\b", source)
         self.assertIsNotNone(main_end)
-        main = re.sub(r"\s+", "", source[: main_end.start()]).lower()
+        main = compact_fortran(source[: main_end.start()])
         writer = main.index("callwrite_z2_field_csv(")
         broadcast_token = (
             "callmpi_bcast(ifieldok,1,mpi_integer,0,"
@@ -471,8 +523,12 @@ class FortranSourceRegressionTests(unittest.TestCase):
             encoding="utf-8", errors="strict"
         )
         for name in (
+            "z2_paths_same",
+            "z2_output_deletable",
+            "z2_legacy_deletable",
             "begin_z2_field_outputs",
             "delete_z2_file",
+            "delete_z2_legacy_file",
             "z2_atomic_replace",
             "write_z2_field_csv",
             "get_nfield",

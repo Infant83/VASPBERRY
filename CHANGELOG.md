@@ -30,14 +30,19 @@ All notable changes to VASPBERRY are recorded here.
 
 - `Z2_FIELD.csv` on the fundamental mesh for PASS results, and
   `Z2_FIELD.invalid.csv` for INVALID or INCOMPLETE runs. Same-directory
-  temporary output and C/POSIX `rename()` prevent partial publication;
-  stale PASS files are removed before WAVECAR processing.
+  temporary output and C/POSIX `rename()` prevent partial publication.
+  Reserved basenames and POSIX `realpath()` checks reject direct, relative,
+  absolute, and symbolic-link input aliases. Schema/marker preflight refuses
+  to delete unowned files, and stale PASS plus legacy NFIELD products are
+  removed before WAVECAR processing.
 - Version, grid, band range, spinor rank, overlap backend, numerical
   thresholds, minimum link singular values, per-plaquette status, and an
   explicit check-scope statement in the field CSV.
 - Production-linked Fortran regression tests for Γ/M1/M2/M3 reciprocal
-  mapping, `Theta^2=-1`, complex*8 norm accumulation, LU pivot phase, and
-  minimum singular values. Serial and MPI sources are both linked and run.
+  mapping, `Theta^2=-1`, complex*8 norm accumulation, LU pivot phase,
+  minimum singular values, canonical-path aliases, and owned-output guards.
+  Both production objects are linked into and exercised by helper drivers;
+  MPI communication ordering is source-checked.
 - Public 1H-MoS₂ regression coverage that verifies all nine periodic copies
   of each of the 144 fundamental plaquettes before checking the wrapped
   time-reversal-odd Berry curvature and zero occupied-subspace Chern number.
