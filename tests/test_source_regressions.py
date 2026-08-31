@@ -554,6 +554,29 @@ class FortranSourceRegressionTests(unittest.TestCase):
                     "#input_trs_independently_verified=0", writer
                 )
 
+    def test_z2_cli_parser_preserves_the_custom_legacy_base(self):
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            parser = compact_fortran(parse_subroutine(source))
+            z2_branch = parser.index("if(iz.eq.1)then")
+            generic_berry = parser.index("elseif(icd+ivel.eq.0")
+            with self.subTest(source=source_path.name):
+                self.assertLess(z2_branch, generic_berry)
+                self.assertIn(
+                    "if(trim(foname).eq.'berrycurv')foname=\"nfield\"",
+                    parser,
+                )
+                self.assertNotIn("character*20option,value", parser)
+        serial_parser = compact_fortran(
+            parse_subroutine(
+                GFORTRAN_SOURCE_PATH.read_text(
+                    encoding="utf-8", errors="strict"
+                )
+            )
+        )
+        self.assertIn("character*20option", serial_parser)
+        self.assertIn("character*75value", serial_parser)
+
     def test_mpi_z2_field_status_is_broadcast_before_common_gate(self):
         source = SOURCE_PATH.read_text(encoding="utf-8", errors="strict")
         main_end = re.search(r"(?im)^\s*end\s+program\b", source)

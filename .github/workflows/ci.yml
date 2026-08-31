@@ -85,6 +85,7 @@ jobs:
           build/z2-test/test_z2_legacy_atomic
 
           guard="$PWD/build/z2-test/test_z2_output_guard"
+          serial_cli="$PWD/vaspberry_gfortran_serial"
           atomic="$PWD/build/z2-test/test_z2_legacy_atomic"
           finalize="$PWD/build/z2-test/test_z2_finalize_guard"
           cases=build/z2-test/output-guard
@@ -142,6 +143,37 @@ jobs:
           cmp "$long_name/expected.bin" "$long_name/WAVECAR"
           test ! -e "$long_name/Z2_FIELD.csv"
           test ! -e "$long_name/Z2_FIELD.invalid.csv"
+
+          cli_71="$cases/cli-71"
+          mkdir -p "$cli_71"
+          printf 'not a real WAVECAR\n' > "$cli_71/WAVECAR"
+          base_71="$(printf 'a%.0s' {1..71})"
+          if (cd "$cli_71" &&
+              "$serial_cli" -z2 1 -o "$base_71" \
+                >stdout.log 2>stderr.log); then
+            echo "dummy WAVECAR unexpectedly completed" >&2
+            exit 1
+          fi
+          test -f "$cli_71/Z2_FIELD.invalid.csv"
+          test ! -e "$cli_71/Z2_FIELD.csv"
+          grep -F "# legacy_output=$base_71.dat" \
+            "$cli_71/Z2_FIELD.invalid.csv"
+
+          cli_72="$cases/cli-72"
+          mkdir -p "$cli_72"
+          printf 'not a real WAVECAR\n' > "$cli_72/WAVECAR"
+          base_72="$(printf 'b%.0s' {1..72})"
+          if (cd "$cli_72" &&
+              "$serial_cli" -z2 1 -o "$base_72" \
+                >stdout.log 2>stderr.log); then
+            echo "72-character Z2 output base was accepted" >&2
+            exit 1
+          fi
+          grep -F 'legacy Z2 output name too long' \
+            "$cli_72/stderr.log"
+          test ! -e "$cli_72/Z2_FIELD.csv"
+          test ! -e "$cli_72/Z2_FIELD.invalid.csv"
+          test ! -e "$cli_72/Z2_FIELD.tmp"
 
           legacy_fail="$cases/legacy-rename-fail"
           mkdir -p "$legacy_fail/NFIELD.dat"

@@ -29,9 +29,9 @@ whereas a time-reversed image uses
 \]
 
 At a represented TRIM \(\Lambda\), the latter becomes
-\(\mathbf G_t=-\mathbf G_s-2\Lambda\). The old shift-free rule is correct at
-Gamma but not at the three nonzero two-dimensional TRIMs (the M points for
-hexagonal MoS₂). Synthetic Γ/M1/M2/M3 tests identify this as a code-level
+\(\mathbf G_t=-\mathbf G_s-2\Lambda\). For TRIM partners folded onto the same stored representative, the old
+shift-free rule is correct at Gamma but not at the three nonzero
+two-dimensional TRIMs (the M points for hexagonal MoS₂). Synthetic Γ/M1/M2/M3 tests identify this as a code-level
 defect. A corrected full-mesh MoS₂ Z2 rerun is still required before assigning
 the previously observed M-region asymmetry quantitatively to this defect.
 
@@ -60,11 +60,13 @@ mesh.
 
 A passing run writes `Z2_FIELD.csv` on the fundamental mesh. A completed
 rejection writes `Z2_FIELD.invalid.csv`. After path/ownership preflight
-succeeds, stale products are removed and an unexpected early stop leaves an
-`INCOMPLETE` invalid sentinel. The legacy NFIELD is closed and atomically
-renamed first; the sentinel is removed next; `Z2_FIELD.csv` is atomically
-renamed last and is the PASS commit marker. Thus an I/O failure cannot expose
-a regular PASS CSV before its legacy companion is complete.
+succeeds, stale products are removed; an unexpected stop before finalization
+leaves an `INCOMPLETE` invalid sentinel. The legacy NFIELD is closed and
+atomically renamed first; the sentinel is removed next; `Z2_FIELD.csv` is
+atomically renamed last and is the PASS commit marker. If the final rename
+fails, neither a regular PASS CSV nor the sentinel remains; the staged
+`Z2_FIELD.tmp` and the nonzero exit are the diagnostic state. No I/O failure
+can expose a regular PASS CSV before its legacy companion is complete.
 
 Before cleanup, reserved basenames and POSIX `realpath()` identities reject
 direct, relative, absolute, and symbolic-link aliases of the input WAVECAR.
@@ -100,8 +102,13 @@ Python workflow below for those independent checks.
 The overlap backend is recorded as
 `WAVECAR_PSEUDO_NO_PAW_AUGMENTATION`. WAVECAR contains the
 plane-wave-expanded pseudo orbitals, so finite-neighbor overlaps omit the PAW
-augmentation term. This can change quantitative overlaps but cannot create
-the missing reciprocal-G shift. For a PAW-aware cross-check, prefer
+augmentation term. This can change the complex finite-neighbor overlap
+matrices, including their phases and conditioning, but cannot create the
+missing reciprocal-G shift. Assuming correct spinor time reversal,
+reciprocal-G folding, link orientation, and a consistently TR-paired mesh,
+omitting a TR-covariant augmentation term is not by itself an exact
+TR-covariance breaker; it can still amplify coarse-mesh or branch-cut
+failures. For a PAW-aware cross-check, prefer
 VASP-generated Bloch overlaps such as `wannier90.mmn`. For noncollinear
 calculations made with affected older VASP versions, the documented AMN/MMN
 spinor-rotation issue also matters: VASP 6.4.3 fixed it, while `ISYM=-1` is

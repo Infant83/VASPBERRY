@@ -4777,7 +4777,9 @@
            call help(ver_tag)
           endif
       enddo
-      if(icd.gt.1 .and. TRIM(foname) .ne. 'BERRYCURV' )then
+      if(iz .eq. 1)then
+       if(TRIM(foname) .eq. 'BERRYCURV')foname="NFIELD"
+      else if(icd.gt.1 .and. TRIM(foname) .ne. 'BERRYCURV' )then
        if(icd .eq.1) then
          write(foname,'(A,A)')"CIRC_DICHROISM.",TRIM(foname)
        elseif(icd.eq.2) then
@@ -4797,8 +4799,6 @@
         write(foname,'(A,A)')"VEL_EXPT.",TRIM(foname)
       else if (ivel .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
         foname="VEL_EXPT"
-      else if (iz .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
-        foname="NFIELD"
       else if (ikubo .ge. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
         foname="BERRYCURV_KUBO"
       endif

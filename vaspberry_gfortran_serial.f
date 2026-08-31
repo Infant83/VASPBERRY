@@ -3193,7 +3193,8 @@
       implicit real*8(a-h,o-z)
       character*75 filename,foname,fbz,ver_tag,vdirec
       real*8 x,y
-      character*20 option,value
+      character*20 option
+      character*75 value
       integer iarg,narg,ia,nkx,nky,ispinor,iskp,ine,ng(3)
       dimension rs(3)
 
@@ -3264,7 +3265,9 @@
            call help(ver_tag)
           endif
       enddo
-      if(icd.eq.1 .and. TRIM(foname) .ne. 'BERRYCURV' )then
+      if(iz .eq. 1)then
+       if(TRIM(foname) .eq. 'BERRYCURV')foname="NFIELD"
+      else if(icd.eq.1 .and. TRIM(foname) .ne. 'BERRYCURV' )then
        write(foname,'(A,A)')"CIRC_DICHROISM.",TRIM(foname)
       else if (icd .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
         foname="CIRC_DICHROISM"
@@ -3274,8 +3277,6 @@
         write(foname,'(A,A)')"VEL_EXPT.",TRIM(foname)
       else if (ivel .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
         foname="VEL_EXPT"
-      else if (iz .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
-        foname="NFIELD"
       endif
 
       if(iwf .ge. 1)then

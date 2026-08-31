@@ -45,7 +45,8 @@ plane-wave reciprocal-G basis. For a time-reversed image,
 At a represented TRIM \(\Lambda\), this becomes
 \(\mathbf G_t=-\mathbf G_s-2\Lambda\). The reciprocal-lattice shift is
 therefore required at nonzero two-dimensional TRIMs (the M points of
-hexagonal MoS₂); the former shift-free \(-G\) rule was valid only at Gamma.
+hexagonal MoS₂); for TRIM partners folded onto the same stored representative, the former
+shift-free \(-G\) rule was valid only at Gamma.
 This is an independently confirmed code-level defect. Quantitatively
 attributing a previously observed MoS₂ field asymmetry to it still requires
 rerunning this corrected path on the corresponding full-mesh WAVECAR.
@@ -59,9 +60,12 @@ after promoting its real and imaginary components to double precision.
 A run that passes the legacy reconstruction checks atomically publishes
 `Z2_FIELD.csv`; a completed rejection writes
 `Z2_FIELD.invalid.csv`. After path/ownership preflight succeeds, stale
-products are removed and an early failure leaves an `INCOMPLETE` sentinel.
-The legacy NFIELD is first completed as a temporary file, then the sentinel is
-removed, and `Z2_FIELD.csv` is published last as the PASS commit marker.
+products are removed; failures before finalization leave an `INCOMPLETE`
+sentinel. The legacy NFIELD is first completed as a temporary file, then the
+sentinel is removed, and `Z2_FIELD.csv` is published last as the PASS commit
+marker. If that final rename itself fails, neither a regular PASS CSV nor the
+sentinel is present: the staged `Z2_FIELD.tmp` remains and the program exits
+nonzero.
 Before cleanup, reserved basenames and POSIX `realpath()` identities reject
 direct, relative, absolute, and symbolic-link aliases of the input WAVECAR.
 Existing files are deleted only after their Z2 schema or legacy NFIELD markers
@@ -94,8 +98,12 @@ and reports an invariant only when every guard passes.
 
 The direct reader uses pseudo-wavefunction coefficients from `WAVECAR`;
 the CSV records `WAVECAR_PSEUDO_NO_PAW_AUGMENTATION`. Missing PAW
-augmentation can quantitatively change finite-neighbor overlaps, but it does
-not generate the omitted reciprocal-G shift. For a PAW-aware cross-check, use
+augmentation can change the complex finite-neighbor overlap matrices,
+including their phases and conditioning, but it does not generate the omitted
+reciprocal-G shift. Assuming correct spinor time reversal, reciprocal-G
+folding, link orientation, and a consistently TR-paired mesh, omitting a
+TR-covariant augmentation term is not by itself an exact TR-covariance
+breaker; it can still amplify coarse-mesh or branch-cut failures. For a PAW-aware cross-check, use
 VASP-generated Bloch overlaps such as `wannier90.mmn`, with a VASP version
 and symmetry setup appropriate for noncollinear spinors. See
 [Ferretti et al.](https://doi.org/10.1088/0953-8984/19/3/036215) and the

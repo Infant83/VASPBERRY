@@ -25,6 +25,9 @@ All notable changes to VASPBERRY are recorded here.
   separate `ZGETRF` copy, including pivot parity, without determinant
   multiplication.
 - Corrected the sign and units in the legacy `NFIELD.dat` explanation.
+- Preserved a custom legacy Z2 `-o` base without the general
+  `BERRYCURV.` prefix, enlarged the serial CLI value buffer, and added
+  executable-level 71-character-pass/72-character-reject coverage.
 
 ### Added
 
@@ -36,8 +39,10 @@ All notable changes to VASPBERRY are recorded here.
   to delete unowned files. After successful preflight, stale PASS plus legacy
   NFIELD products are removed before WAVECAR processing. Legacy output is
   closed and atomically published first; the INCOMPLETE sentinel is removed
-  next; `Z2_FIELD.csv` is the final PASS commit marker. Z2 `-o` bases longer
-  than 71 characters are rejected before cleanup to prevent path truncation.
+  next; `Z2_FIELD.csv` is the final PASS commit marker. If that final rename
+  fails, no regular PASS or sentinel remains and the staged temporary CSV is
+  retained with a nonzero exit. Z2 `-o` bases longer than 71 characters are
+  rejected before cleanup to prevent path truncation.
 - Version, grid, band range, spinor rank, overlap backend, numerical
   thresholds, minimum link singular values, per-plaquette status, and an
   explicit check-scope statement in the field CSV.
@@ -63,9 +68,12 @@ All notable changes to VASPBERRY are recorded here.
   self-consistency, not the raw WAVECAR's physical time-reversal symmetry.
   The CSV records `input_trs_independently_verified=0`.
 - The direct overlap backend remains
-  `WAVECAR_PSEUDO_NO_PAW_AUGMENTATION`. PAW augmentation can affect
-  quantitative finite-neighbor overlaps, but it is not the source of the
-  omitted reciprocal-G shift.
+  `WAVECAR_PSEUDO_NO_PAW_AUGMENTATION`. PAW augmentation can change the
+  complex finite-neighbor overlap matrices, including phases and conditioning,
+  but it is not the source of the omitted reciprocal-G shift. With a correct
+  TR construction and paired mesh, its consistent omission is not by itself
+  an exact TR-covariance breaker, although it can amplify coarse-mesh or
+  branch-cut failures.
 - The pointwise Fukui n-field remains gauge- and logarithm-branch-dependent.
   The physical relation is the wrapped flux condition
   `wrap[flux(-k)+flux(k)]=0` modulo `2*pi`.
