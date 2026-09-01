@@ -30,6 +30,7 @@ from typing import Iterable, Sequence
 import numpy as np
 
 
+__version__ = "1.1.1"
 KINETIC_C = 0.262465831  # 2 m_e / hbar^2, 1/(eV Angstrom^2)
 VALLEY_DISTANCE_TIE_ATOL = 1.0e-12  # inverse Angstrom
 TRANSPORT_OUTPUT_NAMES = (
@@ -2952,6 +2953,7 @@ def validate_map_specifications(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("wavecar", type=Path)
     parser.add_argument("--nx", type=int, required=True)
     parser.add_argument("--ny", type=int, required=True)
@@ -3154,7 +3156,9 @@ def main() -> None:
             "min_gap_above_k_index": int(np.argmin(gap_above) + 1),
         }
     diagnostics = {
-        "wavecar": str(args.wavecar),
+        # Keep shareable diagnostics independent of the caller's local
+        # directory layout while retaining the input filename as provenance.
+        "wavecar": args.wavecar.name,
         "logical_recl": wavecar.header.logical_recl,
         "physical_record_bytes": wavecar.header.stride_bytes,
         "legacy_four_byte_word_recl": (

@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+__version__ = "1.1.1"
 KB_EV_PER_K = 8.617333262145e-5
 TWO_PI = 2.0 * math.pi
 
@@ -638,7 +639,7 @@ def attach_band_energy(
     other = np.delete(eigenval.energies[matched], band - 1, axis=1)
     direct_gap = np.min(np.abs(other - curvature.energy[:, None]), axis=1)
     curvature.metadata["band"] = band
-    curvature.metadata["energy_source"] = str(eigenval.source)
+    curvature.metadata["energy_source"] = eigenval.source.name
     curvature.metadata["max_k_match_error"] = max_distance
     curvature.metadata["min_direct_band_gap_eV"] = float(np.min(direct_gap))
     curvature.metadata["median_direct_band_gap_eV"] = float(np.median(direct_gap))
@@ -724,7 +725,7 @@ def attach_fukui_vertex_energies(
     other = np.delete(eigenval.energies, band - 1, axis=1)
     direct_gap = np.min(np.abs(other - eigenval.energies[:, band - 1, None]), axis=1)
     curvature.metadata["band"] = band
-    curvature.metadata["energy_source"] = str(eigenval.source)
+    curvature.metadata["energy_source"] = eigenval.source.name
     curvature.metadata["energy_quadrature"] = "mean Fermi occupation at four Fukui vertices"
     curvature.metadata["min_direct_band_gap_eV"] = float(np.min(direct_gap))
     curvature.metadata["median_direct_band_gap_eV"] = float(np.median(direct_gap))
@@ -1168,6 +1169,31 @@ def validate_sigma_output_targets(
                 )
 
 
+def validate_plot_output_target(
+    input_path: str | Path,
+    output_path: str | Path,
+    eigenval_path: str | Path | None = None,
+) -> None:
+    """Reject a plot target that aliases any input before reading or writing."""
+
+    try:
+        canonical_output = Path(output_path).resolve(strict=False)
+        protected = [("--input", Path(input_path).resolve(strict=False))]
+        if eigenval_path is not None:
+            protected.append(
+                ("--eigenval", Path(eigenval_path).resolve(strict=False))
+            )
+    except (OSError, RuntimeError) as exc:
+        raise ValueError(f"cannot safely resolve plot input/output paths: {exc}") from exc
+
+    for label, canonical_input in protected:
+        if canonical_output == canonical_input:
+            raise ValueError(
+                f"refusing to overwrite plot input: --output={output_path} and "
+                f"{label} resolve to {canonical_output}"
+            )
+
+
 def plot_map(
     data: CurvatureData,
     output: str | Path,
@@ -1462,6 +1488,7 @@ def _pair_values(values: Iterable[Sequence[float]] | None) -> Sequence[float] | 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     common = argparse.ArgumentParser(add_help=False)
@@ -1534,15 +1561,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "map":
+            validate_plot_output_target(args.input, args.output, args.eigenval)
             for label, center in (("--k-center", args.k_center), ("--kp-center", args.kp_center)):
                 if center is not None and not np.all(np.isfinite(center)):
                     raise ValueError(f"{label} must contain finite values")
             data = _load_with_optional_energy(args, "map")
             plot_map(data, args.output, args.k_center, args.kp_center, args.title)
         elif args.command == "line":
+            validate_plot_output_target(args.input, args.output, args.eigenval)
             data = _load_with_optional_energy(args, "path")
             plot_path(data, args.output, args.title)
         elif args.command == "cut":
+            validate_plot_output_target(args.input, args.output, args.eigenval)
             if args.samples < 2:
                 raise ValueError("--samples must be at least 2")
             if not np.all(np.isfinite(args.k_center)) or not np.all(np.isfinite(args.kp_center)):
@@ -1618,8 +1648,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                     datasets[0], args.k_center, args.kp_center, args.valley_radius
                 )
                 summary = {
-                    "inputs": [str(data.source) for data in datasets],
-                    "eigenval": str(Path(args.eigenval)),
+                    "inputs": [data.source.name for data in datasets],
+                    "eigenval": Path(args.eigenval).name,
                     "spin": args.spin,
                     "bands": bands,
                     "grid": uniform_full_bz_shape(datasets[0]),

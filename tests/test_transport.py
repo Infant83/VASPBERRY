@@ -252,6 +252,8 @@ class TransportTests(unittest.TestCase):
             self.assertEqual(summary["energy_window_validation"]["active_window"], [2, 2])
             self.assertEqual(summary["zero_temperature_occupation"], "E <= mu is occupied")
             self.assertEqual(summary["core_chern_provenance"], "explicit CLI input")
+            self.assertEqual(summary["inputs"], ["BERRYCURV.dat"])
+            self.assertEqual(summary["eigenval"], "EIGENVAL")
 
             stderr = StringIO()
             with self.assertRaises(SystemExit), redirect_stderr(stderr):
@@ -729,6 +731,32 @@ class TransportTests(unittest.TestCase):
                 ])
             self.assertEqual(shared_output.read_text(encoding="utf-8"), "preserve shared\n")
             self.assertTrue(summary_path.exists())
+
+    def test_plot_subcommands_refuse_to_overwrite_their_input(self):
+        with TemporaryDirectory() as directory:
+            source = Path(directory) / "curvature.dat"
+            original = "input must survive\n"
+            commands = {
+                "map": [],
+                "line": [],
+                "cut": [
+                    "--k-center", "0.3333333333", "0.3333333333",
+                    "--kp-center", "0.6666666667", "0.6666666667",
+                ],
+            }
+            for command, extra in commands.items():
+                with self.subTest(command=command):
+                    source.write_text(original, encoding="utf-8")
+                    stderr = StringIO()
+                    with self.assertRaises(SystemExit), redirect_stderr(stderr):
+                        vt.main([
+                            command,
+                            "--input", str(source),
+                            "--output", str(source),
+                            *extra,
+                        ])
+                    self.assertIn("refusing to overwrite plot input", stderr.getvalue())
+                    self.assertEqual(source.read_text(encoding="utf-8"), original)
 
     def test_core_chern_adds_constant_total_baseline_only(self):
         data = synthetic_uniform_band(energy=2.0, chern=1.0)

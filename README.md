@@ -31,6 +31,84 @@ VASPBERRY is written for the post-processing purpose of the VASP outputs, i.e., 
 * Wavefunction plot (Gamma point only in the current version)
 * Guarded WAVECAR-direct Fukui export and valley-transport analysis (Python)
 
+
+## Legacy Fortran Z2 field diagnostics (version 1.1.1)
+
+The `-z2 1` path reconstructs spinor time reversal in the actual
+plane-wave reciprocal-G basis. For a time-reversed image,
+
+\[
+\mathbf G_t=-\mathbf G_s+
+\operatorname{round}(-\mathbf k_s-\mathbf k_t).
+\]
+
+At a represented TRIM \(\Lambda\), this becomes
+\(\mathbf G_t=-\mathbf G_s-2\Lambda\). The reciprocal-lattice shift is
+therefore required at nonzero two-dimensional TRIMs (the M points of
+hexagonal MoS₂); for TRIM partners folded onto the same stored representative, the former
+shift-free \(-G\) rule was valid only at Gamma.
+This is an independently confirmed code-level defect. Quantitatively
+attributing a previously observed MoS₂ field asymmetry to it still requires
+rerunning this corrected path on the corresponding full-mesh WAVECAR.
+
+Each link is now checked by its minimum singular value rather than by
+`abs(det S)`, which depends exponentially on band rank. Determinant phases
+are accumulated from a separate LU factorization without multiplying the
+determinant, and the single-precision WAVECAR coefficient norm is accumulated
+after promoting its real and imaginary components to double precision.
+
+A run that passes the legacy reconstruction checks atomically publishes
+`Z2_FIELD.csv`; a completed rejection writes
+`Z2_FIELD.invalid.csv`. After path/ownership preflight succeeds, stale
+products are removed; failures before finalization leave an `INCOMPLETE`
+sentinel. The legacy NFIELD is first completed as a temporary file, then the
+sentinel is removed, and `Z2_FIELD.csv` is published last as the PASS commit
+marker. If that final rename itself fails, neither a regular PASS CSV nor the
+sentinel is present: the staged `Z2_FIELD.tmp` remains and the program exits
+nonzero.
+Before cleanup, reserved basenames and POSIX `realpath()` identities reject
+direct, relative, absolute, and symbolic-link aliases of the input WAVECAR.
+Existing files are deleted only after their Z2 schema or legacy NFIELD markers
+are recognized; otherwise preflight stops without modifying any file. In that
+case, any older output is not a result of the rejected run. This also keeps a
+hard-linked binary input from being mistaken for a deletable Z2 product. The
+Z2 `-o` base is limited to 71 characters so the checked `.dat` and `.tmp`
+paths cannot truncate. Concurrent Z2 runs in one working directory are not
+supported. The CSV
+contains the wrapped Berry flux, curvature, minimum link singular value,
+Fukui integer n-field, thresholds, and per-plaquette diagnostics on the
+fundamental mesh. The physical flux check is
+
+\[
+\operatorname{wrap}[\Phi(-\mathbf k)+\Phi(\mathbf k)]=0
+\quad(\mathrm{mod}\ 2\pi).
+\]
+
+The pointwise n-field remains gauge- and logarithm-branch-dependent; only its
+integer consistency and half-zone parity are used.
+
+These checks test the numerical self-consistency of the time-reversal gauge
+constructed by the legacy routine. Because the B-minus states and the even
+TRIM partners are generated with the time-reversal operator, they do not
+independently establish time-reversal symmetry of the input WAVECAR. Raw
+\(E(\mathbf k)-E(-\mathbf k)\), TRIM Kramers splitting, occupied-projector
+residuals, the occupied-unoccupied gap, and mesh convergence must be checked
+separately. The guarded `tools/wavecar_z2.py` workflow performs those tests
+and reports an invariant only when every guard passes.
+
+The direct reader uses pseudo-wavefunction coefficients from `WAVECAR`;
+the CSV records `WAVECAR_PSEUDO_NO_PAW_AUGMENTATION`. Missing PAW
+augmentation can change the complex finite-neighbor overlap matrices,
+including their phases and conditioning, but it does not generate the omitted
+reciprocal-G shift. Assuming correct spinor time reversal, reciprocal-G
+folding, link orientation, and a consistently TR-paired mesh, omitting a
+TR-covariant augmentation term is not by itself an exact TR-covariance
+breaker; it can still amplify coarse-mesh or branch-cut failures. For a PAW-aware cross-check, use
+VASP-generated Bloch overlaps such as `wannier90.mmn`, with a VASP version
+and symmetry setup appropriate for noncollinear spinors. See
+[Ferretti et al.](https://doi.org/10.1088/0953-8984/19/3/036215) and the
+[VASP PAW formalism](https://vasp.at/wiki/Projector-augmented-wave_formalism).
+
 # Usage
 * Instruction and possible options
 > ./vaspberry -h

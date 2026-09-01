@@ -1,0 +1,252 @@
+name: CI
+
+on:
+  push:
+    branches: [master, "feature/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements-transport.txt
+      - name: Install Python dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements-transport.txt
+      - name: Run unit and regression tests
+        env:
+          MPLBACKEND: Agg
+          PYTHONPATH: tools
+        run: python -m unittest discover -s tests -v
+
+  fortran-builds:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GNU Fortran, BLAS, LAPACK, and Open MPI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran libblas-dev liblapack-dev openmpi-bin libopenmpi-dev
+      - name: Compile serial source
+        run: >-
+          gfortran -cpp -O2 -fcheck=all -ffixed-line-length-none
+          -fallow-argument-mismatch
+          -o vaspberry_gfortran_serial vaspberry_gfortran_serial.f
+          -llapack -lblas
+      - name: Verify serial help and version
+        run: |
+          ./vaspberry_gfortran_serial -h > vaspberry-help.txt
+          grep -F "Ver 1.1.1" vaspberry-help.txt
+      - name: Compile MPI source
+        run: >-
+          mpifort -cpp -DMPI_USE -O2 -ffixed-line-length-none
+          -fallow-argument-mismatch
+          -o vaspberry_mpi vaspberry.f
+          -llapack -lblas
+      - name: Run actual-source Fortran Z2 helper tests
+        run: |
+          mkdir -p build/z2-test
+          gfortran -cpp -O0 -g -fcheck=all -fbacktrace \
+            -ffpe-trap=invalid,zero,overflow \
+            -ffixed-line-length-none -fallow-argument-mismatch \
+            -c vaspberry_gfortran_serial.f \
+            -o build/z2-test/vaspberry_serial.o
+          objcopy --redefine-sym \
+            main=vaspberry_serial_embedded_main \
+            build/z2-test/vaspberry_serial.o
+          gfortran -O0 -g -fcheck=all -fbacktrace \
+            tests/fortran/test_z2_helpers.f90 \
+            build/z2-test/vaspberry_serial.o \
+            -llapack -lblas -o build/z2-test/test_z2_serial
+          build/z2-test/test_z2_serial
+          gfortran -O0 -g -fcheck=all -fbacktrace \
+            tests/fortran/test_z2_output_guard.f90 \
+            build/z2-test/vaspberry_serial.o \
+            -llapack -lblas -o build/z2-test/test_z2_output_guard
+          gfortran -O0 -g -fcheck=all -fbacktrace \
+            tests/fortran/test_z2_legacy_atomic.f90 \
+            build/z2-test/vaspberry_serial.o \
+            -llapack -lblas -o build/z2-test/test_z2_legacy_atomic
+          gfortran -O0 -g -fcheck=all -fbacktrace \
+            tests/fortran/test_z2_finalize_guard.f90 \
+            build/z2-test/vaspberry_serial.o \
+            -llapack -lblas -o build/z2-test/test_z2_finalize_guard
+          build/z2-test/test_z2_legacy_atomic
+
+          guard="$PWD/build/z2-test/test_z2_output_guard"
+          serial_cli="$PWD/vaspberry_gfortran_serial"
+          atomic="$PWD/build/z2-test/test_z2_legacy_atomic"
+          finalize="$PWD/build/z2-test/test_z2_finalize_guard"
+          cases=build/z2-test/output-guard
+          mkdir -p "$cases"
+          for mode in direct relative absolute symlink hardlink; do
+            case_dir="$cases/$mode"
+            mkdir -p "$case_dir"
+            printf 'private input bytes without Z2 schema\n' \
+              > "$case_dir/Z2_FIELD.csv"
+            cp "$case_dir/Z2_FIELD.csv" "$case_dir/expected.bin"
+            case "$mode" in
+              direct) input_arg="Z2_FIELD.csv" ;;
+              relative) input_arg="./Z2_FIELD.csv" ;;
+              absolute) input_arg="$PWD/$case_dir/Z2_FIELD.csv" ;;
+              symlink)
+                ln -s Z2_FIELD.csv "$case_dir/WAVECAR_ALIAS"
+                input_arg="WAVECAR_ALIAS"
+                ;;
+              hardlink)
+                ln "$case_dir/Z2_FIELD.csv" "$case_dir/WAVECAR_HARDLINK"
+                input_arg="WAVECAR_HARDLINK"
+                ;;
+            esac
+            if (cd "$case_dir" &&
+                "$guard" \
+                  "$input_arg" NFIELD); then
+              echo "collision guard accepted $mode alias" >&2
+              exit 1
+            fi
+            cmp "$case_dir/expected.bin" "$case_dir/Z2_FIELD.csv"
+          done
+
+          unowned="$cases/unowned"
+          mkdir -p "$unowned"
+          printf 'independent input bytes\n' > "$unowned/WAVECAR"
+          printf 'unowned user data\n' > "$unowned/Z2_FIELD.csv"
+          cp "$unowned/Z2_FIELD.csv" "$unowned/expected.bin"
+          if (cd "$unowned" &&
+              "$guard" WAVECAR NFIELD); then
+            echo "unowned output was accepted for deletion" >&2
+            exit 1
+          fi
+          cmp "$unowned/expected.bin" "$unowned/Z2_FIELD.csv"
+
+          long_name="$cases/long-name"
+          mkdir -p "$long_name"
+          printf 'independent input bytes\n' > "$long_name/WAVECAR"
+          cp "$long_name/WAVECAR" "$long_name/expected.bin"
+          long_base="$(printf 'x%.0s' {1..72})"
+          if (cd "$long_name" &&
+              "$guard" WAVECAR "$long_base"); then
+            echo "truncating Z2 output base was accepted" >&2
+            exit 1
+          fi
+          cmp "$long_name/expected.bin" "$long_name/WAVECAR"
+          test ! -e "$long_name/Z2_FIELD.csv"
+          test ! -e "$long_name/Z2_FIELD.invalid.csv"
+
+          cli_71="$cases/cli-71"
+          mkdir -p "$cli_71"
+          printf 'not a real WAVECAR\n' > "$cli_71/WAVECAR"
+          base_71="$(printf 'a%.0s' {1..71})"
+          if (cd "$cli_71" &&
+              "$serial_cli" -z2 1 -o "$base_71" \
+                >stdout.log 2>stderr.log); then
+            echo "dummy WAVECAR unexpectedly completed" >&2
+            exit 1
+          fi
+          test -f "$cli_71/Z2_FIELD.invalid.csv"
+          test ! -e "$cli_71/Z2_FIELD.csv"
+          grep -F "# legacy_output=$base_71.dat" \
+            "$cli_71/Z2_FIELD.invalid.csv"
+
+          cli_72="$cases/cli-72"
+          mkdir -p "$cli_72"
+          printf 'not a real WAVECAR\n' > "$cli_72/WAVECAR"
+          base_72="$(printf 'b%.0s' {1..72})"
+          if (cd "$cli_72" &&
+              "$serial_cli" -z2 1 -o "$base_72" \
+                >stdout.log 2>stderr.log); then
+            echo "72-character Z2 output base was accepted" >&2
+            exit 1
+          fi
+          grep -F 'legacy Z2 output name too long' \
+            "$cli_72/stderr.log"
+          test ! -e "$cli_72/Z2_FIELD.csv"
+          test ! -e "$cli_72/Z2_FIELD.invalid.csv"
+          test ! -e "$cli_72/Z2_FIELD.tmp"
+
+          legacy_fail="$cases/legacy-rename-fail"
+          mkdir -p "$legacy_fail/NFIELD.dat"
+          if (cd "$legacy_fail" && "$atomic"); then
+            echo "legacy rename failure published PASS" >&2
+            exit 1
+          fi
+          test -f "$legacy_fail/Z2_FIELD.invalid.csv"
+          test -f "$legacy_fail/Z2_FIELD.tmp"
+          test ! -f "$legacy_fail/Z2_FIELD.csv"
+          test -f "$legacy_fail/NFIELD.tmp"
+
+          missing_legacy="$cases/missing-legacy"
+          mkdir -p "$missing_legacy"
+          printf '# schema=VASPBERRY_Z2_FIELD\n' \
+            > "$missing_legacy/Z2_FIELD.invalid.csv"
+          printf '# schema=VASPBERRY_Z2_FIELD\n' \
+            > "$missing_legacy/Z2_FIELD.tmp"
+          if (cd "$missing_legacy" && "$finalize" NFIELD); then
+            echo "missing legacy output published PASS" >&2
+            exit 1
+          fi
+          test -f "$missing_legacy/Z2_FIELD.invalid.csv"
+          test -f "$missing_legacy/Z2_FIELD.tmp"
+          test ! -e "$missing_legacy/Z2_FIELD.csv"
+
+          pass_fail="$cases/pass-rename-fail"
+          mkdir -p "$pass_fail/Z2_FIELD.csv"
+          printf 'block replacement\n' \
+            > "$pass_fail/Z2_FIELD.csv/keep"
+          printf '# schema=VASPBERRY_Z2_FIELD\n' \
+            > "$pass_fail/Z2_FIELD.invalid.csv"
+          printf '# schema=VASPBERRY_Z2_FIELD\n' \
+            > "$pass_fail/Z2_FIELD.tmp"
+          printf '# Legacy Z2 candidate BANDS: 1 - 18\n' \
+            > "$pass_fail/NFIELD.dat"
+          printf '# NFIELD.dat stores the gauge-dependent\n' \
+            >> "$pass_fail/NFIELD.dat"
+          if (cd "$pass_fail" && "$finalize" NFIELD); then
+            echo "failed final rename reported PASS" >&2
+            exit 1
+          fi
+          test ! -f "$pass_fail/Z2_FIELD.csv"
+          test -f "$pass_fail/Z2_FIELD.tmp"
+          test ! -e "$pass_fail/Z2_FIELD.invalid.csv"
+
+          safe="$cases/safe"
+          mkdir -p "$safe"
+          printf 'independent input bytes\n' > "$safe/WAVECAR"
+          printf '# schema=VASPBERRY_Z2_FIELD\n# result_status=PASS\n' \
+            > "$safe/Z2_FIELD.csv"
+          printf '# Legacy Z2 candidate BANDS: 1 - 18\n' \
+            > "$safe/NFIELD.dat"
+          printf '# NFIELD.dat stores the gauge-dependent\n' \
+            >> "$safe/NFIELD.dat"
+          (cd "$safe" &&
+            "$guard" WAVECAR NFIELD)
+          test ! -e "$safe/Z2_FIELD.csv"
+          test ! -e "$safe/NFIELD.dat"
+          grep -F '# schema=VASPBERRY_Z2_FIELD' \
+            "$safe/Z2_FIELD.invalid.csv"
+          grep -F '# result_status=INCOMPLETE' \
+            "$safe/Z2_FIELD.invalid.csv"
+
+          mpifort -cpp -DMPI_USE -O0 -g -fcheck=all -fbacktrace \
+            -ffpe-trap=invalid,zero,overflow \
+            -ffixed-line-length-none -fallow-argument-mismatch \
+            -c vaspberry.f -o build/z2-test/vaspberry_mpi.o
+          objcopy --redefine-sym \
+            main=vaspberry_mpi_embedded_main \
+            build/z2-test/vaspberry_mpi.o
+          mpifort -O0 -g -fcheck=all -fbacktrace \
+            tests/fortran/test_z2_helpers.f90 \
+            build/z2-test/vaspberry_mpi.o \
+            -llapack -lblas -o build/z2-test/test_z2_mpi
+          build/z2-test/test_z2_mpi

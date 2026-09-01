@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.0 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.1.1 (f77) for VASP
 ! Written by Hyun-Jung Kim (angpangmokjang@hanmail.net, Infant@kias.re.kr) 
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -41,7 +41,14 @@
 ! version 0.98b add option "-theta theta -phi phi" for the incident light angle 
 !				for the circular dichroism calculations (-cd) ! 2021. Oct. 27. S.-W. Kim & H.-J. Kim 
 
-! last update and bug fixes : 2021. Nov. 30. by H.-J. Kim 
+! version 1.1.0 safety fixes for the legacy Z2 candidate
+!               and a validated Wilson-loop companion
+!               : 2026. Aug. 31. H.-J. Kim
+! version 1.1.1 correct TRIM reciprocal-G mapping and
+!               separate physical flux from gauge-dependent n-field
+!               : 2026. Aug. 31. H.-J. Kim
+
+! last update and bug fixes : 2026. Aug. 31. by H.-J. Kim
 
 !#define MPI_USE
 !#undef  MPI_USE        
@@ -57,6 +64,8 @@
       real*8,    allocatable :: berrycurv(:),recivec(:,:),wklp(:,:,:)
       real*8,    allocatable :: berrycurv_tot(:)
       real*8,    allocatable :: rnfield(:),rnfield_tot(:)
+      real*8,    allocatable :: rflux(:),rflux_tot(:)
+      real*8,    allocatable :: rminsv(:),rminsv_tot(:)
       real*8,    allocatable :: recivec_tot(:,:)
       real*8,    allocatable :: recilat_tot(:,:)
       real*8,    allocatable :: xrecivec(:,:),xberrycurv(:),wklist(:,:)
@@ -119,7 +128,8 @@
       mpi_comm_earth = 0
 #endif
 
-      ver_tag="# VASPBERRY (Ver 1.0), by Hyun-Jung Kim. 2018. Aug. 23."
+      ver_tag="# VASPBERRY (Ver 1.1.1), by Hyun-Jung Kim."//
+     &        " 2026. Aug. 31."
       pi=4.*atan(1.)
 
       !default settings
@@ -134,6 +144,16 @@
      &   iwf,ikwf,ng,rs,imag,init_e,fina_e,nediv,sigma,
      &   klist_fname,sw_fname,atlist_fname,flag_atom_project,
      &   theta,phi)
+      if(iz .ne. 0 .and. iz .ne. 1)then
+       write(0,*) '*** error - Z2 option must be 0 or 1'
+       call vaspberry_fail
+      endif
+      if(iz.eq.1 .and. myrank.eq.0)then
+       call begin_z2_field_outputs(filename,foname)
+      endif
+#ifdef MPI_USE
+      if(iz.eq.1)call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+#endif
       if(myrank == 0)call creditinfo(ver_tag)
 
       if (ixt .ne. 0) call extendingBZ(fbz,ixt)
@@ -141,6 +161,28 @@
       if(myrank == 0)write(6,'(A,A)')"# File reading... : ",filename
       call inforead(irecl,ispin,nk,nband,ecut,a1,a2,a3,filename)
       if (ispin .eq. 2) ispinor=1
+      if(iz .eq. 1)then
+       if(ihf .ne. 0)then
+        write(0,*) '*** error - legacy Z2 needs a full k mesh'
+        call vaspberry_fail
+       endif
+       if(ispin .ne. 1 .or. ispinor .ne. 2)then
+        write(0,*) '*** error - legacy Z2 needs ISPIN=1 spinors'
+        call vaspberry_fail
+       endif
+       if(nkx .lt. 4 .or. nky .lt. 4)then
+        write(0,*) '*** error - legacy Z2 grid must be at least 4x4'
+        call vaspberry_fail
+       endif
+       if(mod(nkx,2) .ne. 0 .or. mod(nky,2) .ne. 0)then
+        write(0,*) '*** error - legacy Z2 grid must be even'
+        call vaspberry_fail
+       endif
+       if(nk .ne. nkx*nky)then
+        write(0,*) '*** error - legacy Z2 needs the full 2D mesh'
+        call vaspberry_fail
+       endif
+      endif
       allocate(cener(nband),ener(nband),occ(nband))
       if(myrank == 0)write(6,'(A,I9)')"# TOTAL RECORD LENGTH = ",irecl
       allocate(wklist(3,nk),nplist(nk))
@@ -152,6 +194,8 @@
       elseif(iz == 1)then
        iz2=4 ! enhancing factor for variable size define in subroutines
        allocate(rnfield(nk*iz2),rnfield_tot(nk*iz2))
+       allocate(rflux(nk*iz2),rflux_tot(nk*iz2))
+       allocate(rminsv(nk*iz2),rminsv_tot(nk*iz2))
        allocate(xrnfield(kperiod*2*kperiod*2*nk*iz2))
        allocate(wnklist(3,nk*iz2))
        allocate(w_half_klist(3,nk),i_half_klist(nk),i_trim_klist(nk))
@@ -166,9 +210,32 @@
        nplist(ik)=nint(xnplane)
        do n=1,nband; ne=ne+nint(occ(n)); enddo
        if(ik .gt. 1 .and. ne_temp0 .ne. ne .and. ine .eq. 0) then
-         write(6,*)"error. !!! ne(K) /= ne(K') !!!",ne,ne_temp0,ik ;stop
+         write(0,*) '*** error - inconsistent occupations',
+     &              ne,ne_temp0,ik
+         call vaspberry_fail
        endif
       enddo
+      if(iz .eq. 1)then
+       del=1d-6
+       ntrim0=count(abs(wklist(1,:)) .le. del .and.
+     &              abs(wklist(2,:)) .le. del)
+       ntrim1=count(abs(wklist(1,:)-0.5d0) .le. del .and.
+     &              abs(wklist(2,:)) .le. del)
+       ntrim2=count(abs(wklist(1,:)) .le. del .and.
+     &              abs(wklist(2,:)-0.5d0) .le. del)
+       ntrim3=count(abs(wklist(1,:)-0.5d0) .le. del .and.
+     &              abs(wklist(2,:)-0.5d0) .le. del)
+       if(any(dabs(wklist(3,:)-dnint(wklist(3,:)))
+     &        .gt.del))then
+        write(0,*) '*** error - legacy Z2 needs kz=0 modulo G'
+        call vaspberry_fail
+       endif
+       if(ntrim0 .ne. 1 .or. ntrim1 .ne. 1 .or.
+     &    ntrim2 .ne. 1 .or. ntrim3 .ne. 1)then
+        write(0,*) '*** error - legacy Z2 needs one of each TRIM'
+        call vaspberry_fail
+       endif
+      endif
       if(ine .ne. 0) ne=ine ! manually specified ne ; useful for the semimetal
       ! check whether multi or single band calculation is performed
       if((nini.eq.nmax))then
@@ -194,6 +261,25 @@
         endif
       endif ! check multi or single ?
       ns=nmax-nini+1
+      if(iz .eq. 1)then
+       if(ne .lt. 2 .or. ne .ge. nband)then
+        write(0,*) '*** error - legacy Z2 needs 2 <= NE < NBANDS'
+        call vaspberry_fail
+       endif
+       if(nini .ne. 1 .or. nmax .ne. ne)then
+        write(0,*) '*** error - legacy Z2 needs bands 1 through NE'
+        call vaspberry_fail
+       endif
+       if(mod(ns,2) .ne. 0)then
+        write(0,*) '*** error - legacy Z2 needs an even band rank'
+        call vaspberry_fail
+       endif
+      endif
+      if(iwf .ge. 1 .and.
+     &   (ikwf .lt. 1 .or. ikwf .gt. nk))then
+       write(0,*) '*** error - selected k is outside WAVECAR'
+       call vaspberry_fail
+      endif
       if(myrank == 0)then
        write(6,'(A,I6)')   "# NELECT     : ",ne*ispin
        if (ispinor .eq. 2)then
@@ -284,10 +370,15 @@
 
       endif !iwf end
       
-      if(iz .eq. 1) then  !get Z2 invariant using Fukui's method
+      if(iz .eq. 1) then  !get legacy Z2 candidate by Fukui method
        del=1E-6 ! criterion for k-point find
        call set_BZ_fukui(nnk,wnklist,w_half_klist,i_half_klist,
      &                   i_trim_klist,nhf, ispin,wklist,del,nk,iz2)
+       if(nnk.ne.nk)then
+        write(0,*) '*** error - legacy Z2 mesh reconstruction',
+     &             nnk,nk
+        call vaspberry_fail
+       endif
 
        do isp=1,ispin !ispin start
       if(myrank == 0)then
@@ -296,6 +387,20 @@
        if(isp.eq.2.and.ispin.eq.2) write(6,'(A,I2)')"# SPIN : DN"
        write(6,*)" "
       endif
+       recivec=0d0
+       recilat=0d0
+       recivec_tot=0d0
+       recilat_tot=0d0
+       rnnfield=0d0
+       rnnfield_bottom=0d0
+       rnnfield_tot=0d0
+       rnnfield_bottom_tot=0d0
+       rnfield_tot=0d0
+       rnfield=0d0
+       rflux_tot=0d0
+       rflux=0d0
+       rminsv_tot=0d0
+       rminsv=0d0
 #ifdef MPI_USE
        nk_rank=nnk/nprocs
        nk_rank_mod=mod(nnk,nprocs)
@@ -308,25 +413,16 @@
            ifk=(myrank+1)*nk_rank+nk_rank_mod
        endif
 
-       recivec=0.
-       recilat=0.
-       recivec_tot=0.
-       recilat_tot=0.
-       rnnfield=0.
-       rnnfield_bottom=0.
-       rnnfield_tot=0.
-       rnnfield_bottom_tot=0.
-       rnfield_tot=0.
-       rnfield=0.
 #else
        ink=1;ifk=nnk
 #endif
        do ik=ink, ifk !ik - loop
-        call get_nfield(rnfield(ik),wklp, isp,ik,nk,nband,nkx,nky,
-     &                      wnklist,ihf,nplist,nnk,iz,ns,kperiod,
-     &                      w_half_klist,i_half_klist,i_trim_klist,nhf,
-     &                      nbmax,npmax,ecut,ispinor,ispin,ne,irecl,
-     &                      nmax,nini,b1,b2,b3,iz2)
+        call get_nfield(rnfield(ik),rflux(ik),rminsv(ik),
+     &       wklp,isp,ik,
+     &       nk,nband,nkx,nky,wnklist,wklist,ihf,nplist,
+     &       nnk,iz,ns,kperiod,w_half_klist,i_half_klist,
+     &       i_trim_klist,nhf,nbmax,npmax,ecut,ispinor,
+     &       ispin,ne,irecl,nmax,nini,b1,b2,b3,iz2)
         if((wklp(2,1,ik)+wklp(2,3,ik))/2. .gt. -del .and.
      &    (wklp(2,1,ik)+wklp(2,3,ik))/2. .lt. 0.5+del ) then
          rnnfield=rnnfield+rnfield(ik)
@@ -363,32 +459,56 @@
      &                MPI_SUM,0,MPI_COMM_WORLD,ierr)
       call MPI_REDUCE(rnfield,rnfield_tot,iz2*nk,MPI_REAL8,
      &                MPI_SUM,0,MPI_COMM_WORLD,ierr)
+      call MPI_REDUCE(rflux,rflux_tot,iz2*nk,MPI_REAL8,
+     &                MPI_SUM,0,MPI_COMM_WORLD,ierr)
+      call MPI_REDUCE(rminsv,rminsv_tot,iz2*nk,MPI_REAL8,
+     &                MPI_SUM,0,MPI_COMM_WORLD,ierr)
       call MPI_REDUCE(recivec,recivec_tot,3*iz2*nk,MPI_REAL8,
      &                MPI_SUM,0,MPI_COMM_WORLD,ierr)
       call MPI_REDUCE(recilat,recilat_tot,3*iz2*nk,MPI_REAL8,
      &                MPI_SUM,0,MPI_COMM_WORLD,ierr)
 
-      rnnfield=rnnfield_tot
-      rnnfield_bottom=rnnfield_bottom_tot
-      rnfield=rnfield_tot
-      recivec=recivec_tot
-      recilat=recilat_tot
+      if(myrank.eq.0)then
+       rnnfield=rnnfield_tot
+       rnnfield_bottom=rnnfield_bottom_tot
+       rnfield=rnfield_tot
+       rflux=rflux_tot
+       rminsv=rminsv_tot
+       recivec=recivec_tot
+       recilat=recilat_tot
+      endif
 #endif
+
+       ifieldok=0
+       if(myrank.eq.0)then
+        call write_z2_field_csv(rnfield,rflux,rminsv,recilat,
+     &       nnk,nkx,nky,dskxky,b1,b2,b3,ifieldok,nini,nmax,
+     &       ispinor)
+       endif
+#ifdef MPI_USE
+       call MPI_BCAST(ifieldok,1,MPI_INTEGER,0,
+     &                MPI_COMM_WORLD,ierr)
+#endif
+       if(ifieldok.ne.1)then
+        write(0,*) '*** error - legacy Z2 reconstruction checks failed'
+        call vaspberry_fail
+       endif
 
         if(myrank == 0)then
          write(6,*)" "
          write(6,'(A)')"# DONE!"
          
          if(nini .eq. nmax) then
-          write(6,'(A,I4)')"# Z2 invariant for the BAND : ",nini
+          write(6,'(A,I4)')"# Legacy Z2 candidate BAND : ",nini
          else
-          write(6,'(A,I4,A,I4)')"# Z2 invariant for the BANDS : ",nini
+          write(6,'(A,I4,A,I4)')"# Legacy Z2 candidate BANDS: ",nini
      &                                                       ," - ",nmax
          endif
-         write(6,'(A,I2)')"# Z2 Invariant =    ",
-     &                    mod((nint(rnnfield)),2)
-         write(6,'(A,I2)')"# Z2 Invariant(bottom) =    ",
-     &                    mod((nint(rnnfield_bottom)),2)
+         write(6,'(A,I2)')"# Legacy Z2 candidate = ",
+     &                    modulo(nint(rnnfield),2)
+         write(6,'(A,I2)')"# Legacy Z2 candidate(bottom) = ",
+     &                    modulo(nint(rnnfield_bottom),2)
+         write(6,'(A)')"# Validate with tools/wavecar_z2.py."
         
          call get_ext_variable(xrecivec,xrecilat,xrnfield,kext,
      &                    recivec,recilat,rnfield,nnk,kperiod,nk,iz2,
@@ -401,6 +521,7 @@
      &                     dSkxky,nini,nmax,xrecivec,xrecilat,kext,
      &                     xrnfield,rnnfield,rnnfield_bottom,0,0,
      &                     iz2,icd,iz,ivel,ikubo,nprocs)
+         call finalize_z2_pass(foname)
         endif !myrank ==0
        enddo !ispin end
 
@@ -492,8 +613,9 @@
             enddo   !loop for ig2
            enddo    !loop for ig3
            if (ispinor*ncnt.ne.npl(ilp)) then
-            write(0,*) '*ni error - computed NPL=',2*ncnt,
-     &                 ' != input nplane=',npl(ilp);stop
+            write(0,*) '*** error - computed NPL=',2*ncnt,
+     &                 ' != input nplane=',npl(ilp)
+            call vaspberry_fail
            endif
         
            do nj=nini, nmax
@@ -520,8 +642,9 @@
              enddo    !loop for ig2
             enddo     !loop for ig3
             if (ispinor*ncnt.ne.npl(ilp+1)) then
-             write(0,*) '*nj error - computed NPL=',2*ncnt,
-     &                  ' != input nplane=',npl(ilp+1);stop
+             write(0,*) '*** error - computed NPL=',2*ncnt,
+     &                  ' != input nplane=',npl(ilp+1)
+             call vaspberry_fail
             endif
             if(ispinor .eq. 2)then
              Siju(ni-nmax+ns,nj-nmax+ns)=dot_product(coeff1u,coeff2u)
@@ -863,8 +986,8 @@
          do ie=nini, nmax
            if(myrank .eq. 0) then
              write(6,'(A  )')" "
-             write(6,'(A,I)')"# BERRY CURVATURE FOR BAND INDEX n= ", ie
-             write(6,'(A,I)')"#                     SPIN INDEX s= ", isp
+             write(6,'(A,I0)')"# BERRY CURVATURE FOR BAND INDEX n= ", ie
+             write(6,'(A,I0)')"#                     SPIN INDEX s= ", isp
              write(6,'(A  )')" "
            endif
 #ifdef MPI_USE
@@ -985,6 +1108,10 @@
       elseif(iz == 1)then
        deallocate(rnfield)
        deallocate(rnfield_tot)
+       deallocate(rflux)
+       deallocate(rflux_tot)
+       deallocate(rminsv)
+       deallocate(rminsv_tot)
        deallocate(wnklist)
        deallocate(xrnfield)
        deallocate(i_trim_klist)
@@ -1071,6 +1198,668 @@
       return
       endfunction
 
+!!$*  initialize safe legacy Z2 output state
+      subroutine z2_paths_same(path1,path2,same,ok)
+      use iso_c_binding
+      implicit none
+      character*(*) path1,path2
+      logical same,ok,exist1,exist2
+      character(kind=c_char),allocatable::cpath1(:),cpath2(:)
+      character(kind=c_char),pointer::rpath1(:),rpath2(:)
+      type(c_ptr) p1,p2
+      integer(c_size_t) nl1,nl2
+      integer i,n1,n2
+      interface
+       function c_realpath(path,resolved) bind(C,name='realpath')
+     & result(ptr)
+        import c_char,c_ptr
+        implicit none
+        character(kind=c_char),intent(in)::path(*)
+        type(c_ptr),value::resolved
+        type(c_ptr) ptr
+       end function c_realpath
+       function c_strlen(str) bind(C,name='strlen') result(n)
+        import c_ptr,c_size_t
+        implicit none
+        type(c_ptr),value::str
+        integer(c_size_t) n
+       end function c_strlen
+       subroutine c_free(ptr) bind(C,name='free')
+        import c_ptr
+        implicit none
+        type(c_ptr),value::ptr
+       end subroutine c_free
+      end interface
+
+      same=.false.
+      ok=.false.
+      nullify(rpath1,rpath2)
+      inquire(file=trim(path1),exist=exist1)
+      if(.not.exist1)return
+      n1=len_trim(path1)
+      if(n1.le.0)return
+      allocate(cpath1(n1+1))
+      cpath1=c_null_char
+      do i=1,n1
+       cpath1(i)=path1(i:i)
+      enddo
+      p1=c_realpath(cpath1,c_null_ptr)
+      deallocate(cpath1)
+      if(.not.c_associated(p1))return
+
+      inquire(file=trim(path2),exist=exist2)
+      if(.not.exist2)then
+       ok=.true.
+       call c_free(p1)
+       return
+      endif
+      n2=len_trim(path2)
+      if(n2.le.0)then
+       call c_free(p1)
+       return
+      endif
+      allocate(cpath2(n2+1))
+      cpath2=c_null_char
+      do i=1,n2
+       cpath2(i)=path2(i:i)
+      enddo
+      p2=c_realpath(cpath2,c_null_ptr)
+      deallocate(cpath2)
+      if(.not.c_associated(p2))then
+       call c_free(p1)
+       return
+      endif
+
+      nl1=c_strlen(p1)
+      nl2=c_strlen(p2)
+      if(nl1.eq.nl2)then
+       call c_f_pointer(p1,rpath1,(/int(nl1)+1/))
+       call c_f_pointer(p2,rpath2,(/int(nl2)+1/))
+       same=.true.
+       do i=1,int(nl1)
+        if(rpath1(i).ne.rpath2(i))same=.false.
+       enddo
+      endif
+      ok=.true.
+      call c_free(p1)
+      call c_free(p2)
+      nullify(rpath1,rpath2)
+      return
+      end subroutine z2_paths_same
+
+      subroutine z2_output_deletable(filename,deletable)
+      implicit none
+      character*(*) filename
+      character*256 header
+      logical deletable,lexist
+      integer ios,iosclose
+
+      deletable=.false.
+      inquire(file=trim(filename),exist=lexist)
+      if(.not.lexist)then
+       deletable=.true.
+       return
+      endif
+      open(unit=94,file=trim(filename),status='old',
+     &     action='read',form='formatted',iostat=ios)
+      if(ios.ne.0)return
+      header=' '
+      read(94,'(A)',iostat=ios)header
+      close(94,iostat=iosclose)
+      if(ios.ne.0 .or. iosclose.ne.0)return
+      if(trim(header).eq.'# schema=VASPBERRY_Z2_FIELD')
+     & deletable=.true.
+      return
+      end subroutine z2_output_deletable
+
+      subroutine z2_legacy_paths(base,target,temp,ok)
+      implicit none
+      character*(*) base,target,temp
+      integer nbase
+      logical ok
+
+      target=' '
+      temp=' '
+      ok=.false.
+      nbase=len_trim(base)
+      if(nbase.le.0)return
+      if(nbase+4.gt.len(target) .or.
+     &   nbase+4.gt.len(temp))return
+      target(1:nbase)=base(1:nbase)
+      target(nbase+1:nbase+4)='.dat'
+      temp(1:nbase)=base(1:nbase)
+      temp(nbase+1:nbase+4)='.tmp'
+      ok=.true.
+      return
+      end subroutine z2_legacy_paths
+
+      subroutine z2_legacy_deletable(filename,deletable)
+      implicit none
+      character*(*) filename
+      character*256 line
+      logical deletable,lexist,found_candidate,found_nfield
+      integer ios,iosclose,i
+
+      deletable=.false.
+      inquire(file=trim(filename),exist=lexist)
+      if(.not.lexist)then
+       deletable=.true.
+       return
+      endif
+      open(unit=93,file=trim(filename),status='old',
+     &     action='read',form='formatted',iostat=ios)
+      if(ios.ne.0)return
+      found_candidate=.false.
+      found_nfield=.false.
+      do i=1,128
+       line=' '
+       read(93,'(A)',iostat=ios)line
+       if(ios.ne.0)exit
+       if(index(line,'# Legacy Z2 candidate').gt.0)
+     &  found_candidate=.true.
+       if(index(line,'# NFIELD.dat stores the gauge-dependent')
+     &  .gt.0)found_nfield=.true.
+      enddo
+      close(93,iostat=iosclose)
+      if(iosclose.ne.0)return
+      if(found_candidate .and. found_nfield)deletable=.true.
+      return
+      end subroutine z2_legacy_deletable
+
+      subroutine delete_z2_legacy_file(filename)
+      implicit none
+      character*(*) filename
+      logical lexist,deletable
+      integer ios
+
+      call z2_legacy_deletable(filename,deletable)
+      if(.not.deletable)then
+       write(0,*) '*** error - refusing to delete non-Z2 legacy file'
+       call vaspberry_fail
+      endif
+      inquire(file=trim(filename),exist=lexist)
+      if(lexist)then
+       open(unit=93,file=trim(filename),status='old',iostat=ios)
+       if(ios.ne.0)then
+        write(0,*) '*** error - legacy output open',ios
+        call vaspberry_fail
+       endif
+       close(93,status='delete',iostat=ios)
+       if(ios.ne.0)then
+        write(0,*) '*** error - legacy output delete',ios
+        call vaspberry_fail
+       endif
+      endif
+      return
+      end subroutine delete_z2_legacy_file
+
+      subroutine finalize_z2_pass(legacybase)
+      implicit none
+      character*(*) legacybase
+      character*75 legacyfile,legacytmp
+      logical pathok,owned,lexist
+      integer ios
+
+      call z2_legacy_paths(legacybase,legacyfile,legacytmp,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - legacy Z2 output name too long'
+       call vaspberry_fail
+      endif
+      inquire(file='Z2_FIELD.tmp',exist=lexist)
+      call z2_output_deletable('Z2_FIELD.tmp',owned)
+      if(.not.lexist .or. .not.owned)then
+       write(0,*) '*** error - missing staged Z2 PASS field'
+       call vaspberry_fail
+      endif
+      inquire(file='Z2_FIELD.invalid.csv',exist=lexist)
+      call z2_output_deletable('Z2_FIELD.invalid.csv',owned)
+      if(.not.lexist .or. .not.owned)then
+       write(0,*) '*** error - missing Z2 INCOMPLETE sentinel'
+       call vaspberry_fail
+      endif
+      inquire(file=trim(legacyfile),exist=lexist)
+      call z2_legacy_deletable(legacyfile,owned)
+      if(.not.lexist .or. .not.owned)then
+       write(0,*) '*** error - incomplete legacy Z2 output'
+       call vaspberry_fail
+      endif
+
+! Z2_FIELD.csv is the final commit marker: remove INCOMPLETE first.
+      call delete_z2_file('Z2_FIELD.invalid.csv')
+      call z2_atomic_replace('Z2_FIELD.tmp','Z2_FIELD.csv',ios)
+      if(ios.ne.0)then
+       write(0,*) '*** error - legacy Z2 PASS publish failed',ios
+       call vaspberry_fail
+      endif
+      write(6,'(A)')'# Z2 field diagnostic file: Z2_FIELD.csv'
+      return
+      end subroutine finalize_z2_pass
+
+      subroutine begin_z2_field_outputs(filename,legacybase)
+      implicit none
+      character*(*) filename,legacybase
+      character*75 legacyfile,legacytmp
+      integer ios,i,ibase,nfile
+      logical same,pathok,safe1,safe2,safe3,safe4,safe5
+
+      call z2_legacy_paths(legacybase,legacyfile,legacytmp,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - legacy Z2 output name too long'
+       call vaspberry_fail
+      endif
+      nfile=len_trim(filename)
+      ibase=1
+      do i=1,nfile
+       if(filename(i:i).eq.'/')ibase=i+1
+      enddo
+      if(ibase.le.nfile)then
+       if(trim(filename(ibase:nfile)).eq.'Z2_FIELD.csv' .or.
+     &    trim(filename(ibase:nfile)).eq.'Z2_FIELD.invalid.csv' .or.
+     &    trim(filename(ibase:nfile)).eq.'Z2_FIELD.tmp')then
+        write(0,*) '*** error - legacy Z2 reserved input basename'
+        call vaspberry_fail
+       endif
+      endif
+      call z2_paths_same(filename,'Z2_FIELD.csv',same,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - cannot resolve legacy Z2 input path'
+       call vaspberry_fail
+      endif
+      if(same)then
+       write(0,*) '*** error - legacy Z2 input-output alias'
+       call vaspberry_fail
+      endif
+      call z2_paths_same(filename,'Z2_FIELD.invalid.csv',
+     &                   same,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - cannot resolve legacy Z2 output path'
+       call vaspberry_fail
+      endif
+      if(same)then
+       write(0,*) '*** error - legacy Z2 input-output alias'
+       call vaspberry_fail
+      endif
+      call z2_paths_same(filename,'Z2_FIELD.tmp',same,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - cannot resolve legacy Z2 output path'
+       call vaspberry_fail
+      endif
+      if(same)then
+       write(0,*) '*** error - legacy Z2 input-output alias'
+       call vaspberry_fail
+      endif
+      call z2_paths_same(filename,legacyfile,same,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - cannot resolve legacy output path'
+       call vaspberry_fail
+      endif
+      if(same)then
+       write(0,*) '*** error - legacy Z2 input-output alias'
+       call vaspberry_fail
+      endif
+      call z2_paths_same(filename,legacytmp,same,pathok)
+      if(.not.pathok)then
+       write(0,*) '*** error - cannot resolve legacy temp path'
+       call vaspberry_fail
+      endif
+      if(same)then
+       write(0,*) '*** error - legacy Z2 input-output alias'
+       call vaspberry_fail
+      endif
+      call z2_output_deletable('Z2_FIELD.csv',safe1)
+      call z2_output_deletable('Z2_FIELD.invalid.csv',safe2)
+      call z2_output_deletable('Z2_FIELD.tmp',safe3)
+      call z2_legacy_deletable(legacyfile,safe4)
+      call z2_legacy_deletable(legacytmp,safe5)
+      if(.not.safe1 .or. .not.safe2 .or. .not.safe3 .or.
+     &   .not.safe4 .or. .not.safe5)then
+       write(0,*) '*** error - refusing to delete non-Z2 output'
+       call vaspberry_fail
+      endif
+      call delete_z2_file('Z2_FIELD.csv')
+      call delete_z2_file('Z2_FIELD.invalid.csv')
+      call delete_z2_file('Z2_FIELD.tmp')
+      call delete_z2_legacy_file(legacyfile)
+      call delete_z2_legacy_file(legacytmp)
+      open(unit=94,file='Z2_FIELD.invalid.csv',status='new',
+     &     action='write',iostat=ios)
+      if(ios.ne.0)then
+       write(0,*) '*** error - legacy Z2 sentinel create',ios
+       call vaspberry_fail
+      endif
+      write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
+      write(94,'(A)')'# schema_version=1'
+      write(94,'(A)')'# vaspberry_version=1.1.1'
+      write(94,'(A)')'# result_status=INCOMPLETE'
+      write(94,'(A)')'# reportable_invariant=0'
+      write(94,'(A)')'# band_range_status=UNRESOLVED'
+      write(94,'(2A)')'# legacy_output=',trim(legacyfile)
+      close(94,iostat=ios)
+      if(ios.ne.0)then
+       write(0,*) '*** error - legacy Z2 sentinel close',ios
+       call vaspberry_fail
+      endif
+      return
+      end subroutine begin_z2_field_outputs
+
+!!$*  delete one controlled legacy Z2 output
+      subroutine delete_z2_file(filename)
+      implicit none
+      character*(*) filename
+      logical lexist,deletable
+      integer ios
+
+      call z2_output_deletable(filename,deletable)
+      if(.not.deletable)then
+       write(0,*) '*** error - refusing to delete non-Z2 output'
+       call vaspberry_fail
+      endif
+      inquire(file=trim(filename),exist=lexist)
+      if(lexist)then
+       open(unit=94,file=trim(filename),status='old',iostat=ios)
+       if(ios.ne.0)then
+        write(0,*) '*** error - legacy Z2 stale output open',ios
+        call vaspberry_fail
+       endif
+       close(94,status='delete',iostat=ios)
+       if(ios.ne.0)then
+        write(0,*) '*** error - legacy Z2 stale output delete',ios
+        call vaspberry_fail
+       endif
+      endif
+      return
+      end subroutine delete_z2_file
+
+!!$*  same-directory atomic rename through the C runtime
+      subroutine z2_atomic_replace(oldname,newname,ios)
+      use iso_c_binding, only: c_char,c_int,c_null_char
+      implicit none
+      character*(*) oldname,newname
+      character(kind=c_char,len=:), allocatable :: cold,cnew
+      integer ios
+      interface
+       function c_rename(oldpath,newpath) bind(C,name='rename')
+     &          result(irc)
+        import c_char,c_int
+        character(kind=c_char),dimension(*) :: oldpath,newpath
+        integer(c_int) irc
+       end function c_rename
+      end interface
+
+      cold=trim(oldname)//c_null_char
+      cnew=trim(newname)//c_null_char
+      ios=int(c_rename(cold,cnew))
+      return
+      end subroutine z2_atomic_replace
+
+!!$*  write legacy Z2 reconstruction diagnostics
+      subroutine write_z2_field_csv(rnfield,rflux,rminsv,recilat,
+     &           nnk,nkx,nky,dskxky,b1,b2,b3,ifieldok,nini,nmax,
+     &           ispinor)
+      implicit none
+      integer nnk,nkx,nky,ifieldok,nini,nmax,ispinor
+      integer i,j,m,found,ios,ntop,nbottom,icellok
+      integer nsum_top,nsum_bottom,parity_top,parity_bottom
+      integer, allocatable :: partner(:),half(:),ninteger(:)
+      real*8 rnfield(nnk),rflux(nnk),rminsv(nnk)
+      real*8 recilat(3,nnk),b1(3),b2(3),b3(3),dskxky
+      real*8 pi,tol,q(3),kp(3),dq(3)
+      real*8 nres,npairres,fluxres,maxnres,maxnpairres
+      real*8 maxfluxres,maxabsflux,totalchern,minsv
+      real*8 minsvtol,fluxtol,cherntol,phasemargin
+      logical fieldok
+      character*32 outname
+
+      pi=4d0*datan(1d0)
+      tol=1d-7
+      minsvtol=1d-6
+      fluxtol=1d-5
+      cherntol=1d-4
+      phasemargin=0.8d0
+      ifieldok=0
+      if(nnk.ne.nkx*nky)then
+       write(0,*) '*** error - legacy Z2 field mesh mismatch',
+     &            nnk,nkx*nky
+       call vaspberry_fail
+      endif
+      if(dskxky.le.0d0)then
+       write(0,*) '*** error - invalid legacy Z2 cell area',
+     &            dskxky
+       call vaspberry_fail
+      endif
+
+      allocate(partner(nnk),half(nnk),ninteger(nnk))
+      partner=0
+      half=0
+      ninteger=0
+
+      do i=1,nnk
+       found=0
+       do j=1,nnk
+        do m=1,3
+         dq(m)=recilat(m,i)+recilat(m,j)
+         dq(m)=dq(m)-dnint(dq(m))
+        enddo
+        if(maxval(dabs(dq)).le.tol)then
+         found=found+1
+         partner(i)=j
+        endif
+       enddo
+       if(found.ne.1)then
+        write(0,*) '*** error - ambiguous legacy Z2 TR partner',
+     &             i,found
+        call vaspberry_fail
+       endif
+      enddo
+
+      do i=1,nnk
+       if(partner(i).lt.1 .or. partner(i).gt.nnk)then
+        write(0,*) '*** error - invalid legacy Z2 TR partner',i
+        call vaspberry_fail
+       endif
+       if(partner(partner(i)).ne.i)then
+        write(0,*) '*** error - noninvolutive Z2 TR partner',i,
+     &             partner(i)
+        call vaspberry_fail
+       endif
+      enddo
+
+      ntop=0
+      nbottom=0
+      nsum_top=0
+      nsum_bottom=0
+      do i=1,nnk
+       q(2)=modulo(recilat(2,i),1d0)
+       ninteger(i)=nint(rnfield(i))
+       if(q(2).lt.0.5d0)then
+        half(i)=1
+        ntop=ntop+1
+        nsum_top=nsum_top+ninteger(i)
+       else
+        half(i)=-1
+        nbottom=nbottom+1
+        nsum_bottom=nsum_bottom+ninteger(i)
+       endif
+      enddo
+      parity_top=modulo(nsum_top,2)
+      parity_bottom=modulo(nsum_bottom,2)
+
+      maxnres=0d0
+      maxnpairres=0d0
+      maxfluxres=0d0
+      maxabsflux=0d0
+      do i=1,nnk
+       j=partner(i)
+       nres=dabs(rnfield(i)-dble(ninteger(i)))
+       npairres=dabs(rnfield(i)+rnfield(j))
+       fluxres=dabs(datan2(dsin(rflux(i)+rflux(j)),
+     &                    dcos(rflux(i)+rflux(j))))
+       maxnres=dmax1(maxnres,nres)
+       maxnpairres=dmax1(maxnpairres,npairres)
+       maxfluxres=dmax1(maxfluxres,fluxres)
+       maxabsflux=dmax1(maxabsflux,dabs(rflux(i)))
+      enddo
+      totalchern=sum(rflux)/(2d0*pi)
+      minsv=minval(rminsv(1:nnk))
+
+      fieldok=.true.
+      if(ntop.ne.nbottom .or. ntop+nbottom.ne.nnk)fieldok=.false.
+      if(maxnres.gt.1d-10)fieldok=.false.
+      if(maxfluxres.gt.fluxtol)fieldok=.false.
+      if(dabs(totalchern).gt.cherntol)fieldok=.false.
+      if(maxabsflux.ge.phasemargin*pi)fieldok=.false.
+      if(minsv.ne.minsv .or. minsv.lt.minsvtol)fieldok=.false.
+      if(nsum_top+nsum_bottom.ne.0)fieldok=.false.
+      if(parity_top.ne.parity_bottom)fieldok=.false.
+      if(fieldok)then
+       ifieldok=1
+       outname='Z2_FIELD.csv'
+      else
+       outname='Z2_FIELD.invalid.csv'
+      endif
+
+      open(unit=94,file='Z2_FIELD.tmp',status='replace',
+     &     action='write',iostat=ios)
+      if(ios.ne.0)then
+       write(0,*) '*** error - cannot open legacy Z2 output',ios
+       call vaspberry_fail
+      endif
+      write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
+      write(94,'(A)')'# schema_version=1'
+      write(94,'(A)')'# vaspberry_version=1.1.1'
+      if(fieldok)then
+       write(94,'(A)')'# result_status=PASS'
+      else
+       write(94,'(A)')'# result_status=INVALID'
+      endif
+      write(94,'(A)')'# result_kind=LEGACY_FUKUI_Z2_CANDIDATE'
+      write(94,'(A)')'# reportable_invariant=0'
+      write(94,'(A,I0)')'# nkx=',nkx
+      write(94,'(A,I0)')'# nky=',nky
+      write(94,'(A,I0)')'# band_min=',nini
+      write(94,'(A,I0)')'# band_max=',nmax
+      write(94,'(A,I0)')'# band_rank=',nmax-nini+1
+      write(94,'(A,I0)')'# spinor_components=',ispinor
+      write(94,'(A)')'# index_base=1'
+      write(94,'(A)')'# plaquette_orientation=POSITIVE_B1_CROSS_B2'
+      write(94,'(A)')'# nfield_definition='//
+     & '[(sum_link_arg)-wrap(sum_link_arg)]/(2*pi)'
+      write(94,'(2A)')'# overlap_backend=',
+     & 'WAVECAR_PSEUDO_NO_PAW_AUGMENTATION'
+      write(94,'(A)')'# input_trs_assumed=1'
+      write(94,'(A)')'# input_trs_independently_verified=0'
+      write(94,'(A)')'# check_scope='//
+     & 'NUMERICAL_SELF_CONSISTENCY_OF_TR_RECONSTRUCTION'
+      write(94,'(A)')'# check_scope_excludes='//
+     & 'RAW_INPUT_TRS,KRAMERS_ENERGY,DIRECT_GAP,'//
+     & 'PAW_AUGMENTATION,MESH_CONVERGENCE'
+      write(94,'(A)')'# physical_tr_rule='//
+     & 'wrap[berry_flux(-k)+berry_flux(k)]=0'
+      write(94,'(A)')'# nfield_note='//
+     & 'gauge_and_log_branch_dependent'
+      write(94,'(A)')'# threshold_policy='//
+     & 'CONSERVATIVE_DIAGNOSTIC_MAY_FALSE_REJECT'
+      write(94,'(A,ES24.16E3)')'# threshold_partner_fractional=',
+     &                         tol
+      write(94,'(A,ES24.16E3)')'# threshold_min_link_singular=',
+     &                         minsvtol
+      write(94,'(A,ES24.16E3)')'# threshold_flux_tr_odd_rad=',
+     &                         fluxtol
+      write(94,'(A,ES24.16E3)')'# threshold_nfield_integer=',
+     &                         1d-10
+      write(94,'(A,ES24.16E3)')'# threshold_total_chern=',
+     &                         cherntol
+      write(94,'(A,ES24.16E3)')'# threshold_phase_margin_fraction_pi=',
+     &                         phasemargin
+      write(94,'(A,ES24.16E3)')'# threshold_max_abs_flux_rad=',
+     &                         phasemargin*pi
+      write(94,'(A,ES24.16E3)')'# total_chern=',totalchern
+      write(94,'(A,ES24.16E3)')'# minimum_link_singular_value=',
+     &                         minsv
+      write(94,'(A,ES24.16E3)')'# max_flux_tr_odd_residual_rad=',
+     &                         maxfluxres
+      write(94,'(A,ES24.16E3)')'# max_nfield_integer_residual=',
+     &                         maxnres
+      write(94,'(A,ES24.16E3)')'# max_nfield_pair_residual=',
+     &                         maxnpairres
+      write(94,'(A,ES24.16E3)')'# max_abs_flux_rad=',maxabsflux
+      write(94,'(A,I0)')'# half_top_nfield_sum=',nsum_top
+      write(94,'(A,I0)')'# half_bottom_nfield_sum=',nsum_bottom
+      if(fieldok)then
+       write(94,'(A,I0)')'# half_top_legacy_z2_candidate=',
+     &                    parity_top
+       write(94,'(A,I0)')'# half_bottom_legacy_z2_candidate=',
+     &                    parity_bottom
+      else
+       write(94,'(A)')'# half_top_legacy_z2_candidate='//
+     &                 'NOT_REPORTABLE'
+       write(94,'(A)')'# half_bottom_legacy_z2_candidate='//
+     &                 'NOT_REPORTABLE'
+      endif
+      write(94,'(A,I0)')'# numerical_self_consistency_checks_pass=',
+     &                   ifieldok
+      write(94,'(A)')'cell_id,q1,q2,q3,kx_A-1,ky_A-1,'//
+     & 'kz_A-1,half_bz,tr_partner,berry_flux_rad,'//
+     & 'berry_curvature_A2,min_link_singular_value,nfield_raw,'//
+     & 'nfield_int,nfield_integer_residual,'//
+     & 'nfield_tr_pair_residual,flux_tr_odd_residual_rad,'//
+     & 'pair_nfield_int_sum,plaquette_checks_pass'
+
+      do i=1,nnk
+       do m=1,3
+        q(m)=modulo(recilat(m,i),1d0)
+       enddo
+       do m=1,3
+        kp(m)=q(1)*b1(m)+q(2)*b2(m)+q(3)*b3(m)
+       enddo
+       j=partner(i)
+       nres=dabs(rnfield(i)-dble(ninteger(i)))
+       npairres=rnfield(i)+rnfield(j)
+       fluxres=datan2(dsin(rflux(i)+rflux(j)),
+     &                dcos(rflux(i)+rflux(j)))
+       icellok=1
+       if(nres.gt.1d-10)icellok=0
+       if(dabs(fluxres).gt.fluxtol)icellok=0
+       if(dabs(rflux(i)).ge.phasemargin*pi)icellok=0
+       if(rminsv(i).lt.minsvtol)icellok=0
+       write(94,910)i,q(1),q(2),q(3),kp(1),kp(2),kp(3),
+     &      half(i),j,rflux(i),rflux(i)/dskxky,rminsv(i),
+     &      rnfield(i),ninteger(i),nres,npairres,fluxres,
+     &      ninteger(i)+ninteger(j),icellok
+      enddo
+  910 format(I0,6(',',ES24.16E3),2(',',I0),
+     &       4(',',ES24.16E3),',',I0,
+     &       3(',',ES24.16E3),2(',',I0))
+      close(94,iostat=ios)
+      if(ios.ne.0)then
+       write(0,*) '*** error - legacy Z2 temporary output close',ios
+       call vaspberry_fail
+      endif
+      if(ifieldok.eq.0)then
+       call z2_atomic_replace('Z2_FIELD.tmp',trim(outname),ios)
+       if(ios.ne.0)then
+        write(0,*) '*** error - legacy Z2 invalid publish',ios
+        call vaspberry_fail
+       endif
+       write(6,'(A,A)')'# Z2 field diagnostic file: ',
+     &                  trim(outname)
+      else
+       write(6,'(A)')'# Z2 PASS field staged; awaiting legacy output'
+      endif
+      write(6,'(A,ES13.5)')'# Z2 field total Chern: ',totalchern
+      write(6,'(A,ES13.5)')'# Z2 field minimum link s.v.: ',minsv
+      write(6,'(A,ES13.5)')'# Z2 field max TR flux residual: ',
+     &                     maxfluxres
+      write(6,'(A,ES13.5)')'# Z2 field max n integer residual: ',
+     &                     maxnres
+      if(ifieldok.eq.0)then
+       write(0,*) '*** invalid - legacy Z2 reconstruction checks failed'
+      endif
+
+      deallocate(ninteger,half,partner)
+      return
+      end subroutine write_z2_field_csv
+
 !!$*  subroutine for writing results
       subroutine write_result(isp,ispin,ispinor,fonameo,foname,filename,
      &                  irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
@@ -1086,7 +1875,9 @@
       real*8  xb(3),xtemp,rvari3(4),rvari4(4)
       character*256 filename,foname,fonameo
       character*256 foname_
+      character*75 z2legacy,z2legacytmp
       character*20,external :: int2str
+      logical z2pathok
        
        if(ikubo .ge. 1 .and. nini .eq. nmax) then
          write(foname_, '(3A )')TRIM(foname),'.EIG-',
@@ -1105,7 +1896,22 @@
          write(fonameo,'(A,A)')TRIM(foname_),'.dat'
        endif
 
-       open(32,file=fonameo,status='unknown')
+       if(iz.eq.1)then
+        call z2_legacy_paths(foname,z2legacy,z2legacytmp,z2pathok)
+        if(.not.z2pathok)then
+         write(0,*) '*** error - legacy Z2 output name too long'
+         call vaspberry_fail
+        endif
+        fonameo=z2legacytmp
+        open(32,file=trim(fonameo),status='replace',
+     &       action='write',iostat=ios)
+        if(ios.ne.0)then
+         write(0,*) '*** error - legacy Z2 temp open',ios
+         call vaspberry_fail
+        endif
+       else
+        open(32,file=fonameo,status='unknown')
+       endif
        write(32,'(A,I4,A)')"# Job running on ",nprocs," total cores"
        write(32,'(A,A)')   "# File reading...  : ",filename
        write(32,'(A,I9)')"# TOTAL RECORD LENGTH = ",irecl
@@ -1128,13 +1934,13 @@
 
        if(nini .eq. nmax) then
         if(iz == 1)then
-         write(32,'(A,I4)')"# Z2 invariant for the BAND : ",nini
+         write(32,'(A,I4)')"# Legacy Z2 candidate BAND : ",nini
         elseif(iz+ivel+icd .eq. 0)then
           write(32,'(A,I4)')"# Chern Number for the BAND : ",nmax
         endif
        else
         if(iz == 1)then
-         write(32,'(A,I4,A,I4)')"# Z2 invariant for the BANDS : ",nini,
+         write(32,'(A,I4,A,I4)')"# Legacy Z2 candidate BANDS: ",nini,
      &                         " - ",nmax
         elseif(iz+ivel+icd .eq. 0)then
           write(32,'(A,I4,A,I4)')"# Chern Number for the BANDS : ",nini,
@@ -1142,15 +1948,16 @@
         endif
        endif
  
-       if(iz == 1)then !Z2 INVARIANT
-        write(32,'(A,I2)')"# Z2 Invariant (top) =    ",
-     &                  mod((nint(rvari)),2)
-        write(32,'(A,I2)')"# Z2 Invariant (bottom) =    ",
-     &                  mod((nint(rvari2)),2)
-        write(32,'(A)')"# Berry Curvature F (A^2) :
-     &  -Im[logPI_S(det(S(K_s,K_s+1)))]/dk^2"
-        write(32,'(A)')"# N-field strength       :
-     &  Sum_s{Im[log(det(S(K_s,k_s+1)))]}/2pi - F/2pi "
+       if(iz == 1)then !legacy Z2 candidate
+        write(32,'(A,I2)')"# Legacy Z2 candidate (top) = ",
+     &                  modulo(nint(rvari),2)
+        write(32,'(A,I2)')"# Legacy Z2 candidate (bottom) = ",
+     &                  modulo(nint(rvari2),2)
+        write(32,'(A)')"# Validate with tools/wavecar_z2.py."
+        write(32,'(A)')"# NFIELD.dat stores the gauge-dependent"
+        write(32,'(A)')"# integer n-field:"
+        write(32,'(A)')"# n=(sum link phases-Wilson phase)/(2*pi)."
+        write(32,'(A)')"# Berry flux=-Wilson phase; see Z2_FIELD.csv."
         write(32,'(A)')"# (cart) kx        ky        kz(A^-1)
      &    n-field strength      ,   (recip)kx        ky        kz"
 
@@ -1215,7 +2022,20 @@
      &        (xrecilat(i,ik),i=1,3)
        enddo
 
-       close(32)
+       if(iz.eq.1)then
+        close(32,iostat=ios)
+        if(ios.ne.0)then
+         write(0,*) '*** error - legacy Z2 temp close',ios
+         call vaspberry_fail
+        endif
+        call z2_atomic_replace(z2legacytmp,z2legacy,ios)
+        if(ios.ne.0)then
+         write(0,*) '*** error - legacy Z2 output publish',ios
+         call vaspberry_fail
+        endif
+       else
+        close(32)
+       endif
        return
       end subroutine write_result
 
@@ -1871,203 +2691,392 @@
       return
       end subroutine set_BZ_fukui
 
-!!$*  subroutine for get nfield strength
-      subroutine get_nfield(rfield,wklp, isp,ik,nk,nband,nkx,nky,
-     &                      wnklist,ihf,nplist,nnk,iz,ns,kperiod,
-     &                      w_half_klist,i_half_klist,i_trim_klist,nhf,
-     &                      nbmax,npmax,ecut,ispinor,ispin,ne,irecl,
-     &                      nmax,nini,b1,b2,b3,iz2)
+!!$*  subroutine for get nfield strength and physical flux
+      subroutine get_nfield(rfield,rflux,rminsv,wklp,isp,ik,
+     &                      nk,nband,
+     &                      nkx,nky,wnklist,wklist,ihf,nplist,
+     &                      nnk,iz,ns,kperiod,w_half_klist,
+     &                      i_half_klist,i_trim_klist,nhf,
+     &                      nbmax,npmax,ecut,ispinor,ispin,ne,
+     &                      irecl,nmax,nini,b1,b2,b3,iz2)
       implicit real*8 (a-h,o-z)
-      complex*8  coeff(npmax)
-      complex*16, allocatable :: Siju(:,:),Sijd(:,:),Sijt(:,:)
-      dimension nbmax(3),wkk(3,5),wklp(3,5,nk*iz2)
-      complex*16 coeff1u((2*nbmax(1)+2)*(2*nbmax(2)+2)*(2*nbmax(3)+1))
-      complex*16 coeff1d((2*nbmax(1)+2)*(2*nbmax(2)+2)*(2*nbmax(3)+1))
-      complex*16 coeff2u((2*nbmax(1)+2)*(2*nbmax(2)+2)*(2*nbmax(3)+1))
-      complex*16 coeff2d((2*nbmax(1)+2)*(2*nbmax(2)+2)*(2*nbmax(3)+1))
-      complex*16 detS(4),detA,detLOOP
-      real*8  wnklist(3,nk*iz2),w_half_klist(3,nk),rfield
-      dimension b1(3),b2(3),b3(3)
-      integer nplist(nk),i_half_klist(nk),i_trim_klist(nk)
+      complex*16, allocatable :: Sijt(:,:)
+      complex*16, allocatable :: coeff1u(:),coeff1d(:)
+      complex*16, allocatable :: coeff2u(:),coeff2d(:)
+      complex*16 detS(4),detLOOP
+      real*8 link_phase(4),phase_sum,wilson_phase
+      real*8 wnklist(3,nk*iz2),wklist(3,nk)
+      real*8 w_half_klist(3,nk),rfield,rflux,rminsv
+      real*8 wkk(3,5),wklp(3,5,nk*iz2)
+      real*8 b1(3),b2(3),b3(3),pi,linksmin
+      integer linkinfo
+      integer nbmax(3),nplist(nk)
+      integer i_half_klist(nk),i_trim_klist(nk)
       integer itr(5),itrim(5),ikk(5),isgg(2,5),npl(5)
-      integer ni,nj,ne,nk,nband,np,npmax,kperiod,ispin,irecl
-      data c/0.262465831d0/ ! constant c = 2m/hbar**2 [1/eV Ang^2]
-      pi=4.*atan(1.)
+      integer ni,nj,ne,nk,nband,npmax,kperiod,ispin,irecl
+      integer ngrid,ilp,itr_sum,nparity
 
-      call klpfind(wkk, isp,ik,nk,nband,nkx,nky,wnklist,ihf,iz,iz2) !k-loop(4pts) of ik-kpoint (K),counter-clock
-      call kindxfind(ikk,isgg,npl,itr,itrim, wnklist,nplist,wkk,nnk,
-     &               nband,iz,w_half_klist,i_half_klist,i_trim_klist,
-     &               nhf,iz2) !find index
+      pi=4d0*datan(1d0)
+      ngrid=(2*nbmax(1)+1)*(2*nbmax(2)+1)*
+     &      (2*nbmax(3)+1)
 
-      wklp(:,:,ik) = wkk(:,:)  ! closed loop (C) for each K : RECIVEC
+      call klpfind(wkk,isp,ik,nk,nband,nkx,nky,wnklist,
+     &             ihf,iz,iz2)
+      call kindxfind(ikk,isgg,npl,itr,itrim,wnklist,nplist,
+     &               wkk,nnk,nband,iz,w_half_klist,
+     &               i_half_klist,i_trim_klist,nhf,iz2)
+      wklp(:,:,ik)=wkk(:,:)
 
-!!$* get overlap matrix S_ij(k,k+1) over the C and PI_s [detS(k_s,k_s+1)], s=1,4
-        allocate(Siju(ns,ns),Sijd(ns,ns),Sijt(ns,ns))
-        do ilp=1,4  ! loop for ilp
-         Siju=(0.,0.)  !initialize
-         Sijd=(0.,0.)
-         Sijt=(0.,0.)
-        ! construct overlap matrix S_ij(ikk1,ikk2)
-        do ni=nini, nmax   ! calculate upto valence band maximum
-         ncnt=0;coeff1u=(0.,0.);coeff1d=(0.,0.);coeff=(0.,0.)
-         call get_coeff(coeff,isgg, ilp,ni,ikk,npl,nband,nk,isp,
-     &                              npmax,itrim)
-         do ig3=0,2*nbmax(3);    ig3p=ig3
-          if (ig3.gt.nbmax(3))   ig3p=ig3-2*nbmax(3)-1
-          do ig2=0,2*nbmax(2);   ig2p=ig2
-           if (ig2.gt.nbmax(2))  ig2p=ig2-2*nbmax(2)-1
-           do ig1=0,2*nbmax(1);  ig1p=ig1
-            if (ig1.gt.nbmax(1)) ig1p=ig1-2*nbmax(1)-1
-             call get_etot(etot, ilp,ni,b1,b2,b3,isgg,ig1p,ig2p,ig3p,
-     &                           ig1,ig2,ig3,wkk,itrim,itr)
-            if (etot.lt.ecut) then; ncnt=ncnt+1
-             call get_incnt(incnt, ilp,ni,ig1p,ig2p,ig3p,nbmax,
-     &                             itr,itrim,isgg,wkk)
-            if(ispinor .eq. 2)then !spinor-dn
-             if(itr(ilp) .eq. 0)then
-              if(itrim(ilp) .eq. 0)then
-               coeff1d(incnt)=coeff(ncnt+npl(ilp)/2) !for |u(dn)>
-              elseif(itrim(ilp) .ge. 1 .and. mod(ni,2) .eq. 1)then
-               coeff1d(incnt)=coeff(ncnt+npl(ilp)/2) !for |u(dn)>
-              elseif(itrim(ilp) .ge. 1 .and. mod(ni,2) .eq. 0)then
-               coeff1d(incnt)=conjg(coeff(ncnt)) !TRIM for |u*(2n-1,up)>
-              endif
-             elseif(itr(ilp) .eq. 1)then
-              coeff1d(incnt)=conjg(coeff(ncnt)) !TRS for |u*(up)>
-             endif
-            endif
+      allocate(Sijt(ns,ns))
+      allocate(coeff1u(ngrid),coeff1d(ngrid))
+      allocate(coeff2u(ngrid),coeff2d(ngrid))
+      detS=(0d0,0d0)
+      rminsv=1d99
 
-            if(itr(ilp) .eq. 0)then  !spinor-up
-             if(itrim(ilp) .eq. 0)then
-              coeff1u(incnt)=coeff(ncnt) !for |u(up)>
-             elseif(itrim(ilp) .ge. 1 .and. mod(ni,2) .eq. 1)then
-              coeff1u(incnt)=coeff(ncnt) !for |u(up)>
-             elseif(itrim(ilp) .ge. 1 .and. mod(ni,2) .eq. 0)then
-              if(ispinor .eq. 1)then
-               coeff1u(incnt)=conjg(coeff(ncnt)) !TRIM for |u*(up)>
-              elseif(ispinor .eq. 2)then
-               coeff1u(incnt)=-conjg(coeff(ncnt+npl(ilp)/2)) !TRIM for -|u*(dn,2n-1)>
-              endif
-             endif
-            elseif(itr(ilp) .eq. 1)then
-             if(ispinor .eq. 2)then
-              coeff1u(incnt)=-conjg(coeff(ncnt+npl(ilp)/2)) !TRS for -|u*(dn)>
-             elseif(ispinor .eq. 1)then
-              coeff1u(incnt)=conjg(coeff(ncnt)) !TRS for |u*>
-             endif
-            endif
+      do ilp=1,4
+       Sijt=(0d0,0d0)
+       do ni=nini,nmax
+        call get_z2_state(coeff1u,coeff1d,ilp,ni,ikk,npl,
+     &       nband,nk,isp,npmax,itrim,itr,wkk,wklist,nbmax,
+     &       ispinor,b1,b2,b3,ecut)
+        do nj=nini,nmax
+         call get_z2_state(coeff2u,coeff2d,ilp+1,nj,ikk,npl,
+     &        nband,nk,isp,npmax,itrim,itr,wkk,wklist,nbmax,
+     &        ispinor,b1,b2,b3,ecut)
+         Sijt(ni-nini+1,nj-nini+1)=
+     &        dot_product(coeff1u,coeff2u)+
+     &        dot_product(coeff1d,coeff2d)
+        enddo
+       enddo
 
-            endif
-           enddo  !loop for ig1                       
-          enddo   !loop for ig2
-         enddo    !loop for ig3
-         if (ispinor*ncnt.ne.npl(ilp)) then
-          write(0,*) '*ni error - computed NPL=',2*ncnt,
-     &               ' != input nplane=',npl(ilp);stop
-         endif
-         do nj=nini, nmax
-          ncnt=0;coeff2u=(0.,0.);coeff2d=(0.,0.);coeff=(0.,0.)
-          call get_coeff(coeff,isgg, ilp+1,nj,ikk,npl,nband,nk,isp,
-     &                               npmax,itrim)
-          do ig3=0,2*nbmax(3); ig3p=ig3
-           if (ig3.gt.nbmax(3)) ig3p=ig3-2*nbmax(3)-1
-           do ig2=0,2*nbmax(2); ig2p=ig2
-            if (ig2.gt.nbmax(2)) ig2p=ig2-2*nbmax(2)-1
-            do ig1=0,2*nbmax(1); ig1p=ig1
-             if (ig1.gt.nbmax(1)) ig1p=ig1-2*nbmax(1)-1
-             call get_etot(etot, ilp+1,nj,b1,b2,b3,isgg,ig1p,ig2p,ig3p,
-     &                           ig1,ig2,ig3,wkk,itrim,itr)
-             if (etot.lt.ecut) then; ncnt=ncnt+1
-              call get_incnt(incnt, ilp+1,nj,ig1p,ig2p,ig3p,nbmax,
-     &                              itr,itrim,isgg,wkk)
+       call z2_link_svd_phase(Sijt,ns,link_phase(ilp),
+     &                        linksmin,linkinfo)
+       if(linkinfo.ne.0)then
+        write(0,*) '*** error - legacy Z2 link factorization',
+     &             ik,ilp,linkinfo
+        call vaspberry_fail
+       endif
+       rminsv=dmin1(rminsv,linksmin)
+       detS(ilp)=dcmplx(dcos(link_phase(ilp)),
+     &                  dsin(link_phase(ilp)))
+      enddo
 
-             if(ispinor .eq. 2)then  !spinor-dn
-              if(itr(ilp+1) .eq. 0)then
-               if(itrim(ilp+1) .ge. 0)then
-                coeff2d(incnt)=coeff(ncnt+npl(ilp+1)/2) !c(dn,n)
-               elseif(itrim(ilp+1) .ge. 1 .and. mod(nj,2) .eq. 1)then
-                coeff2d(incnt)=coeff(ncnt+npl(ilp+1)/2) !c(dn,n)
-               elseif(itrim(ilp+1) .ge. 1 .and. mod(nj,2) .eq. 0)then
-                coeff2d(incnt)=conjg(coeff(ncnt)) !c*(up,n-1)
-               endif
-              elseif(itr(ilp+1) .eq. 1)then
-               coeff2d(incnt)=conjg(coeff(ncnt)) !c*(up)
-              endif
-             endif
+      phase_sum=sum(link_phase)
+      wilson_phase=datan2(dsin(phase_sum),dcos(phase_sum))
+      rflux=-wilson_phase
+      rfield=(phase_sum-wilson_phase)/(2d0*pi)
+      detLOOP=detS(1)*detS(2)*detS(3)*detS(4)
 
-             if(itr(ilp+1) .eq. 0)then  !spinor-up 
-              if(itrim(ilp+1) .eq. 0)then
-               coeff2u(incnt)=coeff(ncnt)
-              elseif(itrim(ilp+1) .ge. 1 .and. mod(nj,2) .eq. 1)then
-               coeff2u(incnt)=coeff(ncnt)
-              elseif(itrim(ilp+1) .ge. 1 .and. mod(nj,2) .eq. 0)then
-               if(ispinor .eq. 1)then
-                coeff2u(incnt)=conjg(coeff(ncnt))  !c(n-1)*
-               elseif(ispinor .eq. 0)then
-                coeff2u(incnt)=-conjg(coeff(ncnt+npl(ilp+1)/2)) !-c*(dn,n-1)
-               endif
-              endif
-             elseif(itr(ilp+1) .eq. 1)then
-              if(ispinor .eq. 2)then
-               coeff2u(incnt)=-conjg(coeff(ncnt+npl(ilp+1)/2))
-              elseif(ispinor .eq. 1)then
-               coeff2u(incnt)=conjg(coeff(ncnt))
-              endif
-             endif
+      if(sum(itrim(1:4)).ge.1)then
+       nparity=0
+       if(itrim(1)+itrim(3).ge.1)nparity=1
+       if(itrim(2)+itrim(4).ge.1)nparity=-1
+       itr_sum=sum(itrim(1:4))*nparity
+      else
+       itr_sum=0
+      endif
+      write(6,704)ik,rfield,rflux,detLOOP,ikk(:),
+     &             (wkk(:,1)+wkk(:,3))/2d0,itr_sum,phase_sum,
+     &             rminsv
+  704 format('#IK=',I4,' NK=',F7.3,' FLUX=',ES13.5,
+     &       ' LOOP_U1=',ES13.5,'+',ES13.5,'i',
+     &       ' KLP=',5I4,' WKC=',3F9.5,' STRM=',I3,
+     &       ' S(ARG)=',ES13.5,' SMIN=',ES13.5)
 
-             endif
-            enddo   !loop for ig1
-           enddo    !loop for ig2
-          enddo     !loop for ig3
-          if (ispinor*ncnt.ne.npl(ilp+1)) then
-           write(0,*) '*nj error - computed NPL=',2*ncnt,
-     &                ' != input nplane=',npl(ilp+1);stop
-          endif
-          if(ispinor .eq. 2)then
-           Siju(ni-nmax+ns,nj-nmax+ns)=dot_product(coeff1u,coeff2u)
-           Sijd(ni-nmax+ns,nj-nmax+ns)=dot_product(coeff1d,coeff2d)
-           Sijt(ni-nmax+ns,nj-nmax+ns)=Siju(ni-nmax+ns,nj-nmax+ns)+
-     &                                 Sijd(ni-nmax+ns,nj-nmax+ns)
-           else if (ispinor .eq. 1)then
-            Sijt(ni-nmax+ns,nj-nmax+ns)=dot_product(coeff1u,coeff2u)
-          endif
-         enddo !nj
-        enddo !ni
-
-        if(nini .eq. nmax)then   ! get determinant : det(S)
-         detS(ilp)=Sijt(1,1)
-         else
-!         call getdetA(detA, Sijt,ns)
-          call get_det(detA, Sijt,ns)
-          detS(ilp)=detA;detA=(0.,0.)
-        endif
-        enddo !ilp
-
-        detLOOP=detS(1)*detS(2)*detS(3)*detS(4)
-        rfield=+sum(aimag(log(detS(1:4))))/(2.*pi)
-     &               - (aimag(log(detLOOP)))/(2.*pi)
-!       write(6,'(A)')"# "
-! 704   format('#===>PI_S[det(S(K_s,K_s+1))] =',F16.8,'  +',F16.8,' i'
-!    &         ,I4,'th-K')
-        if(sum(itrim(1:4)) .ge. 1)then 
-         if(itrim(1)+itrim(3) .ge. 1)nparity=1
-         if(itrim(2)+itrim(4) .ge. 1)nparity=-1
-         itr_sum=sum(itrim(1:4))*nparity
-        else
-         itr_sum=0
-        endif
-        write(6,704)ik,rfield,log(detLOOP),ikk(:),wkk(:,ilp),
-     &              (wkk(:,1)+wkk(:,3))/2.,itr_sum,sum(log(detS(:)))
-  704   format('#IK=',I4,' NK=',F5.2,' P(detS)=',F16.8,'+',F16.8,'i',
-     &         ' KLP=',5I4,' WK=',3F8.4, ' WKC=',3F8.4,' STRM=',I2,
-     &         " S(detS)=",F16.8,'+',F16.8,'i')
-
-      deallocate(Sijt)
-      deallocate(Siju)
-      deallocate(Sijd)
-
+      deallocate(coeff2d,coeff2u,coeff1d,coeff1u,Sijt)
       return
       end subroutine get_nfield
+
+!!$*  robust link determinant phase and minimum singular value
+      subroutine z2_link_svd_phase(Sijt,ns,linkphase,smin,info)
+      implicit none
+      integer ns,info,i,j,lwork,iinfo
+      integer, allocatable :: ipiv(:)
+      real*8 linkphase,smin,phase,pi
+      real*8, allocatable :: sval(:),rwork(:)
+      complex*16 Sijt(ns,ns),workquery(1),udummy(1),vtdummy(1)
+      complex*16, allocatable :: asvd(:,:),alu(:,:),work(:)
+
+      info=0
+      linkphase=0d0
+      smin=0d0
+      pi=4d0*datan(1d0)
+      if(ns.lt.1)then
+       info=1
+       return
+      endif
+      do j=1,ns
+       do i=1,ns
+        if(dble(Sijt(i,j)).ne.dble(Sijt(i,j)) .or.
+     &     aimag(Sijt(i,j)).ne.aimag(Sijt(i,j)))then
+         info=2
+         return
+        endif
+       enddo
+      enddo
+
+      if(ns.eq.1)then
+       smin=abs(Sijt(1,1))
+       if(smin.le.0d0 .or. smin.ne.smin)then
+        info=3
+        return
+       endif
+       linkphase=datan2(aimag(Sijt(1,1)),dble(Sijt(1,1)))
+       return
+      endif
+
+      allocate(asvd(ns,ns),alu(ns,ns),sval(ns))
+      allocate(rwork(max(1,5*ns)),ipiv(ns))
+      asvd=Sijt
+      workquery=(0d0,0d0)
+      udummy=(0d0,0d0)
+      vtdummy=(0d0,0d0)
+      call zgesvd('N','N',ns,ns,asvd,ns,sval,udummy,1,
+     &            vtdummy,1,workquery,-1,rwork,iinfo)
+      if(iinfo.ne.0)then
+       info=100+abs(iinfo)
+       goto 900
+      endif
+      if(dble(workquery(1)).ne.dble(workquery(1)) .or.
+     &   dble(workquery(1)).lt.1d0)then
+       info=199
+       goto 900
+      endif
+      lwork=max(1,3*ns,ceiling(dble(workquery(1))))
+      allocate(work(lwork))
+      asvd=Sijt
+      call zgesvd('N','N',ns,ns,asvd,ns,sval,udummy,1,
+     &            vtdummy,1,work,lwork,rwork,iinfo)
+      if(iinfo.ne.0)then
+       info=200+abs(iinfo)
+       goto 900
+      endif
+      smin=sval(ns)
+      if(smin.le.0d0 .or. smin.ne.smin)then
+       info=299
+       goto 900
+      endif
+
+      alu=Sijt
+      ipiv=0
+      call zgetrf(ns,ns,alu,ns,ipiv,iinfo)
+      if(iinfo.ne.0)then
+       info=300+abs(iinfo)
+       goto 900
+      endif
+      phase=0d0
+      do i=1,ns
+       phase=phase+datan2(aimag(alu(i,i)),dble(alu(i,i)))
+       if(ipiv(i).ne.i)phase=phase+pi
+      enddo
+      linkphase=datan2(dsin(phase),dcos(phase))
+
+  900 continue
+      if(allocated(work))deallocate(work)
+      if(allocated(ipiv))deallocate(ipiv)
+      if(allocated(rwork))deallocate(rwork)
+      if(allocated(sval))deallocate(sval)
+      if(allocated(alu))deallocate(alu)
+      if(allocated(asvd))deallocate(asvd)
+      return
+      end subroutine z2_link_svd_phase
+
+!!$*  exact reciprocal-space mapping for direct and TR images
+      subroutine z2_map_gvector(gt,gs,wks,wkt,itheta,ierr)
+      implicit none
+      integer gt(3),gs(3),itheta,ierr,j,ishift
+      real*8 wks(3),wkt(3),delta,tol
+
+      tol=1d-7
+      ierr=0
+      do j=1,3
+       if(itheta.eq.0)then
+        delta=wks(j)-wkt(j)
+       else
+        delta=-wks(j)-wkt(j)
+       endif
+       ishift=nint(delta)
+       if(dabs(delta-dble(ishift)).gt.tol)ierr=1
+       if(itheta.eq.0)then
+        gt(j)=gs(j)+ishift
+       else
+        gt(j)=-gs(j)+ishift
+       endif
+      enddo
+      return
+      end subroutine z2_map_gvector
+
+!!$*  double-precision norm of single-precision WAVECAR values
+      subroutine z2_raw_norm(raw,nraw,norm)
+      implicit none
+      integer nraw,i
+      complex*8 raw(nraw)
+      real*8 norm
+
+      norm=0d0
+      do i=1,nraw
+       norm=norm+dble(real(raw(i)))**2+
+     &           dble(aimag(raw(i)))**2
+      enddo
+      return
+      end subroutine z2_raw_norm
+
+!!$*  spin-1/2 time reversal in the VASP spinor convention
+      subroutine z2_apply_theta(cinup,cindn,coutup,coutdn)
+      implicit none
+      complex*16 cinup,cindn,coutup,coutdn
+
+      coutup=-conjg(cindn)
+      coutdn=conjg(cinup)
+      return
+      end subroutine z2_apply_theta
+
+!!$*  read and map one spinor state into a common periodic G basis
+      subroutine get_z2_state(coeffu,coeffd,iilp,nni,ikk,npl,
+     &           nband,nk,isp,npmax,itrim,itr,wkk,wklist,nbmax,
+     &           ispinor,b1,b2,b3,ecut)
+      implicit none
+      integer iilp,nni,nband,nk,isp,npmax,ispinor
+      integer ikk(5),npl(5),itrim(5),itr(5),nbmax(3)
+      integer source_band,itheta,nraw,nsource,ntarget
+      integer i,idx,ierr,ios,irec,ngrid
+      integer gs(3),gt(3)
+      integer, allocatable :: gsource(:,:),gtarget(:,:),seen(:)
+      real*8 wkk(3,5),wklist(3,nk),wks(3),wkt(3)
+      real*8 b1(3),b2(3),b3(3),ecut
+      real*8 norm_in,norm_out,tol
+      complex*8, allocatable :: raw(:)
+      complex*16 coeffu((2*nbmax(1)+1)*(2*nbmax(2)+1)*
+     &                  (2*nbmax(3)+1))
+      complex*16 coeffd((2*nbmax(1)+1)*(2*nbmax(2)+1)*
+     &                  (2*nbmax(3)+1))
+      complex*16 zinup,zindn
+
+      if(iilp.lt.1 .or. iilp.gt.5)then
+       write(0,*) '*** error - invalid legacy Z2 loop endpoint',
+     &            iilp
+       call vaspberry_fail
+      endif
+      if(ispinor.ne.2)then
+       write(0,*) '*** error - legacy Z2 state needs spinors'
+       call vaspberry_fail
+      endif
+
+      source_band=nni
+      itheta=itr(iilp)
+      if(itrim(iilp).ge.1 .and. mod(nni,2).eq.0)then
+       source_band=nni-1
+       itheta=1
+      endif
+      if(source_band.lt.1 .or. source_band.gt.nband)then
+       write(0,*) '*** error - invalid legacy Z2 source band',
+     &            source_band
+       call vaspberry_fail
+      endif
+
+      nraw=npl(iilp)
+      if(nraw.lt.2 .or. mod(nraw,ispinor).ne.0)then
+       write(0,*) '*** error - invalid legacy Z2 coefficient count',
+     &            nraw
+       call vaspberry_fail
+      endif
+      ngrid=(2*nbmax(1)+1)*(2*nbmax(2)+1)*
+     &      (2*nbmax(3)+1)
+      allocate(raw(nraw),gsource(3,npmax),gtarget(3,npmax))
+      allocate(seen(ngrid))
+      raw=(0.,0.)
+      gsource=0
+      gtarget=0
+      seen=0
+      coeffu=(0d0,0d0)
+      coeffd=(0d0,0d0)
+
+      wks(:)=wklist(:,ikk(iilp))
+      wkt(:)=wkk(:,iilp)
+      call plindx(gsource,nsource,ispinor,wks,b1,b2,b3,
+     &            nbmax,nraw,ecut,npmax)
+      call plindx(gtarget,ntarget,ispinor,wkt,b1,b2,b3,
+     &            nbmax,nraw,ecut,npmax)
+      if(nsource.ne.ntarget)then
+       write(0,*) '*** error - legacy Z2 G-basis size mismatch',
+     &            nsource,ntarget
+       call vaspberry_fail
+      endif
+
+      irec=3+(ikk(iilp)-1)*(nband+1)+
+     &     nk*(nband+1)*(isp-1)+source_band
+      read(10,rec=irec,iostat=ios)(raw(i),i=1,nraw)
+      if(ios.ne.0)then
+       write(0,*) '*** error - legacy Z2 coefficient read failed',
+     &            irec,ios
+       call vaspberry_fail
+      endif
+
+      call z2_raw_norm(raw,nraw,norm_in)
+      do i=1,nsource
+       gs(:)=gsource(:,i)
+       call z2_map_gvector(gt,gs,wks,wkt,itheta,ierr)
+       if(ierr.ne.0)then
+        write(0,*) '*** error - noninteger legacy Z2 G mapping',
+     &             iilp,i
+        call vaspberry_fail
+       endif
+       if(gt(1).lt.-nbmax(1) .or. gt(1).gt.nbmax(1) .or.
+     &    gt(2).lt.-nbmax(2) .or. gt(2).gt.nbmax(2) .or.
+     &    gt(3).lt.-nbmax(3) .or. gt(3).gt.nbmax(3))then
+        write(0,*) '*** error - legacy Z2 mapped G outside basis',
+     &             gt
+        call vaspberry_fail
+       endif
+       idx=(gt(3)+nbmax(3))*(2*nbmax(2)+1)*
+     &     (2*nbmax(1)+1)+(gt(2)+nbmax(2))*
+     &     (2*nbmax(1)+1)+(gt(1)+nbmax(1))+1
+       if(seen(idx).ne.0)then
+        write(0,*) '*** error - duplicate legacy Z2 G mapping',idx
+        call vaspberry_fail
+       endif
+       seen(idx)=1
+       zinup=dcmplx(raw(i))
+       zindn=dcmplx(raw(i+nsource))
+       if(itheta.eq.0)then
+        coeffu(idx)=zinup
+        coeffd(idx)=zindn
+       else
+        call z2_apply_theta(zinup,zindn,coeffu(idx),
+     &                      coeffd(idx))
+       endif
+      enddo
+
+      do i=1,ntarget
+       gt(:)=gtarget(:,i)
+       if(gt(1).lt.-nbmax(1) .or. gt(1).gt.nbmax(1) .or.
+     &    gt(2).lt.-nbmax(2) .or. gt(2).gt.nbmax(2) .or.
+     &    gt(3).lt.-nbmax(3) .or. gt(3).gt.nbmax(3))then
+        write(0,*) '*** error - legacy Z2 target G outside basis',
+     &             gt
+        call vaspberry_fail
+       endif
+       idx=(gt(3)+nbmax(3))*(2*nbmax(2)+1)*
+     &     (2*nbmax(1)+1)+(gt(2)+nbmax(2))*
+     &     (2*nbmax(1)+1)+(gt(1)+nbmax(1))+1
+       if(seen(idx).ne.1)then
+        write(0,*) '*** error - incomplete legacy Z2 G bijection',
+     &             i,idx
+        call vaspberry_fail
+       endif
+      enddo
+
+      norm_out=sum(abs(coeffu)**2)+sum(abs(coeffd)**2)
+      tol=1d-10*dmax1(1d0,norm_in)
+      if(dabs(norm_in-norm_out).gt.tol)then
+       write(0,*) '*** error - legacy Z2 norm changed in mapping',
+     &            norm_in,norm_out
+       call vaspberry_fail
+      endif
+
+      deallocate(seen,gtarget,gsource,raw)
+      return
+      end subroutine get_z2_state
 
 !!$*  subroutine for getting planewave coefficient for given k & n
       subroutine get_coeff(coeff,isgg, iilp,nni,ikk,npl,nband,nk,isp,
@@ -3234,7 +4243,8 @@
       enddo
       if (ispinor*ncnt.ne.np) then
        write(0,*) '*** error - computed ispinor*ncnt=',ispinor*ncnt,
-     &            ' != input nplane=',np;stop
+     &            ' != input nplane=',np
+       call vaspberry_fail
       endif
       return
       end subroutine plindx
@@ -3291,7 +4301,11 @@
       dimension npl(5),nplist(nk),itrim(5)
       real*8    w_half_klist(3,nk)
       integer   i_half_klist(nk),i_trim_klist(nk)
-      del=1E-6 ! criterion for k-point find
+      if(iz.eq.0)then
+       del=1d-5
+      else
+       del=1d-6
+      endif
 
       ikk=0;isgg=0;itr=0;itrim=0
 !     ! find k-point index ikk for wkk set
@@ -3302,20 +4316,20 @@
          d2=wklist(2,ik)-wkk(2,ilp)
          d3=wklist(3,ik)-wkk(3,ilp)
          distk=dsqrt(d1**2 + d2**2 + d3**2)
-         if (distk .lt. 1E-5)then
+         if (distk .lt. del)then
           ikk(ilp)=ik
           npl(ilp)=nplist(ik)
-          else if(abs(1.-distk).lt.1E-5)then
-           if (abs(1.-dsqrt(d1**2)).lt.1E-5)then
+          else if(abs(1.-distk).lt.del)then
+           if (abs(1.-dsqrt(d1**2)).lt.del)then
             ikk(ilp)=ik
             npl(ilp)=nplist(ik)
             isgg(1,ilp)=1
-           else if(abs(1.-dsqrt(d2**2)).lt.1E-5)then
+           else if(abs(1.-dsqrt(d2**2)).lt.del)then
             ikk(ilp)=ik
             npl(ilp)=nplist(ik)
             isgg(2,ilp)=1
            endif
-          else if(abs(sqrt(2.)-distk).lt.1E-5)then
+          else if(abs(sqrt(2.)-distk).lt.del)then
            ikk(ilp)=ik
            isgg(1,ilp)=1
            isgg(2,ilp)=1
@@ -3392,24 +4406,24 @@
          d3m32=0.0-wkk(3,ilp)
          distkm32=dsqrt(d1m32**2 + d2m32**2 + d3m32**2) !-M3+G2
 
-         if (distk .lt. 1E-5)then
+         if (distk .lt. del)then
           ikk(ilp)=i_half_klist(ik) !Original 
           npl(ilp)=nplist(i_half_klist(ik))
           if(i_trim_klist(ik) .ge. 1)then 
             itrim(ilp)=i_trim_klist(ik)
           endif
-         elseif (distkt .lt. 1E-5 .and. distk .gt. 1E-5)then
-          if(distkm1 .lt. 1E-5)then
+         elseif (distkt .lt. del .and. distk .gt. del)then
+          if(distkm1 .lt. del)then
            ikk(ilp)=i_half_klist(ik) ! -M1
            npl(ilp)=nplist(i_half_klist(ik))
            itrim(ilp)=i_trim_klist(ik)
            isgg(1,ilp)=-1
-          elseif(distkm2 .lt. 1E-5)then
+          elseif(distkm2 .lt. del)then
            ikk(ilp)=i_half_klist(ik) ! -M2
            npl(ilp)=nplist(i_half_klist(ik))
            itrim(ilp)=i_trim_klist(ik)
            isgg(2,ilp)=-1
-          elseif(distkm3 .lt. 1E-5)then
+          elseif(distkm3 .lt. del)then
            ikk(ilp)=i_half_klist(ik) ! -M3
            npl(ilp)=nplist(i_half_klist(ik))
            itrim(ilp)=i_trim_klist(ik)
@@ -3419,8 +4433,8 @@
            npl(ilp)=nplist(i_half_klist(ik))
            itr(ilp)=1
           endif
-         elseif (distktx .lt. 1E-5 .and. distk .gt. 1E-5)then
-          if(distkm31 .lt. 1E-5)then
+         elseif (distktx .lt. del .and. distk .gt. del)then
+          if(distkm31 .lt. del)then
            ikk(ilp)=i_half_klist(ik) ! M3-G2
            npl(ilp)=nplist(i_half_klist(ik))
            itrim(ilp)=i_trim_klist(ik)
@@ -3431,8 +4445,8 @@
            itr(ilp)=1
            isgg(1,ilp)=1
           endif
-         elseif (distkty .lt. 1E-5 .and. distk .gt. 1E-5)then
-          if(distkm32 .lt. 1E-5)then
+         elseif (distkty .lt. del .and. distk .gt. del)then
+          if(distkm32 .lt. del)then
            ikk(ilp)=i_half_klist(ik) ! M3-G1
            npl(ilp)=nplist(i_half_klist(ik))
            itrim(ilp)=i_trim_klist(ik)
@@ -3443,13 +4457,13 @@
            itr(ilp)=1
            isgg(2,ilp)=1
           endif
-         elseif (distkx_ .lt. 1E-5 .and. distk .gt. 1E-5
+         elseif (distkx_ .lt. del .and. distk .gt. del
      &                   .and. wkk(2,ilp) .gt. del
      &                   .and. abs(0.5-wkk(2,ilp)) .gt. del )then
           ikk(ilp)=i_half_klist(ik) ! B+ left edge
           npl(ilp)=nplist(i_half_klist(ik))
           isgg(1,ilp)=-1
-         elseif (distky_ .lt. 1E-5 .and. distk .gt. 1E-5
+         elseif (distky_ .lt. del .and. distk .gt. del
      &                             .and. wkk(1,ilp) .gt.  -0.5+del
      &                             .and. wkk(1,ilp) .lt. -del)then
           ikk(ilp)=i_half_klist(ik) ! B- bottom edge
@@ -3461,6 +4475,14 @@
        enddo !ilp
       endif
 
+      do ilp=1,5
+       if(ikk(ilp) .lt. 1 .or. ikk(ilp) .gt. nk .or.
+     &    npl(ilp) .lt. 1)then
+        write(0,*) '*** error - incomplete five-point k loop',ilp
+        call vaspberry_fail
+       endif
+      enddo
+
       return
       end subroutine kindxfind
 
@@ -3471,16 +4493,16 @@
       complex*16 cener(nband)
       real*8 occ(nband)
       real*8  ener(nband)
+      if(k .lt. 1 .or. k .gt. nk)then
+       write(0,*) '*** error - selected k outside range',k,nk
+       call vaspberry_fail
+      endif
       irec=3+(k-1)*(nband+1)+nk*(nband+1)*(isp-1)  !record addres for "k"-point
 !    !write(6,*)'mmm'
       read(10,rec=irec) xnplane,(wk(i),i=1,3),
      &(cener(nn),occ(nn),nn=1,nband)
 !    !write(6,*)'qqq'
       nplane=nint(xnplane);ener=real(cener)
-      if (kpoint.gt.nk) then
-       write(0,*) '*** error - selected k=',k,' > max k=',nk;stop
-      endif
-
       return
       end subroutine kread
 
@@ -3512,6 +4534,10 @@
         
          ipiv = 0
          call zgetrf(N, N, mat, N, ipiv, info)
+         if(info .ne. 0)then
+          write(0,*) '*** error - ZGETRF failed, INFO=',info
+          call vaspberry_fail
+         endif
         
          determinant = (1d0,0d0)
          do i = 1, N
@@ -3751,7 +4777,9 @@
            call help(ver_tag)
           endif
       enddo
-      if(icd.gt.1 .and. TRIM(foname) .ne. 'BERRYCURV' )then
+      if(iz .eq. 1)then
+       if(TRIM(foname) .eq. 'BERRYCURV')foname="NFIELD"
+      else if(icd.gt.1 .and. TRIM(foname) .ne. 'BERRYCURV' )then
        if(icd .eq.1) then
          write(foname,'(A,A)')"CIRC_DICHROISM.",TRIM(foname)
        elseif(icd.eq.2) then
@@ -3771,8 +4799,6 @@
         write(foname,'(A,A)')"VEL_EXPT.",TRIM(foname)
       else if (ivel .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
         foname="VEL_EXPT"
-      else if (iz .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
-        foname="NFIELD"
       else if (ikubo .ge. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
         foname="BERRYCURV_KUBO"
       endif
@@ -3827,7 +4853,8 @@
       close(10)
       irecl=nint(xirecl);ispin=nint(xispin);iprec=nint(xiprec) ! set to integer
       if(iprec.eq.45210) then
-       write(0,*) '*** error - WAVECAR_double requires complex*16';stop
+       write(0,*) '*** error - WAVECAR_double needs complex*16'
+       call vaspberry_fail
       endif
       open(unit=10,file=filename,access='direct',recl=irecl,
      &iostat=iost,status='old')
@@ -4215,13 +5242,13 @@
       write(6,*)" -vel 1 -is n     : **For the special purpose"
       write(6,*)"                  : Calculate velocity expectation "
       write(6,*)"                  : vaule (v_x, v_y) of n-th state"
-      write(6,*)" -z2  1           : Calculate Z2 invariant   "
-      write(6,*)"                  : Using Fukui's method (JSPJ 76,"
-      write(6,*)"                  : 053702 2007) which is lattice "
-      write(6,*)"                  : version of Fu and Kane method"
-      write(6,*)"                  : (PRB 74, 195312 2006) "
-      write(6,*)" -hf  1           : Use half BZ, ISYM=1 or 2, "
-      write(6,*)"                  : currently only works with -z2 1"
+      write(6,*)" -z2  1           : Legacy Fukui Z2 candidate"
+      write(6,*)"                  : Requires a full even 2D mesh,"
+      write(6,*)"                  : ISPIN=1 spinors, and bands 1:NE."
+      write(6,*)"                  : Do not report it as an invariant."
+      write(6,*)"                  : Run tools/wavecar_z2.py; report"
+      write(6,*)"                  : Z2 only when diagnostics PASS."
+      write(6,*)" -hf  1           : Rejected for legacy Z2 safety."
       write(6,*)" -wf nb -k nk     : **For the special purpose"
       write(6,*)"  -ng nx,ny,nz    : Calculate real-space wavefunction"
       write(6,*)"  -im 1           : output will be written in "
@@ -4275,3 +5302,12 @@
 !     write(6,*)" ex-MPI) mpiifort -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f "
       stop
       end subroutine help
+
+      subroutine vaspberry_fail
+#ifdef MPI_USE
+      include 'mpif.h'
+      integer ierr
+      call MPI_ABORT(MPI_COMM_WORLD,1,ierr)
+#endif
+      stop 1
+      end subroutine vaspberry_fail
