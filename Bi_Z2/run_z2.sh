@@ -62,8 +62,10 @@ mkdir -p "$result_dir"
 cd "$result_dir"
 
 set +e
+# The legacy Fortran CLI parses -f with list-directed input, where a leading
+# slash terminates the value. Use this relative path instead of $wavecar.
 "$build_dir/vaspberry" \
-  -f "$wavecar" -o NFIELD -z2 1 \
+  -f ../WAVECAR -o NFIELD -z2 1 \
   -kx 12 -ky 12 -s 2 -ii 1 -if 10 \
   >fortran.log 2>&1
 fortran_status=$?
