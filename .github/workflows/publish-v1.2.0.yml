@@ -1,0 +1,108 @@
+name: Publish VASPBERRY 1.2.0
+
+# One release only: the tested source commit is fixed below. Re-running this
+# workflow never moves a tag or edits an already published release.
+on:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/publish-v1.2.0.yml'
+      - 'docs/releases/v1.2.0.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-vaspberry-v1.2.0
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'Infant83/VASPBERRY' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify tested source and publish v1.2.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: python
+        run: |
+          import base64
+          import json
+          import os
+          import urllib.request
+          from pathlib import Path
+
+          repo = 'Infant83/VASPBERRY'
+          target = 'de942a622270db6694cff6f3e13d093b72af8b38'
+          tag = 'v1.2.0'
+
+          def api(path, payload=None):
+              request = urllib.request.Request(
+                  f'https://api.github.com/repos/{repo}/{path}',
+                  data=None if payload is None else json.dumps(payload).encode(),
+                  headers={
+                      'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                      'Accept': 'application/vnd.github+json',
+                      'Content-Type': 'application/json',
+                      'X-GitHub-Api-Version': '2022-11-28',
+                  },
+              )
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  return json.load(response)
+
+          version = api(f'contents/VERSION?ref={target}')
+          assert base64.b64decode(version['content']).decode().strip() == '1.2.0'
+          tree = api(f'git/trees/{target}?recursive=1')
+          assert not tree.get('truncated'), 'Cannot audit a truncated source tree'
+          assert not any(
+              entry['path'].rsplit('/', 1)[-1].upper().startswith('POTCAR')
+              for entry in tree['tree']
+          ), 'Source tree contains a POTCAR-named file'
+
+          for workflow in ('ci.yml', 'bi-z2-validation.yml'):
+              runs = api(
+                  f'actions/workflows/{workflow}/runs?head_sha={target}'
+                  '&event=push&per_page=100'
+              )['workflow_runs']
+              assert runs, f'Missing validation: {workflow}'
+              latest = max(runs, key=lambda run: run['id'])
+              assert latest['head_sha'] == target
+              assert latest['status'] == 'completed'
+              assert latest['conclusion'] == 'success', workflow
+              print(f"Verified {workflow}: {latest['html_url']}")
+
+          refs = api(f'git/matching-refs/tags/{tag}')
+          exact = [ref for ref in refs if ref['ref'] == f'refs/tags/{tag}']
+          if exact:
+              obj = exact[0]['object']
+              while obj['type'] == 'tag':
+                  obj = api(f"git/tags/{obj['sha']}")['object']
+              assert obj['type'] == 'commit' and obj['sha'] == target, 'Tag mismatch'
+
+          releases = api('releases?per_page=100')
+          existing = [release for release in releases if release['tag_name'] == tag]
+          if existing:
+              assert exact, 'Existing release has no verified tag'
+              assert not existing[0]['draft'] and not existing[0]['prerelease']
+              print('Already published; no changes: ' + existing[0]['html_url'])
+          else:
+              release = api('releases', {
+                  'tag_name': tag,
+                  'target_commitish': target,
+                  'name': 'VASPBERRY 1.2.0 — Fukui-Hatsugai Z2 and Hall transport',
+                  'body': Path('docs/releases/v1.2.0.md').read_text(encoding='utf-8'),
+                  'draft': False,
+                  'prerelease': False,
+                  'make_latest': 'true',
+              })
+              print('Published: ' + release['html_url'])
+              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+                  summary.write(f"Published [{tag}]({release['html_url']}) from `{target}`.\n")
