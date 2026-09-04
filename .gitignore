@@ -7,3 +7,6 @@ validation/supplied_wavecar/
 
 # VASP PAW datasets are license-restricted and must not be committed.
 **/POTCAR*
+
+# Unreviewed local Bi outputs. Reviewed snapshots use a diagnostics-* directory.
+Bi_Z2/results-v1.1.1/

@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "tool": "wavecar_z2",
+  "tool_version": "1.1.1",
+  "input": "WAVECAR",
+  "method": "SVD polar-unitary Wilson loops with largest-gap parity",
+  "interpretation": "z2 is reportable only when valid is true; candidate_z2 is diagnostic only",
+  "thresholds": {
+    "min_direct_gap_ev": 1e-05,
+    "min_indirect_gap_ev": 1e-05,
+    "max_energy_tr_error_ev": 1e-05,
+    "max_trim_kramers_energy_split_ev": 1e-05,
+    "max_projector_tr_residual": 1e-06,
+    "min_tr_g_basis_coverage": 0.999999999999,
+    "min_tr_raw_norm_coverage": 0.999999,
+    "max_chern_residual": 0.0001,
+    "max_flux_odd_residual_rad": 1e-05,
+    "min_link_singular_value": 1e-06,
+    "min_plane_wave_coverage": 0.9,
+    "max_unitarity_residual": 1e-08,
+    "max_wcc_tr_set_distance": 1e-05,
+    "max_endpoint_kramers_split": 1e-05,
+    "max_wcc_position_change": 0.01,
+    "min_combined_gap_ratio": 0.3,
+    "max_neighbor_move_ratio": 0.3
+  },
+  "valid": false,
+  "z2": null,
+  "candidate_z2": 1,
+  "failed_guards": [
+    "x_loop_wcc_gap_neighbor_converged",
+    "x_loop_wcc_move_neighbor_converged",
+    "y_loop_wcc_gap_neighbor_converged",
+    "y_loop_wcc_move_neighbor_converged",
+    "occupied_projector_time_reversal"
+  ],
+  "checks": [
+    {
+      "name": "occupied_subspace_chern_zero",
+      "pass": true,
+      "value": 2.372991969373171e-16,
+      "relation": "<=",
+      "threshold": 0.0001
+    },
+    {
+      "name": "berry_flux_time_reversal_odd",
+      "pass": true,
+      "value": 1.5659279084305614e-06,
+      "relation": "<=",
+      "threshold": 1e-05
+    },
+    {
+      "name": "link_subspace_nonsingular",
+      "pass": true,
+      "value": 0.8156088271925849,
+      "relation": ">=",
+      "threshold": 1e-06
+    },
+    {
+      "name": "plane_wave_link_coverage",
+      "pass": true,
+      "value": 0.983739837398374,
+      "relation": ">=",
+      "threshold": 0.9
+    },
+    {
+      "name": "polar_link_unitarity",
+      "pass": true,
+      "value": 4.041479944850044e-15,
+      "relation": "<=",
+      "threshold": 1e-08
+    },
+    {
+      "name": "x_loop_wcc_time_reversal_set",
+      "pass": true,
+      "value": 1.663514876959482e-07,
+      "relation": "<=",
+      "threshold": 1e-05
+    },
+    {
+      "name": "x_loop_endpoint_kramers_pairing",
+      "pass": true,
+      "value": 1.4967840333834914e-07,
+      "relation": "<=",
+      "threshold": 1e-05
+    },
+    {
+      "name": "x_loop_wcc_position_converged",
+      "pass": true,
+      "value": 0.00962865205754343,
+      "relation": "<",
+      "threshold": 0.01
+    },
+    {
+      "name": "x_loop_wcc_gap_neighbor_converged",
+      "pass": false,
+      "value": 0.14699040801436505,
+      "relation": ">",
+      "threshold": 0.3
+    },
+    {
+      "name": "x_loop_wcc_move_neighbor_converged",
+      "pass": false,
+      "value": 1.451000109522113,
+      "relation": "<",
+      "threshold": 0.3
+    },
+    {
+      "name": "y_loop_wcc_time_reversal_set",
+      "pass": true,
+      "value": 1.6116233358953735e-07,
+      "relation": "<=",
+      "threshold": 1e-05
+    },
+    {
+      "name": "y_loop_endpoint_kramers_pairing",
+      "pass": true,
+      "value": 1.480398580389064e-07,
+      "relation": "<=",
+      "threshold": 1e-05
+    },
+    {
+      "name": "y_loop_wcc_position_converged",
+      "pass": true,
+      "value": 0.009628655897030436,
+      "relation": "<",
+      "threshold": 0.01
+    },
+    {
+      "name": "y_loop_wcc_gap_neighbor_converged",
+      "pass": false,
+      "value": 0.14699037069421508,
+      "relation": ">",
+      "threshold": 0.3
+    },
+    {
+      "name": "y_loop_wcc_move_neighbor_converged",
+      "pass": false,
+      "value": 1.450999785391342,
+      "relation": "<",
+      "threshold": 0.3
+    },
+    {
+      "name": "loop_axis_z2_agreement",
+      "pass": true,
+      "value": true,
+      "relation": "==",
+      "threshold": null
+    },
+    {
+      "name": "both_loop_axes_evaluated",
+      "pass": true,
+      "value": true,
+      "relation": "==",
+      "threshold": null
+    },
+    {
+      "name": "direct_gap_open",
+      "pass": true,
+      "value": 0.592448499860559,
+      "relation": ">=",
+      "threshold": 1e-05
+    },
+    {
+      "name": "indirect_gap_open",
+      "pass": true,
+      "value": 0.5100443621628519,
+      "relation": ">=",
+      "threshold": 1e-05
+    },
+    {
+      "name": "band_energy_time_reversal",
+      "pass": true,
+      "value": 7.126302712379129e-07,
+      "relation": "<=",
+      "threshold": 1e-05
+    },
+    {
+      "name": "trim_kramers_energy_pairing",
+      "pass": true,
+      "value": 6.811729753586349e-07,
+      "relation": "<=",
+      "threshold": 1e-05
+    },
+    {
+      "name": "occupied_projector_time_reversal",
+      "pass": false,
+      "value": 1.8919915818880428e-05,
+      "relation": "<=",
+      "threshold": 1e-06
+    },
+    {
+      "name": "time_reversal_g_basis_complete",
+      "pass": true,
+      "value": 1.0,
+      "relation": ">=",
+      "threshold": 0.999999999999
+    },
+    {
+      "name": "time_reversal_raw_norm_coverage",
+      "pass": true,
+      "value": 0.9999999999999941,
+      "relation": ">=",
+      "threshold": 0.999999
+    }
+  ],
+  "metrics": {
+    "direct_gap_ev": 0.592448499860559,
+    "indirect_gap_ev": 0.5100443621628519,
+    "max_energy_tr_error_ev": 7.126302712379129e-07,
+    "max_trim_kramers_energy_split_ev": 6.811729753586349e-07,
+    "max_projector_tr_residual": 1.8919915818880428e-05,
+    "min_tr_g_basis_coverage": 1.0,
+    "min_tr_raw_norm_coverage": 0.9999999999999941,
+    "chern": 2.372991969373171e-16,
+    "max_flux_odd_residual_rad": 1.5659279084305614e-06,
+    "min_link_singular_value": 0.8156088271925849,
+    "min_plane_wave_link_coverage": 0.983739837398374,
+    "max_polar_unitarity_residual": 4.041479944850044e-15
+  },
+  "axes": {
+    "x": {
+      "loop_axis": "x",
+      "pump_axis": "y",
+      "candidate_z2": 1,
+      "max_wcc_tr_set_distance_cycles": 1.663514876959482e-07,
+      "max_endpoint_kramers_split_cycles": 1.4967840333834914e-07,
+      "full_vs_stride2_wcc_distance_cycles": 0.00962865205754343,
+      "neighbor_move_ratio": 1.451000109522113,
+      "neighbor_to_largest_gap_ratio": 0.14699040801436505,
+      "half_bz_pump": [
+        0.0,
+        0.08333333333333333,
+        0.16666666666666666,
+        0.25,
+        0.3333333333333333,
+        0.4166666666666667,
+        0.5
+      ],
+      "largest_gap_center": [
+        0.5000000102979001,
+        0.3154916316960726,
+        0.6590670920028363,
+        0.6663950516071284,
+        0.33051666299783455,
+        0.6702890109544805,
+        0.6696351069483151
+      ],
+      "largest_gap_size": [
+        0.49875651920781927,
+        0.2223919086872913,
+        0.28352324538512985,
+        0.2863885691982332,
+        0.2999209522654117,
+        0.31991296761647514,
+        0.3392701273180715
+      ]
+    },
+    "y": {
+      "loop_axis": "y",
+      "pump_axis": "x",
+      "candidate_z2": 1,
+      "max_wcc_tr_set_distance_cycles": 1.6116233358953735e-07,
+      "max_endpoint_kramers_split_cycles": 1.480398580389064e-07,
+      "full_vs_stride2_wcc_distance_cycles": 0.009628655897030436,
+      "neighbor_move_ratio": 1.450999785391342,
+      "neighbor_to_largest_gap_ratio": 0.14699037069421508,
+      "half_bz_pump": [
+        0.0,
+        0.08333333333333333,
+        0.16666666666666666,
+        0.25,
+        0.3333333333333333,
+        0.4166666666666667,
+        0.5
+      ],
+      "largest_gap_center": [
+        0.49999998054314054,
+        0.31549161422312355,
+        0.340932812731607,
+        0.6663950692666727,
+        0.3305166592522487,
+        0.6702890002550737,
+        0.3303648914573828
+      ],
+      "largest_gap_size": [
+        0.49875648651708593,
+        0.22239193096145252,
+        0.2835230983364631,
+        0.28638848613542234,
+        0.299920967711249,
+        0.3199129852246534,
+        0.3392701099857445
+      ]
+    }
+  },
+  "grid": {
+    "nx": 12,
+    "ny": 12,
+    "offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "occupied_bands": 10
+  }
+}
