@@ -5015,7 +5015,8 @@
       subroutine extendingBZ(fbz,ixt)
       implicit real*8 (a-h, o-z)
       character*256  fbz
-      character*200  A,S,P
+      character*200  A,P
+      character*1    S
       dimension b1(3),b2(3),b3(3),xb(3)
       real*8, allocatable :: xrecivec(:,:),xrecilat(:,:),xdata_(:)
       real*8, allocatable ::recivec(:,:),recilat(:,:),data_(:)
@@ -5045,8 +5046,8 @@
          P=A(39:47);read(P,*)b3(2)
          P=A(52:60);read(P,*)b3(3)
        endif
-       S=TRIM(A(1:1))
-       II=ICHAR(TRIM(A))
+       S=A(1:1)
+       II=ICHAR(S)
       enddo
       allocate(recivec(3,nk))
       allocate(recilat(3,nk))

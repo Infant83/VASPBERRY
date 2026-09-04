@@ -30,6 +30,9 @@ All notable changes to VASPBERRY are recorded here.
   is version 2; old ownership markers remain recognized for safe cleanup.
 - Replaced the nonstandard `MPI_REAL8` datatype in the Z2 reductions with
   `MPI_DOUBLE_PRECISION`, and made MPI help exit through `MPI_FINALIZE`.
+- Made the legacy extended-BZ parser pass an explicit length-one character to
+  `ICHAR`, avoiding an Intel ifx 2025.0 front-end failure while retaining the
+  parser's behavior.
 - Moved the Bi and 1H-MoS2 data under `examples/`, separated the Bi 2016 raw
   archive from reviewed new-run templates, and separated full-BZ MoS2 data
   from its K-Gamma-K' line workflow.

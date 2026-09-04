@@ -676,6 +676,15 @@ class FortranSourceRegressionTests(unittest.TestCase):
         self.assertEqual(len(lines), 1)
         self.assertLessEqual(len(lines[0]), 72)
 
+    def test_extended_bz_ichar_receives_a_length_one_character(self):
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            body = compact_fortran(fortran_subroutine(source, "extendingBZ"))
+            with self.subTest(source=source_path.name):
+                self.assertIn("character*1s", body)
+                self.assertIn("ii=ichar(s)", body)
+                self.assertNotIn("ichar(trim(a))", body)
+
 
     def test_z2_helper_implementations_do_not_drift_between_sources(self):
         mpi_source = SOURCE_PATH.read_text(encoding="utf-8", errors="strict")
