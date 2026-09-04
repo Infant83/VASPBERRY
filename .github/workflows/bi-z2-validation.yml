@@ -1,0 +1,51 @@
+name: Bi Z2 validation
+
+on:
+  push:
+    branches: [master, "feature/**"]
+    paths:
+      - ".github/workflows/bi-z2-validation.yml"
+      - "Bi_Z2/**"
+      - "VERSION"
+      - "requirements-transport.txt"
+      - "tools/wavecar_z2.py"
+      - "vaspberry.f"
+      - "vaspberry_gfortran_serial.f"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-transport.txt
+      - name: Install build and Python dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran libblas-dev liblapack-dev
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-transport.txt
+      - name: Verify WAVECAR payload
+        run: |
+          test "$(wc -c < Bi_Z2/WAVECAR)" -eq 200421600
+          echo "a8d81854f2efc561938e478dde1be29a17ccc95d5d37325c122b9d9e82fa0838  Bi_Z2/WAVECAR" | sha256sum -c -
+      - name: Run corrected and guarded Z2 workflows
+        run: ./Bi_Z2/run_z2.sh
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bi-z2-v1.1.1-${{ github.sha }}
+          path: Bi_Z2/results-v1.1.1/
+          if-no-files-found: warn
+          retention-days: 14

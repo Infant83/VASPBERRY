@@ -4,3 +4,6 @@ __pycache__/
 
 # Generated from user-supplied WAVECAR; keep out of the source repository.
 validation/supplied_wavecar/
+
+# VASP PAW datasets are license-restricted and must not be committed.
+**/POTCAR*

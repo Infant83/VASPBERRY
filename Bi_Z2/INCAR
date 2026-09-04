@@ -1,0 +1,70 @@
+ SYSTEM= Bi buckled honeycomb Z2 validation case
+# 
+   PREC    =         A      ! determines the energy cutoff ENCUT, |L|M|N|A|H|
+   ISTART  =         0      ! job   : 0-new 1-cont 2-samecut
+   ICHARG  =         2      ! charge: 0-wave 1-file 2-atom 10-const
+   MAGMOM  = 6*0
+#  ISPIN   =         2      ! | 1-non spin polarized | 2-spin polarized |
+#  MAGMOM  =  0 0 0  0 0 0  0 0 0  
+   ENCUT   =       400      ! cut-off energy for plane wave basis set in eV 
+   NELM    =       200      ! maximum number of electronic SC (selconsistency)
+#  NELMIN  =        16
+#  NELMDL  =        -6      ! number of non-selconsistency SC steps
+   EDIFF   =       1E-06    ! specifies the global break condition for the electronic
+#  LREAL   =        .FALSE. ! real space projection .FALSE. or Auto
+#  IALGO   =        48      ! select algorithm (8=CG for small, 48=RMM for big systems)
+#  NSW     =       500      ! maximum number of ionic steps
+#  IBRION  =         2      ! how to ions are updated and moved
+#  EDIFFG  =       -0.1E-01 ! break conditions for the ionic relaxation loop
+#  ISIF    =         3      ! controls whether the stress tensor is alculated
+   ISYM    =        -1      ! switch symmetry on (1,2,3) or off (-1,0)
+#  NBANDS  =        48
+#  NELECT  =       121
+   KPAR    =         4
+#  NPAR    =         2
+
+ DOS related values:
+   ISMEAR  =         0      ! for semiconductor or insulators ISMEAR=-5, SIGMA=0.05 
+   SIGMA   =         0.02   ! for metal ISMEAR=1 or =2 SIGMA=0.2
+# EMIN   = -10
+# EMAX   =  10
+# NEDOS  = 20000
+# LORBIT = 11
+# LORBMOM = .TRUE.
+
+#Write flags
+   LWAVE   =        .TRUE.  ! These tags determine whether the orbitals (file WAVECAR),
+   LCHARG  =        .FALSE. ! the charge densities (files CHGCAR and CHG) are written
+   LVTOT   =        .FALSE. ! 
+   LVHAR   =        .FALSE. ! electrostatic potential (LOCPOT)
+
+#Non-colinear calculations and spin orbit coupling
+   LSORBIT =        .TRUE.  ! switch on SOC and automatically set LNONCOLLINEAR=.TRUE.
+   SAXIS   =         0 0 1  ! quantisation axis for spin
+   GGA_COMPAT =     .FALSE. ! apply spherical cutoff on gradient field
+
+#Vdw-correction scheme
+#  nonlocal vdW functionals
+#  GGA       =    MK        ! ML for vdW-DF2, RE for vdW-DF, MK for rev-vdW-DF2
+#  LUSE_VDW  =    .TRUE.
+#  PARAM1    =    0.1234    ! 0.1234 for optB88-vdW (MK)
+#  PARAM2    =    0.711357  ! 0.711357 for rev-vdW-DF2, 1.0 for optB88-vdW
+#  Zab_vdW   =   -1.8867    ! turn on if vdW-DF2 is used..
+#  AGGAC     =    0.0
+
+#  Pairwise interatomic vdW energy correction scheme
+#  IVDW    =     2          ! 1 D2, 11 D3, 2 TS,
+#  LVDW_ONECELL = F F F    (default: F F F)
+#  VDW_SR    =    0.94        ! 0.94 PBE, 0.96 HSE, 0.60 rPBE
+#  VDW_C6    =   1028.73  396.
+#  VDW_R0    =   2.17     2.23
+#  VDW_ALPHA =   88.42    37.65
+
+#Exchange correlation treatment:
+#  LHFCALC =        .TRUE.  ! Hartree-Fock type calculations are performed.
+#  AEXX    =         0.25   ! fraction of exact exchange ; HSE06=0.25
+#  AGGAX   =         0.75   ! fraction of LDA correlation energy ; HSE06=0.75
+#  HFSCREEN=         0.2    ! HSE06=0.2 Angstrom-1
+#   ALGO   =         All    ! For metals = Damped , for insulator = All
+#  PRECFOCK=fast            ! controls the FFT gris for the exact exchange (HF) routines
+#  NKRED   =         2

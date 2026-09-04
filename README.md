@@ -153,6 +153,10 @@ and symmetry setup appropriate for noncollinear spinors. See
 
 # Example
 * 1H-MoS2 : Berry curvature and Chern number
+* Bi buckled honeycomb layer: guarded Z2 validation case. See
+  [`Bi_Z2/README.md`](Bi_Z2/README.md). Results made with the pre-v1.1.1
+  implementation are quarantined as regression evidence and are not a
+  validated Z2 invariant.
 * Quantum Anomalous Hall effect (Trypheny-lead lattice) : See H.-J. Kim, C. Li, J. Feng, J.-H. Cho, and Z. Zhang, PRB 93, 041404(R) (2016) (the example files will be provided upon request)
 * Circular dichroism : See S.-W. Kim, H.-J. Kim, S. Cheon, and T.-H. Kim, Phys. Rev. Lett. accepted (2021) (the example will be provided upon reasonable request).
 
