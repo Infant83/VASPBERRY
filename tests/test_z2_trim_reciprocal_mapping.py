@@ -99,6 +99,22 @@ class SyntheticTrimWavecar:
 
 
 class TrimReciprocalMappingTests(unittest.TestCase):
+    def test_complex64_raw_norm_is_invariant_to_g_vector_order(self) -> None:
+        rng = np.random.default_rng(20260904)
+        coefficients = (
+            rng.standard_normal((2, 2, 10_000))
+            + 1j * rng.standard_normal((2, 2, 10_000))
+        ).astype(np.complex64)
+        coefficients *= np.geomspace(1.0e-5, 1.0, 10_000).astype(np.float32)
+        permutation = rng.permutation(coefficients.shape[-1])
+
+        reference = z2._raw_band_norm(coefficients)
+        permuted = z2._raw_band_norm(coefficients[:, :, permutation])
+
+        self.assertEqual(reference.dtype, np.dtype(np.float64))
+        np.testing.assert_allclose(permuted, reference, rtol=1.0e-14, atol=0.0)
+        self.assertGreaterEqual(float(np.min(permuted / reference)), 0.999999)
+
     def test_exact_mapping_at_gamma_and_all_three_m_points(self) -> None:
         wavecar = SyntheticTrimWavecar()
         for index, name in enumerate(TRIM_NAMES):

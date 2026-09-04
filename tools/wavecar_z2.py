@@ -496,6 +496,13 @@ def _grid_tr_partner(grid: Grid, wavecar: Wavecar, ix: int, iy: int) -> tuple[in
     return jx, jy
 
 
+def _raw_band_norm(coefficients: np.ndarray) -> np.ndarray:
+    """Return per-band spinor norms with float64 products and accumulation."""
+
+    amplitudes = np.abs(coefficients).astype(np.float64, copy=False)
+    return np.sum(amplitudes * amplitudes, axis=(1, 2), dtype=np.float64)
+
+
 def wavecar_time_reversal_diagnostics(
     wavecar: Wavecar,
     grid: Grid,
@@ -560,8 +567,8 @@ def wavecar_time_reversal_diagnostics(
                 (source, source_full),
                 (target_frame, target_full),
             ):
-                complete_norm = np.sum(np.abs(complete) ** 2, axis=(1, 2))
-                restricted_norm = np.sum(np.abs(restricted) ** 2, axis=(1, 2))
+                complete_norm = _raw_band_norm(complete)
+                restricted_norm = _raw_band_norm(restricted)
                 if np.any(complete_norm <= 0.0):
                     raise ValueError("occupied spinor coefficient has zero raw norm")
                 min_tr_norm_coverage = min(
