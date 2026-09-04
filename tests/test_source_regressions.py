@@ -104,6 +104,14 @@ class FortranSourceRegressionTests(unittest.TestCase):
         self.assertEqual(actual_options, expected_options)
         self.assertNotRegex(self.parse, r"(?i)transport|hall|ahc")
 
+    def test_fortran_input_path_is_not_list_directed(self):
+        """A slash in an absolute -f path must not terminate Fortran input."""
+        serial = (ROOT / "vaspberry_gfortran_serial.f").read_text()
+        for source in (self.source, serial):
+            compact = source.replace(" ", "").lower()
+            self.assertIn("filename=trim(value)", compact)
+            self.assertNotIn("read(value,*)filename", compact)
+
     def test_kubo_total_is_initialized_immediately_after_allocation(self):
         allocation_and_initialization = re.compile(
             r"(?im)^\s*if\s*\(\s*ikubo\.ge\.1\s*\)\s*"

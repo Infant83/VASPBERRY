@@ -3213,7 +3213,7 @@
          call getarg(2*ia-1,option)
          call getarg(2*ia,value)
          if(option == "-f") then
-            read(value,*) filename
+            filename=trim(value)
            else if(option == "-o") then
             read(value,*) foname
            else if(option == "-kx") then
