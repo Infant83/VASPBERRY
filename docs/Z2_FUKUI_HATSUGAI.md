@@ -52,11 +52,11 @@ For either complementary half-zone,
 nu = sum_(p in B_half) n_V(p) mod 2.
 ```
 
-Fukui and Hatsugai write `D_L=-sum n_12`. With the plaquette orientation used
-by VASPBERRY, the stored field is `n_V=-n_12`; therefore the program's
-`sum n_V mod 2` is the same invariant. The top and bottom values are not two
-independent invariants. They are complementary evaluations of the same
-two-dimensional invariant and must agree modulo two.
+Fukui and Hatsugai write `D_L=-sum n_12` (Ref. 1). With the plaquette
+orientation used by VASPBERRY, the stored field is `n_V=-n_12`; therefore the
+program's `sum n_V mod 2` is the same invariant. The top and bottom values are
+not two independent invariants. They are complementary evaluations of the
+same two-dimensional invariant and must agree modulo two.
 
 ## Valid input contract
 
@@ -64,7 +64,7 @@ The physical calculation must satisfy all of the following conditions:
 
 - a two-dimensional, nonmagnetic, time-reversal-symmetric insulator;
 - a full, unshifted, Gamma-centered `Nx x Ny x 1` mesh with even `Nx` and
-  `Ny`, `kz=0`, and `ISYM=-1`;
+  `Ny`, both at least 4, `kz=0`, and `ISYM=-1`;
 - VASP spinors produced with `ISPIN=1` and `LSORBIT=.TRUE.`;
 - an occupied subspace `1:Nocc` of even rank with a positive global insulating
   gap and separation from band `Nocc+1` at every represented k point; and
@@ -73,11 +73,12 @@ The physical calculation must satisfy all of the following conditions:
 
 VASPBERRY checks the mesh reconstruction, reciprocal-G bijections, link
 conditioning, n-field integrality, time-reversal-odd wrapped flux, zero total
-Chern residual, and equality of the two half-zone parities. It does not
-independently establish that the input is nonmagnetic and time-reversal
-symmetric, does not certify the occupied-unoccupied gap, and does not perform
-a mesh-convergence study. Those input and convergence checks remain the
-user's responsibility.
+Chern residual, and equality of the two half-zone parities. A PASS establishes
+the numerical self-consistency of the time-reversal reconstruction used by the
+Z2 routine. It does not independently establish that the raw `WAVECAR` is a
+nonmagnetic, time-reversal-symmetric insulating input, certify its
+occupied-unoccupied gap, or perform a mesh-convergence study. Those physical
+input and convergence checks remain the user's responsibility.
 
 Setting `-ne Nocc` only overrides occupation inference when the isolated
 occupied subspace has already been established. It cannot turn a metal or
@@ -105,6 +106,9 @@ mpiexec -n 4 "$VASP_BIN" > vasp.out
 ```
 
 The SOC-capable binary path, MPI launcher, and rank count are site-specific.
+The example SCF template sets `LORBIT=11` so that site-projected x/y/z moments
+can be inspected in `OUTCAR`; these PAW-sphere projections are qualitative
+evidence rather than an independent proof of time-reversal symmetry.
 
 ### 2. Write a full-mesh spinor WAVECAR
 
@@ -125,10 +129,11 @@ LWAVE   = .TRUE.
 LCHARG  = .FALSE.
 ```
 
-This CHGCAR-only `ICHARG=11` recipe is for the semilocal-functional workflow
-represented by the example templates. Do not carry it over unchanged to a
-hybrid functional: the hybrid Hamiltonian also depends on regular-mesh
-orbitals. Follow VASP's
+This CHGCAR-only `ICHARG=11` recipe is for the PBE/GGA workflow represented by
+the example templates. Do not carry it over unchanged to hybrid or
+kinetic-energy-density meta-GGA calculations, which require their
+version-appropriate restart workflow and additional information. For hybrid
+functionals, follow VASP's
 [`hybrid-functional workflow`](https://vasp.at/wiki/Band-structure_calculation_using_hybrid_functionals)
 and retain the required `WAVECAR` information instead.
 
@@ -152,11 +157,11 @@ mpiexec -n 4 "$VASP_BIN" > vasp.out
 `ISYM=0` is not sufficient: VASP can still relate `k` and `-k` and reduce the
 sampling. `ISYM=-1` disables that reduction. After the run, confirm that
 `OUTCAR` reports `NKPTS=Nx*Ny` and that the selected occupied bands remain
-separated from the next band throughout the mesh, with a positive sampled
-global gap. Check the gap again with denser sampling or interpolation.
-Also verify that the converged magnetization is consistent with the assumed
-nonmagnetic, time-reversal-symmetric state; zero initial `MAGMOM` does not by
-itself prove that physical condition.
+separated from the next band at every represented k point, with a positive
+sampled global gap. Check the gap again with denser sampling or interpolation.
+Also verify that the total and, where evaluated, site-projected magnetization
+are consistent with the assumed nonmagnetic state. Zero initial, total, or
+projected moments do not by themselves prove physical time-reversal symmetry.
 
 ## Command line
 
@@ -191,7 +196,7 @@ substitute that path in the same commands.
 On PASS, the calculation writes:
 
 - `NFIELD.dat`: the traditional repeated-zone n-field view; and
-- `Z2_FIELD.csv`: the 12 x 12 fundamental mesh, result metadata, numerical
+- `Z2_FIELD.csv`: the `Nx x Ny` fundamental mesh, result metadata, numerical
   checks, flux, curvature, link quality, and integer n-field.
 
 Rejected or interrupted Z2 runs retain `Z2_FIELD.invalid.csv` when the
@@ -221,7 +226,7 @@ guards.
 
 ## Plotting
 
-The Bi helper reads the fundamental-mesh CSV directly:
+The Bi helper reads a current schema-v2 PASS CSV directly:
 
 ```bash
 python3 -m pip install -r requirements-transport.txt
@@ -229,45 +234,37 @@ python3 -m pip install -r requirements-transport.txt
 
 ```bash
 python3 examples/Bi_Z2/scripts/plot_nfield.py \
-  examples/Bi_Z2/reference-v1.1.1-12x12/Z2_FIELD.csv \
-  --legacy examples/Bi_Z2/legacy-pre-1.1.1/NFIELD.dat \
+  examples/Bi_Z2/reference-v1.2.0-12x12/Z2_FIELD.csv \
   --output examples/Bi_Z2/Z2_nfield_12x12.pdf
 ```
 
-The saved example figure compares the incomplete pre-v1.1.1 field with the
-corrected 12 x 12 field and marks only the plaquettes whose integer changed.
-It is a regression visualization of the v1.1.1 field checks. Use the current
-runner to publish the same calculation under the v1.2.0 result contract.
+The figure shows the current 12 x 12 integer n-field and annotates the two
+half-zone sums and parities. The helper also writes a PNG copy when the
+requested output has a `.pdf` suffix.
 
-## What changed from the incomplete implementation
-
-| Area | Earlier behavior | v1.1.1 correction and v1.2.0 interface |
-|---|---|---|
-| reciprocal basis under time reversal | used the shift-free `G_target=-G_source` rule at every represented TRIM | includes `round(-k_source-k_target)` and requires an explicit one-to-one G-vector mapping |
-| Kramers/TR gauge | relied on coefficient-position assumptions in parts of the path | maps both spinor components into a common basis and applies one shared `Theta` operation, including the even TRIM Kramers partner |
-| norm check | squared single-precision coefficient magnitudes | promotes real and imaginary components before the squared-norm accumulation |
-| overlap guard | tested the magnitude of a directly multiplied determinant | measures the minimum overlap singular value and obtains the determinant phase by LU factorization with pivot parity |
-| field and parity regression | the Bi 12 x 12 run reported top/bottom sums `-1/0`, whose parities disagree | gives `-3/+3`, whose parities both equal 1; 5 of 144 fundamental plaquettes changed |
-| output status and schema | emitted the repeated-zone `NFIELD.dat`; v1.1.1 subsequently labeled the guarded field a non-reportable legacy candidate | v1.2.0 schema 2 adds a numeric invariant and `reportable_invariant=1` only for PASS with matching half-zone parities |
-| output publication | had no atomic PASS/INVALID publication contract | uses owned-output checks, a temporary CSV and invalid sentinel, and atomic rename; the PASS CSV is published last |
-| MPI and help behavior | used the nonstandard `MPI_REAL8` name, and MPI help did not follow the normal finalization path | uses `MPI_DOUBLE_PRECISION`; `-h` follows MPI finalization and documents the core Z2 input/result contract |
-| Bi example provenance | mixed an old fixed-charge run with an `INCAR` that does not match recorded settings, without its parent SCF inputs | separates the 2016 archive from reviewed SCF/NSCF templates, records the missing parent-SCF provenance, and excludes licensed `POTCAR` data |
-
-These changes establish the program's internal field result; they do not move
-raw-input TRS, the physical gap, PAW augmentation, or mesh convergence into
-the program's validation scope.
+The checked schema-v2 Bi reference contains 144 fundamental plaquettes. Its
+top and bottom sums are -3 and +3, respectively, so both parities are 1 and
+the result is `Z2=1` on this 12 x 12 mesh. This fixed-mesh PASS is not a
+substitute for the physical input and mesh-convergence checks above.
 
 ## Implementation and numerical notes
 
 - Serial and MPI builds call the same Z2 state, overlap, link, and field
   routines. The MPI path distributes plaquettes and reduces the resulting
   arrays before rank 0 publishes the atomic outputs.
+- The time-reversal construction uses an explicit one-to-one reciprocal-G
+  mapping for both spinor components and the same `Theta` operation for
+  Kramers partners. Coefficient norms are accumulated after promoting their
+  real and imaginary components.
 - Link quality is measured by the minimum singular value of each overlap
   matrix. The determinant phase is accumulated from an LU factorization,
   avoiding rank-dependent determinant-magnitude underflow.
+- Guarded output publication uses an invalid sentinel, same-directory staging,
+  and an atomic final rename. A PASS `Z2_FIELD.csv` is the final commit marker.
 - The direct reader uses pseudo-wavefunction coefficients from `WAVECAR` and
   does not add PAW augmentation terms. The backend and this limitation are
-  recorded in the CSV.
+  recorded in the CSV; Ref. 5 discusses augmentation in PAW overlap matrix
+  elements.
 - Compiler and direct-access record-length requirements are documented in
   [`BUILD.md`](BUILD.md).
 
@@ -298,12 +295,15 @@ VASP input semantics used above follow the official documentation for
 [`ISYM`](https://vasp.at/wiki/ISYM),
 [`LSORBIT`](https://vasp.at/wiki/LSORBIT),
 [`MAGMOM`](https://vasp.at/wiki/MAGMOM),
+[`LORBIT`](https://vasp.at/wiki/LORBIT),
 [`LASPH`](https://vasp.at/wiki/LASPH), and the element-dependent
 [`LMAXMIX`](https://vasp.at/wiki/LMAXMIX) restart setting. Backend scope
 follows the VASP
 [`WAVECAR`](https://vasp.at/wiki/WAVECAR) and
 [`PAW formalism`](https://vasp.at/wiki/Projector-augmented-wave_formalism)
-documentation.
+documentation. Functional-specific restart constraints are summarized in the
+official VASP
+[`meta-GGA workflow`](https://vasp.at/wiki/Band-structure_calculation_using_meta-GGA_functionals).
 
 An independent Wilson-loop calculation may be used as an optional cross-check;
 it is not part of `-z2`. See [Yu et al., *Phys. Rev. B* **84**, 075119 (2011)](https://doi.org/10.1103/PhysRevB.84.075119).

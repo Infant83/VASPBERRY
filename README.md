@@ -46,8 +46,8 @@ length requirement, and BLAS/LAPACK ABI constraints are documented in the
 
 `-z2 1` is a first-class two-dimensional Z2 option. It requires a
 nonmagnetic, time-reversal-symmetric insulating spinor `WAVECAR` on a full,
-unshifted, even Gamma-centered `Nx x Ny x 1` mesh generated with `ISYM=-1`.
-For the bundled Bi 12 x 12 example:
+unshifted, even Gamma-centered `Nx x Ny x 1` mesh with `Nx,Ny>=4`, generated
+with `ISYM=-1`. For the bundled Bi 12 x 12 example:
 
 ```bash
 ./build/vaspberry-gfortran \
@@ -60,8 +60,10 @@ only when `result_status=PASS`, `reportable_invariant=1`, and the top/bottom
 half-zone parities agree; their common value is Z2. Rejected or interrupted Z2
 runs retain `Z2_FIELD.invalid.csv` when the guarded output preflight has
 started, and any `NFIELD.dat` without the final PASS CSV is non-reportable.
-The input gap, physical time-reversal symmetry, and convergence with mesh
-density must still be checked for the system under study.
+PASS tests the numerical self-consistency of the routine's time-reversal
+reconstruction. The raw-input gap, physical time-reversal symmetry, and
+convergence with mesh density must still be checked for the system under
+study.
 
 See the [`Fukui-Hatsugai Z2 guide`](docs/Z2_FUKUI_HATSUGAI.md) for the method,
 input preparation, output schema, plotting, scope, and references. Run
@@ -117,8 +119,8 @@ validation boundary is recorded in the [`roadmap`](docs/ROADMAP.md).
 # Examples
 * [1H-MoS2](examples/1H-MoS2/): Berry curvature, Chern, and Kubo plot data
 * [Bi buckled honeycomb layer](examples/Bi_Z2/): 12 x 12
-  Fukui-Hatsugai n-field Z2 example, input templates, reference result, and
-  legacy regression evidence
+  Fukui-Hatsugai n-field Z2 example, reviewed input templates, current
+  reference result, and n-field plotting helper
 * See the [examples index](examples/README.md) for the sampling requirements
   and the distinction between full-BZ and line-mode data.
 * Quantum Anomalous Hall effect (Trypheny-lead lattice) : See H.-J. Kim, C. Li, J. Feng, J.-H. Cho, and Z. Zhang, PRB 93, 041404(R) (2016) (the example files will be provided upon request)

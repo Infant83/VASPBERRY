@@ -1,26 +1,21 @@
 #!/usr/bin/env python3
-"""Plot a fundamental Fukui-Hatsugai integer n-field and optional legacy delta."""
+"""Plot a reportable VASPBERRY Fukui-Hatsugai integer n-field."""
 
 from __future__ import annotations
 
 import argparse
 import csv
-import re
 from pathlib import Path
-from typing import Iterable
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm, ListedColormap
-from matplotlib.patches import Patch, Rectangle
+from matplotlib.patches import Patch
 import numpy as np
 
 
-COLORS = ("#2166ac", "#ffffff", "#b2182b")
-CMAP = ListedColormap(COLORS)
-NORM = BoundaryNorm((-1.5, -0.5, 0.5, 1.5), CMAP.N)
 KEY_DIGITS = 6
 
 
@@ -42,61 +37,36 @@ def metadata(path: Path) -> dict[str, str]:
     return values
 
 
-def read_current(path: Path) -> tuple[dict[tuple[float, float], int], dict[str, str]]:
+def read_field(
+    path: Path,
+) -> tuple[dict[tuple[float, float], int], dict[str, str]]:
+    field: dict[tuple[float, float], int] = {}
     with path.open(encoding="utf-8") as handle:
         rows = (line for line in handle if not line.startswith("#"))
         reader = csv.DictReader(rows)
         required = {"q1", "q2", "nfield_int"}
-        if reader.fieldnames is None or not required.issubset(reader.fieldnames):
+        if (
+            reader.fieldnames is None
+            or not required.issubset(reader.fieldnames)
+        ):
             raise ValueError(f"{path} is not a VASPBERRY Z2 field CSV")
-        field = {
-            (
+        for row_number, row in enumerate(reader, start=2):
+            key = (
                 round(centered(float(row["q1"])), KEY_DIGITS),
                 round(centered(float(row["q2"])), KEY_DIGITS),
-            ): int(row["nfield_int"])
-            for row in reader
-        }
+            )
+            if key in field:
+                raise ValueError(
+                    f"{path}: duplicate plaquette coordinate at CSV row "
+                    f"{row_number}"
+                )
+            field[key] = int(row["nfield_int"])
     if not field:
         raise ValueError(f"{path} contains no plaquettes")
     return field, metadata(path)
 
 
-def read_legacy(path: Path) -> dict[tuple[float, float], int]:
-    field: dict[tuple[float, float], int] = {}
-    with path.open(encoding="utf-8") as handle:
-        for line in handle:
-            if not line.strip() or line.lstrip().startswith("#"):
-                continue
-            columns = line.split()
-            if len(columns) < 7:
-                continue
-            q1, q2 = float(columns[4]), float(columns[5])
-            if -0.5 < q1 < 0.5 and -0.5 < q2 < 0.5:
-                key = (round(q1, KEY_DIGITS), round(q2, KEY_DIGITS))
-                field[key] = int(round(float(columns[3])))
-    if not field:
-        raise ValueError(f"{path} has no fundamental-zone n-field rows")
-    return field
-
-
-def legacy_reported_half_sums(path: Path) -> tuple[int, int] | None:
-    """Read the half-zone sums printed by the archived implementation."""
-    values: dict[str, int] = {}
-    pattern = re.compile(
-        r"^#\s*Z2 Invariant \((top|bottom)\)\s*=\s*([+-]?\d+)\s*$",
-        re.IGNORECASE,
-    )
-    with path.open(encoding="utf-8") as handle:
-        for line in handle:
-            match = pattern.match(line)
-            if match:
-                values[match.group(1).lower()] = int(match.group(2))
-    if set(values) == {"top", "bottom"}:
-        return values["top"], values["bottom"]
-    return None
-
-
-def current_reported_half_sums(values: dict[str, str]) -> tuple[int, int] | None:
+def reported_half_sums(values: dict[str, str]) -> tuple[int, int] | None:
     """Read the half-zone sums from Z2_FIELD.csv metadata."""
     try:
         return (
@@ -140,15 +110,101 @@ def parity(value: int) -> int:
     return abs(value) % 2
 
 
+def validate_result(
+    field: dict[tuple[float, float], int],
+    values: dict[str, str],
+    path: Path,
+) -> tuple[int, int, int]:
+    """Validate the current result contract and return ``(nx, ny, z2)``."""
+    if values.get("schema") != "VASPBERRY_Z2_FIELD":
+        raise ValueError(f"{path}: missing VASPBERRY_Z2_FIELD schema")
+    try:
+        schema_version = int(values["schema_version"])
+        nx = int(values["nkx"])
+        ny = int(values["nky"])
+        z2 = int(values["z2_invariant"])
+        top_parity = int(values["half_top_z2_parity"])
+        bottom_parity = int(values["half_bottom_z2_parity"])
+    except (KeyError, ValueError) as error:
+        raise ValueError(f"{path}: incomplete Z2 result metadata") from error
+
+    if schema_version < 2:
+        raise ValueError(f"{path}: schema version 2 or newer is required")
+    if values.get("result_kind") != "FUKUI_HATSUGAI_NFIELD_Z2":
+        raise ValueError(f"{path}: unsupported Z2 result kind")
+    if values.get("result_status") != "PASS":
+        raise ValueError(f"{path}: result_status must be PASS")
+    if values.get("reportable_invariant") != "1":
+        raise ValueError(f"{path}: the Z2 invariant is not reportable")
+    if values.get("half_bz_parity_consistent") != "1":
+        raise ValueError(f"{path}: half-zone parities are inconsistent")
+    if values.get("numerical_self_consistency_checks_pass") != "1":
+        raise ValueError(f"{path}: numerical field checks did not pass")
+    if z2 not in (0, 1) or top_parity != z2 or bottom_parity != z2:
+        raise ValueError(f"{path}: inconsistent Z2 and half-zone parity metadata")
+    if nx < 4 or ny < 4 or nx % 2 != 0 or ny % 2 != 0:
+        raise ValueError(
+            f"{path}: nkx and nky must be even integers greater than or "
+            "equal to 4"
+        )
+    if len(field) != nx * ny:
+        raise ValueError(
+            f"{path}: expected {nx} x {ny}={nx * ny} plaquettes, "
+            f"found {len(field)}"
+        )
+
+    xs, ys, _ = grid(field)
+    if len(xs) != nx or len(ys) != ny:
+        raise ValueError(
+            f"{path}: metadata and rectangular mesh dimensions differ"
+        )
+    reported = reported_half_sums(values)
+    calculated = half_sums(field)
+    if reported is None or reported != calculated:
+        raise ValueError(f"{path}: half-zone sums do not reproduce the metadata")
+    if (
+        parity(calculated[0]) != top_parity
+        or parity(calculated[1]) != bottom_parity
+    ):
+        raise ValueError(f"{path}: n-field sums do not reproduce Z2 parities")
+    return nx, ny, z2
+
+
+def integer_style(
+    field: dict[tuple[float, float], int],
+) -> tuple[ListedColormap, BoundaryNorm, list[Patch]]:
+    """Build a discrete, zero-centered color scale without clipping |n| > 1."""
+    max_abs = max(1, max(abs(value) for value in field.values()))
+    integers = np.arange(-max_abs, max_abs + 1, dtype=int)
+    colors = plt.get_cmap("RdBu_r")(
+        np.linspace(0.08, 0.92, len(integers))
+    )
+    colors[max_abs, :3] = 1.0
+    cmap = ListedColormap(colors)
+    norm = BoundaryNorm(
+        np.arange(-max_abs - 0.5, max_abs + 1.5, 1.0), cmap.N,
+    )
+    legend = [
+        Patch(
+            facecolor=colors[index], edgecolor="#999999",
+            label=f"n = {value:+d}" if value else "n = 0",
+        )
+        for index, value in enumerate(integers)
+    ]
+    return cmap, norm, legend
+
+
 def draw_field(
     ax: plt.Axes,
     field: dict[tuple[float, float], int],
     title: str,
+    cmap: ListedColormap,
+    norm: BoundaryNorm,
     reported_sums: tuple[int, int] | None = None,
 ) -> None:
     xs, ys, values = grid(field)
     ax.pcolormesh(
-        edges(xs), edges(ys), values, cmap=CMAP, norm=NORM,
+        edges(xs), edges(ys), values, cmap=cmap, norm=norm,
         edgecolors="#d9d9d9", linewidth=0.45, shading="flat",
     )
     ax.axhline(0.0, color="#222222", linewidth=1.7)
@@ -167,99 +223,43 @@ def draw_field(
     )
 
 
-def changed_cells(
-    old: dict[tuple[float, float], int],
-    new: dict[tuple[float, float], int],
-) -> Iterable[tuple[float, float]]:
-    if set(old) != set(new):
-        missing = len(set(old) ^ set(new))
-        raise ValueError(f"legacy/current grids differ at {missing} coordinates")
-    return (key for key in new if old[key] != new[key])
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Plot a VASPBERRY Fukui-Hatsugai integer n-field.",
     )
     parser.add_argument("field_csv", type=Path, help="Z2_FIELD.csv input")
     parser.add_argument(
-        "--legacy", type=Path,
-        help="optional pre-correction NFIELD.dat to compare",
-    )
-    parser.add_argument(
         "--output", type=Path, default=Path("Z2_nfield.pdf"),
         help="PDF or PNG output path (default: Z2_nfield.pdf)",
     )
     args = parser.parse_args()
 
-    current, meta = read_current(args.field_csv)
-    if len(current) != 144:
-        raise ValueError(
-            f"expected 144 plaquettes for this example, found {len(current)}"
-        )
-
-    legacy = read_legacy(args.legacy) if args.legacy else None
-    if legacy is None:
-        fig, axes = plt.subplots(
-            1, 1, figsize=(6.0, 5.6), constrained_layout=False,
-        )
-        axes_list = [axes]
-    else:
-        fig, axes = plt.subplots(
-            1, 2, figsize=(11.2, 5.2), constrained_layout=False,
-        )
-        axes_list = list(axes)
-        draw_field(
-            axes_list[0], legacy, "Incomplete pre-v1.1.1 field",
-            legacy_reported_half_sums(args.legacy),
-        )
-
+    field, meta = read_field(args.field_csv)
+    nx, ny, z2 = validate_result(field, meta, args.field_csv)
+    cmap, norm, legend = integer_style(field)
+    fig, ax = plt.subplots(
+        1, 1, figsize=(6.2, 5.8), constrained_layout=False,
+    )
     draw_field(
-        axes_list[-1], current, "Corrected 12 x 12 field",
-        current_reported_half_sums(meta),
+        ax, field, "Fundamental n-field", cmap, norm,
+        reported_half_sums(meta),
     )
 
-    if legacy is not None:
-        xs, _, _ = grid(current)
-        cell = float(np.median(np.diff(xs)))
-        changed = list(changed_cells(legacy, current))
-        for q1, q2 in changed:
-            axes_list[-1].add_patch(
-                Rectangle(
-                    (q1 - cell / 2.0, q2 - cell / 2.0), cell, cell,
-                    fill=False, edgecolor="#111111", linewidth=2.0,
-                )
-            )
-        axes_list[-1].text(
-            0.02, 0.02, f"outlined changes: {len(changed)}/144",
-            transform=axes_list[-1].transAxes, ha="left", va="bottom",
-            fontsize=9,
-            bbox={
-                "facecolor": "white", "alpha": 0.85,
-                "edgecolor": "none", "pad": 2.0,
-            },
-        )
-
-    legend = [
-        Patch(facecolor=COLORS[0], edgecolor="#999999", label="n = -1"),
-        Patch(facecolor=COLORS[1], edgecolor="#999999", label="n = 0"),
-        Patch(facecolor=COLORS[2], edgecolor="#999999", label="n = +1"),
-    ]
-    fig.subplots_adjust(left=0.075, right=0.98, bottom=0.21, top=0.76, wspace=0.3)
+    fig.subplots_adjust(left=0.14, right=0.96, bottom=0.21, top=0.76)
     fig.legend(
         handles=legend, loc="lower center", bbox_to_anchor=(0.5, 0.075),
         ncol=3, frameon=False,
     )
-    status = meta.get("result_status", "UNKNOWN")
     fig.suptitle(
-        "Bi Fukui-Hatsugai integer n-field\n"
-        f"fundamental Gamma-centered mesh; corrected field checks: {status}",
+        "Fukui-Hatsugai integer n-field\n"
+        f"{nx} x {ny} fundamental mesh; Z2 = {z2}; result: PASS",
         fontsize=14, y=0.97,
     )
     fig.text(
         0.5, 0.025,
-        "Panel sums reproduce output metadata. The pointwise n-field is "
-        "gauge/branch dependent; Z2 is the half-zone sum modulo 2.",
+        "Half-zone sums reproduce the output metadata.\n"
+        "Pointwise n-field values are gauge/branch dependent; "
+        "Z2 is the half-zone sum modulo 2.",
         ha="center", va="bottom", fontsize=9,
     )
 

@@ -12,9 +12,11 @@ All notable changes to VASPBERRY are recorded here.
 - Added reviewed two-stage Bi input templates: an SOC SCF calculation that
   writes `CHGCAR`, followed by an `ICHARG=11` fixed-charge calculation that
   writes the full-mesh spinor `WAVECAR`.
-- Added a field-only 12 x 12 plotting helper and a rendered comparison of the
-  incomplete and corrected n-fields. Five of 144 plaquettes change; the
-  corrected top/bottom sums are -3/+3 and both parities are 1.
+- Added a plotting helper for reportable schema-2 `Z2_FIELD.csv` outputs and a
+  rendered 12 x 12 Bi n-field. The checked reference has top/bottom sums
+  -3/+3 and matching parity 1.
+- Added the schema-2 Bi 12 x 12 reference CSV used by the guide, plotter, and
+  example-layout regression tests.
 - Added GNU serial/OpenMPI Makefile targets, a two-rank MPI datatype/status
   smoke test, compiler-specific build documentation, and reviewed manual
   recipes for Intel `ifx` and legacy `ifort`.
@@ -39,6 +41,9 @@ All notable changes to VASPBERRY are recorded here.
 - Removed the previous Python Wilson-loop CLI, its detailed guide, and its
   dedicated tests from the active tree. An independent method remains an
   optional literature cross-check and is not part of `-z2`.
+- Removed historical-field comparison from the regular n-field plotting CLI
+  and active Z2 guide. Earlier result details remain confined to this
+  changelog and the explicitly named legacy archive.
 
 ### Data and portability scope
 
@@ -75,6 +80,9 @@ All notable changes to VASPBERRY are recorded here.
   minimum-singular-value measurement. Determinant phases now come from a
   separate `ZGETRF` copy, including pivot parity, without determinant
   multiplication.
+- In the archived Bi 12 x 12 regression, these corrections changed five of
+  144 fundamental plaquettes and replaced the inconsistent -1/0 half-zone
+  sums with -3/+3.
 - Corrected the sign and units in the legacy `NFIELD.dat` explanation.
 - Preserved a custom legacy Z2 `-o` base without the general
   `BERRYCURV.` prefix, enlarged the serial CLI value buffer, and added

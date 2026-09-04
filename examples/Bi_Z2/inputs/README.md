@@ -15,11 +15,13 @@ studied; these files are starting templates, not universal convergence
 parameters.
 
 For the two-atom nonmagnetic test structure, `MAGMOM=6*0.0` explicitly sets
-the three initial moment components per atom to zero. Confirm the final
-magnetization in `OUTCAR`; the initialization alone does not establish
+the three initial moment components per atom to zero. The SCF template sets
+`LORBIT=11` so that the site-projected x/y/z moments can be inspected in
+`OUTCAR`. These PAW-sphere projections are qualitative evidence only: zero
+initial, total, or projected moments do not by themselves establish physical
 time-reversal symmetry.
 
-The CHGCAR-only `ICHARG=11` stage is a semilocal-functional recipe. A hybrid
-Hamiltonian also depends on regular-mesh orbitals, so a hybrid calculation
-requires VASP's separate hybrid-functional workflow and its `WAVECAR`
-information.
+The CHGCAR-only `ICHARG=11` stage is the PBE/GGA recipe represented by these
+templates. Hybrid and kinetic-energy-density meta-GGA calculations require
+their version-appropriate VASP workflows and additional restart information;
+do not reuse this recipe unchanged.

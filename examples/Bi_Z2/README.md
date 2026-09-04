@@ -37,7 +37,7 @@ numerical detail of the 2016 run.
 The licensed Bi PAW data are excluded. Non-proprietary provenance is recorded
 in [`PSEUDOPOTENTIAL.md`](PSEUDOPOTENTIAL.md).
 
-## Reproduce the archived 12 x 12 post-processing result
+## Run the bundled 12 x 12 example
 
 Install Git LFS, GNU Fortran, and LP64 BLAS/LAPACK. From the repository root:
 
@@ -64,37 +64,31 @@ executable; see [`../../docs/BUILD.md`](../../docs/BUILD.md) and the main
 
 ## Read the result
 
-The corrected reference is stored under
-[`reference-v1.1.1-12x12/`](reference-v1.1.1-12x12/). Its half-zone sums are
+The current schema-v2 reference is stored under
+[`reference-v1.2.0-12x12/`](reference-v1.2.0-12x12/). Its half-zone sums are
 
 ```text
 top    = -3 -> parity 1
 bottom = +3 -> parity 1
 ```
 
-That directory is a v1.1.1 numerical snapshot and retains its historical
-candidate-policy strings. The current runner recalculates the same field with
-the v1.2.0 result schema under `results-z2/`.
-
-Thus the two complementary half-zone evaluations agree and the n-field method
-gives `Z2=1` on this 12 x 12 mesh. The numerical self-consistency diagnostics
-also pass: the total Chern residual is `1.159e-14`, the maximum wrapped
-time-reversal-odd flux residual is `1.815e-14 rad`, and the minimum link
-singular value is `0.815455`.
+The runner recalculates this field under `results-z2/`. The two complementary
+half-zone evaluations agree, so the n-field method gives `Z2=1` on this
+12 x 12 mesh. The numerical self-consistency diagnostics also pass: the total
+Chern residual is `1.159e-14`, the maximum wrapped time-reversal-odd flux
+residual is `1.815e-14 rad`, and the minimum link singular value is `0.815455`.
 
 On the archived 144-point `EIGENVAL`, the minimum direct band-10/band-11
 separation is `0.592449 eV` and the sampled global gap is `0.510045 eV`.
 These values describe this fixed mesh and do not establish gap or k-mesh
 convergence.
 
-This does not replace the physical input checks or a mesh-convergence study.
-Verify that the material is nonmagnetic and time-reversal symmetric, that
-bands 1-10 are separated from band 11 throughout the Brillouin zone, and that
-the common parity is stable on denser even Gamma-centered meshes.
-
-The files in [`legacy-pre-1.1.1/`](legacy-pre-1.1.1/) were produced by the
-incomplete implementation. Their top and bottom parities disagree and they
-must not be used as a Z2 result.
+PASS verifies the numerical self-consistency of VASPBERRY's time-reversal
+reconstruction; it does not independently verify the physical symmetry or gap
+of the raw `WAVECAR`. Confirm that the material is nonmagnetic and
+time-reversal symmetric, that bands 1-10 are separated from band 11 at every
+represented k point, and that the separation and common parity are stable on
+denser sampling or suitable interpolation.
 
 ## Draw the 12 x 12 field
 
@@ -107,16 +101,15 @@ python3 -m pip install -r requirements-transport.txt
 
 ```bash
 python3 examples/Bi_Z2/scripts/plot_nfield.py \
-  examples/Bi_Z2/reference-v1.1.1-12x12/Z2_FIELD.csv \
-  --legacy examples/Bi_Z2/legacy-pre-1.1.1/NFIELD.dat \
+  examples/Bi_Z2/reference-v1.2.0-12x12/Z2_FIELD.csv \
   --output examples/Bi_Z2/Z2_nfield_12x12.pdf
 ```
 
 Rendered reference: [`Z2_nfield_12x12.pdf`](Z2_nfield_12x12.pdf) and
 [`Z2_nfield_12x12.png`](Z2_nfield_12x12.png).
 
-The pointwise n-field is gauge- and logarithm-branch-dependent. The plot is a
-discrete regression view; Z2 is determined by the half-zone integer sum
+The pointwise n-field is gauge- and logarithm-branch-dependent. The plot shows
+the current integer field; Z2 is determined by the half-zone integer sum
 modulo two, not by requiring every point to look mirror-symmetric.
 
 ## New VASP calculation
@@ -125,10 +118,12 @@ modulo two, not by requiring every point to look mirror-symmetric.
    `inputs/01_scf/KPOINTS` to a clean VASP directory. Add a locally licensed
    `POTCAR` in the `Bi` species order and run the site's SOC-capable VASP
    executable until `CHGCAR` is converged.
-2. Copy the converged `CHGCAR` with the same `POSCAR` and `POTCAR` into a new
-   directory containing `inputs/02_z2_nscf/INCAR` and `KPOINTS`. This is an
-   `ICHARG=11` fixed-charge run, not a second SCF run; it writes the full-mesh
-   spinor `WAVECAR` consumed by VASPBERRY.
+2. For the supplied PBE/GGA workflow, copy the converged `CHGCAR`
+   with the same `POSCAR` and `POTCAR` into a new directory containing
+   `inputs/02_z2_nscf/INCAR` and `KPOINTS`. This is an `ICHARG=11` fixed-charge
+   run, not a second SCF run; it writes the full-mesh spinor `WAVECAR` consumed
+   by VASPBERRY. Hybrid and kinetic-energy-density meta-GGA calculations need
+   their version-appropriate VASP restart workflows.
 3. Confirm `NKPTS=144`, an even occupied rank, `NBANDS>Nocc`, a direct
    separation between the selected occupied bundle and the next band at every
    k point, and a positive sampled global gap. Check both on denser sampling.

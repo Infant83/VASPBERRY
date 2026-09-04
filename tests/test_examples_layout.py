@@ -6,7 +6,10 @@ import importlib.util
 import os
 import re
 import stat
+import struct
 import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -17,9 +20,9 @@ BI = EXAMPLES / "Bi_Z2"
 MOS2 = EXAMPLES / "1H-MoS2"
 PLOT = BI / "scripts" / "plot_nfield.py"
 RUNNER = BI / "scripts" / "run_z2.sh"
-CURRENT_FIELD = BI / "reference-v1.1.1-12x12" / "Z2_FIELD.csv"
-LEGACY_FIELD = BI / "legacy-pre-1.1.1" / "NFIELD.dat"
+CURRENT_FIELD = BI / "reference-v1.2.0-12x12" / "Z2_FIELD.csv"
 FIGURE_PDF = BI / "Z2_nfield_12x12.pdf"
+FIGURE_PNG = BI / "Z2_nfield_12x12.png"
 
 
 def _read_incar(path: Path) -> dict[str, str]:
@@ -117,10 +120,21 @@ class ExamplesLayoutTests(unittest.TestCase):
 
     def test_bi_runner_has_valid_bash_syntax(self) -> None:
         subprocess.run(["bash", "-n", str(RUNNER)], check=True, cwd=ROOT)
+        self.assertNotIn("--legacy", RUNNER.read_text(encoding="utf-8"))
 
     def test_plot_script_has_valid_python_syntax(self) -> None:
         source = PLOT.read_text(encoding="utf-8")
         compile(source, str(PLOT), "exec")
+
+        help_result = subprocess.run(
+            [sys.executable, str(PLOT), "-h"],
+            check=True,
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        self.assertIn("--output", help_result.stdout)
+        self.assertNotIn("legacy", help_result.stdout.lower())
 
     def test_reviewed_inputs_use_the_same_full_gamma_mesh(self) -> None:
         for stage in ("01_scf", "02_z2_nscf"):
@@ -146,6 +160,7 @@ class ExamplesLayoutTests(unittest.TestCase):
                 self.assertEqual(tags["LASPH"], ".TRUE.")
 
         self.assertEqual(scf["ICHARG"], "2")
+        self.assertEqual(scf["LORBIT"], "11")
         self.assertEqual(scf["LWAVE"], ".FALSE.")
         self.assertEqual(scf["LCHARG"], ".TRUE.")
         self.assertEqual(nscf["ICHARG"], "11")
@@ -180,32 +195,106 @@ class ExamplesLayoutTests(unittest.TestCase):
         self.assertAlmostEqual(direct_gap, 0.592449, places=6)
         self.assertAlmostEqual(global_gap, 0.510045, places=6)
 
-    def test_plot_parser_reproduces_current_and_legacy_field_regressions(self) -> None:
+    def test_plot_parser_validates_current_result_contract(self) -> None:
         plot = _load_plot_module()
-        current, metadata = plot.read_current(CURRENT_FIELD)
-        legacy = plot.read_legacy(LEGACY_FIELD)
+        field, metadata = plot.read_field(CURRENT_FIELD)
 
-        self.assertEqual(len(current), 144)
-        self.assertEqual(len(legacy), 144)
+        self.assertEqual(len(field), 144)
         self.assertEqual(metadata["nkx"], "12")
         self.assertEqual(metadata["nky"], "12")
-        self.assertEqual(plot.current_reported_half_sums(metadata), (-3, 3))
-        self.assertEqual(plot.legacy_reported_half_sums(LEGACY_FIELD), (-1, 0))
-
-        current_halves = plot.half_sums(current)
-        legacy_halves = plot.half_sums(legacy)
-        self.assertEqual(current_halves, (-3, 3))
-        self.assertEqual(tuple(map(plot.parity, current_halves)), (1, 1))
-        self.assertNotEqual(
-            plot.parity(legacy_halves[0]), plot.parity(legacy_halves[1])
+        self.assertEqual(metadata["schema_version"], "2")
+        self.assertEqual(metadata["result_status"], "PASS")
+        self.assertEqual(metadata["reportable_invariant"], "1")
+        self.assertEqual(plot.reported_half_sums(metadata), (-3, 3))
+        self.assertEqual(plot.half_sums(field), (-3, 3))
+        self.assertEqual(tuple(map(plot.parity, (-3, 3))), (1, 1))
+        self.assertEqual(
+            plot.validate_result(field, metadata, CURRENT_FIELD), (12, 12, 1)
         )
-        self.assertEqual(len(list(plot.changed_cells(legacy, current))), 5)
+
+    def test_plot_rejects_noncurrent_or_inconsistent_results(self) -> None:
+        plot = _load_plot_module()
+        field, original_metadata = plot.read_field(CURRENT_FIELD)
+        cases = (
+            ("old schema", "schema_version", "1", "version 2 or newer"),
+            ("invalid status", "result_status", "INVALID", "must be PASS"),
+            ("nonreportable", "reportable_invariant", "0", "not reportable"),
+            ("wrong kind", "result_kind", "OTHER", "unsupported Z2 result kind"),
+            ("small mesh", "nkx", "2", "greater than or equal to 4"),
+            ("wrong sum", "half_top_nfield_sum", "-2", "do not reproduce"),
+        )
+        for label, key, value, message in cases:
+            with self.subTest(case=label):
+                changed_metadata = dict(original_metadata)
+                changed_metadata[key] = value
+                with self.assertRaisesRegex(ValueError, message):
+                    plot.validate_result(field, changed_metadata, CURRENT_FIELD)
+
+        even_metadata = dict(original_metadata)
+        even_metadata.update(
+            z2_invariant="0",
+            half_top_z2_parity="0",
+            half_bottom_z2_parity="0",
+        )
+        with self.assertRaisesRegex(ValueError, "do not reproduce Z2 parities"):
+            plot.validate_result(field, even_metadata, CURRENT_FIELD)
+
+    def test_plot_color_scale_preserves_larger_integer_fields(self) -> None:
+        plot = _load_plot_module()
+        field = {
+            (-0.25, -0.25): -2,
+            (0.25, -0.25): -1,
+            (-0.25, 0.25): 1,
+            (0.25, 0.25): 2,
+        }
+        cmap, norm, legend = plot.integer_style(field)
+
+        mapped = [int(norm(value)) for value in (-2, -1, 0, 1, 2)]
+        self.assertEqual(cmap.N, 5)
+        self.assertEqual(len(set(mapped)), 5)
+        self.assertGreaterEqual(min(mapped), 0)
+        self.assertLess(max(mapped), cmap.N)
+        self.assertEqual(len(legend), 5)
+
+    def test_plot_cli_writes_single_panel_pdf_and_png(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            output = Path(temporary_directory) / "nfield.pdf"
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(PLOT),
+                    str(CURRENT_FIELD),
+                    "--output",
+                    str(output),
+                ],
+                check=True,
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+            )
+            png_output = output.with_suffix(".png")
+            self.assertTrue(output.is_file())
+            self.assertTrue(png_output.is_file())
+
+            png_header = png_output.read_bytes()[:24]
+            self.assertEqual(png_header[:8], b"\x89PNG\r\n\x1a\n")
+            width, height = struct.unpack(">II", png_header[16:24])
+            self.assertGreater(width, 1000)
+            self.assertGreater(height, 1000)
+            self.assertGreater(width / height, 0.9)
+            self.assertLess(width / height, 1.2)
 
     def test_checked_in_figure_is_a_single_page_pdf(self) -> None:
         payload = FIGURE_PDF.read_bytes()
         self.assertTrue(payload.startswith(b"%PDF-"))
         self.assertTrue(payload.rstrip().endswith(b"%%EOF"))
         self.assertEqual(len(re.findall(rb"/Type\s*/Page\b", payload)), 1)
+
+        png_header = FIGURE_PNG.read_bytes()[:24]
+        self.assertEqual(png_header[:8], b"\x89PNG\r\n\x1a\n")
+        width, height = struct.unpack(">II", png_header[16:24])
+        self.assertGreater(width / height, 0.9)
+        self.assertLess(width / height, 1.2)
 
     def test_new_example_markdown_has_no_broken_local_links(self) -> None:
         markdown_files = (

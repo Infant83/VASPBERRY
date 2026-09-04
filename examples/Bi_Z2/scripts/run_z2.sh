@@ -145,7 +145,6 @@ test ! -e Z2_FIELD.tmp
 if command -v python3 >/dev/null 2>&1 && \
    python3 -c 'import matplotlib, numpy' >/dev/null 2>&1; then
   python3 "$script_dir/plot_nfield.py" Z2_FIELD.csv \
-    --legacy "$example_dir/legacy-pre-1.1.1/NFIELD.dat" \
     --output Z2_nfield_12x12.pdf
 fi
 
