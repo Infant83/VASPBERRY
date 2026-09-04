@@ -222,15 +222,15 @@ class FortranSourceRegressionTests(unittest.TestCase):
     def test_z2_guards_reject_unsupported_inputs(self):
         required = (
             "Z2 option must be 0 or 1",
-            "legacy Z2 needs a full k mesh",
-            "legacy Z2 needs ISPIN=1 spinors",
-            "legacy Z2 grid must be at least 4x4",
-            "legacy Z2 grid must be even",
-            "legacy Z2 needs the full 2D mesh",
-            "legacy Z2 needs one of each TRIM",
-            "legacy Z2 needs 2 <= NE < NBANDS",
-            "legacy Z2 needs bands 1 through NE",
-            "legacy Z2 needs an even band rank",
+            "Z2 n-field needs a full k mesh",
+            "Z2 n-field needs ISPIN=1 spinors",
+            "Z2 n-field grid must be at least 4x4",
+            "Z2 n-field grid must be even",
+            "Z2 n-field needs the full 2D mesh",
+            "Z2 n-field needs one of each TRIM",
+            "Z2 n-field needs 2 <= NE < NBANDS",
+            "Z2 n-field needs bands 1 through NE",
+            "Z2 n-field needs an even band rank",
         )
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
             source = source_path.read_text(encoding="utf-8", errors="strict")
@@ -267,20 +267,27 @@ class FortranSourceRegressionTests(unittest.TestCase):
                 or "modulo(nint(rvari" in line
             ]
             with self.subTest(source=source_path.name):
-                self.assertEqual(len(candidate_lines), 4)
+                self.assertEqual(len(candidate_lines), 6)
 
-    def test_legacy_z2_output_is_explicitly_a_candidate(self):
+    def test_z2_output_is_a_pass_gated_first_class_invariant(self):
         required = (
-            "Legacy Z2 candidate",
-            "Do not report it as an invariant.",
-            "tools/wavecar_z2.py",
-            "Z2 only when diagnostics PASS.",
+            "Fukui-Hatsugai n-field Z2 index",
+            "result_kind=FUKUI_HATSUGAI_NFIELD_Z2",
+            "reportable_invariant=1",
+            "z2_invariant=",
+            "half_top_z2_parity=",
+            "half_bottom_z2_parity=",
+            "half_bz_parity_consistent=",
+            "Top/bottom half-BZ consistency: PASS.",
+            "principal plaquette phase",
         )
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
             source = source_path.read_text(encoding="utf-8", errors="strict")
             for fragment in required:
                 with self.subTest(source=source_path.name, fragment=fragment):
                     self.assertIn(fragment, source)
+            self.assertNotIn("tools/wavecar_z2.py", source)
+            self.assertNotIn("Wilson phase", source)
 
     def test_new_z2_failures_return_nonzero_status(self):
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
@@ -289,8 +296,7 @@ class FortranSourceRegressionTests(unittest.TestCase):
             error_indices = [
                 index
                 for index, line in enumerate(lines)
-                if "*** error - Z2" in line
-                or "*** error - legacy Z2" in line
+                if ("*** error -" in line and "Z2" in line)
                 or "*** error - incomplete five-point" in line
             ]
             with self.subTest(source=source_path.name):
@@ -322,7 +328,7 @@ class FortranSourceRegressionTests(unittest.TestCase):
             "subroutine z2_apply_theta",
             "coutup=-conjg(cindn)",
             "coutdn=conjg(cinup)",
-            "rflux=-wilson_phase",
+            "rflux=-plaquette_phase",
             "pi=4d0*datan(1d0)",
             "WAVECAR_PSEUDO_NO_PAW_AUGMENTATION",
             "physical_tr_rule=",
@@ -509,6 +515,7 @@ class FortranSourceRegressionTests(unittest.TestCase):
                     "calldelete_z2_legacy_file(legacytmp)", prepare
                 )
                 self.assertIn("#result_status=incomplete", prepare)
+                self.assertIn("#schema_version=2", prepare)
                 self.assertIn("#legacy_output=", prepare)
 
                 self.assertIn("nbase+4.gt.len(target)", path_builder)
@@ -523,9 +530,15 @@ class FortranSourceRegressionTests(unittest.TestCase):
                 self.assertIn(
                     "#schema=vaspberry_z2_field", owned_csv
                 )
+                self.assertNotIn("schema_version", owned_csv)
                 self.assertIn("#legacyz2candidate", owned_legacy)
+                self.assertIn("#fukui-hatsugaiz2", owned_legacy)
                 self.assertIn(
                     "#nfield.datstoresthegauge-dependent",
+                    owned_legacy,
+                )
+                self.assertIn(
+                    "#nfield.datstoresthegauge-andbranch-",
                     owned_legacy,
                 )
 
@@ -542,7 +555,15 @@ class FortranSourceRegressionTests(unittest.TestCase):
                 )
                 self.assertIn("#result_status=pass", writer)
                 self.assertIn("#result_status=invalid", writer)
+                self.assertIn("#schema_version=2", writer)
+                self.assertNotIn("#schema_version=1", writer)
+                self.assertIn("#reportable_invariant=1", writer)
                 self.assertIn("#reportable_invariant=0", writer)
+                self.assertIn("#z2_invariant=", writer)
+                self.assertIn(
+                    "#z2_invariant=not_reportable", writer
+                )
+                self.assertIn("parity_consistent.ne.1", writer)
 
                 self.assertIn("status='replace'", legacy_writer)
                 self.assertIn("close(32,iostat=ios)", legacy_writer)
@@ -601,10 +622,59 @@ class FortranSourceRegressionTests(unittest.TestCase):
         self.assertLess(broadcast, gate)
         self.assertEqual(main.count(broadcast_token), 1)
         self.assertIn(
-            "callmpi_reduce(rminsv,rminsv_tot,iz2*nk,mpi_real8,"
+            "callmpi_reduce(rminsv,rminsv_tot,iz2*nk,"
+            "mpi_double_precision,"
             "mpi_sum,0,mpi_comm_world,ierr)",
             main,
         )
+        reduce_start = main.index("callmpi_reduce(rnnfield")
+        reduce_end = main.index("if(myrank.eq.0)then", reduce_start)
+        z2_reductions = main[reduce_start:reduce_end]
+        self.assertEqual(z2_reductions.count("mpi_double_precision"), 7)
+        self.assertNotIn("mpi_real8", z2_reductions)
+
+    def test_mpi_help_finalizes_cleanly(self):
+        source = SOURCE_PATH.read_text(encoding="utf-8", errors="strict")
+        help_body = compact_fortran(fortran_subroutine(source, "help"))
+        self.assertIn("callmpi_initialized(", help_body)
+        self.assertIn("callmpi_finalized(", help_body)
+        self.assertIn("callmpi_finalize(ierr)", help_body)
+
+    def test_mpi_real8_buffers_use_the_standard_double_precision_type(self):
+        compact = compact_fortran(self.source)
+        self.assertNotIn("mpi_real8", compact)
+        self.assertGreaterEqual(compact.count("mpi_double_precision"), 16)
+
+    def test_write_result_array_placeholders_are_type_safe(self):
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            compact = compact_fortran(source)
+            with self.subTest(source=source_path.name):
+                self.assertIn("berrymax=0d0", compact)
+                self.assertIn("berrymin=0d0", compact)
+                self.assertNotIn(
+                    "xrnfield,rnnfield,rnnfield_bottom,0,0,", compact
+                )
+        mpi_compact = compact_fortran(self.source)
+        self.assertIn(
+            "xberrycurv,chernnumber,0d0,berrymax,berrymin,", mpi_compact
+        )
+
+    def test_wavecar_direct_access_is_explicitly_read_only_unformatted(self):
+        expected_open = (
+            "open(unit=10,file=filename,access='direct',"
+            "form='unformatted',recl=irecl,action='read',"
+            "iostat=iost,status='old')"
+        )
+        for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
+            source = source_path.read_text(encoding="utf-8", errors="strict")
+            with self.subTest(source=source_path.name):
+                self.assertEqual(compact_fortran(source).count(expected_open), 2)
+
+    def test_mpi_spin_index_write_does_not_depend_on_column_73(self):
+        lines = [line for line in self.source.splitlines() if "SPIN INDEX s=" in line]
+        self.assertEqual(len(lines), 1)
+        self.assertLessEqual(len(lines[0]), 72)
 
 
     def test_z2_helper_implementations_do_not_drift_between_sources(self):
@@ -636,12 +706,12 @@ class FortranSourceRegressionTests(unittest.TestCase):
                     fortran_subroutine(serial_source, name),
                 )
 
-    def test_fortran_version_banner_is_1_1_1(self):
+    def test_fortran_version_banner_is_current(self):
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
             source = source_path.read_text(encoding="utf-8", errors="strict")
             with self.subTest(source=source_path.name):
-                self.assertIn("PROGRAM VASPBERRY Version 1.1.1", source)
-                self.assertIn("# VASPBERRY (Ver 1.1.1)", source)
+                self.assertIn("PROGRAM VASPBERRY Version 1.2.0", source)
+                self.assertIn("# VASPBERRY (Ver 1.2.0)", source)
 
 
 if __name__ == "__main__":

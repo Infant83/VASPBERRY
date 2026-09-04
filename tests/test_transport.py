@@ -498,7 +498,9 @@ class TransportTests(unittest.TestCase):
             vt.attach_fukui_vertex_energies(data, synthetic_eigenval(4, 4, weights=weights), 1)
 
     def test_legacy_periodic_map_collapses_and_validates_chern(self):
-        repeated = vt.read_vaspberry(REPO / "1H-MoS2/BERRYCURV.dat")
+        repeated = vt.read_vaspberry(
+            REPO / "examples/1H-MoS2/BERRYCURV.dat"
+        )
         self.assertEqual(len(repeated.omega), 9 * 144)
         fundamental = vt.deduplicate_reciprocal_replicas(repeated)
         self.assertEqual(len(fundamental.omega), 144)
@@ -507,9 +509,12 @@ class TransportTests(unittest.TestCase):
         self.assertAlmostEqual(chern, 0.0, places=3)
 
     def test_map_and_line_sampling_modes_are_not_interchangeable(self):
-        raw_map = vt.read_vaspberry(REPO / "1H-MoS2/BERRYCURV.dat")
+        raw_map = vt.read_vaspberry(
+            REPO / "examples/1H-MoS2/BERRYCURV.dat"
+        )
         kubo_path = vt.read_vaspberry(
-            REPO / "1H-MoS2/KPATH/3.BC_kubo/BERRYCURV_KUBO.EIG-10.dat"
+            REPO
+            / "examples/1H-MoS2/KPATH/3.BC_kubo/BERRYCURV_KUBO.EIG-10.dat"
         )
         with self.assertRaisesRegex(ValueError, "2D full-BZ map"):
             vt.prepare_k_path(raw_map)
@@ -519,16 +524,21 @@ class TransportTests(unittest.TestCase):
         self.assertEqual(len(unique_map.omega), 144)
 
     def test_corrupt_extended_map_is_not_reinterpreted_as_line(self):
-        raw_map = vt.read_vaspberry(REPO / "1H-MoS2/BERRYCURV.dat")
+        raw_map = vt.read_vaspberry(
+            REPO / "examples/1H-MoS2/BERRYCURV.dat"
+        )
         raw_map.omega[0] += 0.2
         with self.assertRaisesRegex(ValueError, "differs among reciprocal replicas"):
             vt.prepare_k_path(raw_map)
 
     def test_kubo_path_is_plot_only_and_not_a_full_bz(self):
         curvature = vt.read_vaspberry(
-            REPO / "1H-MoS2/KPATH/3.BC_kubo/BERRYCURV_KUBO.EIG-10.dat"
+            REPO
+            / "examples/1H-MoS2/KPATH/3.BC_kubo/BERRYCURV_KUBO.EIG-10.dat"
         )
-        eig = vt.read_eigenval(REPO / "1H-MoS2/KPATH/2.band/EIGENVAL")
+        eig = vt.read_eigenval(
+            REPO / "examples/1H-MoS2/KPATH/2.band/EIGENVAL"
+        )
         vt.attach_band_energy(curvature, eig, 10)
         self.assertEqual(curvature.metadata["min_direct_band_gap_eV"], 0.0)
         fundamental = vt.select_fundamental_path(curvature)

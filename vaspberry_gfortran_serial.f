@@ -1,5 +1,5 @@
-! PROGRAM VASPBERRY Version 1.1.1 (f77) for VASP
-! Written by Hyun-Jung Kim (angpangmokjang@hanmail.net, Infant@kias.re.kr) 
+! PROGRAM VASPBERRY Version 1.2.0 (f77) for VASP
+! Written by Hyun-Jung Kim
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
 ! Copyright 2015. Hyun-Jung Kim All rights reserved.
@@ -23,13 +23,15 @@
 ! routine change: routine for getting a determiant -> get_det : 2018, Jun. 28. H.-J. Kim
 
 ! version 1.1.0 safety fixes for the legacy Z2 candidate
-!               and a validated Wilson-loop companion
 !               : 2026. Aug. 31. H.-J. Kim
 ! version 1.1.1 correct TRIM reciprocal-G mapping and
 !               separate physical flux from gauge-dependent n-field
 !               : 2026. Aug. 31. H.-J. Kim
+! version 1.2.0 formal Fukui-Hatsugai n-field Z2 interface
+!               and GNU/OpenMPI portability checks
+!               : 2026. Sep. 04.
 
-! last update and bug fixes : 2026. Aug. 31. by H.-J. Kim
+! last update and bug fixes : 2026. Sep. 04.
 ! NOTE: This version only support serial calculations and modified
 !#define MPI_USE
 !#undef  MPI_USE
@@ -73,9 +75,11 @@
       nprocs=1
       myrank=0
 
-      ver_tag="# VASPBERRY (Ver 1.1.1), by Hyun-Jung Kim."//
-     &        " 2026. Aug. 31."
+      ver_tag="# VASPBERRY (Ver 1.2.0), by Hyun-Jung Kim."//
+     &        " 2026. Sep. 04."
       pi=4.*atan(1.)
+      berrymax=0d0
+      berrymin=0d0
 
       !default settings
       kperiod=2
@@ -103,23 +107,23 @@
       if (ispin .eq. 2) ispinor=1
       if(iz .eq. 1)then
        if(ihf .ne. 0)then
-        write(0,*) '*** error - legacy Z2 needs a full k mesh'
+        write(0,*) '*** error - Z2 n-field needs a full k mesh'
         call vaspberry_fail
        endif
        if(ispin .ne. 1 .or. ispinor .ne. 2)then
-        write(0,*) '*** error - legacy Z2 needs ISPIN=1 spinors'
+        write(0,*) '*** error - Z2 n-field needs ISPIN=1 spinors'
         call vaspberry_fail
        endif
        if(nkx .lt. 4 .or. nky .lt. 4)then
-        write(0,*) '*** error - legacy Z2 grid must be at least 4x4'
+        write(0,*) '*** error - Z2 n-field grid must be at least 4x4'
         call vaspberry_fail
        endif
        if(mod(nkx,2) .ne. 0 .or. mod(nky,2) .ne. 0)then
-        write(0,*) '*** error - legacy Z2 grid must be even'
+        write(0,*) '*** error - Z2 n-field grid must be even'
         call vaspberry_fail
        endif
        if(nk .ne. nkx*nky)then
-        write(0,*) '*** error - legacy Z2 needs the full 2D mesh'
+        write(0,*) '*** error - Z2 n-field needs the full 2D mesh'
         call vaspberry_fail
        endif
       endif
@@ -167,12 +171,12 @@
      &              abs(wklist(2,:)-0.5d0) .le. del)
        if(any(dabs(wklist(3,:)-dnint(wklist(3,:)))
      &        .gt.del))then
-        write(0,*) '*** error - legacy Z2 needs kz=0 modulo G'
+        write(0,*) '*** error - Z2 n-field needs kz=0 modulo G'
         call vaspberry_fail
        endif
        if(ntrim0 .ne. 1 .or. ntrim1 .ne. 1 .or.
      &    ntrim2 .ne. 1 .or. ntrim3 .ne. 1)then
-        write(0,*) '*** error - legacy Z2 needs one of each TRIM'
+        write(0,*) '*** error - Z2 n-field needs one of each TRIM'
         call vaspberry_fail
        endif
       endif
@@ -197,15 +201,15 @@
       ns=nmax-nini+1
       if(iz .eq. 1)then
        if(ne .lt. 2 .or. ne .ge. nband)then
-        write(0,*) '*** error - legacy Z2 needs 2 <= NE < NBANDS'
+        write(0,*) '*** error - Z2 n-field needs 2 <= NE < NBANDS'
         call vaspberry_fail
        endif
        if(nini .ne. 1 .or. nmax .ne. ne)then
-        write(0,*) '*** error - legacy Z2 needs bands 1 through NE'
+        write(0,*) '*** error - Z2 n-field needs bands 1 through NE'
         call vaspberry_fail
        endif
        if(mod(ns,2) .ne. 0)then
-        write(0,*) '*** error - legacy Z2 needs an even band rank'
+        write(0,*) '*** error - Z2 n-field needs an even band rank'
         call vaspberry_fail
        endif
       endif
@@ -294,12 +298,12 @@
 
       endif !iwf end
       
-      if(iz .eq. 1) then  !get legacy Z2 candidate by Fukui method
+      if(iz .eq. 1) then  !Fukui-Hatsugai discretized n-field Z2
        del=1E-6 ! criterion for k-point find
        call set_BZ_fukui(nnk,wnklist,w_half_klist,i_half_klist,
      &                   i_trim_klist,nhf, ispin,wklist,del,nk,iz2)
        if(nnk.ne.nk)then
-        write(0,*) '*** error - legacy Z2 mesh reconstruction',
+        write(0,*) '*** error - Z2 n-field mesh reconstruction',
      &             nnk,nk
         call vaspberry_fail
        endif
@@ -368,7 +372,7 @@
      &       ispinor)
        endif
        if(ifieldok.ne.1)then
-        write(0,*) '*** error - legacy Z2 reconstruction checks failed'
+        write(0,*) '*** error - Z2 n-field checks failed'
         call vaspberry_fail
        endif
 
@@ -377,16 +381,18 @@
          write(6,'(A)')"# DONE!"
          
          if(nini .eq. nmax) then
-          write(6,'(A,I4)')"# Legacy Z2 candidate BAND : ",nini
+          write(6,'(A,I4)')"# Fukui-Hatsugai Z2 BAND : ",nini
          else
-          write(6,'(A,I4,A,I4)')"# Legacy Z2 candidate BANDS: ",nini
+          write(6,'(A,I4,A,I4)')"# Fukui-Hatsugai Z2 BANDS: ",nini
      &                                                       ," - ",nmax
          endif
-         write(6,'(A,I2)')"# Legacy Z2 candidate = ",
+         write(6,'(A,I2)')"# Z2 invariant (top half BZ) = ",
      &                    modulo(nint(rnnfield),2)
-         write(6,'(A,I2)')"# Legacy Z2 candidate(bottom) = ",
+         write(6,'(A,I2)')"# Z2 invariant (bottom half BZ) = ",
      &                    modulo(nint(rnnfield_bottom),2)
-         write(6,'(A)')"# Validate with tools/wavecar_z2.py."
+         write(6,'(A,I2)')"# Z2 invariant = ",
+     &                    modulo(nint(rnnfield),2)
+         write(6,'(A)')"# Top/bottom half-BZ consistency: PASS."
         
          call get_ext_variable(xrecivec,xrecilat,xrnfield,kext,
      &                    recivec,recilat,rnfield,nnk,kperiod,nk,iz2,
@@ -397,7 +403,8 @@
          call write_result(isp,ispin,ispinor,fonameo,foname,filename,
      &                     irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
      &                     dSkxky,nini,nmax,xrecivec,xrecilat,kext,
-     &                     xrnfield,rnnfield,rnnfield_bottom,0,0,
+     &                     xrnfield,rnnfield,rnnfield_bottom,
+     &                     berrymax,berrymin,
      &                     iz2,icd,iz,ivel,nprocs)
          call finalize_z2_pass(foname)
         endif !myrank ==0
@@ -600,7 +607,7 @@
        call write_result(isp,ispin,ispinor,fonameo,foname,filename,
      &                   irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
      &                   dSkxky,nini,nmax,xrecivec,xrecilat,kext,
-     &                   xberrycurv,chernnumber,0.,berrymax,berrymin,
+     &                   xberrycurv,chernnumber,0d0,berrymax,berrymin,
      &                   iz2,icd,iz,ivel,nprocs)
        endif
 
@@ -628,7 +635,8 @@
        call write_result(isp,ispin,ispinor,fonameo,foname,filename,
      &                  irecl,ecut,nk,nkx,nky,nband,b1,b2,b3,kperiod,
      &                  dSkxky,nini,nmax,xrecivec,xrecilat,kext,
-     &                  xselectivity,0,0.,selectivitymax,selectivitymin,
+     &                  xselectivity,0d0,0d0,
+     &                  selectivitymax,selectivitymin,
      &                  iz2,icd,iz,ivel,nprocs)
 
        endif !icd over
@@ -830,7 +838,7 @@
       implicit none
       character*(*) filename
       character*256 line
-      logical deletable,lexist,found_candidate,found_nfield
+      logical deletable,lexist,found_owner,found_nfield
       integer ios,iosclose,i
 
       deletable=.false.
@@ -842,20 +850,24 @@
       open(unit=93,file=trim(filename),status='old',
      &     action='read',form='formatted',iostat=ios)
       if(ios.ne.0)return
-      found_candidate=.false.
+      found_owner=.false.
       found_nfield=.false.
       do i=1,128
        line=' '
        read(93,'(A)',iostat=ios)line
        if(ios.ne.0)exit
-       if(index(line,'# Legacy Z2 candidate').gt.0)
-     &  found_candidate=.true.
+! Accept both pre-promotion and first-class ownership markers.
+       if(index(line,'# Legacy Z2 candidate').gt.0 .or.
+     &    index(line,'# Fukui-Hatsugai Z2').gt.0)
+     &  found_owner=.true.
        if(index(line,'# NFIELD.dat stores the gauge-dependent')
-     &  .gt.0)found_nfield=.true.
+     &    .gt.0 .or.
+     &    index(line,'# NFIELD.dat stores the gauge- and branch-')
+     &    .gt.0)found_nfield=.true.
       enddo
       close(93,iostat=iosclose)
       if(iosclose.ne.0)return
-      if(found_candidate .and. found_nfield)deletable=.true.
+      if(found_owner .and. found_nfield)deletable=.true.
       return
       end subroutine z2_legacy_deletable
 
@@ -867,19 +879,19 @@
 
       call z2_legacy_deletable(filename,deletable)
       if(.not.deletable)then
-       write(0,*) '*** error - refusing to delete non-Z2 legacy file'
+       write(0,*) '*** error - refusing to delete non-Z2 n-field file'
        call vaspberry_fail
       endif
       inquire(file=trim(filename),exist=lexist)
       if(lexist)then
        open(unit=93,file=trim(filename),status='old',iostat=ios)
        if(ios.ne.0)then
-        write(0,*) '*** error - legacy output open',ios
+        write(0,*) '*** error - Z2 n-field output open',ios
         call vaspberry_fail
        endif
        close(93,status='delete',iostat=ios)
        if(ios.ne.0)then
-        write(0,*) '*** error - legacy output delete',ios
+        write(0,*) '*** error - Z2 n-field output delete',ios
         call vaspberry_fail
        endif
       endif
@@ -895,7 +907,7 @@
 
       call z2_legacy_paths(legacybase,legacyfile,legacytmp,pathok)
       if(.not.pathok)then
-       write(0,*) '*** error - legacy Z2 output name too long'
+       write(0,*) '*** error - Z2 n-field output name too long'
        call vaspberry_fail
       endif
       inquire(file='Z2_FIELD.tmp',exist=lexist)
@@ -913,7 +925,7 @@
       inquire(file=trim(legacyfile),exist=lexist)
       call z2_legacy_deletable(legacyfile,owned)
       if(.not.lexist .or. .not.owned)then
-       write(0,*) '*** error - incomplete legacy Z2 output'
+       write(0,*) '*** error - incomplete Z2 n-field output'
        call vaspberry_fail
       endif
 
@@ -921,7 +933,7 @@
       call delete_z2_file('Z2_FIELD.invalid.csv')
       call z2_atomic_replace('Z2_FIELD.tmp','Z2_FIELD.csv',ios)
       if(ios.ne.0)then
-       write(0,*) '*** error - legacy Z2 PASS publish failed',ios
+       write(0,*) '*** error - Z2 n-field PASS publish failed',ios
        call vaspberry_fail
       endif
       write(6,'(A)')'# Z2 field diagnostic file: Z2_FIELD.csv'
@@ -937,7 +949,7 @@
 
       call z2_legacy_paths(legacybase,legacyfile,legacytmp,pathok)
       if(.not.pathok)then
-       write(0,*) '*** error - legacy Z2 output name too long'
+       write(0,*) '*** error - Z2 n-field output name too long'
        call vaspberry_fail
       endif
       nfile=len_trim(filename)
@@ -949,36 +961,36 @@
        if(trim(filename(ibase:nfile)).eq.'Z2_FIELD.csv' .or.
      &    trim(filename(ibase:nfile)).eq.'Z2_FIELD.invalid.csv' .or.
      &    trim(filename(ibase:nfile)).eq.'Z2_FIELD.tmp')then
-        write(0,*) '*** error - legacy Z2 reserved input basename'
+        write(0,*) '*** error - Z2 n-field reserved input basename'
         call vaspberry_fail
        endif
       endif
       call z2_paths_same(filename,'Z2_FIELD.csv',same,pathok)
       if(.not.pathok)then
-       write(0,*) '*** error - cannot resolve legacy Z2 input path'
+       write(0,*) '*** error - cannot resolve Z2 n-field input path'
        call vaspberry_fail
       endif
       if(same)then
-       write(0,*) '*** error - legacy Z2 input-output alias'
+       write(0,*) '*** error - Z2 n-field input-output alias'
        call vaspberry_fail
       endif
       call z2_paths_same(filename,'Z2_FIELD.invalid.csv',
      &                   same,pathok)
       if(.not.pathok)then
-       write(0,*) '*** error - cannot resolve legacy Z2 output path'
+       write(0,*) '*** error - cannot resolve Z2 n-field output path'
        call vaspberry_fail
       endif
       if(same)then
-       write(0,*) '*** error - legacy Z2 input-output alias'
+       write(0,*) '*** error - Z2 n-field input-output alias'
        call vaspberry_fail
       endif
       call z2_paths_same(filename,'Z2_FIELD.tmp',same,pathok)
       if(.not.pathok)then
-       write(0,*) '*** error - cannot resolve legacy Z2 output path'
+       write(0,*) '*** error - cannot resolve Z2 n-field output path'
        call vaspberry_fail
       endif
       if(same)then
-       write(0,*) '*** error - legacy Z2 input-output alias'
+       write(0,*) '*** error - Z2 n-field input-output alias'
        call vaspberry_fail
       endif
       call z2_paths_same(filename,legacyfile,same,pathok)
@@ -987,7 +999,7 @@
        call vaspberry_fail
       endif
       if(same)then
-       write(0,*) '*** error - legacy Z2 input-output alias'
+       write(0,*) '*** error - Z2 n-field input-output alias'
        call vaspberry_fail
       endif
       call z2_paths_same(filename,legacytmp,same,pathok)
@@ -996,7 +1008,7 @@
        call vaspberry_fail
       endif
       if(same)then
-       write(0,*) '*** error - legacy Z2 input-output alias'
+       write(0,*) '*** error - Z2 n-field input-output alias'
        call vaspberry_fail
       endif
       call z2_output_deletable('Z2_FIELD.csv',safe1)
@@ -1017,19 +1029,19 @@
       open(unit=94,file='Z2_FIELD.invalid.csv',status='new',
      &     action='write',iostat=ios)
       if(ios.ne.0)then
-       write(0,*) '*** error - legacy Z2 sentinel create',ios
+       write(0,*) '*** error - Z2 n-field sentinel create',ios
        call vaspberry_fail
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
-      write(94,'(A)')'# schema_version=1'
-      write(94,'(A)')'# vaspberry_version=1.1.1'
+      write(94,'(A)')'# schema_version=2'
+      write(94,'(A)')'# vaspberry_version=1.2.0'
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
       write(94,'(2A)')'# legacy_output=',trim(legacyfile)
       close(94,iostat=ios)
       if(ios.ne.0)then
-       write(0,*) '*** error - legacy Z2 sentinel close',ios
+       write(0,*) '*** error - Z2 n-field sentinel close',ios
        call vaspberry_fail
       endif
       return
@@ -1051,12 +1063,12 @@
       if(lexist)then
        open(unit=94,file=trim(filename),status='old',iostat=ios)
        if(ios.ne.0)then
-        write(0,*) '*** error - legacy Z2 stale output open',ios
+        write(0,*) '*** error - Z2 n-field stale output open',ios
         call vaspberry_fail
        endif
        close(94,status='delete',iostat=ios)
        if(ios.ne.0)then
-        write(0,*) '*** error - legacy Z2 stale output delete',ios
+        write(0,*) '*** error - Z2 n-field stale output delete',ios
         call vaspberry_fail
        endif
       endif
@@ -1085,7 +1097,7 @@
       return
       end subroutine z2_atomic_replace
 
-!!$*  write legacy Z2 reconstruction diagnostics
+!!$*  write Fukui-Hatsugai n-field Z2 result and diagnostics
       subroutine write_z2_field_csv(rnfield,rflux,rminsv,recilat,
      &           nnk,nkx,nky,dskxky,b1,b2,b3,ifieldok,nini,nmax,
      &           ispinor)
@@ -1093,6 +1105,7 @@
       integer nnk,nkx,nky,ifieldok,nini,nmax,ispinor
       integer i,j,m,found,ios,ntop,nbottom,icellok
       integer nsum_top,nsum_bottom,parity_top,parity_bottom
+      integer parity_consistent
       integer, allocatable :: partner(:),half(:),ninteger(:)
       real*8 rnfield(nnk),rflux(nnk),rminsv(nnk)
       real*8 recilat(3,nnk),b1(3),b2(3),b3(3),dskxky
@@ -1111,12 +1124,12 @@
       phasemargin=0.8d0
       ifieldok=0
       if(nnk.ne.nkx*nky)then
-       write(0,*) '*** error - legacy Z2 field mesh mismatch',
+       write(0,*) '*** error - Z2 n-field mesh mismatch',
      &            nnk,nkx*nky
        call vaspberry_fail
       endif
       if(dskxky.le.0d0)then
-       write(0,*) '*** error - invalid legacy Z2 cell area',
+       write(0,*) '*** error - invalid Z2 n-field cell area',
      &            dskxky
        call vaspberry_fail
       endif
@@ -1139,7 +1152,7 @@
         endif
        enddo
        if(found.ne.1)then
-        write(0,*) '*** error - ambiguous legacy Z2 TR partner',
+        write(0,*) '*** error - ambiguous Z2 n-field TR partner',
      &             i,found
         call vaspberry_fail
        endif
@@ -1147,7 +1160,7 @@
 
       do i=1,nnk
        if(partner(i).lt.1 .or. partner(i).gt.nnk)then
-        write(0,*) '*** error - invalid legacy Z2 TR partner',i
+        write(0,*) '*** error - invalid Z2 n-field TR partner',i
         call vaspberry_fail
        endif
        if(partner(partner(i)).ne.i)then
@@ -1176,6 +1189,8 @@
       enddo
       parity_top=modulo(nsum_top,2)
       parity_bottom=modulo(nsum_bottom,2)
+      parity_consistent=0
+      if(parity_top.eq.parity_bottom)parity_consistent=1
 
       maxnres=0d0
       maxnpairres=0d0
@@ -1203,7 +1218,7 @@
       if(maxabsflux.ge.phasemargin*pi)fieldok=.false.
       if(minsv.ne.minsv .or. minsv.lt.minsvtol)fieldok=.false.
       if(nsum_top+nsum_bottom.ne.0)fieldok=.false.
-      if(parity_top.ne.parity_bottom)fieldok=.false.
+      if(parity_consistent.ne.1)fieldok=.false.
       if(fieldok)then
        ifieldok=1
        outname='Z2_FIELD.csv'
@@ -1214,19 +1229,31 @@
       open(unit=94,file='Z2_FIELD.tmp',status='replace',
      &     action='write',iostat=ios)
       if(ios.ne.0)then
-       write(0,*) '*** error - cannot open legacy Z2 output',ios
+       write(0,*) '*** error - cannot open Z2 n-field output',ios
        call vaspberry_fail
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
-      write(94,'(A)')'# schema_version=1'
-      write(94,'(A)')'# vaspberry_version=1.1.1'
+      write(94,'(A)')'# schema_version=2'
+      write(94,'(A)')'# vaspberry_version=1.2.0'
       if(fieldok)then
        write(94,'(A)')'# result_status=PASS'
       else
        write(94,'(A)')'# result_status=INVALID'
       endif
-      write(94,'(A)')'# result_kind=LEGACY_FUKUI_Z2_CANDIDATE'
-      write(94,'(A)')'# reportable_invariant=0'
+      write(94,'(A)')'# result_kind=FUKUI_HATSUGAI_NFIELD_Z2'
+      if(fieldok)then
+       write(94,'(A)')'# reportable_invariant=1'
+       write(94,'(A,I0)')'# z2_invariant=',parity_top
+       write(94,'(A,I0)')'# half_top_z2_parity=',parity_top
+       write(94,'(A,I0)')'# half_bottom_z2_parity=',parity_bottom
+      else
+       write(94,'(A)')'# reportable_invariant=0'
+       write(94,'(A)')'# z2_invariant=NOT_REPORTABLE'
+       write(94,'(A)')'# half_top_z2_parity=NOT_REPORTABLE'
+       write(94,'(A)')'# half_bottom_z2_parity=NOT_REPORTABLE'
+      endif
+      write(94,'(A,I0)')'# half_bz_parity_consistent=',
+     &                   parity_consistent
       write(94,'(A,I0)')'# nkx=',nkx
       write(94,'(A,I0)')'# nky=',nky
       write(94,'(A,I0)')'# band_min=',nini
@@ -1278,17 +1305,6 @@
       write(94,'(A,ES24.16E3)')'# max_abs_flux_rad=',maxabsflux
       write(94,'(A,I0)')'# half_top_nfield_sum=',nsum_top
       write(94,'(A,I0)')'# half_bottom_nfield_sum=',nsum_bottom
-      if(fieldok)then
-       write(94,'(A,I0)')'# half_top_legacy_z2_candidate=',
-     &                    parity_top
-       write(94,'(A,I0)')'# half_bottom_legacy_z2_candidate=',
-     &                    parity_bottom
-      else
-       write(94,'(A)')'# half_top_legacy_z2_candidate='//
-     &                 'NOT_REPORTABLE'
-       write(94,'(A)')'# half_bottom_legacy_z2_candidate='//
-     &                 'NOT_REPORTABLE'
-      endif
       write(94,'(A,I0)')'# numerical_self_consistency_checks_pass=',
      &                   ifieldok
       write(94,'(A)')'cell_id,q1,q2,q3,kx_A-1,ky_A-1,'//
@@ -1325,19 +1341,19 @@
      &       3(',',ES24.16E3),2(',',I0))
       close(94,iostat=ios)
       if(ios.ne.0)then
-       write(0,*) '*** error - legacy Z2 temporary output close',ios
+       write(0,*) '*** error - Z2 n-field temporary output close',ios
        call vaspberry_fail
       endif
       if(ifieldok.eq.0)then
        call z2_atomic_replace('Z2_FIELD.tmp',trim(outname),ios)
        if(ios.ne.0)then
-        write(0,*) '*** error - legacy Z2 invalid publish',ios
+        write(0,*) '*** error - Z2 n-field invalid publish',ios
         call vaspberry_fail
        endif
        write(6,'(A,A)')'# Z2 field diagnostic file: ',
      &                  trim(outname)
       else
-       write(6,'(A)')'# Z2 PASS field staged; awaiting legacy output'
+       write(6,'(A)')'# Z2 PASS field staged; awaiting NFIELD output'
       endif
       write(6,'(A,ES13.5)')'# Z2 field total Chern: ',totalchern
       write(6,'(A,ES13.5)')'# Z2 field minimum link s.v.: ',minsv
@@ -1346,7 +1362,7 @@
       write(6,'(A,ES13.5)')'# Z2 field max n integer residual: ',
      &                     maxnres
       if(ifieldok.eq.0)then
-       write(0,*) '*** invalid - legacy Z2 reconstruction checks failed'
+       write(0,*) '*** invalid - Z2 n-field checks failed'
       endif
 
       deallocate(ninteger,half,partner)
@@ -1382,14 +1398,14 @@
        if(iz.eq.1)then
         call z2_legacy_paths(foname,z2legacy,z2legacytmp,z2pathok)
         if(.not.z2pathok)then
-         write(0,*) '*** error - legacy Z2 output name too long'
+         write(0,*) '*** error - Z2 n-field output name too long'
          call vaspberry_fail
         endif
         fonameo=z2legacytmp
         open(32,file=trim(fonameo),status='replace',
      &       action='write',iostat=ios)
         if(ios.ne.0)then
-         write(0,*) '*** error - legacy Z2 temp open',ios
+         write(0,*) '*** error - Z2 n-field temp open',ios
          call vaspberry_fail
         endif
        else
@@ -1417,13 +1433,13 @@
 
        if(nini .eq. nmax) then
         if(iz == 1)then
-         write(32,'(A,I4)')"# Legacy Z2 candidate BAND : ",nini
+         write(32,'(A,I4)')"# Fukui-Hatsugai Z2 BAND : ",nini
         elseif(iz+ivel+icd .eq. 0)then
          write(32,'(A,I4)')"# Chern Number for the BAND : ",nmax
         endif
        else
         if(iz == 1)then
-         write(32,'(A,I4,A,I4)')"# Legacy Z2 candidate BANDS: ",nini,
+         write(32,'(A,I4,A,I4)')"# Fukui-Hatsugai Z2 BANDS: ",nini,
      &                         " - ",nmax
         elseif(iz+ivel+icd .eq. 0)then
          write(32,'(A,I4,A,I4)')"# Chern Number for the BANDS : ",nini,
@@ -1431,16 +1447,19 @@
         endif
        endif
  
-       if(iz == 1)then !legacy Z2 candidate
-        write(32,'(A,I2)')"# Legacy Z2 candidate (top) = ",
+       if(iz == 1)then !Fukui-Hatsugai n-field Z2 invariant
+        write(32,'(A,I2)')"# Z2 invariant (top half BZ) = ",
      &                  modulo(nint(rvari),2)
-        write(32,'(A,I2)')"# Legacy Z2 candidate (bottom) = ",
+        write(32,'(A,I2)')"# Z2 invariant (bottom half BZ) = ",
      &                  modulo(nint(rvari2),2)
-        write(32,'(A)')"# Validate with tools/wavecar_z2.py."
-        write(32,'(A)')"# NFIELD.dat stores the gauge-dependent"
-        write(32,'(A)')"# integer n-field:"
-        write(32,'(A)')"# n=(sum link phases-Wilson phase)/(2*pi)."
-        write(32,'(A)')"# Berry flux=-Wilson phase; see Z2_FIELD.csv."
+        write(32,'(A,I2)')"# Z2 invariant = ",
+     &                  modulo(nint(rvari),2)
+        write(32,'(A)')"# Top/bottom half-BZ consistency: PASS."
+        write(32,'(A)')"# NFIELD.dat stores the gauge- and branch-"
+        write(32,'(A)')"# dependent integer n-field:"
+        write(32,'(A)')"# n=(sum link phases-principal plaquette phase)"
+        write(32,'(A)')"#   /(2*pi). Berry flux is minus that phase."
+        write(32,'(A)')"# See Z2_FIELD.csv for validation metadata."
         write(32,'(A)')"# (cart) kx        ky        kz(A^-1)
      &    n-field strength      ,   (recip)kx        ky        kz"
 
@@ -1486,12 +1505,12 @@
        if(iz.eq.1)then
         close(32,iostat=ios)
         if(ios.ne.0)then
-         write(0,*) '*** error - legacy Z2 temp close',ios
+         write(0,*) '*** error - Z2 n-field temp close',ios
          call vaspberry_fail
         endif
         call z2_atomic_replace(z2legacytmp,z2legacy,ios)
         if(ios.ne.0)then
-         write(0,*) '*** error - legacy Z2 output publish',ios
+         write(0,*) '*** error - Z2 n-field output publish',ios
          call vaspberry_fail
         endif
        else
@@ -1903,7 +1922,7 @@
       complex*16, allocatable :: coeff1u(:),coeff1d(:)
       complex*16, allocatable :: coeff2u(:),coeff2d(:)
       complex*16 detS(4),detLOOP
-      real*8 link_phase(4),phase_sum,wilson_phase
+      real*8 link_phase(4),phase_sum,plaquette_phase
       real*8 wnklist(3,nk*iz2),wklist(3,nk)
       real*8 w_half_klist(3,nk),rfield,rflux,rminsv
       real*8 wkk(3,5),wklp(3,5,nk*iz2)
@@ -1951,7 +1970,7 @@
        call z2_link_svd_phase(Sijt,ns,link_phase(ilp),
      &                        linksmin,linkinfo)
        if(linkinfo.ne.0)then
-        write(0,*) '*** error - legacy Z2 link factorization',
+        write(0,*) '*** error - Z2 n-field link factorization',
      &             ik,ilp,linkinfo
         call vaspberry_fail
        endif
@@ -1961,9 +1980,9 @@
       enddo
 
       phase_sum=sum(link_phase)
-      wilson_phase=datan2(dsin(phase_sum),dcos(phase_sum))
-      rflux=-wilson_phase
-      rfield=(phase_sum-wilson_phase)/(2d0*pi)
+      plaquette_phase=datan2(dsin(phase_sum),dcos(phase_sum))
+      rflux=-plaquette_phase
+      rfield=(phase_sum-plaquette_phase)/(2d0*pi)
       detLOOP=detS(1)*detS(2)*detS(3)*detS(4)
 
       if(sum(itrim(1:4)).ge.1)then
@@ -2152,12 +2171,12 @@
       complex*16 zinup,zindn
 
       if(iilp.lt.1 .or. iilp.gt.5)then
-       write(0,*) '*** error - invalid legacy Z2 loop endpoint',
+       write(0,*) '*** error - invalid Z2 n-field loop endpoint',
      &            iilp
        call vaspberry_fail
       endif
       if(ispinor.ne.2)then
-       write(0,*) '*** error - legacy Z2 state needs spinors'
+       write(0,*) '*** error - Z2 n-field state needs spinors'
        call vaspberry_fail
       endif
 
@@ -2168,14 +2187,14 @@
        itheta=1
       endif
       if(source_band.lt.1 .or. source_band.gt.nband)then
-       write(0,*) '*** error - invalid legacy Z2 source band',
+       write(0,*) '*** error - invalid Z2 n-field source band',
      &            source_band
        call vaspberry_fail
       endif
 
       nraw=npl(iilp)
       if(nraw.lt.2 .or. mod(nraw,ispinor).ne.0)then
-       write(0,*) '*** error - invalid legacy Z2 coefficient count',
+       write(0,*) '*** error - invalid Z2 n-field coefficient count',
      &            nraw
        call vaspberry_fail
       endif
@@ -2197,7 +2216,7 @@
       call plindx(gtarget,ntarget,ispinor,wkt,b1,b2,b3,
      &            nbmax,nraw,ecut,npmax)
       if(nsource.ne.ntarget)then
-       write(0,*) '*** error - legacy Z2 G-basis size mismatch',
+       write(0,*) '*** error - Z2 n-field G-basis size mismatch',
      &            nsource,ntarget
        call vaspberry_fail
       endif
@@ -2206,7 +2225,7 @@
      &     nk*(nband+1)*(isp-1)+source_band
       read(10,rec=irec,iostat=ios)(raw(i),i=1,nraw)
       if(ios.ne.0)then
-       write(0,*) '*** error - legacy Z2 coefficient read failed',
+       write(0,*) '*** error - Z2 n-field coefficient read failed',
      &            irec,ios
        call vaspberry_fail
       endif
@@ -2216,14 +2235,14 @@
        gs(:)=gsource(:,i)
        call z2_map_gvector(gt,gs,wks,wkt,itheta,ierr)
        if(ierr.ne.0)then
-        write(0,*) '*** error - noninteger legacy Z2 G mapping',
+        write(0,*) '*** error - noninteger Z2 n-field G mapping',
      &             iilp,i
         call vaspberry_fail
        endif
        if(gt(1).lt.-nbmax(1) .or. gt(1).gt.nbmax(1) .or.
      &    gt(2).lt.-nbmax(2) .or. gt(2).gt.nbmax(2) .or.
      &    gt(3).lt.-nbmax(3) .or. gt(3).gt.nbmax(3))then
-        write(0,*) '*** error - legacy Z2 mapped G outside basis',
+        write(0,*) '*** error - Z2 n-field mapped G outside basis',
      &             gt
         call vaspberry_fail
        endif
@@ -2231,7 +2250,7 @@
      &     (2*nbmax(1)+1)+(gt(2)+nbmax(2))*
      &     (2*nbmax(1)+1)+(gt(1)+nbmax(1))+1
        if(seen(idx).ne.0)then
-        write(0,*) '*** error - duplicate legacy Z2 G mapping',idx
+        write(0,*) '*** error - duplicate Z2 n-field G mapping',idx
         call vaspberry_fail
        endif
        seen(idx)=1
@@ -2251,7 +2270,7 @@
        if(gt(1).lt.-nbmax(1) .or. gt(1).gt.nbmax(1) .or.
      &    gt(2).lt.-nbmax(2) .or. gt(2).gt.nbmax(2) .or.
      &    gt(3).lt.-nbmax(3) .or. gt(3).gt.nbmax(3))then
-        write(0,*) '*** error - legacy Z2 target G outside basis',
+        write(0,*) '*** error - Z2 n-field target G outside basis',
      &             gt
         call vaspberry_fail
        endif
@@ -2259,7 +2278,7 @@
      &     (2*nbmax(1)+1)+(gt(2)+nbmax(2))*
      &     (2*nbmax(1)+1)+(gt(1)+nbmax(1))+1
        if(seen(idx).ne.1)then
-        write(0,*) '*** error - incomplete legacy Z2 G bijection',
+        write(0,*) '*** error - incomplete Z2 n-field G bijection',
      &             i,idx
         call vaspberry_fail
        endif
@@ -2268,7 +2287,7 @@
       norm_out=sum(abs(coeffu)**2)+sum(abs(coeffd)**2)
       tol=1d-10*dmax1(1d0,norm_in)
       if(dabs(norm_in-norm_out).gt.tol)then
-       write(0,*) '*** error - legacy Z2 norm changed in mapping',
+       write(0,*) '*** error - Z2 n-field norm changed in mapping',
      &            norm_in,norm_out
        call vaspberry_fail
       endif
@@ -3319,11 +3338,15 @@
 
 ! The WAVECAR header stores VASP's logical direct-access record length.
 ! VASPBERRY must use the same RECL unit as the VASP writer.
-! With ifort, byte RECL requires -assume byterecl for both programs.
+! With Intel ifx/ifort, byte RECL requires -assume byterecl.
       irecl=24
-      open(unit=10,file=filename,access='direct',recl=irecl,
+      open(unit=10,file=filename,access='direct',
+     & form='unformatted',recl=irecl,action='read',
      & iostat=iost,status='old')
-      if (iost .ne. 0) write(6,*) '0.open error - iostat =',iost
+      if (iost .ne. 0)then
+       write(0,*) '*** error - WAVECAR header open, iostat =',iost
+       call vaspberry_fail
+      endif
 
       read(10,rec=1)xirecl,xispin,xiprec !RDUM,RISPIN,RTAG(in real type)
       close(10)
@@ -3332,9 +3355,13 @@
        write(0,*) '*** error - WAVECAR_double needs complex*16'
        call vaspberry_fail
       endif
-      open(unit=10,file=filename,access='direct',recl=irecl,
-     &iostat=iost,status='old')
-      if (iost.ne.0) write(6,*) '1.open error - iostat =',iost
+      open(unit=10,file=filename,access='direct',
+     & form='unformatted',recl=irecl,action='read',
+     & iostat=iost,status='old')
+      if (iost.ne.0)then
+       write(0,*) '*** error - WAVECAR data open, iostat =',iost
+       call vaspberry_fail
+      endif
       read(10,rec=2) xnk,xnband,ecut,                 !RNKPTS,RNB_TOT,ENCUT
      &(a1(j),j=1,3),(a2(j),j=1,3),(a3(j),j=1,3)       !A1(3),A2(3),A3(3)
       nk=nint(xnk)
@@ -3350,28 +3377,34 @@
       write(6,*)"#This program calculates (1)berry curvature omega(k) "
       write(6,*)"#for closed loop C on a small patches in k-space,"
       write(6,*)"#and (2) degree of optical selectivity between "
-      write(6,*)"#two bands specified. "
+      write(6,*)"#two bands specified, and (3) a 2D Z2 invariant by"
+      write(6,*)"#the Fukui-Hatsugai lattice n-field method."
       write(6,*)" "
       write(6,*)"#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       write(6,*)"#! Copyright 2015. Hyun-Jung Kim All rights reserved.!"
-      write(6,*)"#!           (angpangmokjang@hanmail.net)            !"
+      write(6,*)"#!        https://github.com/Infant83/VASPBERRY       !"
       write(6,*)"#!             Hanyang Univ. 2015.Apr.05.            !"
       write(6,*)"#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       write(6,*)" "
       write(6,*)"#*Ref1: T. Fukui, Y. Hatsugai, and H. Suzuki, "
-      write(6,*)"#       J. J. Phys. Soc. Jap. 74, 1674 (2005),"
+      write(6,*)"#       J. Phys. Soc. Jpn. 74, 1674 (2005),"
+      write(6,*)"#       DOI 10.1143/JPSJ.74.1674"
       write(6,*)"#     'Chern Numbers in Discretized Brillouin Zone: "
-      write(6,*)"#  Efficient Method of Computing (Spin) Hall 
-     &Conductances'"
-      write(6,*)"#*Ref2: R. Resta, J. Phys.: Condens. Matter. 12, R107 
-     &(2000)"
+      write(6,*)"#  Efficient Method of Computing (Spin) Hall
+     & Conductances'"
+      write(6,*)"#*Ref2: T. Fukui and Y. Hatsugai, J. Phys. Soc. Jpn."
+      write(6,*)"#       76, 053702 (2007), DOI 10.1143/JPSJ.76.053702"
+      write(6,*)"#     'Lattice Computation of Z2 Topological "
+      write(6,*)"#      Invariants and Its Application to Bi and Sb'"
+      write(6,*)"#*Ref3: R. Resta, J. Phys.: Condens. Matter. 12, R107
+     & (2000)"
       write(6,*)"#     'Menifestations of Berry's phase in molecules "
       write(6,*)"#      and condensed matter'"
-      write(6,*)"#*Ref3: W. Yao, D. Xiao, and Q. Niu, PRB 77, 235406 
-     &(2008)"
+      write(6,*)"#*Ref4: W. Yao, D. Xiao, and Q. Niu, PRB 77, 235406
+     & (2008)"
       write(6,*)"#     'Valley-dependent optoelectronics from inversion"
       write(6,*)"#      symmetry breaking'"
-      write(6,*)"#*Ref4: http://www.andrew.cmu.edu/user/feenstra/
+      write(6,*)"#*Ref5: http://www.andrew.cmu.edu/user/feenstra/
      &wavetrans/"
       write(6,*)"#       R. M. Feenstra and M. Widom                  "
       write(6,*)"#       some routines has been adopted from WAVETRANS"
@@ -3379,10 +3412,10 @@
       write(6,*)"#       matching "
       write(6,*)" "
       write(6,*)"#*Syntax:"
-      write(6,*)"#       berry -f file -kx nx -ky ny -s 2 -ii ni -if nf"
-      write(6,*)"#*  (or)berry -f file -kx nx -ky ny -s 2 -is n "
+      write(6,*)"# ./vaspberry -f file -kx nx -ky ny -s 2 -ii ni -if nf"
+      write(6,*)"#*  (or) ./vaspberry -f file -kx nx -ky ny -s 2 -is n "
       write(6,*)" "
-      write(6,*)"#*For the detailed help: ./berry -h"
+      write(6,*)"#*For the detailed help: ./vaspberry -h"
       write(6,*)" "
       write(6,*)" "
       end subroutine creditinfo
@@ -3598,10 +3631,13 @@
       write(6,*)"       in the WAVECAR file, but the imaginary part is "
       write(6,*)"       zero (at least for cases investigated thus far)"
       write(6,*)" "
-      write(6,*)"*Syntax:berry -f file -kx nx -ky ny -s 2 -ii ni -if nf"
-      write(6,*)"*   (or)berry -f file -kx nx -ky ny -s 2 -is n "
+      write(6,*)"*Syntax: build/vaspberry-gfortran -f file"
+      write(6,*)"*        -kx nx -ky ny -s 2 -ii ni -if nf"
+      write(6,*)"*   (or) build/vaspberry-gfortran -f file"
+      write(6,*)"*        -kx nx -ky ny -s 2 -is n"
       write(6,*)" "
       write(6,*)"             ### POSSIBLE OPTIONS ###"
+      write(6,*)" -h               : Print this help and stop"
       write(6,*)" -f filename      : File name to be read"
       write(6,*)"                  : Default: WAVECAR"
       write(6,*)" -kx(ky) kx(ky)   : k-point grid of your system"
@@ -3653,13 +3689,30 @@
       write(6,*)" -vel 1 -is n     : **For the special purpose"
       write(6,*)"                  : Calculate velocity expectation "
       write(6,*)"                  : vaule (v_x, v_y) of n-th state"
-      write(6,*)" -z2  1           : Legacy Fukui Z2 candidate"
-      write(6,*)"                  : Requires a full even 2D mesh,"
-      write(6,*)"                  : ISPIN=1 spinors, and bands 1:NE."
-      write(6,*)"                  : Do not report it as an invariant."
-      write(6,*)"                  : Run tools/wavecar_z2.py; report"
-      write(6,*)"                  : Z2 only when diagnostics PASS."
-      write(6,*)" -hf  1           : Rejected for legacy Z2 safety."
+      write(6,*)" -z2  1           : Fukui-Hatsugai n-field Z2 index"
+      write(6,*)"                  : For a 2D, nonmagnetic, gapped,"
+      write(6,*)"                  : time-reversal-symmetric SOC run."
+      write(6,*)"                  : Use a converged CHGCAR in an"
+      write(6,*)"                  : ICHARG=11 run with ISYM=-1 and"
+      write(6,*)"                  : a full, even Gamma-centered mesh"
+      write(6,*)"                  : with Nx,Ny >= 4 and kz=0 modulo G."
+      write(6,*)"                  : Requires ISPIN=1 spinors (-s 2)"
+      write(6,*)"                  : occupied bands 1:NE, NBANDS>NE,"
+      write(6,*)"                  : and each of four 2D TRIM once."
+      write(6,*)"                  : Example (12x12, NE=10):"
+      write(6,*)"                  : ./build/vaspberry-gfortran"
+      write(6,*)"                  :   -f WAVECAR -o NFIELD"
+      write(6,*)"                  :   -z2 1 -kx 12 -ky 12 -s 2"
+      write(6,*)"                  :   -ii 1 -if 10"
+      write(6,*)"                  : PASS writes NFIELD.dat and"
+      write(6,*)"                  : Z2_FIELD.csv. Report z2_invariant"
+      write(6,*)"                  : only for result_status=PASS; the"
+      write(6,*)"                  : top/bottom half-BZ parities must"
+      write(6,*)"                  : agree. Check denser even meshes."
+      write(6,*)"                  : Rejected/preflight runs may keep"
+      write(6,*)"                  : Z2_FIELD.invalid.csv; NFIELD.dat"
+      write(6,*)"                  : needs the final PASS CSV."
+      write(6,*)" -hf  1           : Rejected for Z2 full-mesh safety."
       write(6,*)" -wf nb -k nk     : **For the special purpose"
       write(6,*)"  -ng nx,ny,nz    : Calculate real-space wavefunction"
       write(6,*)"  -im 1           : output will be written in "
@@ -3686,11 +3739,14 @@
      &-kp 1"
       write(6,*)"* here, VBM is valence band maximum"
       write(6,*)" "
-      write(6,*)"*Compilation: gfortran or ifort."
+      write(6,*)"*Compilation: see Makefile and docs/BUILD.md."
+      write(6,*)" GNU: make serial; make mpi"
+      write(6,*)" Intel: make ifx; make ifx-mpi"
+      write(6,*)" Classic: make ifort; make ifort-mpi (manual only)"
       write(6,*)"*WAVECAR compatibility:"
       write(6,*)" VASP and VASPBERRY must use the same direct-access"
       write(6,*)" RECL unit. Byte RECL is recommended."
-      write(6,*)" With ifort, compile both VASP and VASPBERRY using"
+      write(6,*)" With Intel ifx/ifort, compile reader and writer using"
       write(6,*)" '-assume byterecl'. The supplied gfortran version"
       write(6,*)" uses byte RECL."
       write(6,*)" A RECL mismatch may leave the first WAVECAR header"
@@ -3701,16 +3757,6 @@
       write(6,*)" A VASPBERRY built without '-assume byterecl' may"
       write(6,*)" read such a legacy WAVECAR, but use it only for"
       write(6,*)" files written with that same RECL convention."
-      write(6,*)" for OSX,  -Wl,-stack_size,0x80000000 may be required"
-      write(6,*)" ex-noMPI)ifort -fpp -assume byterecl -mkl 
-     &-o vaspberry vaspberry.f"
-      write(6,*)" ex-MPI)mpif90 -DMPI_USE -mkl -fpp -assume byterecl 
-     &-o vaspberry vaspberry.f"
-      write(6,*)" ex-noMPI-gfortran) gfortran -I/opt/local/include 
-     &-L/opt/local/lib/lapack/ -l lapack -o vaspberry vaspberry_gfortran
-     &_serial.f"
-!     write(6,*)" ex-MPI) mpif90 -DMPI_USE -mkl -fpp -assume byterecl -o vaspberry vaspberry.f "
-
       stop
       end subroutine help
 

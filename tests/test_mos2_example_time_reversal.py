@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXAMPLE = ROOT / "1H-MoS2" / "BERRYCURV.dat"
+EXAMPLE = ROOT / "examples" / "1H-MoS2" / "BERRYCURV.dat"
 
 
 def _mod1(value: float) -> float:

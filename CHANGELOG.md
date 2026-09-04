@@ -2,6 +2,54 @@
 
 All notable changes to VASPBERRY are recorded here.
 
+## [1.2.0] - 2026-09-04
+
+### Added
+
+- Promoted `-z2 1` to the documented two-dimensional Fukui-Hatsugai lattice
+  n-field Z2 interface. `-h` now states the full even Gamma-centered mesh,
+  SOC spinor, occupied-band, output, parity, and mesh-convergence contract.
+- Added reviewed two-stage Bi input templates: an SOC SCF calculation that
+  writes `CHGCAR`, followed by an `ICHARG=11` fixed-charge calculation that
+  writes the full-mesh spinor `WAVECAR`.
+- Added a field-only 12 x 12 plotting helper and a rendered comparison of the
+  incomplete and corrected n-fields. Five of 144 plaquettes change; the
+  corrected top/bottom sums are -3/+3 and both parities are 1.
+- Added GNU serial/OpenMPI Makefile targets, a two-rank MPI datatype/status
+  smoke test, compiler-specific build documentation, and reviewed manual
+  recipes for Intel `ifx` and legacy `ifort`.
+- Added a roadmap that explicitly defers an importable Python library port
+  until it has golden numerical comparisons with the Fortran implementations.
+
+### Changed
+
+- PASS field results now record
+  `result_kind=FUKUI_HATSUGAI_NFIELD_Z2`,
+  `reportable_invariant=1`, a numeric `z2_invariant`, and matching top/bottom
+  parity fields. Rejected results remain non-reportable. The Z2 field schema
+  is version 2; old ownership markers remain recognized for safe cleanup.
+- Replaced the nonstandard `MPI_REAL8` datatype in the Z2 reductions with
+  `MPI_DOUBLE_PRECISION`, and made MPI help exit through `MPI_FINALIZE`.
+- Moved the Bi and 1H-MoS2 data under `examples/`, separated the Bi 2016 raw
+  archive from reviewed new-run templates, and separated full-BZ MoS2 data
+  from its K-Gamma-K' line workflow.
+- Removed the previous Python Wilson-loop CLI, its detailed guide, and its
+  dedicated tests from the active tree. An independent method remains an
+  optional literature cross-check and is not part of `-z2`.
+
+### Data and portability scope
+
+- Removed all four tracked MoS2 `POTCAR` copies from the current tree and
+  added non-proprietary provenance plus a CI guard against future tracking.
+  Historical Git objects require a separately authorized history rewrite to
+  purge completely.
+- GNU serial and OpenMPI builds are configured for CI on Ubuntu 22.04 and
+  24.04. Intel `ifx` 2025.0 and retained `ifort` 2021.10 serial builds are
+  compile/help-tested in CI; Intel MPI numerical validation remains manual.
+- The bundled Bi `WAVECAR` reproduces VASPBERRY post-processing. The complete
+  preceding SCF provenance for its archived `CHGCAR` is unavailable, so it is
+  not described as an end-to-end DFT reproduction package.
+
 ## [1.1.1] - 2026-08-31
 
 ### Fixed
@@ -78,8 +126,10 @@ All notable changes to VASPBERRY are recorded here.
   The physical relation is the wrapped flux condition
   `wrap[flux(-k)+flux(k)]=0` modulo `2*pi`.
 - Thresholds are conservative diagnostic policies and can yield false
-  rejection on a coarse mesh. The guarded Wilson-loop workflow and mesh
-  convergence remain required before reporting an invariant.
+  rejection on a coarse mesh. At the time of version 1.1.1, the guarded
+  Wilson-loop workflow and mesh convergence were required before reporting
+  an invariant; version 1.2.0 supersedes that reporting policy for the
+  validated Fukui-Hatsugai n-field result.
 
 ### Distribution status
 

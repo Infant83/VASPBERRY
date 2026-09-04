@@ -1,14 +1,15 @@
-name: Bi Z2 validation
+name: Bi n-field Z2 validation
 
 on:
   push:
     branches: [master, "feature/**"]
     paths:
       - ".github/workflows/bi-z2-validation.yml"
-      - "Bi_Z2/**"
+      - "Makefile"
+      - "examples/Bi_Z2/**"
+      - "tests/compare_z2_fields.py"
       - "VERSION"
       - "requirements-transport.txt"
-      - "tools/wavecar_z2.py"
       - "vaspberry.f"
       - "vaspberry_gfortran_serial.f"
   workflow_dispatch:
@@ -18,8 +19,8 @@ permissions:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,20 +33,40 @@ jobs:
       - name: Install build and Python dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gfortran libblas-dev liblapack-dev
+          sudo apt-get install -y gfortran libblas-dev liblapack-dev \
+            openmpi-bin libopenmpi-dev
           python -m pip install --upgrade pip
           python -m pip install -r requirements-transport.txt
       - name: Verify WAVECAR payload
         run: |
-          test "$(wc -c < Bi_Z2/WAVECAR)" -eq 200421600
-          echo "a8d81854f2efc561938e478dde1be29a17ccc95d5d37325c122b9d9e82fa0838  Bi_Z2/WAVECAR" | sha256sum -c -
-      - name: Run corrected and guarded Z2 workflows
-        run: ./Bi_Z2/run_z2.sh
-      - name: Upload diagnostics
+          test "$(wc -c < examples/Bi_Z2/WAVECAR)" -eq 200421600
+          echo "a8d81854f2efc561938e478dde1be29a17ccc95d5d37325c122b9d9e82fa0838  examples/Bi_Z2/WAVECAR" | sha256sum -c -
+      - name: Build GNU serial and Open MPI executables
+        run: make gnu
+      - name: Run serial 12 x 12 Z2 workflow
+        run: |
+          VASPBERRY_BIN="$PWD/build/vaspberry-gfortran" \
+          VASPBERRY_RESULT_DIR="$PWD/examples/Bi_Z2/results-z2-serial" \
+            ./examples/Bi_Z2/scripts/run_z2.sh
+      - name: Run two-rank Open MPI 12 x 12 Z2 workflow
+        run: |
+          OMPI_MCA_rmaps_base_oversubscribe=1 \
+          VASPBERRY_BIN="$PWD/build/vaspberry-mpi" \
+          VASPBERRY_RESULT_DIR="$PWD/examples/Bi_Z2/results-z2-mpi" \
+          VASPBERRY_MPI_NPROCS=2 \
+            ./examples/Bi_Z2/scripts/run_z2.sh
+      - name: Compare serial and MPI Z2 fields
+        run: |
+          python tests/compare_z2_fields.py \
+            examples/Bi_Z2/results-z2-serial/Z2_FIELD.csv \
+            examples/Bi_Z2/results-z2-mpi/Z2_FIELD.csv
+      - name: Upload serial and MPI n-field diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bi-z2-v1.1.1-${{ github.sha }}
-          path: Bi_Z2/results-v1.1.1/
+          name: bi-z2-nfield-serial-mpi-${{ github.sha }}
+          path: |
+            examples/Bi_Z2/results-z2-serial/
+            examples/Bi_Z2/results-z2-mpi/
           if-no-files-found: warn
           retention-days: 14

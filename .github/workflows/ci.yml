@@ -30,32 +30,85 @@ jobs:
           PYTHONPATH: tools
         run: python -m unittest discover -s tests -v
 
-  fortran-builds:
-    runs-on: ubuntu-latest
+  fortran-portability:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            gfortran: gfortran-11
+          - os: ubuntu-24.04
+            gfortran: gfortran-13
+    runs-on: ${{ matrix.os }}
+    env:
+      OMPI_FC: ${{ matrix.gfortran }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GNU Fortran, BLAS, LAPACK, and Open MPI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.gfortran }} libblas-dev \
+            liblapack-dev openmpi-bin libopenmpi-dev
+      - name: Record GNU and MPI compiler versions
+        run: |
+          ${{ matrix.gfortran }} --version
+          mpifort --showme:command
+          mpiexec --version
+      - name: Build GNU serial and MPI executables
+        run: make gnu FC=${{ matrix.gfortran }} MPIFC=mpifort
+      - name: Run serial and two-rank MPI smoke checks
+        run: >-
+          make check-gnu FC=${{ matrix.gfortran }} MPIFC=mpifort
+          MPIEXEC=mpiexec MPIEXEC_FLAGS=--oversubscribe
+
+  intel-serial-portability:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: intel
+            version: "2025.0"
+            target: ifx
+            command: ifx
+            executable: build/vaspberry-ifx
+          - compiler: intel-classic
+            version: "2021.10"
+            target: ifort
+            command: ifort
+            executable: build/vaspberry-ifort
+    steps:
+      - uses: actions/checkout@v4
+      - uses: fortran-lang/setup-fortran@be037f0a45b1160f139d4ccd0b96f9e9bfd6a682 # v1
+        with:
+          compiler: ${{ matrix.compiler }}
+          version: ${{ matrix.version }}
+      - name: Install LP64 BLAS and LAPACK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libblas-dev liblapack-dev
+      - name: Record Intel compiler version
+        run: ${{ matrix.command }} --version
+      - name: Build and help-test Intel serial executable
+        run: |
+          make ${{ matrix.target }} \
+            IFX_MKL_FLAGS='-llapack -lblas' \
+            IFORT_MKL_FLAGS='-llapack -lblas'
+          ${{ matrix.executable }} -h > build/help-intel.txt
+          sh tests/check_fortran_help.sh build/help-intel.txt
+
+  fortran-z2-regression:
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Install GNU Fortran, BLAS, LAPACK, and Open MPI
         run: |
           sudo apt-get update
           sudo apt-get install -y gfortran libblas-dev liblapack-dev openmpi-bin libopenmpi-dev
-      - name: Compile serial source
-        run: >-
-          gfortran -cpp -O2 -fcheck=all -ffixed-line-length-none
-          -fallow-argument-mismatch
-          -o vaspberry_gfortran_serial vaspberry_gfortran_serial.f
-          -llapack -lblas
-      - name: Verify serial help and version
-        run: |
-          ./vaspberry_gfortran_serial -h > vaspberry-help.txt
-          grep -F "Ver 1.1.1" vaspberry-help.txt
-      - name: Compile MPI source
-        run: >-
-          mpifort -cpp -DMPI_USE -O2 -ffixed-line-length-none
-          -fallow-argument-mismatch
-          -o vaspberry_mpi vaspberry.f
-          -llapack -lblas
       - name: Run actual-source Fortran Z2 helper tests
         run: |
+          make serial
           mkdir -p build/z2-test
           gfortran -cpp -O0 -g -fcheck=all -fbacktrace \
             -ffpe-trap=invalid,zero,overflow \
@@ -85,7 +138,7 @@ jobs:
           build/z2-test/test_z2_legacy_atomic
 
           guard="$PWD/build/z2-test/test_z2_output_guard"
-          serial_cli="$PWD/vaspberry_gfortran_serial"
+          serial_cli="$PWD/build/vaspberry-gfortran"
           atomic="$PWD/build/z2-test/test_z2_legacy_atomic"
           finalize="$PWD/build/z2-test/test_z2_finalize_guard"
           cases=build/z2-test/output-guard
@@ -169,7 +222,7 @@ jobs:
             echo "72-character Z2 output base was accepted" >&2
             exit 1
           fi
-          grep -F 'legacy Z2 output name too long' \
+          grep -F 'Z2 n-field output name too long' \
             "$cli_72/stderr.log"
           test ! -e "$cli_72/Z2_FIELD.csv"
           test ! -e "$cli_72/Z2_FIELD.invalid.csv"

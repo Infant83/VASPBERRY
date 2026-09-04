@@ -460,7 +460,7 @@ Plot a legacy curvature map:
 
 ```bash
 python tools/vaspberry_transport.py map \
-  --input 1H-MoS2/BERRYCURV.dat \
+  --input examples/1H-MoS2/BERRYCURV.dat \
   --output berry_map.png
 ```
 
@@ -468,8 +468,8 @@ Plot a Kubo line result together with its band energy:
 
 ```bash
 python tools/vaspberry_transport.py line \
-  --input 1H-MoS2/KPATH/3.BC_kubo/BERRYCURV_KUBO.EIG-10.dat \
-  --eigenval 1H-MoS2/KPATH/2.band/EIGENVAL \
+  --input examples/1H-MoS2/KPATH/3.BC_kubo/BERRYCURV_KUBO.EIG-10.dat \
+  --eigenval examples/1H-MoS2/KPATH/2.band/EIGENVAL \
   --band 10 --output kubo_path.png
 ```
 

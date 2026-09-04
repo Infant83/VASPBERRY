@@ -1,2 +1,0 @@
-INVALID: z2=None, candidate_z2=1
-failed guards: x_loop_wcc_gap_neighbor_converged, x_loop_wcc_move_neighbor_converged, y_loop_wcc_gap_neighbor_converged, y_loop_wcc_move_neighbor_converged, occupied_projector_time_reversal

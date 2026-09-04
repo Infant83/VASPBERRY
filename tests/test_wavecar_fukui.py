@@ -804,7 +804,14 @@ class WavecarFukuiUnitTests(unittest.TestCase):
             self.assertGreater(png_path.stat().st_size, 1000)
 
     def test_checked_in_line_wavecar_byte_recl_and_g_count(self):
-        path = ROOT / "1H-MoS2" / "KPATH" / "2.band" / "WAVECAR"
+        path = (
+            ROOT
+            / "examples"
+            / "1H-MoS2"
+            / "KPATH"
+            / "2.band"
+            / "WAVECAR"
+        )
         if not path.exists():
             self.skipTest("checked-in WAVECAR fixture is absent")
         parsed = MODULE.Wavecar(path, spinor_components=2)

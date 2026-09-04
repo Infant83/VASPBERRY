@@ -30,7 +30,7 @@ from typing import Iterable, Sequence
 import numpy as np
 
 
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 KINETIC_C = 0.262465831  # 2 m_e / hbar^2, 1/(eV Angstrom^2)
 VALLEY_DISTANCE_TIE_ATOL = 1.0e-12  # inverse Angstrom
 TRANSPORT_OUTPUT_NAMES = (
