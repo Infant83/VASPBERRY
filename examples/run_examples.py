@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""List or run the public feature examples, retaining failures and their logs."""
+"""Run VASPBERRY tutorials on actual public VASP WAVECAR files."""
 from __future__ import annotations
 
 import argparse
@@ -22,10 +22,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("features", nargs="*", help="Feature IDs shown by --list")
     parser.add_argument("--list", action="store_true", help="List inputs and default workflow modes")
-    parser.add_argument("--all", action="store_true", help="Run every default workflow, including stored Bi validation")
+    parser.add_argument("--all", action="store_true", help="Recalculate all six real VASP tutorials")
     parser.add_argument("--output-dir", type=Path, help="New directory for all generated files and logs")
     parser.add_argument("--binary", type=Path, default=ROOT / "build/vaspberry-gfortran",
-                        help="Current Fortran binary for optical and wavefunction examples")
+                        help="Current Fortran executable")
+    parser.add_argument("--bi-wavecar", type=Path, default=EXAMPLES / "Bi_Z2/WAVECAR",
+                        help="Full public Bi LFS WAVECAR for Fukui, Z2 and gap Hall")
+    parser.add_argument("--mos2-wavecar", type=Path, default=EXAMPLES / "1H-MoS2/KPATH/2.band/WAVECAR",
+                        help="Public MoS2 band-path WAVECAR")
     args = parser.parse_args()
     if args.all and args.features:
         parser.error("use feature IDs or --all, not both")
@@ -34,8 +38,8 @@ def main() -> int:
         parser.error("unknown feature IDs: " + ", ".join(unknown))
     if args.list or not (args.all or args.features):
         for item in features.values():
-            print(f"{item['id']:20} {item['default_mode']:28} {item['title']}")
-        print("\nSee examples/README.md for inputs, reference results and full recalculation.")
+            print(f"{item['id']:20} {item['dataset']:6} {item['title']}")
+        print("\nSee examples/README.md for VASP inputs, commands and actual reference results.")
         return 0
     selected = list(features) if args.all else list(dict.fromkeys(args.features))
     if args.output_dir is None:
@@ -48,6 +52,16 @@ def main() -> int:
     binary = args.binary.resolve()
     if any(features[key]["requires_fortran"] for key in selected) and not binary.is_file():
         parser.error(f"missing Fortran binary: {binary}; run make serial or pass --binary")
+    inputs = {"bi": args.bi_wavecar.resolve(), "mos2": args.mos2_wavecar.resolve()}
+    for dataset in {features[key]["dataset"] for key in selected}:
+        wavecar = inputs[dataset]
+        if not wavecar.is_file():
+            parser.error(f"missing actual {dataset} WAVECAR: {wavecar}; see examples/README.md")
+        with wavecar.open("rb") as stream:
+            if stream.read(128).startswith(b"version https://git-lfs.github.com/spec/"):
+                parser.error("Bi WAVECAR is only an LFS pointer. Run git lfs pull --include='examples/Bi_Z2/WAVECAR', "
+                             "or python3 examples/fetch_inputs.py bi --output-dir results/inputs/bi "
+                             "and pass --bi-wavecar results/inputs/bi/WAVECAR")
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=False)
     report = {
@@ -63,7 +77,8 @@ def main() -> int:
     for key in selected:
         item = features[key]
         command = [sys.executable, str(EXAMPLES / item["runner"]),
-                   "--output-dir", str(output / key)]
+                   "--output-dir", str(output / key),
+                   "--wavecar", str(inputs[item["dataset"]])]
         if item["requires_fortran"]:
             command.extend(["--binary", str(binary)])
         start = time.monotonic()
@@ -81,8 +96,10 @@ def main() -> int:
                     try:
                         payload = json.loads((output / key / "result.json").read_text())
                         if (not isinstance(payload, dict) or payload.get("schema_version") != 1
-                                or payload.get("feature_id") != key or payload.get("status") != "PASS"):
-                            raise ValueError("result.json must report schema_version=1, the selected feature_id and status=PASS")
+                                or payload.get("feature_id") != key or payload.get("status") != "PASS"
+                                or payload.get("workflow_mode") != item["default_mode"]):
+                            raise ValueError("result.json must report schema_version=1, the selected feature_id, "
+                                             "status=PASS and the catalog workflow_mode")
                     except (OSError, ValueError) as exc:
                         entry.update(status="FAIL", error=str(exc))
             except OSError as exc:

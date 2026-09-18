@@ -1,7 +1,7 @@
 # Valley-resolved intrinsic Hall transport
 
-The [Fukui feature example](../examples/features/fukui-chern/) exercises the
-plaquette-flux and geometric transport helpers on public analytic eigenstates.
+The [Fukui feature example](../examples/features/fukui-chern/) recalculates occupied-subspace
+curvature and Chern from the actual public Bi WAVECAR.
 Use the [material catalog](../examples/materials/) for WAVECAR input availability.
 
 This document specifies the physically validated post-processing path for

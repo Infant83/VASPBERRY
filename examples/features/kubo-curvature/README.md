@@ -1,74 +1,117 @@
-# Kubo curvature: public analytic-model check
+# Kubo Berry curvature: VASP MoS₂ WAVECAR → VASPBERRY → figure
 
-Run from the repository root with Python, NumPy and Matplotlib:
+This tutorial runs the current **Fortran VASPBERRY executable on an actual
+VASP SOC WAVECAR**, then plots the two upper valence bands along K–Γ–K′.
+The expected result is opposite-sign curvature near K and K′. Γ and nearby
+unresolved individual-band states are explicitly omitted from the curvature
+plot. The calculation is a line scan, so it does not produce a Chern number or
+Hall conductivity.
 
-```bash
-python3 examples/features/kubo-curvature/run.py --output-dir results/example-kubo
+## 1. Input files
+
+The [public MoS₂ calculation](../../1H-MoS2/KPATH/2.band/) contains:
+
+| File | Role in this tutorial |
+|---|---|
+| [WAVECAR](../../1H-MoS2/KPATH/2.band/WAVECAR) | Actual input to VASPBERRY: 48 k points, 32 spinor bands, 400 eV cutoff |
+| [KPOINTS](../../1H-MoS2/KPATH/2.band/KPOINTS) | Two 24-point line segments; records 24 and 25 both represent Γ |
+| [POSCAR](../../1H-MoS2/KPATH/2.band/POSCAR), [INCAR](../../1H-MoS2/KPATH/2.band/INCAR) | Original structure and VASP settings for interpreting the supplied data |
+| [EIGENVAL](../../1H-MoS2/KPATH/2.band/EIGENVAL), [OUTCAR](../../1H-MoS2/KPATH/2.band/OUTCAR) | VASP energies and calculation record |
+
+The WAVECAR is **60,521,760 bytes**, SHA256
+`33f8546512856d6c04ad0a80454b18ac9b60e2af4b98f2f85b376ec49b1a8d9f`.
+No VASP run or JSON model input is required to reproduce the VASPBERRY result.
+POTCAR is not distributed; see the [material provenance](../../1H-MoS2/README.md)
+before attempting to regenerate the VASP states themselves.
+
+All commands below start in the repository root.
+
+## 2. Run VASPBERRY directly
+
+```sh
+make serial
+mkdir -p results/mos2-kubo-direct
+cd results/mos2-kubo-direct
+../../build/vaspberry-gfortran \
+  -f ../../examples/1H-MoS2/KPATH/2.band/WAVECAR \
+  -s 2 -kubo 2 -ii 17 -if 18 \
+  -kubo_csv KUBO.csv -o BERRYCURV > vaspberry.log
+cd ../..
 ```
 
-The output directory must be new. The runner reads [input.json](input.json),
-calls the public `vaspberry_kubo.py demo` and `matrix` commands, and compares
-every curvature value with an independent closed-form expression. No VASP
-files, executable or licensed data are needed. The sibling Hall example also
-uses this folder's small [model_tools.py](model_tools.py) helper.
+`-s 2` reads the two components of each SOC spinor. `-ii 17 -if 18` selects the
+bands whose curvature is printed; the Kubo sum uses **all 32 bands present in
+WAVECAR** as intermediate states. `-kubo 2` selects line mode and avoids a BZ
+integral. `-kubo_csv` writes physical, full-precision per-band point data.
+Choose a fresh output directory and CSV filename for every run.
 
-## Model, sign and checks
+The main outputs are `KUBO.csv`, `BERRYCURV_KUBO.dat`, the band-specific DAT
+files, and the log. CSV columns include spin, k index, band, fractional k,
+energy in eV, `omega_z_A2`, and the closest other-band gap in eV.
+The DAT file's generic `K-GRID`/`dk²` header retains the default grid parameters
+in line mode; it is not evidence of a full mesh. The explicit
+`integration=NONE_K_PATH` and `Chern_number=NOT_APPLICABLE_K_PATH` records define
+this calculation's scope.
 
-The QWZ Hamiltonian is
+## 3. Reproduce the reference figure and checks
 
-```text
-H = sin(kx) sigma_x + sin(ky) sigma_y + (m + cos(kx) + cos(ky)) sigma_z
-m = -1; lattice constant = 1 Angstrom; energy coefficient = 1 eV
+```sh
+python3 examples/features/kubo-curvature/run.py \
+  --wavecar examples/1H-MoS2/KPATH/2.band/WAVECAR \
+  --binary build/vaspberry-gfortran \
+  --output-dir results/mos2-kubo
 ```
 
-With `A = +i<u|d u>` and ordered axes `(kx, ky)`, the analytic lower-band
-curvature is
+This command **reruns VASPBERRY**, checks the CSV against the WAVECAR energies
+and nearest gaps, then writes the figure. It never reads a model Hamiltonian.
+Dependencies are NumPy and Matplotlib. Output directories are never overwritten.
 
-```text
-Omega_lower = [cos(kx) + cos(ky) + m cos(kx) cos(ky)] / (2 |d|^3)
-Omega_upper = -Omega_lower
-```
+| Reference | Expected result / meaning |
+|---|---|
+| [figure.png](reference/figure.png) | VASP valence energies and VASPBERRY Kubo curvature |
+| [summary.csv](reference/summary.csv) | All 96 band/k rows; blank curvature means the individual band is unresolved |
+| [KUBO.csv](reference/KUBO.csv) | Actual unmodified native per-band output, including diagnostic near-degenerate values |
+| [result.json](reference/result.json) | Numerical checks, units, caveats, and output checksums |
+| [provenance.json](reference/provenance.json) | WAVECAR/source/binary hashes and executed commands |
 
-`Omega` has units Angstrom². The continuum band Chern numbers are **+1, −1**;
-the runner integrates the actual point curvature without integer rounding.
-Both the output and intermediate windows are explicitly `1:2`: the full
-two-band model. This exact model window does not establish convergence of
-an intermediate-band cutoff in a DFT calculation. Spin multiplicity is one.
+![MoS₂ native Kubo result](reference/figure.png)
 
-On the default 32 × 32 mesh, the retained reference has:
+For band 18, Ωz is approximately **−6.671251 Å² at K** and **+6.671253 Å² at K′**.
+Each plotted band has **44 valid points out of 48** using a `10⁻⁵ eV` isolation
+threshold. The source's near-Γ splitting reaches about `3.1 × 10⁻⁹ eV`;
+dividing by that tiny gap gives unstable individual-band raw values. The
+tutorial preserves them in the native CSV but masks them in the figure and
+summary. It checks valid curvature against the stored reference with an
+absolute tolerance of `10⁻⁵ Å²`, allowing compiler roundoff.
 
-| Check | Reference | Required tolerance |
-|---|---:|---:|
-| Maximum pointwise oracle error | 7.22 × 10⁻¹⁶ Angstrom² | < 10⁻¹² Angstrom² |
-| Maximum `Omega_lower + Omega_upper` magnitude | 1.67 × 10⁻¹⁶ Angstrom² | < 10⁻¹² Angstrom² |
-| Sampled lower-band Chern number | 1.0000000009382 | distance from +1 < 10⁻⁷ |
-| Minimum isolation gap | 2 eV | positive; every state valid |
+## 4. Apply the workflow to your VASP calculation
 
-The runner also checks the analytic energies and unchanged source hashes.
-This is a normalization, sign and implementation example for an analytic
-model, not a material benchmark or a general mesh-convergence certificate.
+1. Supply your own SOC WAVECAR and its matching KPOINTS/structure records.
+2. Choose the actual band numbers from your VASP energies. Keep `-s 2` for SOC
+   spinors; scalar or collinear calculations require their appropriate setting.
+3. Use `-kubo 2` for paths and inspect `min_gap_eV` before interpreting a band.
+   Degenerate groups require a subspace treatment; do not reduce a safety
+   threshold merely to retain every plotted point.
+4. Plot the CSV using its actual k coordinates and units. Increase the number
+   of intermediate bands through a new VASP calculation with larger NBANDS,
+   and check convergence for your observable.
 
-## Inspect and reproduce
+The convenience runner verifies the exact tutorial WAVECAR checksum. For
+another system, adapt the explicit VASPBERRY command and the small plotting
+script rather than expecting the MoS₂ reference checks to apply unchanged.
 
-- [reference/result.json](reference/result.json): numerical checks, units,
-  portable commands, version, base commit and source hashes.
-- [reference/summary.csv](reference/summary.csv): both bands at 16 selected
-  k points, with analytic curvature and residuals. Every mesh point is checked
-  during execution.
-- [reference/figure.png](reference/figure.png): lower-band curvature and
-  absolute oracle error.
-- [reference/provenance.json](reference/provenance.json): reference file hashes.
+**Method scope:** this native implementation uses canonical momentum. PAW
+augmentation and nonlocal/SOC velocity corrections are absent, so the numbers
+are a reproducible bare-momentum approximation. They are already in the
+standard `−2 Im` normalization; do not divide them by two. A path has no area
+weights for a BZ integral. For an actual full-mesh occupied-subspace charge
+response, continue with the [Bi Hall tutorial](../hall-valley/).
 
-![QWZ Kubo curvature and oracle error](reference/figure.png)
+The QWZ implementation oracle now lives under
+[developer model validation](../../../validation/models/kubo-curvature/).
 
-The fresh run keeps complete generated data in `model/` and `curvature/`,
-including NPZ/CSV/JSON products. It also writes `result.json`, `summary.csv`,
-`figure.png`, subprocess stdout/stderr and `run.json` with command exit codes
-and hashes. Large generated NPZ files are deliberately absent from the
-committed reference. Compare numerical checks within the stated tolerances;
-archive hashes describe the original run, not a promise of byte-identical
-NPZ files or plots across software versions. Production metadata may record
-the local output path; the committed result uses portable path placeholders.
-
-See [Kubo transport](../../../docs/KUBO_TRANSPORT.md) for applying the
-same standardized matrix and curvature workflow to another Hamiltonian.
+For maintainers, package a successful replay into a **new** reference directory
+with `python3 examples/features/kubo-curvature/export_reference.py --run-dir
+results/mos2-kubo --output-dir results/mos2-kubo-reference`. Distributed hashes
+cover the shipped files; the separately labeled full-run hashes retain the
+original native-output and log record.

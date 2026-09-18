@@ -1,0 +1,19 @@
+[
+  "build/vaspberry-gfortran",
+  "-f",
+  "WAVECAR",
+  "-o",
+  "NFIELD",
+  "-z2",
+  "1",
+  "-kx",
+  "12",
+  "-ky",
+  "12",
+  "-s",
+  "2",
+  "-ii",
+  "1",
+  "-if",
+  "10"
+]

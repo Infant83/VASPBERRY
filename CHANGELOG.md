@@ -6,11 +6,12 @@ All notable changes to VASPBERRY are recorded here.
 
 ### Added
 
-- A feature-oriented example catalog with runnable Fukui/Chern, Kubo, Hall,
-  Z2, optical-selectivity and Gamma-wavefunction workflows, compact reference
-  CSV/JSON/figures and a batch runner that retains calculation logs and failures.
-  The material catalog preserves the existing MoS2/Bi paths; stored-reference
-  validation is explicitly distinguished from a new WAVECAR calculation.
+- Real VASP-based feature tutorials: Bi occupied-subspace Fukui/Chern, Z2 and
+  gap Hall; MoS2 band-path Kubo, optical response and Gamma wavefunctions. Each
+  gives actual input files, explicit production commands, freshly calculated
+  original outputs, numerical/figure references and steps for another system.
+  Public Bi input can be fetched with size/checksum verification. Model and
+  synthetic checks are retained separately under validation/models/.
 - General matrix-to-curvature, explicit legacy-normalization import, and
   two-dimensional intrinsic charge Hall commands in `tools/vaspberry_kubo.py`.
 - A versioned NPZ plus JSON format for pointwise Berry curvature, energies,

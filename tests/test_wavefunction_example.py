@@ -10,7 +10,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
-    "wavefunction_example", ROOT / "examples/features/wavefunction/run.py")
+    "wavefunction_example", ROOT / "validation/models/wavefunction/run.py")
 EXAMPLE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(EXAMPLE)
 

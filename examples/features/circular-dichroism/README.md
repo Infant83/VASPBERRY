@@ -1,54 +1,127 @@
-# Circular optical selectivity
+# MoS₂: VASP WAVECAR → circularly polarized optical spectra
 
-Run the production Fortran `-cd 1` calculation on a **640-byte synthetic WAVECAR**, then compare its angle dependence to an analytic answer. No VASP installation, PAW dataset, or downloaded material file is needed.
+This tutorial runs the production `vaspberry-gfortran` executable on the **actual
+VASP WAVECAR supplied with the repository**. Start from the VASP output, run the
+command below, then compare your spectrum and figure with the saved reference.
 
-![Actual Fortran selectivity and analytic curve](reference/figure.png)
+## 1. Input files
 
-## Run
+The calculation reads [`WAVECAR`](../../1H-MoS2/KPATH/2.band/WAVECAR), from the
+existing [1H-MoS₂ band-path dataset](../../1H-MoS2/README.md). Its
+[`INCAR`](../../1H-MoS2/KPATH/2.band/INCAR),
+[`KPOINTS`](../../1H-MoS2/KPATH/2.band/KPOINTS),
+[`POSCAR`](../../1H-MoS2/KPATH/2.band/POSCAR), and
+[`EIGENVAL`](../../1H-MoS2/KPATH/2.band/EIGENVAL) provide the VASP setup and context;
+`-cd 2` itself reads `WAVECAR`.
 
-From the repository root:
+| Property of the supplied WAVECAR | Value |
+|---|---|
+| System | Monolayer 1H-MoS₂, SOC |
+| Stored states | 48 k points, 32 bands, two spinor components |
+| Cutoff | 400 eV |
+| Path | K → Γ → K′; Γ appears at indices 24 and 25 |
+| Occupation | Bands 1–18 occupied; 19–32 empty |
+| Input size | 60,521,760 bytes |
+| SHA-256 | `33f8546512856d6c04ad0a80454b18ac9b60e2af4b98f2f85b376ec49b1a8d9f` |
 
-```sh
-python3 -m pip install -r requirements-transport.txt
+No JSON input is needed. This is a replay of the supplied VASP output; it does
+not run VASP or generate a model WAVECAR.
+
+## 2. Run VASPBERRY
+
+Run these commands from the repository root, using a new output directory:
+
+```bash
 make serial
-python3 examples/features/circular-dichroism/run.py --output-dir /tmp/vaspberry-circular-example
+repo_dir="$PWD"
+mkdir -p results
+mkdir results/mos2-optical
+(
+  cd results/mos2-optical
+  "$repo_dir/build/vaspberry-gfortran" \
+    -f "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
+    -s 2 -kx 48 -ky 1 -cd 2 -if 20 \
+    -ien 1 -fen 3 -nediv 201 -sigma 0.05 \
+    -theta 0 -phi 0 -o optical > stdout.log 2> stderr.log
+)
+python3 examples/features/circular-dichroism/run.py \
+  --output-dir results/mos2-optical --postprocess-only
 ```
 
-The output directory must not exist. Use `--binary /path/to/vaspberry` to select another compiled production executable. The script reads [input.json](input.json); `--input /path/to/input.json` selects a modified copy. You may change the finite, distinct `theta_degrees` samples between 0° and 180°. The fixed scalar Gamma fixture and `phi_degrees = 0` are validated; unsupported changes are rejected. The script does not build or modify the executable and leaves generated inputs and raw Fortran outputs in the output directory.
+The last command needs NumPy and Matplotlib. It reads the Fortran output,
+produces `summary.csv` and `figure.png`, and checks the saved reference.
+Its report records `execution_mode=postprocess_existing_outputs` and marks the
+original producer revision `unknown`: a current plotting script cannot certify
+which executable created pre-existing files. Its script/reader hashes describe
+the local analysis only. The automated replay below records
+`execution_mode=calculate_and_postprocess`, the actual command and binary hash,
+and the local Fortran source revision; that is how the shipped reference was made.
 
-For every angle `0, 15, …, 180`, the script creates a numbered `theta-NNN/` case directory and executes this command there (replace `$BINARY` with the absolute executable path):
+| Flag | Meaning here |
+|---|---|
+| `-s 2` | Read both SOC spinor components; this is not a spin-degeneracy multiplier. |
+| `-cd 2` | Compute left/right optical spectra from all occupied states. |
+| `-if 20` | Include final bands 19 and 20; `-cd 2` automatically uses occupied bands 1–18. |
+| `-ien 1 -fen 3 -nediv 201` | Sample photon energies from 1 to 3 eV. |
+| `-sigma 0.05` | Gaussian broadening parameter, in eV. |
+| `-theta 0 -phi 0` | Light incident along the out-of-plane z direction. |
+| `-kx 48 -ky 1` | Bookkeeping for these 48 path points; this does not create a 2D mesh. |
 
-```sh
-"$BINARY" -f ../WAVECAR.synthetic -s 1 -kx 1 -ky 1 -ii 1 -if 2 -cd 1 -theta 0 -phi 0 -kp 1 -o selectivity
+For an automated replay of exactly those steps:
+
+```bash
+python3 examples/features/circular-dichroism/run.py \
+  --output-dir results/mos2-optical-replay
 ```
 
-Only the `-theta` value changes between those 13 commands. Each command and exit code is recorded in `result.json`.
+## 3. Outputs and expected result
 
-## Why the answer is known
+| Output | What to inspect |
+|---|---|
+| `CIRC_DICHROISM_W.optical_LEFT_KP1.dat`, `...RIGHT_KP1.dat` | Photon-energy spectra at the first k point, K. |
+| `...LEFT_KP48.dat`, `...RIGHT_KP48.dat` | Spectra at K′. There are 48 files per polarization. |
+| `...LEFT.dat`, `...RIGHT.dat` | Sums over this path. They are **not full-BZ absorption integrals**. |
+| `summary.csv` | 9,648 rows: k index, fractional k, path distance, photon energy, both intensities and selectivity. |
+| `figure.png` | Left/right k-resolved spectra and their normalized difference. |
+| `result.json` | Input/source/binary checksums, command, validation and reference comparison. |
 
-The scalar Gamma-point basis has a cubic cell of side `2π Å` and seven plane waves, with cutoff 5 eV. Only `G = 0, +x, +y` have nonzero coefficients:
+The lowest K peak occurs at **1.67 eV** on this photon-energy grid. At that point
+the printed left/right intensities are **0.0000 / 0.0402** (arbitrary units), so
+the selectivity is **−1**. The corresponding K′ peak has selectivity **+1** in
+VASPBERRY's channel convention. These are reference values for the supplied
+files and selected band window, not a convergence claim for optical absorption.
 
-```text
-valence:    (1, 1, 1) / √3
-conduction: (1, ω, ω*) / √3,  ω = exp(2πi/3)
-```
+The current `-cd 2` output convention includes a factor `1/NKPOINTS` in each
+k-resolved spectrum, as well as the Gaussian broadening and `1/(photon energy)²`.
+Keep that convention in mind when comparing intensity scales from different
+path samplings. It cancels in the left/right selectivity ratio.
 
-These two states are normalized and mutually orthogonal before complex64 storage. With the code's `p_cv = <c|p|v>` convention and azimuth `φ = 0`, their optical selectivity is
+The postprocessor leaves selectivity blank where the summed intensity is too
+small to resolve reliably. In particular, a single fixed band-pair ratio can be
+misleading when that transition is spin-forbidden or when the energy ordering of
+the conduction states changes along the path. Summing the two selected empty
+states before forming the ratio avoids displaying those near-zero denominators.
 
-```text
-η(θ) = (|P+|² − |P−|²) / (|P+|² + |P−|²)
-     = √3 cos(θ) / [1 + cos²(θ)].
-```
+Reference files:
+[numeric CSV](reference/summary.csv) · [provenance and checks](reference/result.json) ·
+[raw Fortran outputs](reference/raw-output.tar.gz) · [figure](reference/figure.png)
 
-The checked result is `+0.866025` at 0°, zero at 90°, and `−0.866025` at 180°. All 13 standard-output values agree with the analytic formula within `4.61e-7`. The legacy `.dat` column has four decimal places; its separate tolerance is `5.1e-5`. The script checks both representations rather than inventing extra precision.
+![MoS2 optical reference](reference/figure.png)
 
-## Outputs and scope
+## 4. Apply this workflow to your material
 
-- `summary.csv`: measured selectivity, analytic value, and both rounding errors.
-- `figure.png`: actual measured points with the analytic curve.
-- `result.json`: pass/fail status, commands, input/source/binary hashes, and errors.
-- `theta-NNN/selectivity.dat`, `stdout.log`, `stderr.log`: original production outputs.
+Use the `WAVECAR` from your own VASP calculation and change the flags to match
+its spin representation, k points, empty-band range and photon-energy window.
+For SOC use `-s 2`; for scalar wavefunctions use `-s 1`. Include enough empty
+states to converge the chosen photon-energy range. Use a path for k-resolved
+plots, or a suitable full-BZ mesh for an integrated observable. Do not interpret
+the sum of path points as a Brillouin-zone integral.
 
-The committed [reference result](reference/result.json) and [summary](reference/summary.csv) come from a real run of VASPBERRY 1.3.0. Compressed original `.dat` and stdout files are retained in `reference/raw/`; executable paths in the reference JSON are expressed relative to the repository root for portability.
+The supplied helper deliberately checks the 18-occupied-band setup: a different
+material generally needs the direct CLI command and an adapted postprocessor.
+The production routine evaluates bare momentum matrix elements of the stored
+pseudo-wavefunctions and prints intensities in arbitrary units; the example is
+not an absolute absorption coefficient or a PAW-corrected optical response.
 
-This is a single synthetic scalar transition, **not a material prediction or an absolute absorption rate**. Its coefficients and energies are authored model data rather than converged eigenstates of a material Hamiltonian. The ratio uses bare momentum and cancels common amplitude factors; it does not test PAW/nonlocal optical corrections, occupations, photon-intensity prefactors, spinor/SOC behavior, or Brillouin-zone integration. The signs follow the program's `P+`/`P−` convention and should not be relabeled as an experimental helicity convention without specifying the viewing direction.
+The earlier synthetic numerical check is retained under
+[`validation/models/circular-dichroism`](../../../validation/models/circular-dichroism/).

@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "feature_id": "kubo-curvature",
+  "workflow_mode": "analytic_recalculation",
+  "model": {
+    "model": "QWZ two-band analytic model",
+    "mesh": 32,
+    "mass": -1.0,
+    "spin_multiplicity": 1,
+    "energy_reference": "QWZ Hamiltonian zero; energy coefficient 1 eV",
+    "degeneracy_threshold_eV": 1e-08,
+    "pointwise_absolute_tolerance_A2": 1e-12,
+    "chern_absolute_tolerance": 1e-07
+  },
+  "convention": "A=+i<u|d u>; ordered (kx,ky); a=1 Angstrom",
+  "curvature_formula": "Omega_lower=(cos(kx)+cos(ky)+m*cos(kx)*cos(ky))/(2*|d|^3); upper=-lower",
+  "units": {
+    "curvature": "Angstrom^2",
+    "energy": "eV",
+    "chern": "dimensionless"
+  },
+  "numerical_checks": {
+    "pointwise_oracle_max_abs_error_A2": 7.216449660063518e-16,
+    "analytic_energy_max_abs_error_eV": 2.220446049250313e-15,
+    "band_pair_sum_max_abs_A2": 1.6653345369377348e-16,
+    "sampled_band_chern": [
+      1.0000000009382009,
+      -1.0000000009382009
+    ],
+    "continuum_expected_band_chern": [
+      1.0,
+      -1.0
+    ],
+    "sampled_chern_max_abs_error": 9.382008503422412e-10,
+    "minimum_isolation_gap_eV": 1.9999999999999996,
+    "all_states_valid_nondegenerate": true,
+    "pointwise_absolute_tolerance_A2": 1e-12,
+    "chern_absolute_tolerance": 1e-07,
+    "passed": true
+  },
+  "provenance": {
+    "reference_base_commit": "49fd65e521b7eca40abc4ecc2abcfff62130fcb9",
+    "source_commit": "49fd65e521b7eca40abc4ecc2abcfff62130fcb9",
+    "version": "1.3.0",
+    "python_version": "3.12.14",
+    "numpy_version": "2.3.5",
+    "matplotlib_version": "3.11.2",
+    "source_sha256_before": {
+      "VERSION": "64d23f858ef51b0f996e4966d4e27c0371b437e2d2787890b1f7ad22d4ec5663",
+      "examples/features/kubo-curvature/input.json": "0891dd8cf4f46c7cdf8857f24a61e964defd140cf2943476b764557ae693d744",
+      "examples/features/kubo-curvature/model_tools.py": "79f4fbf0c43a8c7b6744d01f704cafc98635a7d76a84f015cfa63ee6b156e63d",
+      "examples/features/kubo-curvature/run.py": "186a12ac9481608c3f7103652abe5eaff99fbdbb6e143e3c13dcc8bc055fcca0",
+      "tools/berry_data.py": "0729f23dcec4acd63bceb4b2d3f88ac8b079a01de74149cead4273c09d5c349b",
+      "tools/exported_matrix_kubo.py": "86072ce48d5771e3e087d97a89462f15ecd875919e35990c887750b3cf3433ed",
+      "tools/vaspberry_kubo.py": "1dd5900e5693c7d1e13b5d37d2827e575fa709c52074ae6448e6f04e320976d8",
+      "tools/vaspberry_transport.py": "cca22d550ed932d0ca77237ecaeb1fa0dbdbec5f8edc08467cb31bd8b1e192db",
+      "tools/wavecar_fukui.py": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e"
+    },
+    "commands": [
+      {
+        "argv": [
+          "python3",
+          "tools/vaspberry_kubo.py",
+          "demo",
+          "--mesh",
+          "32",
+          "--mass",
+          "-1.0",
+          "--output-dir",
+          "<output-dir>/model"
+        ],
+        "exit_code": 0,
+        "stdout": "01-demo.stdout",
+        "stderr": "01-demo.stderr"
+      },
+      {
+        "argv": [
+          "python3",
+          "tools/vaspberry_kubo.py",
+          "matrix",
+          "--matrices",
+          "<output-dir>/model/matrix.npz",
+          "--metadata",
+          "<output-dir>/model/matrix.json",
+          "--n-bands",
+          "1:2",
+          "--m-bands",
+          "1:2",
+          "--mesh",
+          "32",
+          "32",
+          "--plane-axes",
+          "0",
+          "1",
+          "--spin-multiplicity",
+          "1",
+          "--energy-reference",
+          "QWZ Hamiltonian zero; energy coefficient 1 eV",
+          "--degeneracy-threshold-eV",
+          "1e-08",
+          "--output-dir",
+          "<output-dir>/curvature"
+        ],
+        "exit_code": 0,
+        "stdout": "02-matrix.stdout",
+        "stderr": "02-matrix.stderr"
+      }
+    ],
+    "path_convention": "repository-relative sources; generated files relative to output directory",
+    "generated_data_sha256": {
+      "curvature/curvature.json": "4b6ade8ee2c520d6b0ae0d307f90dd061707a1e87859f175b197467f51ea7a7b",
+      "curvature/curvature.npz": "8cb3eae5a2db7ede5d9a7fefbcf91a88db82eba62b31d164d1ef20dec5027ef1",
+      "model/matrix.json": "4e5e81ee711764f8f3ceeec4ce9ddea156b8d02a0a803b7f584bfaf68595c78a",
+      "model/matrix.npz": "5755834edf70181e23ee17050aa8f6f30f4e5789049b712c4808047962738ef6"
+    }
+  },
+  "scope": "Analytic two-band implementation/sign check. Finite-grid quadrature is not rounded to an integer. No material convergence claim.",
+  "status": "PASS",
+  "output_sha256": {
+    "summary.csv": "cb90c19cc59fde7ea87d2afd044a21f0e82834f694542c0e4f36ebcda35f3998",
+    "figure.png": "0e1481a5db233ac186c6ab559b5334b67de7bdbc5e226781aff11b9ef906ab4c"
+  }
+}

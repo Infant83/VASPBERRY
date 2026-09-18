@@ -1,8 +1,9 @@
 # Kubo curvature and two-dimensional charge Hall transport
 
-Runnable inputs and checked numerical/figure references are in the
-[Kubo curvature](../examples/features/kubo-curvature/) and
-[Hall/region](../examples/features/hall-valley/) examples.
+Actual VASP-based tutorials and reference results are provided for
+[native MoS₂ Kubo curvature](../examples/features/kubo-curvature/) and
+[Bi occupied-subspace Fukui Hall](../examples/features/hall-valley/). Their
+methods and required sampling are explicitly different.
 
 The `tools/vaspberry_kubo.py` command converts declared interband matrices or
 legacy Kubo data into a common point-curvature format and integrates a
@@ -14,55 +15,25 @@ Use `python tools/vaspberry_kubo.py --help` and each subcommand's `--help` for
 the available options. The [output specification](OUTPUT_FORMAT.md) describes
 the interchange files; [migration](MIGRATION.md) covers older normalization.
 
-## Public demonstration
+## Start from actual VASP output
 
-From the repository root, use fresh output directories:
+Use the [MoS₂ tutorial](../examples/features/kubo-curvature/) to run the native
+Fortran Kubo calculation on the supplied real WAVECAR. It includes the actual
+command, raw high-precision CSV, plotted reference and unresolved-band mask.
+The band-path input is not a full integration mesh. The native operator is
+canonical momentum; PAW/nonlocal/SOC velocity corrections are not supplied by
+that approximation.
 
-```bash
-python3 -m pip install -r requirements-transport.txt
-python3 tools/vaspberry_kubo.py demo \
-  --mesh 32 --mass -1 --output-dir results/qwz-matrix
+The [Bi charge-Hall tutorial](../examples/features/hall-valley/) uses a different
+production route: full-mesh WAVECAR occupied-subspace Fukui transport in the
+insulating gap. Bi's unresolved Kramers pairs prevent treating its individual
+bands as isolated point-Kubo input. Its zero charge Hall plateau is an actual
+material sanity check, not a nonzero valley-Hall demonstration.
 
-python3 tools/vaspberry_kubo.py matrix \
-  --matrices results/qwz-matrix/matrix.npz \
-  --metadata results/qwz-matrix/matrix.json \
-  --n-bands 1:2 --m-bands 1:2 \
-  --mesh 32 32 --plane-axes 0 1 \
-  --spin-multiplicity 1 --energy-reference "QWZ model zero (eV)" \
-  --degeneracy-threshold-eV 1e-8 \
-  --output-dir results/qwz-curvature
-
-python3 tools/vaspberry_kubo.py hall \
-  --curvature results/qwz-curvature \
-  --mu-min -0.5 --mu-max 0.5 --mu-num 101 --mu-reference 0 \
-  --temperatures 0 300 --band-resolved \
-  --output-dir results/qwz-hall
-```
-
-`demo` creates the two-band Qi–Wu–Zhang model's `matrix.npz` and `matrix.json`.
-It is a complete model fixture, not a simulated material. With this mass and
-orientation the lower-band continuum Chern is +1, so the zero-temperature
-occupied sheet response at μ=0 approaches −1 in units of e²/h. Increase the
-mesh to inspect convergence; the tool does not round the result. The upper
-band is retained to make both the spectral sum and occupation window explicit.
-
-The `matrix` command writes `curvature.npz`, `curvature.json` and
-`curvature.csv`. `hall` writes `conductivity.npz`, `conductivity.json` and
-`conductivity.csv`. In Hall output `band_id=0` means the sum of all represented
-bands; `--band-resolved` adds rows for each band. The μ reference is included
-in the output even when it is not one of the requested evenly spaced points.
-
-Plot that standardized CSV with the standalone public example:
-
-```bash
-python3 examples/kubo/plot_hall.py \
-  --input results/qwz-hall/conductivity.csv \
-  --output results/qwz-hall/hall.png
-```
-
-See [plotting options](../examples/kubo/) for different regions, bands,
-temperatures, quantities and figure formats. The plotter displays stored
-values and does not make a convergence claim.
+The remainder of this guide describes the generic matrix and point-curvature
+interfaces. They require the actual exported operator/curvature data specified
+below. JSON metadata records what those arrays mean; it does not replace the
+VASP wavefunctions or create a material calculation.
 
 ## Applying the workflow to other data
 
@@ -82,15 +53,16 @@ meshes.
 
 For regional contributions, save a JSON region specification as described in
 [the format guide](OUTPUT_FORMAT.md#user-defined-reciprocal-space-regions).
-Then add, for example:
+Then add, for example (choose the chemical-potential values for your own
+energy zero and available band window):
 
 ```bash
 python3 tools/vaspberry_kubo.py hall \
-  --curvature results/qwz-curvature \
+  --curvature results/material-curvature \
   --mu-min -0.5 --mu-max 0.5 --mu-num 101 --mu-reference 0 \
   --temperatures 0 300 --regions regions.json \
   --difference A_minus_B:region_A:region_B \
-  --output-dir results/qwz-regions
+  --output-dir results/material-regions
 ```
 
 The difference is exactly left minus right; there is no implicit factor of
@@ -239,3 +211,56 @@ File-format validation and physical convergence answer different questions.
 - [Wannier90 Berry module documentation](https://wannier90.readthedocs.io/en/latest/user_guide/postw90/berry/): connection, velocity and intrinsic Hall conventions.
 - [Fukui, Hatsugai and Suzuki, JPSJ 74, 1674 (2005)](https://doi.org/10.1143/JPSJ.74.1674): geometric lattice Chern calculation and continuum limit.
 - [Gajdoš et al., Phys. Rev. B 73, 045112 (2006)](https://doi.org/10.1103/PhysRevB.73.045112): PAW optical matrix elements and generalized overlap terms.
+
+## Developer analytic check (separate from VASP tutorials)
+
+The [developer fixture catalog](../validation/models/) retains these formula
+checks. Use the real-input tutorials above to learn VASPBERRY from VASP files.
+
+From the repository root, use fresh output directories:
+
+```bash
+python3 -m pip install -r requirements-transport.txt
+python3 tools/vaspberry_kubo.py demo \
+  --mesh 32 --mass -1 --output-dir results/qwz-matrix
+
+python3 tools/vaspberry_kubo.py matrix \
+  --matrices results/qwz-matrix/matrix.npz \
+  --metadata results/qwz-matrix/matrix.json \
+  --n-bands 1:2 --m-bands 1:2 \
+  --mesh 32 32 --plane-axes 0 1 \
+  --spin-multiplicity 1 --energy-reference "QWZ model zero (eV)" \
+  --degeneracy-threshold-eV 1e-8 \
+  --output-dir results/qwz-curvature
+
+python3 tools/vaspberry_kubo.py hall \
+  --curvature results/qwz-curvature \
+  --mu-min -0.5 --mu-max 0.5 --mu-num 101 --mu-reference 0 \
+  --temperatures 0 300 --band-resolved \
+  --output-dir results/qwz-hall
+```
+
+`demo` creates the two-band Qi–Wu–Zhang model's `matrix.npz` and `matrix.json`.
+It is a complete model fixture, not a simulated material. With this mass and
+orientation the lower-band continuum Chern is +1, so the zero-temperature
+occupied sheet response at μ=0 approaches −1 in units of e²/h. Increase the
+mesh to inspect convergence; the tool does not round the result. The upper
+band is retained to make both the spectral sum and occupation window explicit.
+
+The `matrix` command writes `curvature.npz`, `curvature.json` and
+`curvature.csv`. `hall` writes `conductivity.npz`, `conductivity.json` and
+`conductivity.csv`. In Hall output `band_id=0` means the sum of all represented
+bands; `--band-resolved` adds rows for each band. The μ reference is included
+in the output even when it is not one of the requested evenly spaced points.
+
+Plot that standardized CSV with the standalone public example:
+
+```bash
+python3 examples/kubo/plot_hall.py \
+  --input results/qwz-hall/conductivity.csv \
+  --output results/qwz-hall/hall.png
+```
+
+See [plotting options](../examples/kubo/) for different regions, bands,
+temperatures, quantities and figure formats. The plotter displays stored
+values and does not make a convergence claim.

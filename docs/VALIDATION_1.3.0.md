@@ -27,39 +27,68 @@ The [method guide](KUBO_TRANSPORT.md) includes runnable public matrix → curvat
 → Hall commands. Those commands and the standalone
 [CSV plotting example](../examples/kubo/README.md) passed local smoke checks.
 
-## Feature examples and wavefunction follow-up
+## Actual VASP tutorials
 
-The subsequent feature-example update, also checked on 2026-09-19, passed
-**230 tests** with no skips in the local Python discovery run. A fresh serial
-build ran all six defaults in approximately 8.8 seconds on the validation
-machine (timing is illustrative, not a performance guarantee):
+The user-facing examples now start from the supplied **real MoS₂ and Bi VASP
+WAVECAR files**. All six were recalculated with the current production
+Fortran or Python WAVECAR path on 2026-09-19, with original outputs, figures,
+checksums and numerical comparisons retained in each `reference/` directory.
+The combined local run passed in approximately 76 seconds; timings depend on
+hardware. The public Bi download was independently retrieved and verified
+against its pinned 200,421,600-byte SHA-256 payload.
 
 ```bash
 make serial
-python3 examples/run_examples.py --all --output-dir results/feature-examples
+python3 examples/fetch_inputs.py bi --output-dir results/inputs/bi
+python3 examples/run_examples.py --all \
+  --bi-wavecar results/inputs/bi/WAVECAR --output-dir results/feature-examples
 python3 -m unittest discover -s tests -v
 ```
 
-| Example | Checked result |
+| Actual input and calculation | Checked result |
 |---|---|
-| Fukui/Chern | QWZ phases +1, −1, 0; empty/filled lower-band Hall signs |
-| Matrix Kubo | Pointwise oracle error below 7.3e-16 Å²; Chern integral error below 9.4e-10 |
-| Hall/regions | Direct occupation/curvature oracle and region/band sums agree below 8e-15 |
-| Z₂ | Stored Bi schema-2 field validates with matching parity 1; no new Bi WAVECAR run |
-| Optical selectivity | Current Fortran angular dependence agrees within 4.7e-7 |
-| Gamma wavefunction | Current Fortran complex amplitudes agree within 5e-7 |
+| Bi 12×12 occupied bands 1:10, native Fukui | C = 0; sampled direct/global gaps 0.592448500 / 0.510044362 eV |
+| Bi 12×12, native Z₂ | Z₂ = 1; two half-zone integer sums −3 and +3 |
+| Bi occupied-subspace Fukui transport, T=0 | All 41 chemical potentials within the gap pass; max charge Hall residual 1.17e−16 e²/h |
+| MoS₂ actual 48-point path, native Kubo | 96 band/point rows; 88 meet the stated 1e−5 eV isolation threshold; K/K′ opposite signs |
+| MoS₂ actual path, native `-cd 2` | 9,648 k/energy rows; independent momentum/spectral sum agrees within 4.991e−5 a.u., within text-output rounding |
+| MoS₂ Γ band 18, native `-wf` | Both spinor components; independent Fourier amplitude error 3.42e−7 Å^(−3/2), integrated pseudo-density 0.8258141586 versus coefficient norm 0.8258141556 |
 
-The new wavefunction fixture exposed a pre-existing phase-array extent mismatch
-(`npmax` versus active `ncnt`) and an uninitialized POSCAR-header loop flag.
-Both complete Fortran sources now pass a regression compiled with
-`-fcheck=all -finit-integer=1`, checking the real/imaginary grids and header.
-This retains the existing amplitude output convention, documented by the
-[wavefunction example](../examples/features/wavefunction/).
+The full local Python suite passed **238 tests** with no skips, including an
+actual MoS₂ native Kubo batch calculation, immutable reference hashes and
+archive contents, input-pointer rejection, malformed Fukui mesh/coordinate rejection, retained failures, and compiled
+Fortran regressions. See the individual tutorials for comparison tolerances.
+The CI `feature-examples` job downloads the actual Bi input, recalculates all
+six examples and retains outputs/logs. Local success alone does not establish
+hosted CI success.
 
-The [feature index](../examples/README.md) links the exact inputs, compact
-reference results, figures and provenance. Existing MoS₂ and Bi material
-files remain unchanged. The CI `feature-examples` job repeats the six defaults
-and retains results/logs; local success does not imply hosted CI success.
+An actual two-rank OpenMPI MoS₂ Kubo run also passed. Its 96-row high-precision
+CSV is byte-identical to the serial reference, including the 88 valid / 8
+unresolved-state mask. This check covers the native Kubo path; Python tutorial
+wrappers and Python transport do not gain MPI support from it.
+
+The [feature index](../examples/README.md) links the exact inputs, production
+commands, reference outputs and [own-material guide](../examples/APPLY_TO_YOUR_SYSTEM.md).
+Existing `examples/1H-MoS2/` and `examples/Bi_Z2/` inputs and historical outputs
+remain unchanged. Bi is a zero charge-Hall sanity check, not a nonzero-Chern
+or valley-Hall material demonstration. The MoS₂ path cannot supply a BZ
+integral. Native canonical momentum does not include all PAW/nonlocal/SOC
+velocity terms.
+
+## Separate developer checks and historical wavefunction fix
+
+The earlier QWZ, analytic optical, synthetic wavefunction and stored-field
+checks are preserved under [validation/models](../validation/models/), outside
+the user tutorials. All six still pass after the move (about 8.4 seconds
+locally). They check signs, formulas, sum rules and regressions; they are not
+actual VASP material demonstrations.
+
+The synthetic wavefunction fixture previously exposed a phase-array extent
+mismatch (`npmax` versus active `ncnt`) and an uninitialized POSCAR-header loop
+flag. Both complete Fortran sources pass a regression compiled with
+`-fcheck=all -finit-integer=1`, checking real/imaginary grids and headers.
+The actual MoS₂ tutorial independently checks the retained amplitude convention.
+No production numerical kernel changed during the real-input tutorial update.
 
 ## Supplemental historical comparisons
 

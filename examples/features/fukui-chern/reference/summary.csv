@@ -1,4 +1,2 @@
-mass,mesh_nx,mesh_ny,band,chern,expected_chern,absolute_error,minimum_sampled_gap_eV,empty_reference_mu_eV,lower_band_sigma_empty_e2h,lower_band_sigma_mu0_e2h,minimum_link_magnitude,maximum_abs_plaquette_flux_rad
--1.0,16,16,1,1.0000000000000002,1,2.220446049250313e-16,1.9999999999999996,-4.0,-0.0,-1.0000000000000002,0.9807852804032302,0.07885444258637239
-1.0,16,16,1,-1.0000000000000002,-1,2.220446049250313e-16,1.9999999999999998,-4.0,-0.0,1.0000000000000002,0.9807852804032302,0.0788544425863721
-2.5,16,16,1,-3.8210830548138084e-16,0,3.8210830548138084e-16,1.0,-5.5,-0.0,3.8210830548138084e-16,0.9573351753006475,0.14278547816219156
+mesh_nx,mesh_ny,plaquettes,occupied_band_min,occupied_band_max,chern_from_native_log,max_abs_printed_curvature_A2,max_reference_curvature_difference_A2,minimum_direct_gap_eV,sampled_global_gap_eV
+12,12,144,1,10,-0,0,0,0.592448499861,0.510044362163

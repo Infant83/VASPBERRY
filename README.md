@@ -12,7 +12,12 @@ See the [1.3.0 notes](docs/releases/v1.3.0.md) and
 No v1.3.0 tag or release archive is implied by this source version.
 
 # Download Git version
-* git clone --branch master  https://github.com/Infant83/VASPBERRY.git
+The examples below are on the unreleased development branch:
+
+```bash
+git clone --branch feature/general-kubo-1.3 https://github.com/Infant83/VASPBERRY.git
+cd VASPBERRY
+```
 
 # Compile
 
@@ -47,9 +52,10 @@ length requirement, and BLAS/LAPACK ABI constraints are documented in the
 | Two-dimensional Z₂ invariant | Fortran `-z2 1`; [Fukui–Hatsugai guide](docs/Z2_FUKUI_HATSUGAI.md) | [Z₂ / Bi](examples/features/z2/) |
 | Circular dichroism / optical selectivity | Fortran `-cd`; [usage below](#usage) | [Circular dichroism](examples/features/circular-dichroism/) |
 | Real-space wavefunction at Gamma | Fortran `-wf`; [usage below](#usage) | [Wavefunction](examples/features/wavefunction/) |
-| Pointwise Kubo Berry curvature | Exported interband matrices; [Kubo guide](docs/KUBO_TRANSPORT.md) | [Kubo curvature](examples/features/kubo-curvature/) |
-| Two-dimensional intrinsic charge Hall response and reciprocal-space regions | Standardized curvature and occupations; [Hall guide](docs/KUBO_TRANSPORT.md) | [Hall / regions](examples/features/hall-valley/) |
-| WAVECAR-direct Fukui export and guarded geometric transport | `tools/wavecar_fukui.py`; [valley-transport guide](docs/VALLEY_TRANSPORT.md) | [Fukui model and material inputs](examples/features/fukui-chern/) |
+| WAVECAR Kubo Berry curvature | Fortran canonical-momentum implementation; [Kubo guide](docs/KUBO_TRANSPORT.md) | [Actual MoS₂ band-path calculation](examples/features/kubo-curvature/) |
+| Exported interband-matrix curvature and transport | [Matrix interface and physical-operator contract](docs/KUBO_TRANSPORT.md) | [Developer numerical checks](validation/models/kubo-curvature/) |
+| Two-dimensional intrinsic charge Hall response and reciprocal-space regions | Standardized curvature and occupations; [Hall guide](docs/KUBO_TRANSPORT.md) | [Actual Bi occupied-subspace Hall](examples/features/hall-valley/) |
+| WAVECAR-direct Fukui export and guarded geometric transport | `tools/wavecar_fukui.py`; [valley-transport guide](docs/VALLEY_TRANSPORT.md) | [Actual Bi occupied-subspace calculation](examples/features/hall-valley/) |
 | Historical Kubo normalization import | `tools/vaspberry_kubo.py import-legacy`; [migration guide](docs/MIGRATION.md) | [Import commands and identification checks](docs/MIGRATION.md#historical-doubled-output) |
 
 These are general-purpose interfaces. Choose the observable and input operator
@@ -61,21 +67,30 @@ band-isolation checks.
 
 # Usage
 
-## Start with a small, reproducible example
+## Start with actual VASP files
 
-The [feature catalog](examples/README.md) links each input, runner, reference
-CSV/JSON and figure. Five workflows calculate analytic or synthetic examples;
-Z₂ defaults to validating the stored Bi field and provides a separate WAVECAR
-recalculation mode.
+The [user tutorials](examples/README.md) reproduce calculations from public
+**MoS₂ and Bi WAVECAR files**. Each explains the input files, the explicit
+VASPBERRY command and its options, original output files, plotting, comparison
+with a checked reference, and how to apply the command to your own material.
+The material examples do not require a model-configuration JSON.
 
 ```bash
+make serial
 python3 -m pip install -r requirements-transport.txt
-python3 examples/run_examples.py --list
-python3 examples/run_examples.py fukui-chern kubo-curvature hall-valley z2 \
-  --output-dir results/python-examples
-# With the current Fortran binary built by make serial:
-python3 examples/run_examples.py --all --output-dir results/all-examples
+# A complete real MoS2 example; its WAVECAR is already in the repository:
+python3 examples/features/kubo-curvature/run.py --output-dir results/mos2-kubo
+
+# Fetch the real Bi WAVECAR if you do not have its Git LFS payload:
+python3 examples/fetch_inputs.py bi --output-dir results/inputs/bi
+python3 examples/features/z2/run.py --wavecar results/inputs/bi/WAVECAR \
+  --output-dir results/bi-z2
 ```
+
+The wrappers execute and record the production commands shown in each tutorial.
+The [input catalog](examples/INPUTS.md) lists actual VASP files and checksums.
+For another material, follow [the transfer guide](examples/APPLY_TO_YOUR_SYSTEM.md)
+and set the mesh, bands, spinor setting and energies from your own VASP output.
 
 ## Apply the calculation to your input
 
@@ -114,10 +129,15 @@ transport workflow with its occupation and band-window checks.
 
 ### Python workflows
 
-For the matrix-to-curvature-to-Hall pipeline, follow the
-[Kubo example](examples/features/kubo-curvature/) and
-[Hall example](examples/features/hall-valley/). They write versioned NPZ/JSON
-and long-form CSV with explicit units, normalization and provenance.
+The [MoS₂ Kubo tutorial](examples/features/kubo-curvature/) starts from a real
+WAVECAR and exports canonical-momentum curvature along a band path. The
+[Bi Hall tutorial](examples/features/hall-valley/) uses full-mesh occupied-subspace
+Fukui flux in its insulating gap. Its unresolved Kramers partners are not
+used as separately isolated Kubo bands.
+
+For exported physical interband matrices, use the [matrix/Hall guide](docs/KUBO_TRANSPORT.md)
+and [NPZ/JSON output specification](docs/OUTPUT_FORMAT.md). This interface is
+separate from the native WAVECAR approximation.
 
 The WAVECAR-direct workflow exports Fukui plaquette flux, four vertex energies,
 adjacent-band gaps and link-quality diagnostics. A basic full-mesh export is:
@@ -136,8 +156,8 @@ Kubo data: version 1.3.0 corrects their factor-of-two normalization.
 
 # Examples and material datasets
 
-- [Feature examples](examples/README.md): small inputs, runnable commands,
-  numerical reference results and figures for all calculation features.
+- [Feature tutorials](examples/README.md): actual VASP files, production
+  commands, numerical reference outputs, figures and application to your system.
 - [Material catalog](examples/materials/): existing MoS₂/Bi data, sampling and
   reproduction requirements. Their original paths remain available.
 - [1H-MoS₂](examples/1H-MoS2/): full-mesh stored maps and a separate band-path
@@ -146,6 +166,8 @@ Kubo data: version 1.3.0 corrects their factor-of-two normalization.
   schema-2 Z₂ result and Git LFS wavefunction.
 - [Standalone Hall CSV plotting](examples/kubo/): reusable plotting for
   standardized transport output.
+- [Developer numerical checks](validation/models/): analytic/synthetic fixtures
+  retained separately for testing formulas and regressions.
 
 Method details, diagnostics and output contracts are kept in the linked
 guides. An importable Python-library port remains a [roadmap](docs/ROADMAP.md)

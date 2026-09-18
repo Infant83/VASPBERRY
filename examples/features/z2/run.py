@@ -1,33 +1,22 @@
 #!/usr/bin/env python3
-"""Validate/plot stored Bi schema-2 data; optionally rerun WAVECAR postprocessing."""
+"""Run current VASPBERRY Z2 on the actual public Bi WAVECAR, validate and plot."""
 from __future__ import annotations
 
-import argparse
 import csv
-import hashlib
-import json
 from pathlib import Path
-import subprocess
 import sys
 
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
-sys.path.insert(0, str(ROOT/'examples/Bi_Z2/scripts'))
+sys.path.insert(0, str(ROOT / "examples/features/fukui-chern"))
+from bi_common import arguments, execute, write_result
+sys.path.insert(0, str(ROOT / "examples/Bi_Z2/scripts"))
 from plot_nfield import read_field, validate_result, half_sums, integer_style, draw_field
-
-
-def sha(path):
-    h = hashlib.sha256()
-    with Path(path).open('rb') as f:
-        for block in iter(lambda: f.read(8*1024*1024), b''):
-            h.update(block)
-    return h.hexdigest()
-
 
 def validate_rows(path):
     field, metadata = read_field(path)
@@ -80,88 +69,33 @@ def validate_rows(path):
 
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--output-dir', type=Path, required=True, help='fresh result directory')
-    p.add_argument('--wavecar', type=Path, help='optional actual tracked Bi WAVECAR; never an LFS pointer')
-    p.add_argument('--binary', type=Path, default=ROOT/'build/vaspberry-gfortran', help='current executable, used only with --wavecar')
-    p.add_argument('--timeout', type=float, default=300, help='optional postprocessing time limit in seconds')
-    args = p.parse_args()
-    if args.output_dir.exists():
-        p.error('output directory exists; use a fresh path')
-    config = json.loads((HERE/'input.json').read_text())
-    reference = ROOT/config['reference_field']
-    if sha(reference) != config['reference_sha256']:
-        p.error('stored reference hash changed; do not silently replace the historical fixture')
-    _, _, reference_summary = validate_rows(reference)
-    if (reference_summary['z2'] != config['expected_z2'] or
-            [reference_summary['half_top_sum'], reference_summary['half_bottom_sum']] != config['expected_half_sums']):
-        p.error('reference invariants disagree with fixture input')
-    provenance = {'input_sha256': sha(HERE/'input.json'), 'runner_sha256': sha(__file__),
-                  'reference_field': config['reference_field'], 'reference_sha256': sha(reference),
-                  'plot_helper_sha256': sha(ROOT/'examples/Bi_Z2/scripts/plot_nfield.py')}
-    if args.wavecar is not None:
-        with args.wavecar.open('rb') as f:
-            if f.read(128).startswith(b'version https://git-lfs.github.com/spec/'):
-                p.error('WAVECAR is a Git LFS pointer; fetch the actual tracked Bi payload first')
-        if args.wavecar.stat().st_size != config['wavecar_bytes'] or sha(args.wavecar) != config['wavecar_sha256']:
-            p.error('this optional reproduction requires the exact public Bi WAVECAR fixture')
-        if not args.binary.is_file() or not np.isfinite(args.timeout) or args.timeout <= 0:
-            p.error('provide a built executable and a finite positive timeout')
-        provenance.update(wavecar_sha256=sha(args.wavecar), binary_sha256=sha(args.binary))
-    args.output_dir.mkdir(parents=True)
-    source = reference
-    mode = 'stored_field_validation_and_new_plot'
-    if args.wavecar is not None:
-        command = [str(args.binary.resolve()), '-f', str(args.wavecar.resolve()), '-o', 'NFIELD',
-                   '-z2', '1', '-kx', '12', '-ky', '12', '-s', '2', '-ii', '1', '-if', '10']
-        try:
-            with (args.output_dir/'fortran.log').open('w') as out:
-                run = subprocess.run(command, cwd=args.output_dir, stdout=out, stderr=subprocess.STDOUT,
-                                     timeout=args.timeout)
-            if run.returncode != 0:
-                raise RuntimeError('postprocessing executable failed with exit '+str(run.returncode))
-        except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
-            (args.output_dir/'result.json').write_text(json.dumps({'schema_version': 1, 'feature_id': 'z2',
-                'status': 'FAILED', 'workflow_mode': 'wavecar_postprocessing',
-                'mode': 'wavecar_postprocessing', 'error': str(error), 'provenance': provenance}, indent=2)+'\n')
-            p.exit(1, str(error)+'\n')
-        source = args.output_dir/'Z2_FIELD.csv'
-        mode = 'new_wavecar_postprocessing_compared_to_stored_invariant'
-    field, meta, summary = validate_rows(source)
-    if (summary['mesh_nx'], summary['mesh_ny']) != tuple(config['mesh']) or any(
-            int(meta[key]) != value for key, value in (('band_min', 1), ('band_max', 10),
-                                                       ('band_rank', 10), ('spinor_components', 2))):
-        raise ValueError('field does not describe the required Bi mesh and occupied subspace')
-    if args.wavecar is not None and meta['vaspberry_version'] != (ROOT/'VERSION').read_text().strip():
-        raise ValueError('rerun executable version does not match this checkout; rebuild the binary')
-    if summary['z2'] != reference_summary['z2']:
-        raise ValueError('recomputed Z2 disagrees with the historical reference')
-    with (args.output_dir/'summary.csv').open('w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=list(summary)); writer.writeheader(); writer.writerow(summary)
+    args = arguments(__doc__)
+    out, provenance, edges, gaps = execute(args, "z2", ["-o", "NFIELD", "-z2", "1"])
+    field, metadata, summary = validate_rows(out / "Z2_FIELD.csv")
+    if (summary["mesh_nx"], summary["mesh_ny"], summary["z2"]) != (12, 12, 1):
+        raise ValueError("Bi reference requires a 12 x 12 field and Z2 = 1")
+    for key, expected in (("band_min", 1), ("band_max", 10), ("band_rank", 10), ("spinor_components", 2)):
+        if int(metadata[key]) != expected:
+            raise ValueError("unexpected selected occupied bundle: " + key)
+    if [summary["half_top_sum"], summary["half_bottom_sum"]] != [-3, 3]:
+        raise ValueError("public input n-field differs from its reference; inspect the field and numerical diagnostics")
+    summary.update(gaps)
     cmap, norm, legend = integer_style(field)
     fig, ax = plt.subplots(figsize=(6.4, 6.2))
-    draw_field(ax, field, 'Bi reference: stored field revalidated' if args.wavecar is None else 'Bi: new WAVECAR postprocessing',
-               cmap, norm, (summary['half_top_sum'], summary['half_bottom_sum']))
+    draw_field(ax, field, "Bi: actual VASPBERRY calculation from WAVECAR", cmap, norm,
+               (summary["half_top_sum"], summary["half_bottom_sum"]))
     fig.subplots_adjust(left=.14, right=.95, bottom=.19, top=.79)
-    fig.legend(handles=legend, loc='lower center', bbox_to_anchor=(.5, .065), ncol=3, frameon=False)
-    fig.suptitle('Fukui-Hatsugai Z2 = '+str(summary['z2']), y=.96, fontsize=16)
-    fig.text(.5, .015, 'Pointwise n-field is gauge dependent; half-zone parity is the invariant.\n'
-             'Default mode does not rerun WAVECAR or DFT.', ha='center', fontsize=9)
-    fig.savefig(args.output_dir/'figure.png', dpi=180, bbox_inches='tight'); plt.close(fig)
-    result = {'schema_version': 1, 'feature_id': 'z2', 'status': 'PASS', 'workflow_mode': mode, 'mode': mode,
-              'software_version': (ROOT/'VERSION').read_text().strip(),
-              'field_producer_version': meta['vaspberry_version'], 'summary': summary,
-              'numerical_checks': {'status': 'PASS', 'reference_hash': 'PASS', 'schema_and_half_zone_parities': 'PASS',
-                                   'row_partner_consistency': 'PASS', 'recomputed_row_diagnostics': 'PASS',
-                                   'reference_z2_agreement': 'PASS'},
-              'reference_z2_agrees': True, 'source_field_sha256': sha(source), 'provenance': provenance,
-              'limitations': ['Default revalidates stored schema-2 rows and regenerates a plot; it does not recalculate wavefunctions or links.',
-                              'Optional WAVECAR mode recomputes postprocessing only, not VASP SCF/NSCF.',
-                              'Numerical TR reconstruction checks do not independently establish raw-input TR symmetry, gap, PAW completeness or mesh convergence.'],
-              'output_sha256': {name: sha(args.output_dir/name) for name in ('summary.csv', 'figure.png')}}
-    (args.output_dir/'result.json').write_text(json.dumps(result, indent=2, allow_nan=False)+'\n')
-    print(json.dumps({'status': 'PASS', 'mode': mode, 'z2': summary['z2']}))
+    fig.legend(handles=legend, loc="lower center", bbox_to_anchor=(.5, .065), ncol=3, frameon=False)
+    fig.suptitle("Bi 12 × 12 SOC · Fukui-Hatsugai Z2 = 1", y=.96, fontsize=15)
+    fig.text(.5, .015, "Pointwise n-field is gauge dependent; the half-zone parity is the invariant.\n"
+             "Fresh post-processing of the public VASP 5.4.1 spinor WAVECAR.", ha="center", fontsize=9)
+    fig.savefig(out / "figure.png", dpi=180, bbox_inches="tight"); plt.close(fig)
+    write_result(out, "z2", provenance, summary, ["NFIELD.dat", "Z2_FIELD.csv"], [
+        "Real archived VASP input; reproduces VASPBERRY postprocessing, not an end-to-end new VASP calculation.",
+        "The pointwise n-field is gauge and branch dependent; the agreed half-zone parity is the reported invariant.",
+        "Numerical checks establish reconstruction consistency, not independent raw-input TR symmetry or mesh convergence.",
+        "WAVECAR pseudo-wavefunction overlaps omit PAW augmentation; confirm the gap, symmetry and convergence for another system."])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

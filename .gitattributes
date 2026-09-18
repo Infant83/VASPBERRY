@@ -1,4 +1,8 @@
 *.f whitespace=trailing-space,space-before-tab,cr-at-eol
 # Python csv writers emit RFC-style CRLF; retain exact reference checksums.
 examples/features/**/reference/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+validation/models/**/reference/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+# Preserve native Fortran record padding and the exact archived output hashes.
+examples/features/**/reference/*.dat -whitespace
+examples/features/**/reference/*.log -whitespace
 examples/Bi_Z2/WAVECAR filter=lfs diff=lfs merge=lfs -text

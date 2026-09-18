@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "feature_id": "fukui-chern",
+  "status": "PASS",
+  "workflow_mode": "new_analytic_model_calculation",
+  "mode": "new_analytic_model_calculation",
+  "software_version": "1.3.0",
+  "input": {
+    "model": "Qi-Wu-Zhang two-orbital square-lattice model",
+    "hamiltonian": "H(k)=sin(kx)*sigma_x+sin(ky)*sigma_y+(mass+cos(kx)+cos(ky))*sigma_z",
+    "mesh": [
+      16,
+      16
+    ],
+    "masses": [
+      -1.0,
+      1.0,
+      2.5
+    ],
+    "selected_band": 1,
+    "lattice_constant_A": 1.0,
+    "energy_unit_eV": 1.0,
+    "connection_convention": "A=i<u|grad_k u>",
+    "expected_lower_band_chern": [
+      1,
+      -1,
+      0
+    ]
+  },
+  "cases": [
+    {
+      "mass": -1.0,
+      "mesh_nx": 16,
+      "mesh_ny": 16,
+      "band": 1,
+      "chern": 1.0000000000000002,
+      "expected_chern": 1,
+      "absolute_error": 2.220446049250313e-16,
+      "minimum_sampled_gap_eV": 1.9999999999999996,
+      "empty_reference_mu_eV": -4.0,
+      "lower_band_sigma_empty_e2h": -0.0,
+      "lower_band_sigma_mu0_e2h": -1.0000000000000002,
+      "minimum_link_magnitude": 0.9807852804032302,
+      "maximum_abs_plaquette_flux_rad": 0.07885444258637239
+    },
+    {
+      "mass": 1.0,
+      "mesh_nx": 16,
+      "mesh_ny": 16,
+      "band": 1,
+      "chern": -1.0000000000000002,
+      "expected_chern": -1,
+      "absolute_error": 2.220446049250313e-16,
+      "minimum_sampled_gap_eV": 1.9999999999999998,
+      "empty_reference_mu_eV": -4.0,
+      "lower_band_sigma_empty_e2h": -0.0,
+      "lower_band_sigma_mu0_e2h": 1.0000000000000002,
+      "minimum_link_magnitude": 0.9807852804032302,
+      "maximum_abs_plaquette_flux_rad": 0.0788544425863721
+    },
+    {
+      "mass": 2.5,
+      "mesh_nx": 16,
+      "mesh_ny": 16,
+      "band": 1,
+      "chern": -3.8210830548138084e-16,
+      "expected_chern": 0,
+      "absolute_error": 3.8210830548138084e-16,
+      "minimum_sampled_gap_eV": 1.0,
+      "empty_reference_mu_eV": -5.5,
+      "lower_band_sigma_empty_e2h": -0.0,
+      "lower_band_sigma_mu0_e2h": 3.8210830548138084e-16,
+      "minimum_link_magnitude": 0.9573351753006475,
+      "maximum_abs_plaquette_flux_rad": 0.14278547816219156
+    }
+  ],
+  "numerical_checks": {
+    "status": "PASS",
+    "expected_chern": "PASS",
+    "isolated_links_and_flux_geometry": "PASS",
+    "empty_band_sigma_equals_zero": "PASS",
+    "mu0_sigma_equals_minus_chern": "PASS"
+  },
+  "production_functions": [
+    "wavecar_fukui.plaquette_flux",
+    "vaspberry_transport.validate_fukui_geometry",
+    "vaspberry_transport.integrate_sigma"
+  ],
+  "provenance": {
+    "input_sha256": "f7b77ce85e2630699dc69a3b3a21feab33afb7ce345e64d4d1ff1c9142dac9b6",
+    "runner_sha256": "786b1d2213955de37757b3a28234f25b94dc58c6adb092e09328783dee01587b",
+    "wavecar_fukui_sha256": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e",
+    "transport_sha256": "cca22d550ed932d0ca77237ecaeb1fa0dbdbec5f8edc08467cb31bd8b1e192db"
+  },
+  "limitations": [
+    "Analytic orthonormal two-orbital model, not a VASP or material calculation.",
+    "Model eigenvector overlaps are generated here; no WAVECAR parser or PAW overlap is exercised.",
+    "Flux is cell-integrated radians, not Kubo point curvature in Angstrom squared.",
+    "Hall values are the lower-band contribution with four-vertex occupations at T=0; the upper band is empty at mu=0 in this model.",
+    "A resolved known gapped model is checked; integer output alone is not a material convergence proof."
+  ],
+  "output_sha256": {
+    "summary.csv": "211769b9a30ce66e0984c3eea4c179689801aee63b2de1e29f49b551eefb4d31",
+    "plaquettes.csv": "1bb30edbd5503c5eb56825ee7c2fb03cf36dc60d438a47e58458490793e7946f",
+    "figure.png": "392d108cfc6930491c20345f6537a118c8b5ae453e771ce1dd75cdf94ac9a987"
+  }
+}

@@ -1,33 +1,86 @@
 {
-  "schema_version": 1,
   "feature_id": "hall-valley",
-  "status": "PASS",
-  "reference_base_commit": "49fd65e521b7eca40abc4ecc2abcfff62130fcb9",
-  "source_commit": "49fd65e521b7eca40abc4ecc2abcfff62130fcb9",
   "version": "1.3.0",
-  "workflow_mode": "analytic_recalculation",
-  "description": "Compact outputs copied from an executed fresh run. Full generated NPZ, production JSON and command logs are retained outside the committed reference. Numerical tolerance checks, not archive byte identity, define reproduction.",
-  "reference_file_sha256": {
-    "result.json": "e8332c47b36843f23349ed6c352e85a8a10353ee2a1ab051a84e246acddcb9aa",
-    "summary.csv": "86872236d2a90e74da5d68cd406b211f06b05c259eaad3969500ab75c601efbf",
-    "figure.png": "ba77b313c59cb9c91ad6d02ce3fa844819b313109bb1211e8451d2cc29b65617"
+  "source_commit": "18c0a1117923dd2b3001dc56f6202b8f41c0426e",
+  "python_version": "3.12.14",
+  "input": {
+    "name": "WAVECAR",
+    "sha256": "a8d81854f2efc561938e478dde1be29a17ccc95d5d37325c122b9d9e82fa0838",
+    "bytes": 200421600
   },
-  "sources_unchanged_during_run": true,
   "source_sha256": {
-    "VERSION": "64d23f858ef51b0f996e4966d4e27c0371b437e2d2787890b1f7ad22d4ec5663",
-    "examples/features/hall-valley/input.json": "50ca6ecc2a6c852bb6fa6e8dbf5cae637cd8f4f3f75987066340e51c852dd46e",
-    "examples/features/hall-valley/regions.json": "b31d4dd26fb0419bc319c3c701bca9f98f71c1d55c5ca6311290906449b7d273",
-    "examples/features/hall-valley/run.py": "1d1a9fc596c17d8821fe43b6634f7642005763653da970a95b3d90f893203a36",
-    "examples/features/kubo-curvature/model_tools.py": "79f4fbf0c43a8c7b6744d01f704cafc98635a7d76a84f015cfa63ee6b156e63d",
-    "tools/berry_data.py": "0729f23dcec4acd63bceb4b2d3f88ac8b079a01de74149cead4273c09d5c349b",
-    "tools/exported_matrix_kubo.py": "86072ce48d5771e3e087d97a89462f15ecd875919e35990c887750b3cf3433ed",
-    "tools/vaspberry_kubo.py": "1dd5900e5693c7d1e13b5d37d2827e575fa709c52074ae6448e6f04e320976d8",
-    "tools/vaspberry_transport.py": "cca22d550ed932d0ca77237ecaeb1fa0dbdbec5f8edc08467cb31bd8b1e192db",
-    "tools/wavecar_fukui.py": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e"
+    "examples/features/hall-valley/run.py": "470db503afa75a28fa7764dfaecdebf98afdde1339ca692fa22d2a0b4956dde1",
+    "examples/features/kubo-curvature/workflow.py": "2fb102f65b94bd9e97d4ad70ab22172f85cca6cbf4cfd2cfb39e63aed7986881",
+    "vaspberry.f": "dc6674ddde8bd4c3064015ffcaba89d9ea150124f111925c63c90ab44a223df3",
+    "tools/wavecar_fukui.py": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e",
+    "VERSION": "64d23f858ef51b0f996e4966d4e27c0371b437e2d2787890b1f7ad22d4ec5663"
   },
-  "command_exit_codes": [
-    0,
-    0,
-    0
-  ]
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "tools/wavecar_fukui.py",
+        "<WAVECAR>",
+        "--nx",
+        "12",
+        "--ny",
+        "12",
+        "--spinor-components",
+        "2",
+        "--energy-band",
+        "11",
+        "--map",
+        "occupied=1:10",
+        "--transport-full-t0",
+        "10",
+        "--mu-min",
+        "-1.3",
+        "--mu-max",
+        "-0.9",
+        "--mu-num",
+        "41",
+        "--valley-k",
+        "0.6666666666666666,0.3333333333333333,0",
+        "--valley-kp",
+        "0.3333333333333333,0.6666666666666666,0",
+        "--output-dir",
+        "<output-dir>/calculation"
+      ],
+      "cwd": "<repository>",
+      "exit_code": 0,
+      "elapsed_s": 17.906870777951553,
+      "stdout": "01.stdout.log",
+      "stderr": "01.stderr.log"
+    }
+  ],
+  "status": "PASS",
+  "original_full_run_output_sha256": {
+    "01.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "01.stdout.log": "170a48c5d5658ebff1a2993b110747f4f3cf7594bdd839109031a5d4abb1d19f",
+    "calculation/diagnostics.json": "2c29d7f29afafe2babb5645e4eee647b36fe1111f00321c5da01a4294c89d2a7",
+    "calculation/fukui_occupied.csv": "7feccc2ef33ca6ea9b443d95696ebec5d5a5871eace9a2115dc8c09cc1fd0fb1",
+    "calculation/transport_full_t0.csv": "38e9b44008d04d5cf5aa5b7121e8fb8a54aba31728b528d5f4852410be2ffc85",
+    "calculation/transport_full_t0_diagnostics.json": "cc5ed01301d9fa374235172d62068488cc7e72b616b7fc028052516840023615",
+    "figure.png": "8c7ce48388f6d0555d6cf2bfa43d85a6c3d0173297e184b5eb30d0f6549c1e82",
+    "summary.csv": "aa7729780487452fbaa9b782515019b5417b14a9dc5dc1e2892e5d9d9254c8cf"
+  },
+  "distributed_payload_sha256": {
+    "summary.csv": "aa7729780487452fbaa9b782515019b5417b14a9dc5dc1e2892e5d9d9254c8cf",
+    "figure.png": "8c7ce48388f6d0555d6cf2bfa43d85a6c3d0173297e184b5eb30d0f6549c1e82",
+    "transport_full_t0.csv": "38e9b44008d04d5cf5aa5b7121e8fb8a54aba31728b528d5f4852410be2ffc85",
+    "transport_full_t0_diagnostics.json": "cc5ed01301d9fa374235172d62068488cc7e72b616b7fc028052516840023615",
+    "fukui_occupied.csv": "7feccc2ef33ca6ea9b443d95696ebec5d5a5871eace9a2115dc8c09cc1fd0fb1"
+  },
+  "reference_packaging": {
+    "path_scope": "result.json output_sha256 and provenance.json distributed_payload_sha256 both use reference-directory-relative paths to shipped files; original_full_run_output_sha256 uses original-run-relative paths to the complete calculation record, including files not shipped in this reference",
+    "original_run_path_to_distributed_path": {
+      "summary.csv": "summary.csv",
+      "figure.png": "figure.png",
+      "calculation/transport_full_t0.csv": "transport_full_t0.csv",
+      "calculation/transport_full_t0_diagnostics.json": "transport_full_t0_diagnostics.json",
+      "calculation/fukui_occupied.csv": "fukui_occupied.csv"
+    },
+    "exporter": "examples/features/kubo-curvature/export_reference.py",
+    "exporter_sha256": "0f192a9cc47801eea045290e7f3b5890f010627f06786f487cbe239be5b8df13"
+  }
 }

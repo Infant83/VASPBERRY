@@ -51,10 +51,15 @@ jobs:
           python -m pip install -r requirements-transport.txt
       - name: Build current serial source
         run: make serial
-      - name: Recalculate public models and validate stored Bi field
+      - name: Fetch and verify the real public Bi VASP input
+        run: python examples/fetch_inputs.py bi --output-dir results/inputs/bi
+      - name: Recalculate VASPBERRY outputs from real Bi and MoS2 WAVECAR files
         env:
           MPLBACKEND: Agg
-        run: python examples/run_examples.py --all --output-dir results/feature-examples
+        run: >-
+          python examples/run_examples.py --all
+          --bi-wavecar results/inputs/bi/WAVECAR
+          --output-dir results/feature-examples
       - name: Retain example results and failure logs
         if: always()
         uses: actions/upload-artifact@v4
