@@ -24,6 +24,10 @@ jobs:
           cache-dependency-path: requirements-transport.txt
       - name: Install Python dependencies
         run: python -m pip install --upgrade pip && python -m pip install -r requirements-transport.txt
+      - name: Install compiled regression dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran libblas-dev liblapack-dev
       - name: Run unit and regression tests
         env:
           MPLBACKEND: Agg
