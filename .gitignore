@@ -14,3 +14,6 @@ examples/Bi_Z2/results*/
 # Local compiler and test products.
 /build/
 /build-*/
+
+# User-generated tutorial and transport outputs.
+/results/

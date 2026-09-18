@@ -1,0 +1,14 @@
+{
+  "reference_field": "examples/Bi_Z2/reference-v1.2.0-12x12/Z2_FIELD.csv",
+  "reference_sha256": "0d34d8fe0977330748f5cd26d4d0cf70b941e2bb851cf5eb10e5d51ca9f6a13e",
+  "reference_producer_version": "1.2.0",
+  "reference_commit": "aef4d163996d47a618b289f5251f22d26fa71981",
+  "reference_ci_run": "https://github.com/Infant83/VASPBERRY/actions/runs/33881876978",
+  "mesh": [12, 12],
+  "occupied_bands": [1, 10],
+  "spinor_components": 2,
+  "expected_z2": 1,
+  "expected_half_sums": [-3, 3],
+  "wavecar_sha256": "a8d81854f2efc561938e478dde1be29a17ccc95d5d37325c122b9d9e82fa0838",
+  "wavecar_bytes": 200421600
+}

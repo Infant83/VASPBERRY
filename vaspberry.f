@@ -2471,7 +2471,7 @@
           do i1=1,nx
            ii=ii+1
            do iispinor=1,ispinor
-            wkgr(:)=(wk(1)+ig(1,1:ncnt))*((i1-1)/dble(nx)+rs(1)) +
+            wkgr(1:ncnt)=(wk(1)+ig(1,1:ncnt))*((i1-1)/dble(nx)+rs(1)) +
      &              (wk(2)+ig(2,1:ncnt))*((i2-1)/dble(ny)+rs(2)) +
      &              (wk(3)+ig(3,1:ncnt))*((i3-1)/dble(nz)+rs(3))
            
@@ -2557,6 +2557,7 @@
         n_atom=0
         idirect=0
 
+        ifinish=0
         do while (ifinish .ne. 1)
          read(ID+10,*) n_atom(1:itype)
          itot = sum(n_atom)

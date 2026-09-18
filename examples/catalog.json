@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "features": [
+    {
+      "id": "fukui-chern",
+      "title": "Fukui Berry flux, Chern and geometric transport",
+      "default_mode": "analytic_recalculation",
+      "requires_fortran": false,
+      "input_description": "Analytic two-band QWZ eigenstates",
+      "runner": "features/fukui-chern/run.py",
+      "readme": "features/fukui-chern/README.md",
+      "input": "features/fukui-chern/input.json",
+      "reference": "features/fukui-chern/reference",
+      "guide": "docs/VALLEY_TRANSPORT.md",
+      "required_outputs": [
+        "result.json",
+        "summary.csv",
+        "figure.png"
+      ]
+    },
+    {
+      "id": "kubo-curvature",
+      "title": "Interband-matrix Kubo Berry curvature",
+      "default_mode": "analytic_recalculation",
+      "requires_fortran": false,
+      "input_description": "Generated QWZ matrices with analytic derivatives",
+      "runner": "features/kubo-curvature/run.py",
+      "readme": "features/kubo-curvature/README.md",
+      "input": "features/kubo-curvature/input.json",
+      "reference": "features/kubo-curvature/reference",
+      "guide": "docs/KUBO_TRANSPORT.md",
+      "required_outputs": [
+        "result.json",
+        "summary.csv",
+        "figure.png"
+      ]
+    },
+    {
+      "id": "hall-valley",
+      "title": "Intrinsic charge Hall and reciprocal-space regions",
+      "default_mode": "analytic_recalculation",
+      "requires_fortran": false,
+      "input_description": "Generated QWZ matrices and illustrative region definitions",
+      "runner": "features/hall-valley/run.py",
+      "readme": "features/hall-valley/README.md",
+      "input": "features/hall-valley/input.json",
+      "reference": "features/hall-valley/reference",
+      "guide": "docs/KUBO_TRANSPORT.md",
+      "required_outputs": [
+        "result.json",
+        "summary.csv",
+        "figure.png"
+      ]
+    },
+    {
+      "id": "z2",
+      "title": "Fukui–Hatsugai Z2 invariant",
+      "default_mode": "stored_reference_validation",
+      "requires_fortran": false,
+      "input_description": "Bundled schema-2 Bi field; optional full WAVECAR recalculation",
+      "runner": "features/z2/run.py",
+      "readme": "features/z2/README.md",
+      "input": "features/z2/input.json",
+      "reference": "features/z2/reference",
+      "guide": "docs/Z2_FUKUI_HATSUGAI.md",
+      "required_outputs": [
+        "result.json",
+        "summary.csv",
+        "figure.png"
+      ]
+    },
+    {
+      "id": "circular-dichroism",
+      "title": "Circular optical selectivity",
+      "default_mode": "synthetic_wavecar_calculation",
+      "requires_fortran": true,
+      "input_description": "Generated scalar Gamma-point WAVECAR",
+      "runner": "features/circular-dichroism/run.py",
+      "readme": "features/circular-dichroism/README.md",
+      "input": "features/circular-dichroism/input.json",
+      "reference": "features/circular-dichroism/reference",
+      "guide": "README.md#usage",
+      "required_outputs": [
+        "result.json",
+        "summary.csv",
+        "figure.png"
+      ]
+    },
+    {
+      "id": "wavefunction",
+      "title": "Gamma-point real-space wavefunction",
+      "default_mode": "synthetic_wavecar_calculation",
+      "requires_fortran": true,
+      "input_description": "Generated scalar Gamma-point WAVECAR",
+      "runner": "features/wavefunction/run.py",
+      "readme": "features/wavefunction/README.md",
+      "input": "features/wavefunction/input.json",
+      "reference": "features/wavefunction/reference",
+      "guide": "README.md#usage",
+      "required_outputs": [
+        "result.json",
+        "summary.csv",
+        "figure.png"
+      ]
+    }
+  ]
+}

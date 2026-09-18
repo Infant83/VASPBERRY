@@ -1,0 +1,10 @@
+{
+  "model": "QWZ two-band analytic model",
+  "mesh": 32,
+  "mass": -1.0,
+  "spin_multiplicity": 1,
+  "energy_reference": "QWZ Hamiltonian zero; energy coefficient 1 eV",
+  "degeneracy_threshold_eV": 1e-8,
+  "pointwise_absolute_tolerance_A2": 1e-12,
+  "chern_absolute_tolerance": 1e-7
+}

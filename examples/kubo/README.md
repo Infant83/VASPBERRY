@@ -1,5 +1,9 @@
 # Public Kubo/Hall example and CSV plotting
 
+For a complete input → calculation → checked result workflow, start with the
+[Kubo curvature](../features/kubo-curvature/) and [Hall/region](../features/hall-valley/)
+feature examples. This directory retains the reusable CSV plotter.
+
 The [Kubo transport guide](../../docs/KUBO_TRANSPORT.md#public-demonstration)
 provides a complete QWZ analytic-model workflow: `demo` → `matrix` → `hall`.
 It needs no VASP input, licensed potential or material-specific setting. Run

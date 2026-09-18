@@ -6,6 +6,11 @@ All notable changes to VASPBERRY are recorded here.
 
 ### Added
 
+- A feature-oriented example catalog with runnable Fukui/Chern, Kubo, Hall,
+  Z2, optical-selectivity and Gamma-wavefunction workflows, compact reference
+  CSV/JSON/figures and a batch runner that retains calculation logs and failures.
+  The material catalog preserves the existing MoS2/Bi paths; stored-reference
+  validation is explicitly distinguished from a new WAVECAR calculation.
 - General matrix-to-curvature, explicit legacy-normalization import, and
   two-dimensional intrinsic charge Hall commands in `tools/vaspberry_kubo.py`.
 - A versioned NPZ plus JSON format for pointwise Berry curvature, energies,
@@ -21,6 +26,10 @@ All notable changes to VASPBERRY are recorded here.
 
 ### Fixed
 
+- Match the wavefunction phase-array assignment to its active plane-wave count
+  and initialize the POSCAR-header parsing loop in both Fortran sources. The
+  synthetic Gamma example now runs with array bounds checks and verifies the
+  original real/imaginary output against a known state.
 - Corrected the legacy Fortran Kubo circular-momentum normalization: the
   curvature now uses the standard `-2 Im` factor for
   `A = i<u|d_k u>`. Earlier unnormalized circular components produced twice

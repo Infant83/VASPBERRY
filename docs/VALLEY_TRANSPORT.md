@@ -1,5 +1,9 @@
 # Valley-resolved intrinsic Hall transport
 
+The [Fukui feature example](../examples/features/fukui-chern/) exercises the
+plaquette-flux and geometric transport helpers on public analytic eigenstates.
+Use the [material catalog](../examples/materials/) for WAVECAR input availability.
+
 This document specifies the physically validated post-processing path for
 chemical-potential-dependent Hall transport from VASPBERRY Fukui data. It also
 separates quantities that the current code can calculate from quantities that

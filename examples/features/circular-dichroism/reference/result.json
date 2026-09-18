@@ -1,0 +1,585 @@
+{
+  "status": "PASS",
+  "example": "circular-dichroism",
+  "commands": [
+    {
+      "cwd_relative_to_output": "theta-000",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "../WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-ii",
+        "1",
+        "-if",
+        "2",
+        "-cd",
+        "1",
+        "-theta",
+        "0",
+        "-phi",
+        "0",
+        "-kp",
+        "1",
+        "-o",
+        "selectivity"
+      ],
+      "returncode": 0
+    },
+    {
+      "cwd_relative_to_output": "theta-001",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "../WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-ii",
+        "1",
+        "-if",
+        "2",
+        "-cd",
+        "1",
+        "-theta",
+        "15",
+        "-phi",
+        "0",
+        "-kp",
+        "1",
+        "-o",
+        "selectivity"
+      ],
+      "returncode": 0
+    },
+    {
+      "cwd_relative_to_output": "theta-002",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "../WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-ii",
+        "1",
+        "-if",
+        "2",
+        "-cd",
+        "1",
+        "-theta",
+        "30",
+        "-phi",
+        "0",
+        "-kp",
+        "1",
+        "-o",
+        "selectivity"
+      ],
+      "returncode": 0
+    },
+    {
+      "cwd_relative_to_output": "theta-003",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "../WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-ii",
+        "1",
+        "-if",
+        "2",
+        "-cd",
+        "1",
+        "-theta",
+        "45",
+        "-phi",
+        "0",
+        "-kp",
+        "1",
+        "-o",
+        "selectivity"
+      ],
+      "returncode": 0
+    },
+    {
+      "cwd_relative_to_output": "theta-004",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "../WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-ii",
+        "1",
+        "-if",
+        "2",
+        "-cd",
+        "1",
+        "-theta",
+        "60",
+        "-phi",
+        "0",
+        "-kp",
+        "1",
+        "-o",
+        "selectivity"
+      ],
+      "returncode": 0
+    },
+    {
+      "cwd_relative_to_output": "theta-005",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "../WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-ii",
+        "1",
+        "-if",
+        "2",
+        "-cd",
+        "1",
+        "-theta",
+        "75",
+        "-phi",
+        "0",
+        "-kp",
+        "1",
+        "-o",
+        "selectivity"
+      ],
+      "returncode": 0
+    },
+    {
+      "cwd_relative_to_output": "theta-006",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "../WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-ii",
+        "1",
+        "-if",
+        "2",
+        "-cd",
+        "1",
+        "-theta",
+        "90",
+        "-phi",
+        "0",
+        "-kp",
+        "1",
+        "-o",
+        "selectivity"
+      ],
+      "returncode": 0
+    },
+    {
+      "cwd_relative_to_output": "theta-007",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "../WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-ii",
+        "1",
+        "-if",
+        "2",
+        "-cd",
+        "1",
+        "-theta",
+        "105",
+        "-phi",
+        "0",
+        "-kp",
+        "1",
+        "-o",
+        "selectivity"
+      ],
+      "returncode": 0
+    },
+    {
+      "cwd_relative_to_output": "theta-008",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "../WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-ii",
+        "1",
+        "-if",
+        "2",
+        "-cd",
+        "1",
+        "-theta",
+        "120",
+        "-phi",
+        "0",
+        "-kp",
+        "1",
+        "-o",
+        "selectivity"
+      ],
+      "returncode": 0
+    },
+    {
+      "cwd_relative_to_output": "theta-009",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "../WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-ii",
+        "1",
+        "-if",
+        "2",
+        "-cd",
+        "1",
+        "-theta",
+        "135",
+        "-phi",
+        "0",
+        "-kp",
+        "1",
+        "-o",
+        "selectivity"
+      ],
+      "returncode": 0
+    },
+    {
+      "cwd_relative_to_output": "theta-010",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "../WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-ii",
+        "1",
+        "-if",
+        "2",
+        "-cd",
+        "1",
+        "-theta",
+        "150",
+        "-phi",
+        "0",
+        "-kp",
+        "1",
+        "-o",
+        "selectivity"
+      ],
+      "returncode": 0
+    },
+    {
+      "cwd_relative_to_output": "theta-011",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "../WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-ii",
+        "1",
+        "-if",
+        "2",
+        "-cd",
+        "1",
+        "-theta",
+        "165",
+        "-phi",
+        "0",
+        "-kp",
+        "1",
+        "-o",
+        "selectivity"
+      ],
+      "returncode": 0
+    },
+    {
+      "cwd_relative_to_output": "theta-012",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "../WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-ii",
+        "1",
+        "-if",
+        "2",
+        "-cd",
+        "1",
+        "-theta",
+        "180",
+        "-phi",
+        "0",
+        "-kp",
+        "1",
+        "-o",
+        "selectivity"
+      ],
+      "returncode": 0
+    }
+  ],
+  "schema_version": 1,
+  "feature_id": "circular-dichroism",
+  "workflow_mode": "synthetic-production-fortran",
+  "input": {
+    "schema_version": 1,
+    "feature_id": "circular-dichroism",
+    "workflow_mode": "synthetic-production-fortran",
+    "fixture": {
+      "kind": "gamma_scalar_three_plane_waves",
+      "cell_side_A": 6.283185307179586,
+      "cutoff_eV": 5,
+      "bands": 2,
+      "spinor": false,
+      "k_fractional": [
+        0,
+        0,
+        0
+      ]
+    },
+    "theta_degrees": [
+      0,
+      15,
+      30,
+      45,
+      60,
+      75,
+      90,
+      105,
+      120,
+      135,
+      150,
+      165,
+      180
+    ],
+    "phi_degrees": 0
+  },
+  "input_sha256": "116e9ecff6653e1518e03b57809e3d22b41bbb3352bcfc0c82b15f163ff818f4",
+  "binary_sha256": "ebcf57aa22f5dbf3456121f4a49ab80539738f53fbfdeefed87baf517042c6f8",
+  "script_sha256": "d0646008d7c17e94b4df6752a06a89feaacdfff6807de39a8719d95ceb817ca5",
+  "source_sha256": "dc6674ddde8bd4c3064015ffcaba89d9ea150124f111925c63c90ab44a223df3",
+  "scope": "Synthetic Gamma-point bare-momentum optical selectivity; no material or absolute rate.",
+  "fixture": {
+    "bytes": 640,
+    "sha256": "91411dac2ad03b135f4b19a447090d36f2c42c2351a90e139b0b94bad8216a17",
+    "k_fractional": [
+      0,
+      0,
+      0
+    ],
+    "record_bytes": 128,
+    "bands": 2,
+    "plane_waves": 7,
+    "coefficient_norms": [
+      0.9999999403953552,
+      1.0
+    ],
+    "interband_overlap_absolute": 0.0
+  },
+  "max_absolute_error": 4.608256634619501e-07,
+  "tolerance": 1e-06,
+  "points": 13,
+  "dat_max_absolute_error": 4.34608256634772e-05,
+  "dat_tolerance": 5.1e-05,
+  "analytic_formula": "sqrt(3)*cos(theta)/(1+cos(theta)^2)",
+  "output_sha256": {
+    "summary.csv": "9b932a3e399293199a8bee809f0a00e70acea1d77c70ff73cc3e110d010cfafd",
+    "figure.png": "61ad736c524b8b95f0ae214a29db63cd95a5355402bfffead70ea08412abd4d7"
+  },
+  "wall_seconds": 0.48171186400577426,
+  "raw_output_sha256": {
+    "theta-000/selectivity.dat": {
+      "uncompressed_sha256": "cfbdaa3cc4549323472f5f4d965e034b442a9e862a3e18e2ca8c88eb9559bdd9",
+      "gzip_file": "raw/theta-000__selectivity.dat.gz",
+      "gzip_sha256": "24adb2438612080cfd52d4c7cf9b606112beba6f82098971065853f2afbdca74"
+    },
+    "theta-001/selectivity.dat": {
+      "uncompressed_sha256": "336834f3ff8ee6f5dc24b87aa826c8db64a06c6ecc22c3295128beb41b77ecb7",
+      "gzip_file": "raw/theta-001__selectivity.dat.gz",
+      "gzip_sha256": "eb163311636cfeaf778293c8aad7aa126bc4c76f44ec875c9b9c3d6b6aa18764"
+    },
+    "theta-002/selectivity.dat": {
+      "uncompressed_sha256": "f48ab407db3ecba71fb13ae8f506d960317001efe95766fd86113fddc322eaca",
+      "gzip_file": "raw/theta-002__selectivity.dat.gz",
+      "gzip_sha256": "fc7f9df118cfa54e34ecdc6e89aa586cb9c4549ee037c15369b5eecae9377089"
+    },
+    "theta-003/selectivity.dat": {
+      "uncompressed_sha256": "39b1f0f715aefca4eeb789fc246d491f46f389f7d7a43b42f50ec31a8929c3b9",
+      "gzip_file": "raw/theta-003__selectivity.dat.gz",
+      "gzip_sha256": "e79c0bc03e3bd26c32d35467986daf31623ee995691f15b8e08551919a88b577"
+    },
+    "theta-004/selectivity.dat": {
+      "uncompressed_sha256": "a6bbfff778f37cecb46082d5521f1ef578b6849dadd51867ba2613ce1227d75a",
+      "gzip_file": "raw/theta-004__selectivity.dat.gz",
+      "gzip_sha256": "09ea4f85c3f5ea930202ad9e2604800e1226a41f76683ff7d018214826777b19"
+    },
+    "theta-005/selectivity.dat": {
+      "uncompressed_sha256": "9b2fdbeeaf635c9c7fc43c5914d2657cfd5d4772dbf2015a0a21d538f58e3cc5",
+      "gzip_file": "raw/theta-005__selectivity.dat.gz",
+      "gzip_sha256": "67112ec5c9821845ed39575818c8633e32638b6da0fbbe92de5cbc676a336be6"
+    },
+    "theta-006/selectivity.dat": {
+      "uncompressed_sha256": "c7ab1a43fd5d3d033ac282241befae637368cd25f294b234c185e7618f0f6eba",
+      "gzip_file": "raw/theta-006__selectivity.dat.gz",
+      "gzip_sha256": "eddc52f0bcd9b410e310c89bce3170a8e55dbb3b79ac69d7d78096979956e997"
+    },
+    "theta-007/selectivity.dat": {
+      "uncompressed_sha256": "b3ab017dae52b7ac8c3e1fdd4b2bc5e215d34abb31233b5a089f6262cc708873",
+      "gzip_file": "raw/theta-007__selectivity.dat.gz",
+      "gzip_sha256": "da56078d368642d6c2f9bfd13b4e957954546a8f07130a1f285a3be747fb0c93"
+    },
+    "theta-008/selectivity.dat": {
+      "uncompressed_sha256": "f9cd5bf78306d05a1311bc3ba218bbb184c6da0268d496a5127fae465026c9f9",
+      "gzip_file": "raw/theta-008__selectivity.dat.gz",
+      "gzip_sha256": "8d9cb79b4c8676ef72f1f156da911b1b6a36b6c23cdb362cc276d0643a0fb557"
+    },
+    "theta-009/selectivity.dat": {
+      "uncompressed_sha256": "1a985dbdb3ae89a2bc1630e859b4f8502ddb67d77069fa1804fa0e28b1d92e97",
+      "gzip_file": "raw/theta-009__selectivity.dat.gz",
+      "gzip_sha256": "b930544434818a30f6e1d6d16f9d1fb937672f9270195cc1694724c0ebe9350e"
+    },
+    "theta-010/selectivity.dat": {
+      "uncompressed_sha256": "a9263ebcbea219554ace4af2ff084db196a02795935c782d7a7f4697fa519a29",
+      "gzip_file": "raw/theta-010__selectivity.dat.gz",
+      "gzip_sha256": "27ddf42e6aacf06377fa3fd60a112b54dc62064c0bc86fa2431f589e9757da5a"
+    },
+    "theta-011/selectivity.dat": {
+      "uncompressed_sha256": "cebc3376806fb93fd7c78ff32a2cc221209ee280cd7f473000dd5b927c5de28a",
+      "gzip_file": "raw/theta-011__selectivity.dat.gz",
+      "gzip_sha256": "dcc5b73ef2747f45a7e9d13f545f05a2c65ae39bfb18c15b2875e9c368dd0030"
+    },
+    "theta-012/selectivity.dat": {
+      "uncompressed_sha256": "81d939846530bc2f504f5e914129abb86275c7d230c0eaac30800eedbd9c2ff2",
+      "gzip_file": "raw/theta-012__selectivity.dat.gz",
+      "gzip_sha256": "f9e0921bc417accf584821094406b9a53f49359900f82603455e5414d1bcb103"
+    },
+    "theta-000/stdout.log": {
+      "uncompressed_sha256": "dfaa4633969b366446178c94a27e654af4f8a6ce74c623cd871e7d97a59abf14",
+      "gzip_file": "raw/theta-000__stdout.log.gz",
+      "gzip_sha256": "549e7439f694f316306185da3541a3b8caeee0587e9fc3a3911fa9b481381d8e"
+    },
+    "theta-001/stdout.log": {
+      "uncompressed_sha256": "f365884ccd3a07a477dd8a81cbc63ac5598cea9c4be9487166bcb3b3e2b6854e",
+      "gzip_file": "raw/theta-001__stdout.log.gz",
+      "gzip_sha256": "ab6fe47b10a8ce3e265edcb41e9116580a8ee19da1f3d0b119827b1ff7b99755"
+    },
+    "theta-002/stdout.log": {
+      "uncompressed_sha256": "edf9fa206cb812a4b78f9fe0535a2b478633a35da7e23d73cdd40507e789343a",
+      "gzip_file": "raw/theta-002__stdout.log.gz",
+      "gzip_sha256": "016daf8aa2dbda3c28dd9a7fd43a95f59e45ad6f2aa6bc9c9b40e05c0a7a1663"
+    },
+    "theta-003/stdout.log": {
+      "uncompressed_sha256": "5181b29f4ad91e239ee244b47f7b67ea64c672178463c98729f9abef0d3324a4",
+      "gzip_file": "raw/theta-003__stdout.log.gz",
+      "gzip_sha256": "e52e120459a912c8b8903ea2b0abe746cff94fa94940be44802a46f43d8be380"
+    },
+    "theta-004/stdout.log": {
+      "uncompressed_sha256": "cc62e943517f581ead2b04bad7dea73c73c8b5de7afdd4a4b294a1bd936ca6f0",
+      "gzip_file": "raw/theta-004__stdout.log.gz",
+      "gzip_sha256": "2008ba9c173341e00ac352bcf0d46dfc3b3643736821599820667eb511b95240"
+    },
+    "theta-005/stdout.log": {
+      "uncompressed_sha256": "67ee08604a71fafbd0c5c365ed9a50d589d7658ccd23287cbbab936a3ca2f3ff",
+      "gzip_file": "raw/theta-005__stdout.log.gz",
+      "gzip_sha256": "07cb755bb58344649e3ec73857629f57d9f686c65b80babdcddb4da77a8092b4"
+    },
+    "theta-006/stdout.log": {
+      "uncompressed_sha256": "cf6df891e15bca25250d30a750a501d1755369f33e28e0600c29a8e53d0c7040",
+      "gzip_file": "raw/theta-006__stdout.log.gz",
+      "gzip_sha256": "2b8b1eb59f16d7f4ba93757f57f1c0abd4b0fe23e52a2c9dbe4edb9f875e7e28"
+    },
+    "theta-007/stdout.log": {
+      "uncompressed_sha256": "086af3dc0b6dccc5163e2799d6f6fd3e0bb8b61b2858a87a14dff03810b417ea",
+      "gzip_file": "raw/theta-007__stdout.log.gz",
+      "gzip_sha256": "31c35672647b688a5e708e13d21f63cf4ce215f32b141d1a0f2d7a3b0ddfe12d"
+    },
+    "theta-008/stdout.log": {
+      "uncompressed_sha256": "2713705c11f393f1fdc644b1c722223ca71b6e0931ad75ee001df9e1284775ae",
+      "gzip_file": "raw/theta-008__stdout.log.gz",
+      "gzip_sha256": "a157d03afcc17617afe57c2ed51d6ba8bb6397dae77d10b742b65cf315cc2db4"
+    },
+    "theta-009/stdout.log": {
+      "uncompressed_sha256": "121f9d4191411c0ca7b2acebb8bbc940d617be3c695ff2f300f7153cbca11d0a",
+      "gzip_file": "raw/theta-009__stdout.log.gz",
+      "gzip_sha256": "526949ca0caeea701691a061a9a83bcd167e3166b5d9a46373be51ab26ab2144"
+    },
+    "theta-010/stdout.log": {
+      "uncompressed_sha256": "31450451f1381a5ea1c2722ababa1f65c20c1715ad80df98856475951ad14fcb",
+      "gzip_file": "raw/theta-010__stdout.log.gz",
+      "gzip_sha256": "de764a6e78c0e4c363e0b0b98ac456da781a5cdd947a4fb19531857957046b3f"
+    },
+    "theta-011/stdout.log": {
+      "uncompressed_sha256": "328d81cf84c8e6392c83a539f81dfe89071d8b8b0ccfd464da059240081222ed",
+      "gzip_file": "raw/theta-011__stdout.log.gz",
+      "gzip_sha256": "94845f01c58d0c802b5f0e7bfab5c895b736bfdf6a7f9ca8e0d35ededc452ecf"
+    },
+    "theta-012/stdout.log": {
+      "uncompressed_sha256": "a62b4ad6ef5da22c5761d1b4ffebfe48cef577c742b68c977694dbefa52f9070",
+      "gzip_file": "raw/theta-012__stdout.log.gz",
+      "gzip_sha256": "657dace8776b204b78ac6564db3048325914d298e0aca938d532764482a7e421"
+    }
+  },
+  "reference_note": "Actual production outputs copied unchanged; argv executable paths are normalized relative to repository root. Original absolute commands retained in the local research run."
+}

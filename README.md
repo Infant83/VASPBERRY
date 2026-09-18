@@ -40,123 +40,116 @@ length requirement, and BLAS/LAPACK ABI constraints are documented in the
 > with byte `RECL` and regenerating `WAVECAR` is the preferred fix.
 
 # Features
-* Berry curvature calculation
-* Compute Chern number for certain band(s) which are well-isolated over the BZ
-* Two-dimensional Z2 invariant by the Fukui-Hatsugai lattice n-field method
-* Circular dichroism (optical selectivity response to the circulary polarized light)
-* Wavefunction plot (Gamma point only in the current version)
-* Guarded WAVECAR-direct Fukui export and valley-transport analysis (Python)
-* General interband-matrix Kubo curvature with versioned NPZ/JSON output
-* Two-dimensional charge Hall integration with user-defined reciprocal-space regions
 
-## Choose an observable
-
-| Input and goal | Interface | Result |
+| Quantity / task | Main interface and guide | Runnable example and results |
 |---|---|---|
-| Full-mesh `WAVECAR`, isolated band or bundle | Existing Fortran or `tools/wavecar_fukui.py` | Oriented Fukui plaquette flux and its Chern sum |
-| Exported interband matrices | `tools/vaspberry_kubo.py matrix` | Pointwise Kubo curvature with declared units and provenance |
-| Historical Kubo map and matching energies | `tools/vaspberry_kubo.py import-legacy` | Point curvature with an explicit source-normalization convention |
-| Standardized point curvature and occupations | `tools/vaspberry_kubo.py hall` | Intrinsic charge sheet response in `e²/h`, optionally by region |
-| Analytic two-band model | `tools/vaspberry_kubo.py demo` | Public demonstration without VASP input data |
+| Berry flux and Chern number of an isolated band or band bundle | Fortran; [guarded Python Fukui workflow](docs/VALLEY_TRANSPORT.md) | [Fukui/Chern](examples/features/fukui-chern/) |
+| Two-dimensional Z₂ invariant | Fortran `-z2 1`; [Fukui–Hatsugai guide](docs/Z2_FUKUI_HATSUGAI.md) | [Z₂ / Bi](examples/features/z2/) |
+| Circular dichroism / optical selectivity | Fortran `-cd`; [usage below](#usage) | [Circular dichroism](examples/features/circular-dichroism/) |
+| Real-space wavefunction at Gamma | Fortran `-wf`; [usage below](#usage) | [Wavefunction](examples/features/wavefunction/) |
+| Pointwise Kubo Berry curvature | Exported interband matrices; [Kubo guide](docs/KUBO_TRANSPORT.md) | [Kubo curvature](examples/features/kubo-curvature/) |
+| Two-dimensional intrinsic charge Hall response and reciprocal-space regions | Standardized curvature and occupations; [Hall guide](docs/KUBO_TRANSPORT.md) | [Hall / regions](examples/features/hall-valley/) |
+| WAVECAR-direct Fukui export and guarded geometric transport | `tools/wavecar_fukui.py`; [valley-transport guide](docs/VALLEY_TRANSPORT.md) | [Fukui model and material inputs](examples/features/fukui-chern/) |
+| Historical Kubo normalization import | `tools/vaspberry_kubo.py import-legacy`; [migration guide](docs/MIGRATION.md) | [Import commands and identification checks](docs/MIGRATION.md#historical-doubled-output) |
 
-Start with the [Kubo and Hall guide](docs/KUBO_TRANSPORT.md). The
-[output-format specification](docs/OUTPUT_FORMAT.md) distinguishes point
+These are general-purpose interfaces. Choose the observable and input operator
+for the physical system; use the standardized output in your own analysis.
+The [output specification](docs/OUTPUT_FORMAT.md) distinguishes point
 curvature in Å² from geometric plaquette flux in radians. A finite-mesh Kubo
 integral need not be an integer; a Fukui lattice integer still needs mesh and
-band-isolation checks. The operator and basis used to generate the matrices
-remain part of the scientific calculation.
-
-
-## Fukui-Hatsugai Z2 invariant
-
-`-z2 1` is a first-class two-dimensional Z2 option. It requires a
-nonmagnetic, time-reversal-symmetric insulating spinor `WAVECAR` on a full,
-unshifted, even Gamma-centered `Nx x Ny x 1` mesh with `Nx,Ny>=4`, generated
-with `ISYM=-1`. For the bundled Bi 12 x 12 example:
-
-```bash
-./build/vaspberry-gfortran \
-  -f examples/Bi_Z2/WAVECAR -o NFIELD -z2 1 \
-  -kx 12 -ky 12 -s 2 -ii 1 -if 10
-```
-
-A PASS writes `NFIELD.dat` and `Z2_FIELD.csv`. A field result is reportable
-only when `result_status=PASS`, `reportable_invariant=1`, and the top/bottom
-half-zone parities agree; their common value is Z2. Rejected or interrupted Z2
-runs retain `Z2_FIELD.invalid.csv` when the guarded output preflight has
-started, and any `NFIELD.dat` without the final PASS CSV is non-reportable.
-PASS tests the numerical self-consistency of the routine's time-reversal
-reconstruction. The raw-input gap, physical time-reversal symmetry, and
-convergence with mesh density must still be checked for the system under
-study.
-
-See the [`Fukui-Hatsugai Z2 guide`](docs/Z2_FUKUI_HATSUGAI.md) for the method,
-input preparation, output schema, plotting, scope, and references. Run
-`./build/vaspberry-gfortran -h` for the built-in option summary.
-
-An importable Python-library port is deferred to a later release; its proposed
-validation boundary is recorded in the [`roadmap`](docs/ROADMAP.md).
+band-isolation checks.
 
 # Usage
-* Instruction and possible options
-> ./build/vaspberry-gfortran -h
-* Berry curvature calculation and Chern number (ex, k-grid: 12x12, multiband berry curvature from 1-th to 18-th band)
-> ./build/vaspberry-gfortran -kx 12 -ky 12 -ii 1 -if 18
-* Z2 invariant (12x12 full Gamma-centered SOC mesh, occupied bands 1--10)
-> ./build/vaspberry-gfortran -f WAVECAR -o NFIELD -z2 1 -kx 12 -ky 12 -s 2 -ii 1 -if 10
-* Circular dichroism [ex, transition rate from 11-th to 12-th state by right(+) polarized light]
-> ./build/vaspberry-gfortran -kx 12 -ky 12 -cd 1 -ii 11 -if 12
-* Real space wavefunction plot [ex, to plot 18-th state with 1-st k-point (if it is gamma point), with 40x40x40 grid for density file]
-> ./build/vaspberry-gfortran -wf 18 -k 1 -ng 40,40,40
-> NOTE: current version only support gamma point for wavefunction plot. (there is some problem in boundary region in off-gamma k-point)
-* If your system is semimetallic, there can be following error messages: "error. !!! ne(k) /= ne(k') !!!". This is due to that the number of occupied states for certain k-point (ne(k)) counted based on the calculated Fermi level is differ over the Brillouin zone. In this case, one can explicitly specify the number of electrons (NE) of your system, so that VASPBERRY calculate berry curvature with "NE" bands. 
-> ./build/vaspberry-gfortran -kx 12 -ky 12 -ii 1 -if 18 -ne 18
 
-  This chooses a fixed band manifold for its geometric calculation. It does
-  not supply the changing occupations needed for a metal's Hall response;
-  use the corresponding transport workflow and verify the selected manifold.
+## Start with a small, reproducible example
 
-* Energy-resolved and valley-resolved Hall transport is available through the
-  opt-in Python 3.10+ tools. The direct reader exports high-precision plaquette flux,
-  four vertex energies, adjacent-band gaps, and link-quality diagnostics from
-  the same full-mesh WAVECAR:
-> python -m pip install -r requirements-transport.txt
-> python tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 --energy-band 19 --output-dir direct_raw --valley-k 0.6666667,0.3333333,0 --valley-kp 0.3333333,0.6666667,0 --plot
+The [feature catalog](examples/README.md) links each input, runner, reference
+CSV/JSON and figure. Five workflows calculate analytic or synthetic examples;
+Z₂ defaults to validating the stored Bi field and provides a separate WAVECAR
+recalculation mode.
 
-  To request a guarded zero-temperature chemical-potential scan, add for example:
-> python tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 --energy-band 19 --output-dir direct_transport --transport-t0 --mu-min 0.40 --mu-max 0.55 --mu-num 151 --valley-k 0.6666667,0.3333333,0 --valley-kp 0.3333333,0.6666667,0 --plot
+```bash
+python3 -m pip install -r requirements-transport.txt
+python3 examples/run_examples.py --list
+python3 examples/run_examples.py fukui-chern kubo-curvature hall-valley z2 \
+  --output-dir results/python-examples
+# With the current Fortran binary built by make serial:
+python3 examples/run_examples.py --all --output-dir results/all-examples
+```
 
-  To scan every represented occupied subspace through a VBM at band 18,
-  including hole occupations, use the separate full-window mode. Band 19 is
-  retained as the mandatory unoccupied sentinel:
-> python tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 --energy-band 18 --output-dir full_valence_scan --transport-full-t0 18 --mu-min -8.0 --mu-max 0.40 --mu-num 1001 --valley-k 0.6666667,0.3333333,0 --valley-kp 0.3333333,0.6666667,0 --plot --plot-domain first-bz
+## Apply the calculation to your input
 
-  This output is cumulative `sigma_xy(mu)`. It does not claim a smooth
-  `d sigma_xy/d mu` spectral density or a selected-mu k-resolved transport map;
-  on a 12x12 mesh those require separate convergence and representation work.
+Run `./build/vaspberry-gfortran -h`,
+`python3 tools/wavecar_fukui.py --help`, or
+`python3 tools/vaspberry_kubo.py --help` for all options.
+The following Fortran commands assume a compatible `WAVECAR` in the working
+directory. Use a separate output directory for each calculation.
 
-  See the [valley-transport guide](docs/VALLEY_TRANSPORT.md) before interpreting
-  a single-band or transport result. The
-  guarded transport path refuses active plaquettes with nearly singular links,
-  insufficient band isolation, or branch-risk phases. The three-manifold mode
-  validates its fully occupied valence baseline globally and keeps its window
-  above the VBM. The full-window mode instead validates the `MAX_BAND` reference
-  bundle globally and keeps `mu_max` below the `MAX_BAND+1` sentinel.
-  Existing Fortran Fukui output and default calculations are unchanged.
-  Version 1.3.0 corrects the legacy Kubo normalization; see the
-  [migration guide](docs/MIGRATION.md) before comparing older Kubo files.
+```bash
+# Berry flux / Chern: full 12 × 12 mesh, bands 1–18.
+./build/vaspberry-gfortran -kx 12 -ky 12 -ii 1 -if 18
 
-# Examples
-* [Public Kubo/Hall workflow and CSV plotting](examples/kubo/): an analytic
-  model and reusable figures without VASP input or material-specific settings
-* [1H-MoS2](examples/1H-MoS2/): Berry curvature, Chern, and Kubo plot data
-* [Bi buckled honeycomb layer](examples/Bi_Z2/): 12 x 12
-  Fukui-Hatsugai n-field Z2 example, reviewed input templates, current
-  reference result, and n-field plotting helper
-* See the [examples index](examples/README.md) for the sampling requirements
-  and the distinction between full-BZ and line-mode data.
-* Quantum Anomalous Hall effect (Trypheny-lead lattice) : See H.-J. Kim, C. Li, J. Feng, J.-H. Cho, and Z. Zhang, PRB 93, 041404(R) (2016) (the example files will be provided upon request)
-* Circular dichroism : See S.-W. Kim, H.-J. Kim, S. Cheon, and T.-H. Kim, Phys. Rev. Lett. accepted (2021) (the example will be provided upon reasonable request).
+# Z₂: full even Gamma-centered SOC mesh, occupied bands 1–10.
+./build/vaspberry-gfortran -f WAVECAR -o NFIELD -z2 1 \
+  -kx 12 -ky 12 -s 2 -ii 1 -if 10
+
+# Circular optical response for bands 11 → 12.
+./build/vaspberry-gfortran -kx 12 -ky 12 -cd 1 -ii 11 -if 12
+
+# Real-space band 18 at Gamma; matching POSCAR and EIGENVAL are also required.
+./build/vaspberry-gfortran -wf 18 -k 1 -ng 40,40,40
+```
+
+Z₂ requires a nonmagnetic time-reversal-symmetric insulator and a full,
+unshifted, even `Nx × Ny × 1` mesh with `Nx,Ny >= 4`, generated with `ISYM=-1`.
+Use only a final `Z2_FIELD.csv` with `result_status=PASS`,
+`reportable_invariant=1` and matching half-zone parities. Input gap, physical
+time-reversal symmetry and mesh convergence require separate checks; see the
+[Z₂ guide](docs/Z2_FUKUI_HATSUGAI.md).
+
+For a semimetal, `-ne 18` can select a fixed 18-band geometric manifold when
+the automatically counted occupations differ across k points. This does not
+supply the changing occupations for metallic Hall transport. Use the
+transport workflow with its occupation and band-window checks.
+
+### Python workflows
+
+For the matrix-to-curvature-to-Hall pipeline, follow the
+[Kubo example](examples/features/kubo-curvature/) and
+[Hall example](examples/features/hall-valley/). They write versioned NPZ/JSON
+and long-form CSV with explicit units, normalization and provenance.
+
+The WAVECAR-direct workflow exports Fukui plaquette flux, four vertex energies,
+adjacent-band gaps and link-quality diagnostics. A basic full-mesh export is:
+
+```bash
+python3 tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 \
+  --energy-band 19 --output-dir results/direct-fukui
+```
+
+The [valley-transport guide](docs/VALLEY_TRANSPORT.md) gives
+`--transport-t0`, `--transport-full-t0`, region definitions and the required
+unoccupied sentinel band. These scans report cumulative `sigma_xy(mu)`;
+a smooth energy derivative or material convergence needs further analysis.
+Read the [migration guide](docs/MIGRATION.md) before comparing historical
+Kubo data: version 1.3.0 corrects their factor-of-two normalization.
+
+# Examples and material datasets
+
+- [Feature examples](examples/README.md): small inputs, runnable commands,
+  numerical reference results and figures for all calculation features.
+- [Material catalog](examples/materials/): existing MoS₂/Bi data, sampling and
+  reproduction requirements. Their original paths remain available.
+- [1H-MoS₂](examples/1H-MoS2/): full-mesh stored maps and a separate band-path
+  WAVECAR. A line-mode input cannot supply a full-BZ integral.
+- [Bi buckled honeycomb](examples/Bi_Z2/): reviewed input templates,
+  schema-2 Z₂ result and Git LFS wavefunction.
+- [Standalone Hall CSV plotting](examples/kubo/): reusable plotting for
+  standardized transport output.
+
+Method details, diagnostics and output contracts are kept in the linked
+guides. An importable Python-library port remains a [roadmap](docs/ROADMAP.md)
+item.
 
 # Contributors
 * Hyun-Jung Kim: Main developer

@@ -1,5 +1,9 @@
 # Kubo curvature and two-dimensional charge Hall transport
 
+Runnable inputs and checked numerical/figure references are in the
+[Kubo curvature](../examples/features/kubo-curvature/) and
+[Hall/region](../examples/features/hall-valley/) examples.
+
 The `tools/vaspberry_kubo.py` command converts declared interband matrices or
 legacy Kubo data into a common point-curvature format and integrates a
 two-dimensional intrinsic charge Hall response. It also provides a public
