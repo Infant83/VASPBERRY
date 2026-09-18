@@ -136,6 +136,8 @@ reference set and retains the outputs as an artifact.
 - [Standalone Hall CSV plotting](kubo/): plots standardized transport output.
 - [Developer numerical checks](../validation/models/): analytic models,
   synthetic states and historical field checks, kept outside user tutorials.
+- [Supplementary reference map](../docs/REFERENCE_MATERIALS.md): connect these
+  examples and method checks for hands-on documents and release technical reports.
 
 VASP `POTCAR` files are not distributed. The supplied outputs reproduce
 VASPBERRY postprocessing; consult each material's provenance before claiming
