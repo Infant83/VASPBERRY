@@ -5,6 +5,7 @@ root unless an example says otherwise.
 
 | Example | Sampling | Purpose | Main input |
 |---|---|---|---|
+| [`kubo/`](kubo/) | public analytic 2D mesh | matrix-to-curvature/Hall workflow and standalone CSV plotting | generated QWZ fixture |
 | [`Bi_Z2/`](Bi_Z2/) | full even Gamma-centered 2D mesh | Fukui-Hatsugai n-field Z2 invariant | SOC spinor `WAVECAR` |
 | [`1H-MoS2/`](1H-MoS2/) | full 12 x 12 mesh | Berry curvature and Chern regression | stored `BERRYCURV.dat` |
 | [`1H-MoS2/KPATH/`](1H-MoS2/KPATH/) | K-Gamma-K' line | band and Kubo plot data | line-mode `WAVECAR`/`EIGENVAL` |

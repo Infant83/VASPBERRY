@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare serial and MPI VASPBERRY v1.2 Z2 field CSV files."""
+"""Compare serial and MPI VASPBERRY schema-2 Z2 field CSV files."""
 
 from __future__ import annotations
 
@@ -66,7 +66,6 @@ CONTINUOUS_METADATA = (
 REQUIRED_EXACT_METADATA = {
     "schema": "VASPBERRY_Z2_FIELD",
     "schema_version": "2",
-    "vaspberry_version": "1.2.0",
     "result_status": "PASS",
     "result_kind": "FUKUI_HATSUGAI_NFIELD_Z2",
     "reportable_invariant": "1",
@@ -89,6 +88,7 @@ REQUIRED_EXACT_METADATA = {
 REQUIRED_METADATA = frozenset(
     {
         *REQUIRED_EXACT_METADATA,
+        "vaspberry_version",
         *CONTINUOUS_METADATA,
         "plaquette_orientation",
         "nfield_definition",
@@ -113,7 +113,7 @@ class Z2ComparisonError(ValueError):
 
 @dataclass(frozen=True)
 class Z2Field:
-    """Parsed, type-checked v1.2 Z2 field output."""
+    """Parsed, type-checked schema-2 Z2 field output."""
 
     path: Path
     metadata: dict[str, str]
@@ -194,7 +194,7 @@ def _read_records(path: Path) -> tuple[dict[str, str], list[str], list[list[str]
 
 
 def load_z2_field(path: Path) -> Z2Field:
-    """Load and validate one reportable 12 x 12 v1.2 Z2 field."""
+    """Load a reportable 12 x 12 schema-2 field from v1.2.0 or v1.3.0."""
     metadata, header, records = _read_records(path)
 
     if len(header) != len(set(header)):
@@ -214,6 +214,8 @@ def load_z2_field(path: Path) -> Z2Field:
             f"{path}: schema-v2 CSV columns are invalid ({'; '.join(details)})"
         )
 
+    if metadata.get("vaspberry_version") not in {"1.2.0", "1.3.0"}:
+        raise Z2ComparisonError("unsupported schema-2 producer version")
     for key, expected in REQUIRED_EXACT_METADATA.items():
         if key not in metadata:
             raise Z2ComparisonError(
@@ -374,7 +376,9 @@ def compare_z2_fields(
 
     mismatches: list[str] = []
 
-    for key in sorted(serial_keys - set(CONTINUOUS_METADATA)):
+    # The loader already restricts both producers to compatible schema-2
+    # versions. Preserve every other metadata and numerical comparison.
+    for key in sorted(serial_keys - set(CONTINUOUS_METADATA) - {"vaspberry_version"}):
         serial_value = serial.metadata[key]
         mpi_value = mpi.metadata[key]
         if serial_value != mpi_value:

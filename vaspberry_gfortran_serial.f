@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.2.0 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.3.0 (f77) for VASP
 ! Written by Hyun-Jung Kim
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -31,7 +31,7 @@
 !               and GNU/OpenMPI portability checks
 !               : 2026. Sep. 04.
 
-! last update and bug fixes : 2026. Sep. 04.
+! last update and bug fixes : 2026. Sep. 19.
 ! NOTE: This version only support serial calculations and modified
 !#define MPI_USE
 !#undef  MPI_USE
@@ -75,8 +75,8 @@
       nprocs=1
       myrank=0
 
-      ver_tag="# VASPBERRY (Ver 1.2.0), by Hyun-Jung Kim."//
-     &        " 2026. Sep. 04."
+      ver_tag="# VASPBERRY (Ver 1.3.0), by Hyun-Jung Kim."//
+     &        " 2026. Sep. 19."
       pi=4.*atan(1.)
       berrymax=0d0
       berrymin=0d0
@@ -1034,7 +1034,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.2.0'
+      write(94,'(A)')'# vaspberry_version=1.3.0'
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
@@ -1234,7 +1234,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.2.0'
+      write(94,'(A)')'# vaspberry_version=1.3.0'
       if(fieldok)then
        write(94,'(A)')'# result_status=PASS'
       else
@@ -3211,6 +3211,7 @@
      &    iwf,ikwf,ng,rs,imag)
       implicit real*8(a-h,o-z)
       character*75 filename,foname,fbz,ver_tag,vdirec
+      character*256 foname_base
       real*8 x,y
       character*20 option
       character*75 value
@@ -3284,17 +3285,18 @@
            call help(ver_tag)
           endif
       enddo
+      foname_base=foname
       if(iz .eq. 1)then
-       if(TRIM(foname) .eq. 'BERRYCURV')foname="NFIELD"
-      else if(icd.eq.1 .and. TRIM(foname) .ne. 'BERRYCURV' )then
-       write(foname,'(A,A)')"CIRC_DICHROISM.",TRIM(foname)
-      else if (icd .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
+       if(TRIM(foname_base) .eq. 'BERRYCURV')foname="NFIELD"
+      else if(icd.eq.1 .and. TRIM(foname_base) .ne. 'BERRYCURV' )then
+       write(foname,'(A,A)')"CIRC_DICHROISM.",TRIM(foname_base)
+      else if (icd .eq. 1 .and. TRIM(foname_base) .eq. 'BERRYCURV') then
         foname="CIRC_DICHROISM"
-      else if (icd+ivel .eq. 0 .and. TRIM(foname) .ne. 'BERRYCURV')then
-        write(foname,'(A,A)')"BERRYCURV.",TRIM(foname)
-      else if (ivel .eq. 1 .and. TRIM(foname) .ne. 'BERRYCURV') then
-        write(foname,'(A,A)')"VEL_EXPT.",TRIM(foname)
-      else if (ivel .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
+      else if (icd+ivel .eq. 0 .and. TRIM(foname_base) .ne. 'BERRYCURV')then
+        write(foname,'(A,A)')"BERRYCURV.",TRIM(foname_base)
+      else if (ivel .eq. 1 .and. TRIM(foname_base) .ne. 'BERRYCURV') then
+        write(foname,'(A,A)')"VEL_EXPT.",TRIM(foname_base)
+      else if (ivel .eq. 1 .and. TRIM(foname_base) .eq. 'BERRYCURV') then
         foname="VEL_EXPT"
       endif
 
@@ -3606,6 +3608,8 @@
       subroutine help(ver_tag)
       character*75 ver_tag
       write(6,*)"          **** PROGRAM INSTRUCTION ***"
+      write(6,*)"Historical serial source: no -kubo implementation."
+      write(6,*)"Use make serial for current vaspberry.f features."
       write(6,*)" "
       write(6,*)ver_tag
       write(6,*)" "

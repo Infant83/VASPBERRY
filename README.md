@@ -1,9 +1,15 @@
 # VASPBERRY
-Berry curvature, Chern number, and two-dimensional Z2 calculations from VASP
-`WAVECAR` wavefunctions. VASPBERRY implements the discrete Brillouin-zone
+Berry curvature, Chern number, two-dimensional intrinsic charge Hall transport,
+and two-dimensional Z2 calculations. VASPBERRY reads VASP `WAVECAR`
+wavefunctions and exported interband matrices. It implements the discrete Brillouin-zone
 method of [Fukui, Hatsugai, and Suzuki, J. Phys. Soc. Jpn. 74, 1674
 (2005)](https://doi.org/10.1143/JPSJ.74.1674), together with circular
 dichroism and real-space wavefunction output.
+
+**Current source: 1.3.0, unreleased.** Record the exact commit with results.
+See the [1.3.0 notes](docs/releases/v1.3.0.md) and
+[migration guide](docs/MIGRATION.md) for the legacy Kubo factor-of-two fix.
+No v1.3.0 tag or release archive is implied by this source version.
 
 # Download Git version
 * git clone --branch master  https://github.com/Infant83/VASPBERRY.git
@@ -40,6 +46,25 @@ length requirement, and BLAS/LAPACK ABI constraints are documented in the
 * Circular dichroism (optical selectivity response to the circulary polarized light)
 * Wavefunction plot (Gamma point only in the current version)
 * Guarded WAVECAR-direct Fukui export and valley-transport analysis (Python)
+* General interband-matrix Kubo curvature with versioned NPZ/JSON output
+* Two-dimensional charge Hall integration with user-defined reciprocal-space regions
+
+## Choose an observable
+
+| Input and goal | Interface | Result |
+|---|---|---|
+| Full-mesh `WAVECAR`, isolated band or bundle | Existing Fortran or `tools/wavecar_fukui.py` | Oriented Fukui plaquette flux and its Chern sum |
+| Exported interband matrices | `tools/vaspberry_kubo.py matrix` | Pointwise Kubo curvature with declared units and provenance |
+| Historical Kubo map and matching energies | `tools/vaspberry_kubo.py import-legacy` | Point curvature with an explicit source-normalization convention |
+| Standardized point curvature and occupations | `tools/vaspberry_kubo.py hall` | Intrinsic charge sheet response in `e²/h`, optionally by region |
+| Analytic two-band model | `tools/vaspberry_kubo.py demo` | Public demonstration without VASP input data |
+
+Start with the [Kubo and Hall guide](docs/KUBO_TRANSPORT.md). The
+[output-format specification](docs/OUTPUT_FORMAT.md) distinguishes point
+curvature in Å² from geometric plaquette flux in radians. A finite-mesh Kubo
+integral need not be an integer; a Fukui lattice integer still needs mesh and
+band-isolation checks. The operator and basis used to generate the matrices
+remain part of the scientific calculation.
 
 
 ## Fukui-Hatsugai Z2 invariant
@@ -87,6 +112,10 @@ validation boundary is recorded in the [`roadmap`](docs/ROADMAP.md).
 * If your system is semimetallic, there can be following error messages: "error. !!! ne(k) /= ne(k') !!!". This is due to that the number of occupied states for certain k-point (ne(k)) counted based on the calculated Fermi level is differ over the Brillouin zone. In this case, one can explicitly specify the number of electrons (NE) of your system, so that VASPBERRY calculate berry curvature with "NE" bands. 
 > ./build/vaspberry-gfortran -kx 12 -ky 12 -ii 1 -if 18 -ne 18
 
+  This chooses a fixed band manifold for its geometric calculation. It does
+  not supply the changing occupations needed for a metal's Hall response;
+  use the corresponding transport workflow and verify the selected manifold.
+
 * Energy-resolved and valley-resolved Hall transport is available through the
   opt-in Python 3.10+ tools. The direct reader exports high-precision plaquette flux,
   four vertex energies, adjacent-band gaps, and link-quality diagnostics from
@@ -113,10 +142,13 @@ validation boundary is recorded in the [`roadmap`](docs/ROADMAP.md).
   validates its fully occupied valence baseline globally and keeps its window
   above the VBM. The full-window mode instead validates the `MAX_BAND` reference
   bundle globally and keeps `mu_max` below the `MAX_BAND+1` sentinel.
-  Existing Fortran Fukui output and default calculations are unchanged; the
-  opt-in spin-polarized Kubo path includes an independent accumulator fix.
+  Existing Fortran Fukui output and default calculations are unchanged.
+  Version 1.3.0 corrects the legacy Kubo normalization; see the
+  [migration guide](docs/MIGRATION.md) before comparing older Kubo files.
 
 # Examples
+* [Public Kubo/Hall workflow and CSV plotting](examples/kubo/): an analytic
+  model and reusable figures without VASP input or material-specific settings
 * [1H-MoS2](examples/1H-MoS2/): Berry curvature, Chern, and Kubo plot data
 * [Bi buckled honeycomb layer](examples/Bi_Z2/): 12 x 12
   Fukui-Hatsugai n-field Z2 example, reviewed input templates, current

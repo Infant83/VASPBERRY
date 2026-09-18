@@ -28,7 +28,9 @@ IFX_MKL_FLAGS ?= -qmkl=sequential
 IFORT_MKL_FLAGS ?= -mkl=sequential
 MPIEXEC_FLAGS ?=
 
-SERIAL_SOURCE := vaspberry_gfortran_serial.f
+SERIAL_SOURCE := vaspberry.f
+# Historical no-Kubo source is available explicitly via
+# make serial SERIAL_SOURCE=vaspberry_gfortran_serial.f BUILD_DIR=build-legacy
 MPI_SOURCE := vaspberry.f
 GNU_SERIAL_BIN := $(BUILD_DIR)/vaspberry-gfortran
 GNU_MPI_BIN := $(BUILD_DIR)/vaspberry-mpi

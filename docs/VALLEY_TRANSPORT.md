@@ -514,9 +514,14 @@ example has a zero minimum direct gap and an approximately
 machine-epsilon degeneracy handling and makes that example unsuitable as a
 quantitative transport reference.
 
+Version 1.3.0 corrects the legacy Fortran Kubo factor-of-two normalization
+error. Older maps require an explicit source convention; see
+[migration](MIGRATION.md). The generic matrix and point-curvature Hall tools
+are documented separately in [Kubo transport](KUBO_TRANSPORT.md).
+
 Before any full-grid legacy Kubo result is used quantitatively, its degeneracy
-regularization, normalization, PAW/nonlocal/SOC velocity terms, unoccupied-band
-convergence, and agreement with Fukui/Wannier benchmarks must be established.
+regularization, PAW/nonlocal/SOC velocity terms, unoccupied-band convergence,
+and agreement with independently matched calculations must be established.
 For collinear `ISPIN=2`, the total Kubo accumulator is reset inside each spin
 branch before the band loop; a source regression protects this separation.
 
