@@ -1,5 +1,8 @@
 # Two-dimensional Z2 invariant by the Fukui-Hatsugai n-field method
 
+The [Z₂ feature example](../examples/features/z2/) recalculates the invariant
+from the real Bi WAVECAR, with exact commands, native reference outputs and a figure.
+
 VASPBERRY's `-z2 1` option evaluates the two-dimensional class-AII invariant
 directly from a VASP spinor `WAVECAR`. It implements the lattice n-field
 construction of Fukui and Hatsugai on a full, uniform, Gamma-centered mesh.

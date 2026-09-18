@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "feature_id": "wavefunction",
+  "workflow_mode": "synthetic-production-fortran",
+  "fixture": {
+    "kind": "gamma_scalar_three_plane_waves",
+    "cell_side_A": 6.283185307179586,
+    "cutoff_eV": 5,
+    "bands": 2,
+    "spinor": false,
+    "k_fractional": [0, 0, 0]
+  },
+  "grid": [32, 32, 10]
+}

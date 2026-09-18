@@ -74,6 +74,7 @@ class FortranSourceRegressionTests(unittest.TestCase):
             "-klist",
             "-kp",
             "-kubo",
+            "-kubo_csv",
             "-kx",
             "-ky",
             "-ne",
@@ -592,9 +593,10 @@ class FortranSourceRegressionTests(unittest.TestCase):
             with self.subTest(source=source_path.name):
                 self.assertLess(z2_branch, generic_berry)
                 self.assertIn(
-                    "if(trim(foname).eq.'berrycurv')foname=\"nfield\"",
+                    "if(trim(foname_base).eq.'berrycurv')foname=\"nfield\"",
                     parser,
                 )
+                self.assertIn("foname_base=foname", parser)
                 self.assertNotIn("character*20option,value", parser)
         serial_parser = compact_fortran(
             parse_subroutine(
@@ -719,8 +721,8 @@ class FortranSourceRegressionTests(unittest.TestCase):
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
             source = source_path.read_text(encoding="utf-8", errors="strict")
             with self.subTest(source=source_path.name):
-                self.assertIn("PROGRAM VASPBERRY Version 1.2.0", source)
-                self.assertIn("# VASPBERRY (Ver 1.2.0)", source)
+                self.assertIn("PROGRAM VASPBERRY Version 1.3.0", source)
+                self.assertIn("# VASPBERRY (Ver 1.3.0)", source)
 
 
 if __name__ == "__main__":

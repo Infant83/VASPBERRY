@@ -2,6 +2,74 @@
 
 All notable changes to VASPBERRY are recorded here.
 
+## [1.3.0] - Unreleased
+
+### Added
+
+- Real VASP-based feature tutorials: Bi occupied-subspace Fukui/Chern, Z2 and
+  gap Hall; MoS2 band-path Kubo, optical response and Gamma wavefunctions. Each
+  gives actual input files, explicit production commands, freshly calculated
+  original outputs, numerical/figure references and steps for another system.
+  Public Bi input can be fetched with size/checksum verification. Model and
+  synthetic checks are retained separately under validation/models/.
+- General matrix-to-curvature, explicit legacy-normalization import, and
+  two-dimensional intrinsic charge Hall commands in `tools/vaspberry_kubo.py`.
+- A versioned NPZ plus JSON format for pointwise Berry curvature, energies,
+  reciprocal coordinates, integration weights, selected bands and provenance.
+- User-defined reciprocal-space regions for decomposing the sheet Hall
+  response, with a public analytic two-band demonstration that needs no VASP
+  files or proprietary data.
+- A standalone Matplotlib example that plots selected regions, bands,
+  temperatures and observables from the standardized Hall CSV.
+- Method, output-format and migration guides documenting sign, units,
+  band-sum truncation, physical-operator scope and the distinction between
+  point curvature and Fukui plaquette flux.
+
+### Fixed
+
+- Match the wavefunction phase-array assignment to its active plane-wave count
+  and initialize the POSCAR-header parsing loop in both Fortran sources. The
+  synthetic Gamma example now runs with array bounds checks and verifies the
+  original real/imaginary output against a known state.
+- Corrected the legacy Fortran Kubo circular-momentum normalization: the
+  curvature now uses the standard `-2 Im` factor for
+  `A = i<u|d_k u>`. Earlier unnormalized circular components produced twice
+  this curvature. The migration guide explains how to identify and import
+  old outputs without silently rescaling already normalized results.
+- Preserve custom `-o` output names by avoiding overlapping Fortran string
+  reads and writes. Corrected the serial job-displacement array bounds.
+- Check individual-band isolation against all exported energies even when
+  the intermediate sum is truncated, and recompute imported gaps from the
+  matching WAVECAR. Invalid individual-band data cannot enter Hall integration.
+- Check full-mesh geometry, spin multiplicity, reciprocal-region overlap and
+  producer checksums at the portable data boundary.
+
+### Performance and numerical stability
+
+- Use sorted cumulative sums at zero temperature and share finite-temperature
+  occupation arrays across regions and bands in bounded chemical-potential
+  chunks. Band-resolved work avoids a full state array for each band mask.
+- Integrate doping differences from the reference occupation directly, so
+  subtraction of a large filled-band baseline does not erase a small signal.
+- The default GNU serial and MPI builds now use the same current source.
+  The historical reduced serial source remains explicitly available.
+
+### Compatibility and scientific scope
+
+- Existing Fukui command lines and plaquette outputs remain available.
+  They are not relabeled as pointwise Kubo curvature.
+- The normalization fix changes the legacy Kubo magnitude; it does not add
+  missing PAW, nonlocal, SOC or Hubbard-potential velocity terms. A supplied
+  matrix must represent the declared Hamiltonian and physical operator.
+- Validation of array shapes, units and numerical properties is distinct
+  from material-specific k-mesh, intermediate-band and basis convergence.
+  Integer Chern numbers are not enforced by rounding finite-mesh integrals.
+- The new Hall command computes a two-dimensional intrinsic **charge** sheet
+  response. It does not implement spin Hall conductivity or a three-dimensional
+  bulk conductivity conversion.
+- `VERSION` identifies an unreleased source candidate. No v1.3.0 Git tag,
+  GitHub Release, new DOI or published binary is created by this change.
+
 ## [1.2.0] - 2026-09-04
 
 ### Added

@@ -1,11 +1,11 @@
 cff-version: 1.2.0
 message: >-
-  If you use VASPBERRY 1.2.0, cite this repository and the scientific method
-  references appropriate to the calculation you performed.
+  If you use the unreleased VASPBERRY 1.3.0 source, cite this repository,
+  the exact commit, and the scientific method references appropriate to
+  the calculation you performed.
 title: VASPBERRY
 type: software
-version: 1.2.0
-date-released: 2026-09-04
+version: 1.3.0
 authors:
   - family-names: Kim
     given-names: Hyun-Jung
@@ -15,4 +15,6 @@ url: "https://github.com/Infant83/VASPBERRY"
 abstract: >-
   VASPBERRY reads VASP WAVECAR wavefunctions to calculate Berry curvature,
   Chern numbers, a Fukui-Hatsugai n-field Z2 invariant, circular dichroism,
-  and guarded energy- and valley-resolved Hall transport.
+  and guarded energy- and valley-resolved Hall transport. General matrix
+  post-processing tools provide versioned point-curvature data and
+  two-dimensional intrinsic charge Hall integration.

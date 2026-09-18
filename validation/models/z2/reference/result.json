@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "feature_id": "z2",
+  "status": "PASS",
+  "workflow_mode": "stored_field_validation_and_new_plot",
+  "mode": "stored_field_validation_and_new_plot",
+  "software_version": "1.3.0",
+  "field_producer_version": "1.2.0",
+  "summary": {
+    "mesh_nx": 12,
+    "mesh_ny": 12,
+    "plaquettes": 144,
+    "z2": 1,
+    "half_top_sum": -3,
+    "half_bottom_sum": 3,
+    "total_chern": 1.15938396221796e-14,
+    "minimum_link_singular_value": 0.8154547168424493,
+    "max_nfield_integer_residual": 2.10639813308154e-24,
+    "max_flux_tr_odd_residual_rad": 1.815214645262131e-14,
+    "max_abs_flux_rad": 1.1752576836165929e-06
+  },
+  "numerical_checks": {
+    "status": "PASS",
+    "reference_hash": "PASS",
+    "schema_and_half_zone_parities": "PASS",
+    "row_partner_consistency": "PASS",
+    "recomputed_row_diagnostics": "PASS",
+    "reference_z2_agreement": "PASS"
+  },
+  "reference_z2_agrees": true,
+  "source_field_sha256": "0d34d8fe0977330748f5cd26d4d0cf70b941e2bb851cf5eb10e5d51ca9f6a13e",
+  "provenance": {
+    "input_sha256": "61bc2dfef6274eec7502acf8052e9e76174ebeac1ccc984014ade4910f6321ae",
+    "runner_sha256": "3fe59fcc044a83cff0fd9b0fe96535cf43ce877644ec299260e5ef424db81a80",
+    "reference_field": "examples/Bi_Z2/reference-v1.2.0-12x12/Z2_FIELD.csv",
+    "reference_sha256": "0d34d8fe0977330748f5cd26d4d0cf70b941e2bb851cf5eb10e5d51ca9f6a13e",
+    "plot_helper_sha256": "80634b194fe230d0664449aa51cc3cc77caea92bb69ed3e3b7c3c2f06c80f490"
+  },
+  "limitations": [
+    "Default revalidates stored schema-2 rows and regenerates a plot; it does not recalculate wavefunctions or links.",
+    "Optional WAVECAR mode recomputes postprocessing only, not VASP SCF/NSCF.",
+    "Numerical TR reconstruction checks do not independently establish raw-input TR symmetry, gap, PAW completeness or mesh convergence."
+  ],
+  "output_sha256": {
+    "summary.csv": "de38050a2bbe2e57edba62c01aa4259a4b6a3ee8e2b16bf79116b513f0576e22",
+    "figure.png": "13c91e74a56da022d3cd88ee31ccee0a26abfbf4245aa549bd6295de9b1ea7af"
+  }
+}

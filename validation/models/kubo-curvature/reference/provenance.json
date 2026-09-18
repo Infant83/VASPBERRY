@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "feature_id": "kubo-curvature",
+  "status": "PASS",
+  "reference_base_commit": "49fd65e521b7eca40abc4ecc2abcfff62130fcb9",
+  "source_commit": "49fd65e521b7eca40abc4ecc2abcfff62130fcb9",
+  "version": "1.3.0",
+  "workflow_mode": "analytic_recalculation",
+  "description": "Compact outputs copied from an executed fresh run. Full generated NPZ, production JSON and command logs are retained outside the committed reference. Numerical tolerance checks, not archive byte identity, define reproduction.",
+  "reference_file_sha256": {
+    "result.json": "8751d72c6bc2939a0cd3316cc5b8cdb76efdb2ce74e05a90c5ddd7467e498aae",
+    "summary.csv": "cb90c19cc59fde7ea87d2afd044a21f0e82834f694542c0e4f36ebcda35f3998",
+    "figure.png": "0e1481a5db233ac186c6ab559b5334b67de7bdbc5e226781aff11b9ef906ab4c"
+  },
+  "sources_unchanged_during_run": true,
+  "source_sha256": {
+    "VERSION": "64d23f858ef51b0f996e4966d4e27c0371b437e2d2787890b1f7ad22d4ec5663",
+    "examples/features/kubo-curvature/input.json": "0891dd8cf4f46c7cdf8857f24a61e964defd140cf2943476b764557ae693d744",
+    "examples/features/kubo-curvature/model_tools.py": "79f4fbf0c43a8c7b6744d01f704cafc98635a7d76a84f015cfa63ee6b156e63d",
+    "examples/features/kubo-curvature/run.py": "186a12ac9481608c3f7103652abe5eaff99fbdbb6e143e3c13dcc8bc055fcca0",
+    "tools/berry_data.py": "0729f23dcec4acd63bceb4b2d3f88ac8b079a01de74149cead4273c09d5c349b",
+    "tools/exported_matrix_kubo.py": "86072ce48d5771e3e087d97a89462f15ecd875919e35990c887750b3cf3433ed",
+    "tools/vaspberry_kubo.py": "1dd5900e5693c7d1e13b5d37d2827e575fa709c52074ae6448e6f04e320976d8",
+    "tools/vaspberry_transport.py": "cca22d550ed932d0ca77237ecaeb1fa0dbdbec5f8edc08467cb31bd8b1e192db",
+    "tools/wavecar_fukui.py": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e"
+  },
+  "command_exit_codes": [
+    0,
+    0
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "status": "PASS",
+  "example": "wavefunction",
+  "commands": [
+    {
+      "cwd_relative_to_output": ".",
+      "argv": [
+        "build-community/vaspberry-gfortran",
+        "-f",
+        "WAVECAR.synthetic",
+        "-s",
+        "1",
+        "-kx",
+        "1",
+        "-ky",
+        "1",
+        "-wf",
+        "1",
+        "-k",
+        "1",
+        "-ng",
+        "32,32,10",
+        "-im",
+        "1"
+      ],
+      "returncode": 0
+    }
+  ],
+  "schema_version": 1,
+  "feature_id": "wavefunction",
+  "workflow_mode": "synthetic-production-fortran",
+  "input": {
+    "schema_version": 1,
+    "feature_id": "wavefunction",
+    "workflow_mode": "synthetic-production-fortran",
+    "fixture": {
+      "kind": "gamma_scalar_three_plane_waves",
+      "cell_side_A": 6.283185307179586,
+      "cutoff_eV": 5,
+      "bands": 2,
+      "spinor": false,
+      "k_fractional": [
+        0,
+        0,
+        0
+      ]
+    },
+    "grid": [
+      32,
+      32,
+      10
+    ]
+  },
+  "config_sha256": "81565a43e55b9b0bed2de27740e3e111d4776129d9fa8696c2c8786ae3b5d380",
+  "binary_sha256": "ebcf57aa22f5dbf3456121f4a49ab80539738f53fbfdeefed87baf517042c6f8",
+  "script_sha256": "04e391d199b4b59ff7fcf3dabcddd7ba5586faf10d6f2b7f18dc7748ec773a46",
+  "source_sha256": "dc6674ddde8bd4c3064015ffcaba89d9ea150124f111925c63c90ab44a223df3",
+  "scope": "Synthetic scalar Gamma-point wavefunction; raw output is amplitude, not charge density.",
+  "input_sha256": {
+    "WAVECAR.synthetic": "91411dac2ad03b135f4b19a447090d36f2c42c2351a90e139b0b94bad8216a17",
+    "POSCAR": "1e7bea8c3fe76f702fd0fa3c5e4a9d67b65eb6b2b1deb0ba17cd7f5e5b15d0e9",
+    "EIGENVAL": "cdc1dd2752ded0df9d3471edea10bd95a942de58538b40b5435f3599fdf9074b"
+  },
+  "max_absolute_error": 4.933805286603892e-07,
+  "tolerance": 2e-06,
+  "grid": [
+    32,
+    32,
+    10
+  ],
+  "cell_volume_A3": 248.05021344239853,
+  "mean_abs_u_squared": 1.0000000074361584,
+  "analytic_u": "(1+exp(2*pi*i*x)+exp(2*pi*i*y))/sqrt(3)",
+  "raw_output": "sqrt(V)*u; normalized physical psi=raw/V",
+  "k_fractional": [
+    0,
+    0,
+    0
+  ],
+  "output_sha256": {
+    "summary.csv": "0d1661ea321b28ed9962eaa439c0138eefaf5249712b3dd58208f63e07404d2c",
+    "figure.png": "fd1c773cd90753d65fabba4051555a6db79077cdaa38fade326e97a898885bc1"
+  },
+  "wall_seconds": 0.8410032249521464,
+  "raw_output_sha256": {
+    "PARCHG-W-K001-E001-IM-SPIN1": {
+      "uncompressed_sha256": "e4970176b00b56087031dfc05b2d2c8d259edc0bef8e8fddb8aae3dce2127a4c",
+      "gzip_file": "raw/PARCHG-W-K001-E001-IM-SPIN1.gz",
+      "gzip_sha256": "cf38523137084727cdc368da396e3f0d39b788f2164096ae6406d2085ddf0bdd"
+    },
+    "PARCHG-W-K001-E001-SPIN1": {
+      "uncompressed_sha256": "ea81502a94a2bf3b5129d7691151a6dfb6f81bc4e8106cf92db0b6c11cff01c0",
+      "gzip_file": "raw/PARCHG-W-K001-E001-SPIN1.gz",
+      "gzip_sha256": "8f90548b4688122befd02a64ffa3163edfcf41074674a22da2ed4f3db2f9f12a"
+    },
+    "stdout.log": {
+      "uncompressed_sha256": "aeb2ff308bce86f76eab3d2121cef59697d84de2762a7913100e46f51b5659f8",
+      "gzip_file": "raw/stdout.log.gz",
+      "gzip_sha256": "c394eb1ed4ff2c564f01b46dd905974dae081122b0ea578c36901c1884573c42"
+    }
+  },
+  "reference_note": "Actual production outputs copied unchanged; argv executable paths are normalized relative to repository root. Original absolute commands retained in the local research run."
+}

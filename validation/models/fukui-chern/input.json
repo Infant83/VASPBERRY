@@ -1,0 +1,11 @@
+{
+  "model": "Qi-Wu-Zhang two-orbital square-lattice model",
+  "hamiltonian": "H(k)=sin(kx)*sigma_x+sin(ky)*sigma_y+(mass+cos(kx)+cos(ky))*sigma_z",
+  "mesh": [16, 16],
+  "masses": [-1.0, 1.0, 2.5],
+  "selected_band": 1,
+  "lattice_constant_A": 1.0,
+  "energy_unit_eV": 1.0,
+  "connection_convention": "A=i<u|grad_k u>",
+  "expected_lower_band_chern": [1, -1, 0]
+}

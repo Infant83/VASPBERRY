@@ -1,0 +1,238 @@
+{
+  "method": "all-band Sawahata-style T=0 cumulative-subspace plaquette average",
+  "occupation_convention": "E <= mu is occupied",
+  "gauge_treatment": "determinant links of cumulative subspaces 1:n; no isolated-band Berry-curvature weighting inside degeneracies",
+  "max_cumulative_band": 10,
+  "sentinel_band": 11,
+  "sentinel_min_ev": -0.8389191634146871,
+  "max_bundle_energy_max_ev": -1.348963525577539,
+  "indirect_gap_above_max_bundle_ev": 0.5100443621628519,
+  "positive_indirect_gap_above_max_bundle": true,
+  "max_bundle_plateau_in_requested_range": true,
+  "max_bundle_plateau_sample_count": 41,
+  "max_bundle_plateau_validated_sample_count": 41,
+  "max_bundle_plateau_quality_pass": true,
+  "max_bundle_chern": 1.1650988554270417e-16,
+  "max_bundle_chern_nearest_integer": 0,
+  "max_bundle_chern_nearest_integer_residual": 1.1650988554270417e-16,
+  "max_bundle_sigma_e2_over_h": -1.1650988554270417e-16,
+  "max_bundle_sigma_valley_contrast_e2_over_h": -6.731237917748309e-08,
+  "max_bundle_plateau_max_chern_error": 0.0,
+  "mu_range_ev": [
+    -1.3,
+    -0.9,
+    41
+  ],
+  "mu_max_below_sentinel_min": true,
+  "quality_thresholds": {
+    "min_link_singular_value": 0.001,
+    "min_neighbor_gap_ev": 1e-05,
+    "min_plane_wave_coverage": 0.9,
+    "max_abs_phi_rad": 2.5132741228718345
+  },
+  "minimum_plane_wave_coverage": 0.983739837398374,
+  "max_bundle_quality": {
+    "phase_finite": true,
+    "links_finite_and_nonsingular": true,
+    "min_link_singular_value": 0.8156088271925849,
+    "min_link_pass": true,
+    "min_gap_to_sentinel_ev": 0.592448499860559,
+    "min_gap_to_sentinel_pass": true,
+    "max_abs_phi_rad": 7.962308703479691e-07,
+    "principal_branch_margin_pass": true,
+    "quality_pass": true
+  },
+  "cumulative_map_numeric_issues": [],
+  "cumulative_maps": [
+    {
+      "label": "occ_1",
+      "bands": [
+        1,
+        1
+      ],
+      "chern": -2.8271597168564594e-16,
+      "flux_min_rad": -1.1522039267518942,
+      "flux_max_rad": 1.2608031346544282,
+      "max_abs_flux_rad": 1.2608031346544282,
+      "min_link_singular_value": 0.6748359951830857,
+      "max_link_condition_number": 1.0,
+      "min_plane_wave_coverage": 0.983739837398374,
+      "plane_wave_coverage_required": 0.9,
+      "plane_wave_coverage_pass": true
+    },
+    {
+      "label": "occ_2",
+      "bands": [
+        1,
+        2
+      ],
+      "chern": 3.020422925149645e-16,
+      "flux_min_rad": -3.008082304356563e-06,
+      "flux_max_rad": 4.159827811345954e-06,
+      "max_abs_flux_rad": 4.159827811345954e-06,
+      "min_link_singular_value": 1.118564852613294,
+      "max_link_condition_number": 1.000013109962275,
+      "min_plane_wave_coverage": 0.983739837398374,
+      "plane_wave_coverage_required": 0.9,
+      "plane_wave_coverage_pass": true
+    },
+    {
+      "label": "occ_3",
+      "bands": [
+        1,
+        3
+      ],
+      "chern": 2.1203697876423444e-16,
+      "flux_min_rad": -1.0812845598174496,
+      "flux_max_rad": 1.0545497858668011,
+      "max_abs_flux_rad": 1.0812845598174496,
+      "min_link_singular_value": 0.5274495266777969,
+      "max_link_condition_number": 2.938379282250431,
+      "min_plane_wave_coverage": 0.983739837398374,
+      "plane_wave_coverage_required": 0.9,
+      "plane_wave_coverage_pass": true
+    },
+    {
+      "label": "occ_4",
+      "bands": [
+        1,
+        4
+      ],
+      "chern": 1.82219278625514e-16,
+      "flux_min_rad": -6.781634143138149e-08,
+      "flux_max_rad": 5.9169064980935104e-08,
+      "max_abs_flux_rad": 6.781634143138149e-08,
+      "min_link_singular_value": 1.458926322211715,
+      "max_link_condition_number": 1.1071039985276399,
+      "min_plane_wave_coverage": 0.983739837398374,
+      "plane_wave_coverage_required": 0.9,
+      "plane_wave_coverage_pass": true
+    },
+    {
+      "label": "occ_5",
+      "bands": [
+        1,
+        5
+      ],
+      "chern": 2.8271597168564594e-16,
+      "flux_min_rad": -2.140939939426759,
+      "flux_max_rad": 1.7546975464353218,
+      "max_abs_flux_rad": 2.140939939426759,
+      "min_link_singular_value": 0.4935925542874739,
+      "max_link_condition_number": 3.285382281712923,
+      "min_plane_wave_coverage": 0.983739837398374,
+      "plane_wave_coverage_required": 0.9,
+      "plane_wave_coverage_pass": true
+    },
+    {
+      "label": "occ_6",
+      "bands": [
+        1,
+        6
+      ],
+      "chern": 9.309748261843468e-16,
+      "flux_min_rad": -3.8270477431545663e-07,
+      "flux_max_rad": 4.549501246842169e-07,
+      "max_abs_flux_rad": 4.549501246842169e-07,
+      "min_link_singular_value": 0.9408174533975547,
+      "max_link_condition_number": 1.7148116485756268,
+      "min_plane_wave_coverage": 0.983739837398374,
+      "plane_wave_coverage_required": 0.9,
+      "plane_wave_coverage_pass": true
+    },
+    {
+      "label": "occ_7",
+      "bands": [
+        1,
+        7
+      ],
+      "chern": -3.0,
+      "flux_min_rad": -2.414698682985034,
+      "flux_max_rad": 1.3836298338358068,
+      "max_abs_flux_rad": 2.414698682985034,
+      "min_link_singular_value": 0.23294243433871006,
+      "max_link_condition_number": 6.991001144607869,
+      "min_plane_wave_coverage": 0.983739837398374,
+      "plane_wave_coverage_required": 0.9,
+      "plane_wave_coverage_pass": true
+    },
+    {
+      "label": "occ_8",
+      "bands": [
+        1,
+        8
+      ],
+      "chern": 1.954713201793176e-16,
+      "flux_min_rad": -5.068435355216187e-06,
+      "flux_max_rad": 3.8744716057692585e-06,
+      "max_abs_flux_rad": 5.068435355216187e-06,
+      "min_link_singular_value": 0.5667668580832033,
+      "max_link_condition_number": 2.862126573652832,
+      "min_plane_wave_coverage": 0.983739837398374,
+      "plane_wave_coverage_required": 0.9,
+      "plane_wave_coverage_pass": true
+    },
+    {
+      "label": "occ_9",
+      "bands": [
+        1,
+        9
+      ],
+      "chern": 2.0,
+      "flux_min_rad": -0.4280614642070226,
+      "flux_max_rad": 2.617334872007746,
+      "max_abs_flux_rad": 2.617334872007746,
+      "min_link_singular_value": 0.046795869170798525,
+      "max_link_condition_number": 35.675937933517325,
+      "min_plane_wave_coverage": 0.983739837398374,
+      "plane_wave_coverage_required": 0.9,
+      "plane_wave_coverage_pass": true
+    },
+    {
+      "label": "occ_10",
+      "bands": [
+        1,
+        10
+      ],
+      "chern": 1.1650988554270417e-16,
+      "flux_min_rad": -7.962308703479691e-07,
+      "flux_max_rad": 4.254346721577207e-07,
+      "max_abs_flux_rad": 7.962308703479691e-07,
+      "min_link_singular_value": 0.8156088271925849,
+      "max_link_condition_number": 2.0472331989603405,
+      "min_plane_wave_coverage": 0.983739837398374,
+      "plane_wave_coverage_required": 0.9,
+      "plane_wave_coverage_pass": true
+    }
+  ],
+  "valley_partition": {
+    "K_fractional": [
+      0.6666666666666666,
+      0.3333333333333333,
+      0.0
+    ],
+    "Kp_fractional": [
+      0.3333333333333333,
+      0.6666666666666666,
+      0.0
+    ],
+    "radius_inv_angstrom": null,
+    "mode": "nearest-center Voronoi",
+    "K_cell_count": 66,
+    "Kp_cell_count": 66,
+    "outside_cell_count": 12,
+    "min_center_distance_K_inv_angstrom": 0.0688791902326584,
+    "min_center_distance_Kp_inv_angstrom": 0.06887919023265844
+  },
+  "validation_scope": "all requested discrete mu points plus every occupation-event subinterval in the closed requested mu range",
+  "validated": true,
+  "validation_failure_reasons": [],
+  "max_bundle_reference_validated": true,
+  "requested_mu_points_validated": true,
+  "continuous_mu_range_validated": true,
+  "continuous_invalid_event_count": 0,
+  "continuous_invalid_events": [],
+  "merged_invalid_mu_intervals_ev": [],
+  "invalid_mu_count": 0,
+  "invalid_mu": []
+}

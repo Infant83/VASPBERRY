@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "features": [
+    {
+      "id": "fukui-chern",
+      "title": "Bi occupied-subspace Berry curvature and Chern",
+      "default_mode": "vasp_wavecar_calculation",
+      "dataset": "bi",
+      "requires_fortran": true,
+      "input_description": "Actual public Bi SOC full 12x12 WAVECAR",
+      "runner": "features/fukui-chern/run.py",
+      "readme": "features/fukui-chern/README.md",
+      "input": "Bi_Z2/WAVECAR",
+      "reference": "features/fukui-chern/reference",
+      "required_outputs": [
+        "result.json",
+        "summary.csv",
+        "figure.png"
+      ]
+    },
+    {
+      "id": "kubo-curvature",
+      "title": "MoS2 band-path canonical-momentum Kubo curvature",
+      "default_mode": "vasp_wavecar_calculation",
+      "dataset": "mos2",
+      "requires_fortran": true,
+      "input_description": "Actual public MoS2 SOC K-Gamma-K-prime line WAVECAR",
+      "runner": "features/kubo-curvature/run.py",
+      "readme": "features/kubo-curvature/README.md",
+      "input": "1H-MoS2/KPATH/2.band/WAVECAR",
+      "reference": "features/kubo-curvature/reference",
+      "required_outputs": [
+        "result.json",
+        "summary.csv",
+        "figure.png"
+      ]
+    },
+    {
+      "id": "hall-valley",
+      "title": "Bi insulating-gap charge Hall from occupied-subspace Fukui flux",
+      "default_mode": "vasp_wavecar_calculation",
+      "dataset": "bi",
+      "requires_fortran": false,
+      "input_description": "Actual public Bi SOC full 12x12 WAVECAR",
+      "runner": "features/hall-valley/run.py",
+      "readme": "features/hall-valley/README.md",
+      "input": "Bi_Z2/WAVECAR",
+      "reference": "features/hall-valley/reference",
+      "required_outputs": [
+        "result.json",
+        "summary.csv",
+        "figure.png"
+      ]
+    },
+    {
+      "id": "z2",
+      "title": "Bi Fukui-Hatsugai Z2 invariant",
+      "default_mode": "vasp_wavecar_calculation",
+      "dataset": "bi",
+      "requires_fortran": true,
+      "input_description": "Actual public Bi SOC full 12x12 WAVECAR",
+      "runner": "features/z2/run.py",
+      "readme": "features/z2/README.md",
+      "input": "Bi_Z2/WAVECAR",
+      "reference": "features/z2/reference",
+      "required_outputs": [
+        "result.json",
+        "summary.csv",
+        "figure.png"
+      ]
+    },
+    {
+      "id": "circular-dichroism",
+      "title": "MoS2 circular optical response",
+      "default_mode": "vasp_wavecar_calculation",
+      "dataset": "mos2",
+      "requires_fortran": true,
+      "input_description": "Actual public MoS2 SOC K-Gamma-K-prime line WAVECAR",
+      "runner": "features/circular-dichroism/run.py",
+      "readme": "features/circular-dichroism/README.md",
+      "input": "1H-MoS2/KPATH/2.band/WAVECAR",
+      "reference": "features/circular-dichroism/reference",
+      "required_outputs": [
+        "result.json",
+        "summary.csv",
+        "figure.png"
+      ]
+    },
+    {
+      "id": "wavefunction",
+      "title": "MoS2 Gamma-point spinor wavefunction",
+      "default_mode": "vasp_wavecar_calculation",
+      "dataset": "mos2",
+      "requires_fortran": true,
+      "input_description": "Actual public MoS2 SOC K-Gamma-K-prime line WAVECAR",
+      "runner": "features/wavefunction/run.py",
+      "readme": "features/wavefunction/README.md",
+      "input": "1H-MoS2/KPATH/2.band/WAVECAR",
+      "reference": "features/wavefunction/reference",
+      "required_outputs": [
+        "result.json",
+        "summary.csv",
+        "figure.png"
+      ]
+    }
+  ]
+}

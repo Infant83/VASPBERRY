@@ -1,0 +1,2 @@
+mesh_nx,mesh_ny,plaquettes,occupied_band_min,occupied_band_max,chern_from_native_log,max_abs_printed_curvature_A2,max_reference_curvature_difference_A2,minimum_direct_gap_eV,sampled_global_gap_eV
+12,12,144,1,10,-0,0,0,0.592448499861,0.510044362163

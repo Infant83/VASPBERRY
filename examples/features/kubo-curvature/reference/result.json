@@ -1,0 +1,104 @@
+{
+  "feature_id": "kubo-curvature",
+  "material": "1H-MoS2",
+  "input_repository_path": "examples/1H-MoS2/KPATH/2.band/WAVECAR",
+  "numerical_checks": {
+    "native_rows": 96,
+    "source_kpoints": 48,
+    "source_bands": 32,
+    "valid_points_per_band": {
+      "17": 44,
+      "18": 44
+    },
+    "minimum_isolation_gap_eV": 3.122647029840664e-09,
+    "isolation_threshold_eV": 1e-05,
+    "energy_agreement_max_eV": 0.0,
+    "coordinate_agreement_max_fractional": 0.0,
+    "gap_agreement_max_eV": 0.0,
+    "K_plus_Kprime_max_abs_A2": 1.669235414780701e-06,
+    "reference_comparison_max_abs_A2": 0.0,
+    "reference_validity_mask_matches": true,
+    "passed": true
+  },
+  "units": {
+    "energy": "eV (unchanged WAVECAR zero)",
+    "curvature": "Angstrom^2"
+  },
+  "sampling": "48-point K-Gamma-Kprime line; duplicate Gamma records 24 and 25",
+  "scope": "Actual native Fortran calculation, bands 17:18, intermediate bands 1:32. Near-degenerate individual bands are masked at 1e-5 eV in the figure and summary; raw CSV retains diagnostic values. Canonical momentum omits PAW augmentation and nonlocal/SOC velocity terms. A line cannot define a Brillouin-zone Chern number or Hall conductivity.",
+  "status": "PASS",
+  "schema_version": 1,
+  "workflow_mode": "vasp_wavecar_calculation",
+  "provenance": {
+    "feature_id": "kubo-curvature",
+    "version": "1.3.0",
+    "source_commit": "18c0a1117923dd2b3001dc56f6202b8f41c0426e",
+    "python_version": "3.12.14",
+    "input": {
+      "name": "WAVECAR",
+      "sha256": "33f8546512856d6c04ad0a80454b18ac9b60e2af4b98f2f85b376ec49b1a8d9f",
+      "bytes": 60521760
+    },
+    "source_sha256": {
+      "examples/features/kubo-curvature/run.py": "08ecda4bb21f96ce4a6527c616123d6c72d94cf0f99c99c1301564c36100f7f2",
+      "examples/features/kubo-curvature/workflow.py": "2fb102f65b94bd9e97d4ad70ab22172f85cca6cbf4cfd2cfb39e63aed7986881",
+      "vaspberry.f": "dc6674ddde8bd4c3064015ffcaba89d9ea150124f111925c63c90ab44a223df3",
+      "tools/wavecar_fukui.py": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e",
+      "VERSION": "64d23f858ef51b0f996e4966d4e27c0371b437e2d2787890b1f7ad22d4ec5663"
+    },
+    "commands": [
+      {
+        "argv": [
+          "build/vaspberry-gfortran",
+          "-f",
+          "<WAVECAR>",
+          "-s",
+          "2",
+          "-kubo",
+          "2",
+          "-ii",
+          "17",
+          "-if",
+          "18",
+          "-kubo_csv",
+          "KUBO.csv",
+          "-o",
+          "BERRYCURV"
+        ],
+        "cwd": "<output-dir>/native",
+        "exit_code": 0,
+        "elapsed_s": 0.3342223782092333,
+        "stdout": "01.stdout.log",
+        "stderr": "01.stderr.log"
+      }
+    ],
+    "status": "PASS",
+    "binary_sha256": "3a9c6a2150b6212dbd1a581dc87ba0249a4c7430097b51266d7e147f812174b7"
+  },
+  "original_full_run_output_sha256": {
+    "01.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "01.stdout.log": "5196b76c3e4a7a779e51b40c3eab667053ae1015f929c1bcbb0717a762bb29d6",
+    "figure.png": "c9d641cc6661801c9195afb70f6374c68bc9dedf3c8158c4b105c515df168a12",
+    "native/BERRYCURV_KUBO.EIG-17.dat": "dd640c16e6ee4c8da544936ccc5acf7ff481519efa0aa96c5be09e3785c530e2",
+    "native/BERRYCURV_KUBO.EIG-18.dat": "7d3935a457b9867a945241abde9e843f2e8e790bea4a3971902f1f8e2928ab83",
+    "native/BERRYCURV_KUBO.dat": "cb6e0322dc19d89c27e2f0fcc3961429e2b50516063ad8b79de7d5a894380896",
+    "native/KUBO.csv": "ee65a3aa7150fd26e4f8673d0774215beb9c6efa4606901873029bdf3e3d88f3",
+    "summary.csv": "7c307f4223306786739a3b8575b6c8f1493f64f83070fd486f1b8f144671d3d9"
+  },
+  "output_sha256": {
+    "summary.csv": "7c307f4223306786739a3b8575b6c8f1493f64f83070fd486f1b8f144671d3d9",
+    "figure.png": "c9d641cc6661801c9195afb70f6374c68bc9dedf3c8158c4b105c515df168a12",
+    "KUBO.csv": "ee65a3aa7150fd26e4f8673d0774215beb9c6efa4606901873029bdf3e3d88f3",
+    "provenance.json": "40d70349e7edaef72715765e2705dcbf98b4549fe663102d9e424320d82ae891"
+  },
+  "reference_packaging": {
+    "path_scope": "result.json output_sha256 and provenance.json distributed_payload_sha256 both use reference-directory-relative paths to shipped files; original_full_run_output_sha256 uses original-run-relative paths to the complete calculation record, including files not shipped in this reference",
+    "original_run_path_to_distributed_path": {
+      "summary.csv": "summary.csv",
+      "figure.png": "figure.png",
+      "native/KUBO.csv": "KUBO.csv"
+    },
+    "exporter": "examples/features/kubo-curvature/export_reference.py",
+    "exporter_sha256": "0f192a9cc47801eea045290e7f3b5890f010627f06786f487cbe239be5b8df13"
+  }
+}
