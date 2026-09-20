@@ -1,141 +1,102 @@
-# Fukui–Hatsugai Z₂ from a real Bi WAVECAR
+# Bi: Z₂ invariant and integer field
 
-**Start with the public VASP SOC WAVECAR, run VASPBERRY, and obtain Z₂ = 1.**
-This tutorial recalculates the wavefunction overlaps and n-field with the
-current Fortran executable; it does not merely redraw a stored field.
+Buckled honeycomb Bi has **Z₂ = 1** for the occupied SOC bands 1–10 in this
+12 × 12 example. VASPBERRY evaluates the Fukui–Hatsugai integer field and
+compares the parities of two complementary half Brillouin zones.
 
-## 1. Obtain the actual VASP output
+## Input and preparation
 
-Run these commands from the repository root. The calculation input is the
-**real Bi `WAVECAR`**, not a JSON configuration or model Hamiltonian.
-
-```bash
-git lfs pull --include='examples/Bi_Z2/WAVECAR'
-shasum -a 256 examples/Bi_Z2/WAVECAR
-```
-
-Expected SHA-256:
-
-```text
-a8d81854f2efc561938e478dde1be29a17ccc95d5d37325c122b9d9e82fa0838
-```
-
-The payload is **200,421,600 bytes**. A 134-byte Git LFS pointer is not a usable
-WAVECAR. If Git LFS is unavailable, download the same public file separately:
-
-```bash
-mkdir -p inputs
-curl -fL https://media.githubusercontent.com/media/Infant83/VASPBERRY/a692e21482d24767859d02b7885dd70b234c6a2c/examples/Bi_Z2/WAVECAR -o inputs/Bi-WAVECAR
-shasum -a 256 inputs/Bi-WAVECAR
-```
-
-Then pass `--wavecar inputs/Bi-WAVECAR` to the runner below. It verifies the
-exact size and checksum before executing VASPBERRY. It never substitutes a
-model or a stored result for a missing input.
-
-### Input files and provenance
-
-| File | Role |
-|---|---|
-| [`Bi_Z2/WAVECAR`](../../Bi_Z2/WAVECAR) | Actual VASPBERRY input: 144 points on a 12 × 12 × 1 mesh, 18 SOC spinor bands |
-| [`archive-2016-run/EIGENVAL`](../../Bi_Z2/archive-2016-run/EIGENVAL) | VASP band energies, cross-checked against WAVECAR by the runner |
-| [`archive-2016-run/OUTCAR`](../../Bi_Z2/archive-2016-run/OUTCAR) | Archived VASP 5.4.1 settings and output |
-| [`inputs/POSCAR`](../../Bi_Z2/inputs/POSCAR) | Bi structure for a new calculation |
-| [`inputs/01_scf/`](../../Bi_Z2/inputs/01_scf/) and [`inputs/02_z2_nscf/`](../../Bi_Z2/inputs/02_z2_nscf/) | Recommended SCF and full-mesh SOC input templates |
-| [`PSEUDOPOTENTIAL.md`](../../Bi_Z2/PSEUDOPOTENTIAL.md) | Potential provenance; licensed POTCAR is not redistributed |
-
-The archived WAVECAR came from a 2016 fixed-charge calculation. The full
-preceding SCF provenance is unavailable. This tutorial reproduces **VASPBERRY
-post-processing of that public VASP result**. The recommended VASP input
-templates are not claimed to recreate every digit of the 2016 WAVECAR.
-
-## 2. Build VASPBERRY and plotting dependencies
+Run from the repository root:
 
 ```bash
 make serial
 python3 -m pip install -r requirements-transport.txt
+python3 examples/fetch_inputs.py bi --output-dir results/inputs/bi
 ```
 
-## 3. Run the actual calculation and make the figure
+The public VASP `WAVECAR` contains 144 points on a full Γ-centered mesh and
+18 SOC spinor bands. The [structure](../../Bi_Z2/inputs/POSCAR),
+[band energies](../../Bi_Z2/archive-2016-run/EIGENVAL) and
+[material calculation notes](../../Bi_Z2/README.md) accompany the input.
+
+## Run VASPBERRY
 
 ```bash
-python3 examples/features/z2/run.py --output-dir results/bi-z2
+repo_dir="$PWD"
+mkdir results/bi-z2
+(
+  cd results/bi-z2
+  "$repo_dir/build/vaspberry-gfortran" \
+    -f "$repo_dir/results/inputs/bi/WAVECAR" -o NFIELD -z2 1 \
+    -kx 12 -ky 12 -s 2 -ii 1 -if 10 > fortran.log
+)
 ```
 
-The wrapper verifies the input, invokes VASPBERRY, validates the new CSV and
-plots its integer n-field. Inside a new output directory it runs this native
-command, where `WAVECAR` points to the downloaded public input:
+`-z2 1` selects the integer-field method, `-s 2` reads SOC spinors, and
+`-ii 1 -if 10` selects the complete occupied subspace. The mesh dimensions
+must match the WAVECAR. For MPI, use `make mpi` and prefix the MPI executable
+with `mpiexec -n 4`.
+
+The output `Z2_FIELD.csv` reports:
+
+| Quantity | Reference |
+|---|---:|
+| Z₂ invariant | **1** |
+| Half-zone integer sums | −3 and +3 |
+| Half-zone parities | 1 and 1 |
+| Minimum occupied–empty direct gap | 0.5924485 eV |
+| Sampled global gap | 0.5100444 eV |
+| Minimum link singular value | 0.815455 |
+
+Use a result only when `result_status=PASS`, `reportable_invariant=1`, and the
+two half-zone parities agree. The [method guide](../../../docs/Z2_FUKUI_HATSUGAI.md)
+explains the numerical checks.
+
+## Plot the integer field
 
 ```bash
-/path/to/vaspberry/build/vaspberry-gfortran \
-  -f WAVECAR -o NFIELD -z2 1 \
-  -kx 12 -ky 12 -s 2 -ii 1 -if 10 > fortran.log 2>&1
+python3 examples/features/z2/run.py \
+  --plot-only results/bi-z2/Z2_FIELD.csv \
+  --poscar examples/Bi_Z2/inputs/POSCAR \
+  --figure results/bi-z2/nfield.png
 ```
 
-Here `-z2 1` selects the Fukui–Hatsugai n-field calculation, `-s 2` selects
-SOC spinors, and bands 1–10 form the complete occupied subspace.
-`-kx 12 -ky 12` describes the full mesh already present in WAVECAR.
+![Bi Z2 integer field in its Cartesian first Brillouin zone](reference/figure.png)
 
-The existing material runner is another entry point:
-`VASPBERRY_BIN="$PWD/build/vaspberry-gfortran" ./examples/Bi_Z2/scripts/run_z2.sh`.
-For MPI, build with `make mpi` and run the native command with
-`mpiexec -n 4 /path/to/vaspberry/build/vaspberry-mpi`. The convenience Python
-runner uses serial execution.
+The axes are Cartesian **kx and ky in Å⁻¹**, with equal scales and the
+hexagonal Wigner–Seitz first Brillouin zone. Each tile shows its computed
+integer n(k); the categorical colors are not interpolated. K is `(1/3, 2/3)`
+and K′ is its time-reversed partner.
 
-## 4. Compare your outputs
+**The integer field is gauge and branch dependent.** Its local appearance is
+not a measurable Berry-curvature distribution. Z₂ comes from the agreed
+half-zone parity in the original calculation; folding the plot into the
+hexagon does not redefine the half zones used for that calculation.
 
-| Produced file | Stored reference | What it contains |
-|---|---|---|
-| `Z2_FIELD.csv` | [Full-precision field](reference/Z2_FIELD.csv) | Fresh schema-2 field, invariant and numerical diagnostics |
-| `NFIELD.dat` | [Native n-field output](reference/NFIELD.dat) | Legacy plotting output |
-| `fortran.log` | [Native log](reference/fortran.log) | Actual VASPBERRY execution |
-| `band_edges.csv` | [Band edges](reference/band_edges.csv) | VASP bands 10/11 and their separation |
-| `summary.csv` | [Summary](reference/summary.csv) | Parities, sums, numerical residuals and sampled gaps |
-| `figure.png` | [Reference figure](reference/figure.png) | Integer n-field calculated from the actual WAVECAR |
-| `result.json` | [Run provenance](reference/result.json) | PASS, input/source/output hashes and exact command |
+[Full field CSV](reference/Z2_FIELD.csv) ·
+[Native n-field output](reference/NFIELD.dat) ·
+[Numerical summary](reference/summary.csv) ·
+[Figure PDF](reference/figure.pdf)
 
-![Bi Z2 reference from an actual WAVECAR calculation](reference/figure.png)
+To calculate, validate and plot in one command:
 
-Expected result:
-
-```text
-result_status=PASS
-reportable_invariant=1
-z2_invariant=1
-half_top_nfield_sum=-3       -> parity 1
-half_bottom_nfield_sum=3     -> parity 1
-half_bz_parity_consistent=1
+```bash
+python3 examples/features/z2/run.py \
+  --wavecar results/inputs/bi/WAVECAR --output-dir results/bi-z2-checked
 ```
 
-The WAVECAR minimum occupied/empty direct gap is **0.592448500 eV** and the
-sampled global gap is **0.510044362 eV**. Subtracting the individually rounded
-energies in EIGENVAL gives 0.592449 and 0.510045 eV respectively. The minimum link
-singular value is about **0.815455**. Total Chern and wrapped TR-odd flux
-residuals are near machine precision; their final digits may change with
-the compiler or numerical libraries. Consult the full-precision CSV and the
-[Z₂ result contract](../../../docs/Z2_FUKUI_HATSUGAI.md) for thresholds.
-The pointwise n-field depends on gauge and logarithm branch; the agreed
-half-zone parity determines Z₂. It is not a local measurable curvature map.
+## Apply to your material
 
-The committed reference is a fresh current-version calculation from the
-checked public WAVECAR. It agrees with the older
-[material reference](../../Bi_Z2/reference-v1.2.0-12x12/), which is preserved.
+Use a nonmagnetic, time-reversal-symmetric insulator with a full, unshifted,
+even SOC mesh and `ISYM=-1`. Select a fixed even-dimensional occupied bundle
+separated from the unoccupied states throughout the BZ. Replace the input,
+mesh and band range in the VASPBERRY command and use the matching POSCAR for
+the figure. [VASP input templates](../../Bi_Z2/inputs/) provide a starting point.
 
-## 5. Apply the commands to your system
-
-1. Establish a nonmagnetic, time-reversal-symmetric insulating state in VASP.
-   Produce the full even 2D SOC mesh with `ISYM=-1`; use the supplied
-   [SCF/NSCF templates](../../Bi_Z2/inputs/) as a starting point.
-2. Check the actual WAVECAR mesh and select a **fixed, even-dimensional
-   occupied bundle** separated from all unoccupied bands over the mesh.
-3. Replace the input path, mesh and occupied range in the native command.
-   The tutorial runner verifies the exact Bi fixture; it intentionally does
-   not reinterpret arbitrary materials using Bi's band indices.
-4. Require `result_status=PASS`, a reportable invariant and agreement of the
-   two complementary half-zone parities. Inspect the gap and diagnostics on
-   denser meshes before drawing a material conclusion.
-
-PASS checks the numerical consistency of VASPBERRY's TR reconstruction; it
-does not independently establish physical TR symmetry, PAW completeness, or
-k-mesh convergence. WAVECAR pseudo-wavefunction overlaps omit PAW
-augmentation. See [method and validity requirements](../../../docs/Z2_FUKUI_HATSUGAI.md).
+Repeat the gap and invariant calculation on denser meshes. Passing numerical
+checks does not independently establish physical time-reversal symmetry or
+mesh convergence. WAVECAR overlaps omit PAW augmentation. The public Bi
+wavefunctions reproduce the post-processing calculation; the original SCF
+provenance is incomplete. Historical results remain in the
+[material reference](../../Bi_Z2/reference-v1.2.0-12x12/) and
+[supplementary reference collection](../../../docs/REFERENCE_MATERIALS.md).

@@ -57,7 +57,8 @@ jobs:
         env:
           MPLBACKEND: Agg
         run: >-
-          python examples/run_examples.py --all
+          python examples/run_examples.py
+          fukui-chern kubo-curvature hall-valley z2 circular-dichroism wavefunction
           --bi-wavecar results/inputs/bi/WAVECAR
           --output-dir results/feature-examples
       - name: Retain example results and failure logs

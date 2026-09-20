@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "feature_id": "fukui-berry-curvature",
+  "status": "PASS",
+  "material": "1H-MoS2",
+  "mesh": [
+    12,
+    12
+  ],
+  "occupied_bands": [
+    1,
+    18
+  ],
+  "execution_mode": "calculate_and_postprocess",
+  "workflow_mode": "vasp_wavecar_calculation",
+  "commands": [
+    {
+      "argv": [
+        "$REPO/build/vaspberry-gfortran",
+        "-f",
+        "$VASP_NSCF/WAVECAR",
+        "-s",
+        "2",
+        "-kx",
+        "12",
+        "-ky",
+        "12",
+        "-ii",
+        "1",
+        "-if",
+        "18",
+        "-o",
+        "BERRYCURV"
+      ],
+      "exit_code": 0,
+      "cwd": "."
+    }
+  ],
+  "provenance": {
+    "poscar_sha256": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+    "analysis_script_sha256": "37353be7fa87be67b7a28e00d98a69bc89e831d1f27c06fc055bb3cfe264a38f",
+    "plotter_sha256": "56cfaeb920befa1c38e3d20930eacf5f276abcfb4222efb3fa825aa47f91fc2b",
+    "producer_revision": "source-sha256:dc6674ddde8bd4c3064015ffcaba89d9ea150124f111925c63c90ab44a223df3",
+    "wavecar_sha256": "e1955a6b3562870edd67030d7e64cb59b6956c53db7259b25a6adee400fc9e10",
+    "source_sha256": "dc6674ddde8bd4c3064015ffcaba89d9ea150124f111925c63c90ab44a223df3",
+    "binary_sha256": "3a9c6a2150b6212dbd1a581dc87ba0249a4c7430097b51266d7e147f812174b7",
+    "source_bands": 26,
+    "published_header_normalization": {
+      "scope": "Only the workstation path in the File reading comment was replaced with WAVECAR; all numerical rows and scientific headers are unchanged.",
+      "original_native_output_sha256": "c83f2bfd45c68fb328a1a382ceab1dbfea94b9b42176f108d07e52f79016e542",
+      "published_native_output_sha256": "52d1d919d3ade539998f6728b24300b74fd041f293af7e87cd932920417c3b8f"
+    },
+    "vasp_run_record": "vasp/run.json",
+    "wavecar_distribution": "Not bundled; generate using ../inputs/README.md with licensed VASP and matching PAW datasets.",
+    "portable_command_placeholders": {
+      "$REPO": "Repository root",
+      "$VASP_NSCF": "Completed full-mesh VASP working directory"
+    }
+  },
+  "units": {
+    "k_cartesian": "Angstrom^-1",
+    "berry_curvature": "Angstrom^2",
+    "plaquette_flux": "radian"
+  },
+  "sampled_occupied_boundary_gap_eV": 1.6735503637308078,
+  "sampled_global_gap_eV": 1.6735503597349837,
+  "numerical_checks": {
+    "chern_absolute_tolerance": 0.0001,
+    "time_reversal_curvature_tolerance_A2": 0.001,
+    "chern_near_zero": true,
+    "time_reversal_odd": true,
+    "nonzero_local_curvature": true,
+    "reference_comparison": "PASS",
+    "reference_max_curvature_difference_A2": 0.0,
+    "reference_absolute_tolerance_A2": 0.00011
+  },
+  "native_display_rows": 1296,
+  "unique_plaquettes": 144,
+  "plaquette_area_inv_A2": 0.03147026501530105,
+  "total_chern_from_printed_values": -5.008648237051601e-07,
+  "minimum_curvature_A2": -12.3125,
+  "maximum_curvature_A2": 12.3124,
+  "max_time_reversal_odd_residual_A2": 0.00020000000000020002,
+  "plot": {
+    "mesh": [
+      12,
+      12
+    ],
+    "first_bz_area_inv_A2": 4.531718162203352,
+    "rendering": "constant_native_plaquette_values_clipped_to_first_BZ",
+    "interpolation": "none",
+    "axes": "Cartesian kx, ky in Angstrom^-1",
+    "K_fractional": [
+      0.3333333333333333,
+      0.6666666666666666
+    ],
+    "Kprime_fractional": [
+      -0.3333333333333333,
+      -0.6666666666666666
+    ],
+    "color_min": -12.3125,
+    "color_max": 12.3125,
+    "native_to_cartesian_z_sign": 1
+  },
+  "historical_unit_label_note": "Native historical A^-2 label is incorrect; flux/deltaS has units A^2.",
+  "interpretation": "Opposite-sign K/Kprime valley curvature can coexist with vanishing total Chern number.",
+  "output_sha256": {
+    "BERRYCURV.dat": "52d1d919d3ade539998f6728b24300b74fd041f293af7e87cd932920417c3b8f",
+    "summary.csv": "00ca9e8e78d39c5732ea485085dcf1f0daeea3dfd55f9f806fe8993d7f1765bd",
+    "figure.png": "9c9b00abb13ef8f9085511b69f356574bf359fa21fb625579cf2b0438f0dd0b1",
+    "figure.pdf": "c21141970aab2adefcffd893da1a8bbd17af07bbc3e5da0876bce91800d28259"
+  },
+  "elapsed_seconds": 63.183174452977255
+}

@@ -135,7 +135,7 @@ def execute(args, feature_id, options):
 
 def write_result(out, feature_id, provenance, summary, outputs, limitations):
     np.savetxt(out / "summary.csv", [[summary[key] for key in summary]], delimiter=",", header=",".join(summary), comments="", fmt="%.12g")
-    outputs = [*outputs, "band_edges.csv", "summary.csv", "figure.png", "fortran.log", "command.json"]
+    outputs = [*outputs, "band_edges.csv", "summary.csv", "figure.png", "figure.pdf", "fortran.log", "command.json"]
     result = {"schema_version": 1, "feature_id": feature_id, "status": "PASS",
               "workflow_mode": "vasp_wavecar_calculation", "software_version": (ROOT / "VERSION").read_text().strip(),
               "summary": summary, "numerical_checks": {"status": "PASS", "actual_wavecar_sha256": "PASS",

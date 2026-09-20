@@ -5,4 +5,12 @@ validation/models/**/reference/*.csv whitespace=trailing-space,space-before-tab,
 # Preserve native Fortran record padding and the exact archived output hashes.
 examples/features/**/reference/*.dat -whitespace
 examples/features/**/reference/*.log -whitespace
+# Keep native VASP records and the archived Fukui output byte-for-byte.
+examples/features/fukui-berry-curvature/inputs/POSCAR -whitespace
+examples/features/fukui-berry-curvature/reference/archive/*.dat -whitespace
+examples/features/fukui-berry-curvature/reference/archive/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/features/fukui-berry-curvature/reference/python/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/features/fukui-berry-curvature/reference/vasp/OUTCAR -whitespace
+examples/features/fukui-berry-curvature/reference/vasp/EIGENVAL -whitespace
+examples/features/fukui-berry-curvature/reference/vasp/OSZICAR -whitespace
 examples/Bi_Z2/WAVECAR filter=lfs diff=lfs merge=lfs -text

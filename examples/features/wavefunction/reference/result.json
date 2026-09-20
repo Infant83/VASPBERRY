@@ -41,9 +41,9 @@
       "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
       "EIGENVAL": "4632f93d56bb7bfc06414782faa752d10c347c66d95093631aed76412d71c2ae"
     },
-    "script_sha256": "25ea23bb24ae10e6063743439f3eeaf203d24b29f643ce07799c5131b74de69c",
+    "script_sha256": "1de00e42b4774e5064410782b5876266266675e3be1d6a0afc5f45582f783a67",
     "local_analysis_source_sha256": {
-      "run.py": "25ea23bb24ae10e6063743439f3eeaf203d24b29f643ce07799c5131b74de69c",
+      "run.py": "1de00e42b4774e5064410782b5876266266675e3be1d6a0afc5f45582f783a67",
       "tools/wavecar_fukui.py": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e"
     },
     "analysis_checkout_version": "1.3.0",
@@ -90,13 +90,13 @@
   },
   "output_sha256": {
     "summary.csv": "0495098bc98e24481cb8aba2f77dd52e485a9820f01ac901bbdbb8a9355fed10",
-    "figure.png": "d019b8e47a5140b64127db56cd130b89186ee4076bcfc9be47ccca38f881c8cb"
+    "figure.png": "96c3ad52b93e77747ace1a90fe00faff5a0e164b9b2369cf843c20719f64b02d",
+    "figure.pdf": "9fb52763febee41d86219735ef30416f854b5e5094c1f42e386166f2bd6002e9"
   },
-  "wall_seconds": 4.405350009910762,
+  "wall_seconds": 5.099914169870317,
   "reference_generation": {
-    "date": "2026-09-19",
-    "source_base_commit": "18c0a1117923dd2b3001dc56f6202b8f41c0426e",
-    "procedure": "Execute run.py against the public VASP input, retain raw outputs, CSV, figure and provenance."
+    "date": "2026-09-20",
+    "procedure": "Repeat the same native VASPBERRY calculation; compare unchanged numerical outputs and produce Cartesian scientific figures."
   },
   "raw_output_sha256": {
     "PARCHG-W-K024-E018-IM-SPIN1": "8345d903844171b3897418c632b3a110da29f8f365802e576a828a07836d1146",

@@ -1,32 +1,50 @@
-# Kubo Berry curvature: VASP MoS₂ WAVECAR → VASPBERRY → figure
+# Band-resolved Berry curvature of monolayer MoS₂
 
-This tutorial runs the current **Fortran VASPBERRY executable on an actual
-VASP SOC WAVECAR**, then plots the two upper valence bands along K–Γ–K′.
-The expected result is opposite-sign curvature near K and K′. Γ and nearby
-unresolved individual-band states are explicitly omitted from the curvature
-plot. The calculation is a line scan, so it does not produce a Chern number or
-Hall conductivity.
+This example calculates the two highest valence bands of 1H-MoS₂ along
+K–Γ–K′ from the supplied VASP spinor wavefunctions. The band energies are even
+under reversal of the path, while the Berry curvature near K and K′ has
+opposite signs.
 
-## 1. Input files
+## Physical quantity
 
-The [public MoS₂ calculation](../../1H-MoS2/KPATH/2.band/) contains:
+For a nondegenerate band, VASPBERRY evaluates
 
-| File | Role in this tutorial |
+$$
+\Omega_{n,z}(\mathbf{k})=-2\,\mathrm{Im}
+\sum_{m\ne n}
+\frac{D^x_{nm}(\mathbf{k})D^y_{mn}(\mathbf{k})}
+{[E_n(\mathbf{k})-E_m(\mathbf{k})]^2},
+\qquad D^a=\hbar v_a.
+$$
+
+The native WAVECAR implementation uses the canonical-momentum approximation
+$v_a=p_a/m_e$. Its curvature is expressed in Å². PAW augmentation and
+nonlocal/SOC velocity corrections are not included. The band-index sum uses
+all intermediate states stored in WAVECAR.
+
+## Input and calculation settings
+
+The [MoS₂ dataset](../../1H-MoS2/KPATH/2.band/) provides the required VASP
+output and the corresponding structure, sampling and calculation settings.
+
+| Input or setting | Value |
 |---|---|
-| [WAVECAR](../../1H-MoS2/KPATH/2.band/WAVECAR) | Actual input to VASPBERRY: 48 k points, 32 spinor bands, 400 eV cutoff |
-| [KPOINTS](../../1H-MoS2/KPATH/2.band/KPOINTS) | Two 24-point line segments; records 24 and 25 both represent Γ |
-| [POSCAR](../../1H-MoS2/KPATH/2.band/POSCAR), [INCAR](../../1H-MoS2/KPATH/2.band/INCAR) | Original structure and VASP settings for interpreting the supplied data |
-| [EIGENVAL](../../1H-MoS2/KPATH/2.band/EIGENVAL), [OUTCAR](../../1H-MoS2/KPATH/2.band/OUTCAR) | VASP energies and calculation record |
+| Calculation input | [WAVECAR](../../1H-MoS2/KPATH/2.band/WAVECAR) |
+| Structure and settings | [POSCAR](../../1H-MoS2/KPATH/2.band/POSCAR), [INCAR](../../1H-MoS2/KPATH/2.band/INCAR) |
+| Sampling | [KPOINTS](../../1H-MoS2/KPATH/2.band/KPOINTS): K–Γ and Γ–K′, 24 points per segment |
+| VASP output | [EIGENVAL](../../1H-MoS2/KPATH/2.band/EIGENVAL), [OUTCAR](../../1H-MoS2/KPATH/2.band/OUTCAR) |
+| Wavefunctions | SOC spinors; 32 bands; 400 eV plane-wave cutoff |
+| Selected bands | 17 and 18, the two highest valence bands |
+| Intermediate bands | 1–32 |
 
-The WAVECAR is **60,521,760 bytes**, SHA256
-`33f8546512856d6c04ad0a80454b18ac9b60e2af4b98f2f85b376ec49b1a8d9f`.
-No VASP run or JSON model input is required to reproduce the VASPBERRY result.
-POTCAR is not distributed; see the [material provenance](../../1H-MoS2/README.md)
-before attempting to regenerate the VASP states themselves.
+Γ occurs twice, at WAVECAR indices 24 and 25. The horizontal coordinate in the
+figure is cumulative **Cartesian** distance along the path,
+$s_j=\sum_{i<j}|\mathbf{k}_{i+1}-\mathbf{k}_i|$, in Å⁻¹. The reciprocal vectors
+used in this conversion include $2\pi$.
 
-All commands below start in the repository root.
+## Run VASPBERRY
 
-## 2. Run VASPBERRY directly
+Start in the repository root and use a new output directory:
 
 ```sh
 make serial
@@ -39,21 +57,12 @@ cd results/mos2-kubo-direct
 cd ../..
 ```
 
-`-s 2` reads the two components of each SOC spinor. `-ii 17 -if 18` selects the
-bands whose curvature is printed; the Kubo sum uses **all 32 bands present in
-WAVECAR** as intermediate states. `-kubo 2` selects line mode and avoids a BZ
-integral. `-kubo_csv` writes physical, full-precision per-band point data.
-Choose a fresh output directory and CSV filename for every run.
+`-s 2` selects the two spinor components. `-kubo 2` evaluates the supplied
+path; `-ii 17 -if 18` selects the bands to output. `-kubo_csv` produces the
+full-precision point data used below. The other outputs are the combined
+`BERRYCURV_KUBO.dat`, band-specific DAT files and the calculation log.
 
-The main outputs are `KUBO.csv`, `BERRYCURV_KUBO.dat`, the band-specific DAT
-files, and the log. CSV columns include spin, k index, band, fractional k,
-energy in eV, `omega_z_A2`, and the closest other-band gap in eV.
-The DAT file's generic `K-GRID`/`dk²` header retains the default grid parameters
-in line mode; it is not evidence of a full mesh. The explicit
-`integration=NONE_K_PATH` and `Chern_number=NOT_APPLICABLE_K_PATH` records define
-this calculation's scope.
-
-## 3. Reproduce the reference figure and checks
+To run the calculation and generate both PNG and PDF figures:
 
 ```sh
 python3 examples/features/kubo-curvature/run.py \
@@ -62,56 +71,53 @@ python3 examples/features/kubo-curvature/run.py \
   --output-dir results/mos2-kubo
 ```
 
-This command **reruns VASPBERRY**, checks the CSV against the WAVECAR energies
-and nearest gaps, then writes the figure. It never reads a model Hamiltonian.
-Dependencies are NumPy and Matplotlib. Output directories are never overwritten.
+The plotting script requires NumPy and Matplotlib. For MPI, build with
+`make mpi` and replace the executable in the native command with
+`mpiexec -np 2 ../../build/vaspberry-mpi`. The two-process calculation
+reproduces the serial point data for this input.
 
-| Reference | Expected result / meaning |
-|---|---|
-| [figure.png](reference/figure.png) | VASP valence energies and VASPBERRY Kubo curvature |
-| [summary.csv](reference/summary.csv) | All 96 band/k rows; blank curvature means the individual band is unresolved |
-| [KUBO.csv](reference/KUBO.csv) | Actual unmodified native per-band output, including diagnostic near-degenerate values |
-| [result.json](reference/result.json) | Numerical checks, units, caveats, and output checksums |
-| [provenance.json](reference/provenance.json) | WAVECAR/source/binary hashes and executed commands |
+## Results
 
-![MoS₂ native Kubo result](reference/figure.png)
+![Valence bands and Berry curvature of monolayer MoS2](reference/figure.png)
 
-For band 18, Ωz is approximately **−6.671251 Å² at K** and **+6.671253 Å² at K′**.
-Each plotted band has **44 valid points out of 48** using a `10⁻⁵ eV` isolation
-threshold. The source's near-Γ splitting reaches about `3.1 × 10⁻⁹ eV`;
-dividing by that tiny gap gives unstable individual-band raw values. The
-tutorial preserves them in the native CSV but masks them in the figure and
-summary. It checks valid curvature against the stored reference with an
-absolute tolerance of `10⁻⁵ Å²`, allowing compiler roundoff.
+**Figure.** (a) The upper valence bands, with energies measured from the
+maximum of band 18 on the sampled path, $E_{\mathrm{v}}=-1.274873881$ eV in
+the original VASP energy reference. (b) Band-resolved Berry curvature in the
+canonical-momentum approximation. Both panels use the same Cartesian path
+distance, with K, Γ and K′ marked explicitly. Curvature is omitted where the
+nearest other-band separation is at most $10^{-5}$ eV.
 
-## 4. Apply the workflow to your VASP calculation
+| Quantity | Band 17 | Band 18 |
+|---|---:|---:|
+| $\Omega_z(\mathrm{K})$ (Å²) | −5.489549 | −6.671251 |
+| $\Omega_z(\mathrm{K}')$ (Å²) | +5.489548 | +6.671253 |
+| Resolved points on the path | 44 of 48 | 44 of 48 |
 
-1. Supply your own SOC WAVECAR and its matching KPOINTS/structure records.
-2. Choose the actual band numbers from your VASP energies. Keep `-s 2` for SOC
-   spinors; scalar or collinear calculations require their appropriate setting.
-3. Use `-kubo 2` for paths and inspect `min_gap_eV` before interpreting a band.
-   Degenerate groups require a subspace treatment; do not reduce a safety
-   threshold merely to retain every plotted point.
-4. Plot the CSV using its actual k coordinates and units. Increase the number
-   of intermediate bands through a new VASP calculation with larger NBANDS,
-   and check convergence for your observable.
+[PNG figure](reference/figure.png) · [PDF figure](reference/figure.pdf) ·
+[band and curvature table](reference/summary.csv) ·
+[native Kubo output](reference/KUBO.csv)
 
-The convenience runner verifies the exact tutorial WAVECAR checksum. For
-another system, adapt the explicit VASPBERRY command and the small plotting
-script rather than expecting the MoS₂ reference checks to apply unchanged.
+The native CSV contains the band energy, fractional k coordinates, curvature
+and nearest-band separation. `summary.csv` adds the Cartesian path distance
+and marks unresolved curvature entries as blank. CSV energies retain the
+original VASP reference; the energy shift is applied only in the figure.
 
-**Method scope:** this native implementation uses canonical momentum. PAW
-augmentation and nonlocal/SOC velocity corrections are absent, so the numbers
-are a reproducible bare-momentum approximation. They are already in the
-standard `−2 Im` normalization; do not divide them by two. A path has no area
-weights for a BZ integral. For an actual full-mesh occupied-subspace charge
-response, continue with the [Bi Hall tutorial](../hall-valley/).
+## Interpretation and application to another system
 
-The QWZ implementation oracle now lives under
-[developer model validation](../../../validation/models/kubo-curvature/).
+The opposite signs at K and K′ are consistent with the time-reversal relation
+between the two valleys. Near Γ, the selected states become nearly degenerate:
+the smallest splitting is about $3.1\times10^{-9}$ eV. An individual-band Kubo
+denominator is then unstable. Those points are omitted rather than interpreted
+as a large physical curvature; degenerate states require a subspace treatment.
 
-For maintainers, package a successful replay into a **new** reference directory
-with `python3 examples/features/kubo-curvature/export_reference.py --run-dir
-results/mos2-kubo --output-dir results/mos2-kubo-reference`. Distributed hashes
-cover the shipped files; the separately labeled full-run hashes retain the
-original native-output and log record.
+For another material, use its WAVECAR, choose the bands from the corresponding
+VASP energies, and set the scalar/spinor option appropriately. Inspect band
+separations before plotting individual-band curvature. Convergence of the
+intermediate-state sum requires VASP calculations with increasing NBANDS.
+The example script is configured for the supplied MoS₂ dataset; adapt the
+native command and plotting selections for different systems.
+
+A k path does not sample a Brillouin-zone area and cannot determine a Chern
+number or Hall conductivity. The [Bi Hall example](../hall-valley/) illustrates
+a full-mesh occupied-subspace calculation. The [material guide](../../1H-MoS2/README.md)
+describes the supplied VASP dataset and preparation of new inputs.

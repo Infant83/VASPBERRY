@@ -134,19 +134,31 @@ def main():
                 comparison = {"status": "PASS", "absolute_tolerance": 1.1e-4, "reference": "reference/summary.csv"}
             else:
                 comparison = {"status": "NOT_APPLICABLE", "reason": "different WAVECAR; no MoS2 numerical match asserted"}
-        fig, axes = plt.subplots(1, 3, figsize=(11.2, 4), constrained_layout=True)
-        extent = (.5, wavecar.header.nkpoints+.5, float(energy[0]), float(energy[-1]))
-        for ax, values, title, cmap in zip(axes, [left, right, np.ma.array(selectivity, mask=~visible)],
-                                         ["Left channel", "Right channel", "(Left − Right) / (Left + Right)"],
-                                         ["magma", "magma", "RdBu_r"]):
-            limits = {"vmin": -1, "vmax": 1} if ax is axes[2] else {"vmin": 0, "vmax": float(intensity.max())}
-            artist = ax.imshow(values.T, origin="lower", aspect="auto", interpolation="nearest", extent=extent, cmap=cmap, **limits)
-            ax.set(title=title, xlabel="WAVECAR k-point index", ylabel="Photon energy (eV)")
-            if input_hash == PUBLIC_WAVECAR_SHA256:
-                ax.set_xticks([1, 24.5, 48], ["K (1)", "Γ (24/25)", "K′ (48)"])
-            fig.colorbar(artist, ax=ax, shrink=.8, label="Selectivity" if ax is axes[2] else "Intensity (a.u.)")
-        fig.suptitle(f"{material.replace('MoS2', 'MoS₂')} · VASP WAVECAR → VASPBERRY -cd 2 · normal incidence")
-        fig.savefig(out / "figure.png", dpi=170)
+        fig, axes = plt.subplots(1, 3, figsize=(10.5, 3.35), constrained_layout=True)
+        endpoint_titles = ("K", "K′") if input_hash == PUBLIC_WAVECAR_SHA256 else ("First k point", "Last k point")
+        maximum = max(float(intensity[0].max()), float(intensity[-1].max()))
+        for ax, ik, label, panel in zip(axes[:2], (0, -1), endpoint_titles, ("a", "b")):
+            ax.plot(energy, left[ik], color="#2166ac", linewidth=1.6, label="Left circular")
+            ax.plot(energy, right[ik], color="#b2182b", linewidth=1.6, linestyle="--", label="Right circular")
+            ax.set(xlabel="Photon energy (eV)", ylabel="Intensity (arb. units)",
+                   xlim=(energy[0], energy[-1]), ylim=(0, maximum*1.08), title=f"({panel})  {label}")
+            ax.legend(frameon=False, fontsize=8, loc="upper right")
+            ax.tick_params(direction="in", top=True, right=True)
+        # Consecutive duplicate endpoints, such as the two Gamma records,
+        # occupy the same physical distance; draw one, retain both in the CSV.
+        keep = np.r_[True, np.diff(distances) > 1e-10]
+        values = np.ma.array(selectivity[keep].T, mask=~visible[keep].T)
+        artist = axes[2].pcolormesh(distances[keep], energy, values, shading="nearest",
+                                    cmap="RdBu_r", vmin=-1, vmax=1, rasterized=True)
+        axes[2].set(title="(c)  Circular selectivity", xlabel=r"Path distance ($\mathrm{\AA}^{-1}$)",
+                    ylabel="Photon energy (eV)", xlim=(distances[0], distances[-1]),
+                    ylim=(energy[0], energy[-1]))
+        if input_hash == PUBLIC_WAVECAR_SHA256:
+            axes[2].set_xticks([distances[0], distances[23], distances[-1]], ["K", "Γ", "K′"])
+            axes[2].axvline(distances[23], color="0.4", linewidth=.6)
+        fig.colorbar(artist, ax=axes[2], shrink=.85, label=r"$\eta=(I_L-I_R)/(I_L+I_R)$")
+        fig.savefig(out / "figure.png", dpi=240)
+        fig.savefig(out / "figure.pdf")
         plt.close(fig)
         peak = int(np.argmax(intensity[0]))
         report.update(status="PASS", points=wavecar.header.nkpoints, spectrum_rows=len(rows),
@@ -155,7 +167,7 @@ def main():
                       first_k_peak_energy_eV=float(energy[peak]), first_k_peak_left=float(left[0, peak]),
                       first_k_peak_right=float(right[0, peak]), first_k_peak_selectivity=float(selectivity[0, peak]),
                       last_k_peak_selectivity=float(selectivity[-1, np.argmax(intensity[-1])]),
-                      output_sha256={p.name: sha(p) for p in (out / "summary.csv", out / "figure.png")})
+                      output_sha256={p.name: sha(p) for p in (out / "summary.csv", out / "figure.png", out / "figure.pdf")})
         if sha(source) != report["provenance"]["input_sha256"]["WAVECAR"]:
             raise AssertionError("WAVECAR changed during calculation")
     except Exception as exc:

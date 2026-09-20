@@ -22,7 +22,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("features", nargs="*", help="Feature IDs shown by --list")
     parser.add_argument("--list", action="store_true", help="List inputs and default workflow modes")
-    parser.add_argument("--all", action="store_true", help="Recalculate all six real VASP tutorials")
+    parser.add_argument("--all", action="store_true", help="Recalculate every tutorial; requires all three VASP datasets")
     parser.add_argument("--output-dir", type=Path, help="New directory for all generated files and logs")
     parser.add_argument("--binary", type=Path, default=ROOT / "build/vaspberry-gfortran",
                         help="Current Fortran executable")
@@ -30,6 +30,9 @@ def main() -> int:
                         help="Full public Bi LFS WAVECAR for Fukui, Z2 and gap Hall")
     parser.add_argument("--mos2-wavecar", type=Path, default=EXAMPLES / "1H-MoS2/KPATH/2.band/WAVECAR",
                         help="Public MoS2 band-path WAVECAR")
+    parser.add_argument("--mos2-mesh-wavecar", type=Path,
+                        default=EXAMPLES / "features/fukui-berry-curvature/inputs/WAVECAR",
+                        help="Full 12x12 MoS2 WAVECAR generated with the Fukui tutorial's VASP inputs")
     args = parser.parse_args()
     if args.all and args.features:
         parser.error("use feature IDs or --all, not both")
@@ -38,7 +41,8 @@ def main() -> int:
         parser.error("unknown feature IDs: " + ", ".join(unknown))
     if args.list or not (args.all or args.features):
         for item in features.values():
-            print(f"{item['id']:20} {item['dataset']:6} {item['title']}")
+            preparation = " [VASP preparation required]" if item.get("input_preparation") else ""
+            print(f"{item['id']:23} {item['dataset']:9} {item['title']}{preparation}")
         print("\nSee examples/README.md for VASP inputs, commands and actual reference results.")
         return 0
     selected = list(features) if args.all else list(dict.fromkeys(args.features))
@@ -52,11 +56,15 @@ def main() -> int:
     binary = args.binary.resolve()
     if any(features[key]["requires_fortran"] for key in selected) and not binary.is_file():
         parser.error(f"missing Fortran binary: {binary}; run make serial or pass --binary")
-    inputs = {"bi": args.bi_wavecar.resolve(), "mos2": args.mos2_wavecar.resolve()}
+    inputs = {"bi": args.bi_wavecar.resolve(), "mos2": args.mos2_wavecar.resolve(),
+              "mos2-mesh": args.mos2_mesh_wavecar.resolve()}
     for dataset in {features[key]["dataset"] for key in selected}:
         wavecar = inputs[dataset]
         if not wavecar.is_file():
-            parser.error(f"missing actual {dataset} WAVECAR: {wavecar}; see examples/README.md")
+            preparation = next((features[key].get("input_preparation") for key in selected
+                                if features[key]["dataset"] == dataset), None)
+            guide = f"examples/{preparation}" if preparation else "examples/INPUTS.md"
+            parser.error(f"missing actual {dataset} WAVECAR: {wavecar}; see {guide}")
         with wavecar.open("rb") as stream:
             if stream.read(128).startswith(b"version https://git-lfs.github.com/spec/"):
                 parser.error("Bi WAVECAR is only an LFS pointer. Run git lfs pull --include='examples/Bi_Z2/WAVECAR', "

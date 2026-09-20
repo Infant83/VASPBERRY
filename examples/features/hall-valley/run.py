@@ -64,21 +64,30 @@ def main():
             if len(ref)!=len(rows) or any(abs(float(a["mu_eV"])-float(b["mu_eV"]))>1e-12 for a,b in zip(ref,rows)):
                 raise RuntimeError("Reference chemical-potential grid mismatch")
             reference_error=max(abs(float(a["sigma_total_e2_over_h"])-float(b["sigma_total_e2_over_h"])) for a,b in zip(ref,rows))
-        fig,axes=plt.subplots(1,2,figsize=(10,4.1),constrained_layout=True)
-        axes[0].axhline(0,color="grey",linestyle="--",label="TRS charge-Hall expectation")
-        axes[0].plot(mu,sigma,color="#2166ac",lw=2,label="Actual WAVECAR calculation")
-        axes[0].set(xlabel="Chemical potential μ (WAVECAR eV)",ylabel=r"Sheet $\sigma_{xy}$ ($e^2/h$)",
-                    title="Bi · occupied bands 1:10 · T = 0 K",ylim=(-.05,.05))
-        axes[0].grid(alpha=.2);axes[0].legend(fontsize=8,loc="upper right")
-        axes[0].text(.5,.1,f"max |σ| = {np.max(abs(sigma)):.2e} e²/h\nAll 41 points pass the guards",
-                     ha="center",transform=axes[0].transAxes,fontsize=9)
-        image=axes[1].imshow(flux.T*1e6,origin="lower",extent=(0,1,0,1),cmap="RdBu_r",
-                            vmin=-max(abs(flux.min()),abs(flux.max()))*1e6,
-                            vmax=max(abs(flux.min()),abs(flux.max()))*1e6,interpolation="nearest")
-        axes[1].set(xlabel="Fractional q₁",ylabel="Fractional q₂",title="Occupied-subspace plaquette flux residual")
-        fig.colorbar(image,ax=axes[1],label="Flux (10⁻⁶ rad)",shrink=.85)
-        fig.suptitle("Bi bilayer · public 12 × 12 VASP WAVECAR · charge response")
-        fig.savefig(output / "figure.png",dpi=170);plt.close(fig)
+        valence_max=diagnostics["max_bundle_energy_max_ev"]
+        gap=diagnostics["indirect_gap_above_max_bundle_ev"]
+        fig,ax=plt.subplots(figsize=(6.6,3.9),constrained_layout=True)
+        margin=.06
+        ax.axvspan(-margin,0,color="0.91",zorder=0)
+        ax.axvspan(0,gap,color="#e7f0ec",zorder=0)
+        ax.axvspan(gap,gap+margin,color="0.91",zorder=0)
+        ax.axvline(0,color="0.55",ls="--",lw=.8)
+        ax.axvline(gap,color="0.55",ls="--",lw=.8)
+        ax.axhline(0,color="0.55",ls=":",lw=.8,zorder=1)
+        ax.plot(mu-valence_max,sigma,color="#2166ac",lw=2.1,label=r"$T=0$ K",zorder=3)
+        ax.set(xlabel=r"$\mu-E_{\mathrm{v}}$ (eV)",ylabel=r"$\sigma_{xy}$ ($e^2/h$)",
+               title="Bi bilayer: insulating charge-Hall response",
+               xlim=(-margin,gap+margin),ylim=(-.06,.06),yticks=[-.05,0,.05])
+        ax.tick_params(direction="in",top=True,right=True)
+        ax.text(gap/2,.041,rf"$E_{{\mathrm{{g}}}}={gap:.3f}$ eV",ha="center",fontsize=11)
+        ax.text(-margin/2,.05,"VB",ha="center",fontsize=9,color="0.35")
+        ax.text(gap+margin/2,.05,"CB",ha="center",fontsize=9,color="0.35")
+        ax.text(0,-.051,r"$E_{\mathrm{v}}$",ha="center",fontsize=10,color="0.35")
+        ax.text(gap,-.051,r"$E_{\mathrm{c}}$",ha="center",fontsize=10,color="0.35")
+        ax.legend(frameon=False,loc="lower center",bbox_to_anchor=(.5,.06))
+        fig.savefig(output / "figure.png",dpi=220)
+        fig.savefig(output / "figure.pdf")
+        plt.close(fig)
         checks={"mu_count":len(rows),"sampled_global_gap_eV":diagnostics["indirect_gap_above_max_bundle_ev"],
             "valence_max_eV":diagnostics["max_bundle_energy_max_ev"],"conduction_min_eV":diagnostics["sentinel_min_ev"],
             "minimum_direct_occupied_subspace_gap_eV":diagnostics["max_bundle_quality"]["min_gap_to_sentinel_ev"],
@@ -98,6 +107,10 @@ def main():
         finish(output,record,{"feature_id":"hall-valley","material":"Bi bilayer",
             "input_repository_path":"examples/Bi_Z2/WAVECAR (Git LFS payload)",
             "numerical_checks":checks,"units":{"energy":"eV (unchanged WAVECAR zero)","sigma":"e^2/h (2D sheet response)","flux":"radian"},
+            "figure_conventions":{"energy_reference_eV":valence_max,
+                "energy_reference_definition":"sampled full-mesh maximum of occupied band 10; CSV chemical potentials remain unchanged",
+                "plot_quantity":"total two-dimensional sheet charge Hall conductivity",
+                "gap_eV":gap,"curve_scope":"only the 41 calculated chemical potentials; no extrapolation into band regions"},
             "method":"Guarded cumulative occupied-subspace Fukui transport; MAX_BAND=10, sentinel=11, T=0",
             "scope":"Actual VASP WAVECAR calculation of the insulating total charge response. "
                 "Bi's near-degenerate Kramers partners require occupied subspaces; this is not individual-band point-Kubo integration. "

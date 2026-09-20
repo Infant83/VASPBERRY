@@ -79,23 +79,32 @@ def main():
                 and int(a["valid_isolated_band"]) == b["valid_isolated_band"] for a,b in zip(ref,summary))
             reference_error = max((abs(float(a["omega_z_A2"])-float(b["omega_z_A2"]))
                 for a,b in zip(ref,summary) if a["omega_z_A2"] and b["omega_z_A2"] != ""), default=0.)
-        fig, axes = plt.subplots(1,2,figsize=(10,4),constrained_layout=True)
+        energy_reference = max(r["energy_eV"] for r in summary)
+        fig, axes = plt.subplots(1,2,figsize=(8.2,3.8),constrained_layout=True)
         for b,data in by_band.items():
-            color = {17:"#2563a6",18:"#bb502d"}[b]
-            axes[0].plot(distance,[r["energy_eV"] for r in data],color=color,label=f"Band {b}")
+            color = {17:"#2166ac",18:"#b35806"}[b]
+            axes[0].plot(distance,np.array([r["energy_eV"] for r in data])-energy_reference,
+                         color=color,lw=1.7,label=rf"$n={b}$")
             values = np.array([r["omega_z_A2"] if r["valid_isolated_band"] else np.nan for r in data],float)
-            axes[1].plot(distance,values,".-",markersize=3,color=color,label=f"Band {b}")
-        axes[0].set(ylabel="WAVECAR energy (eV)",title="Valence bands from actual VASP states")
-        axes[1].set(ylabel=r"$\Omega_z$ ($\AA^2$)",title="Native Kubo; unresolved states omitted")
+            axes[1].plot(distance,values,color=color,lw=1.7,label=rf"$n={b}$")
+        axes[0].set(ylabel=r"$E-E_{\mathrm{v}}$ (eV)",title="(a) Valence-band dispersion")
+        axes[1].set(ylabel=r"$\Omega_{n,z}$ ($\AA^2$)",title="(b) Berry curvature")
+        axes[1].axhline(0,color="0.65",lw=.6,zorder=0)
         gamma = (distance[23]+distance[24])/2
         for ax in axes:
             ax.set_xticks([distance[0],gamma,distance[-1]],["K",r"$\Gamma$","K′"])
-            ax.set_xlabel("K–Γ–K′ path")
-            ax.grid(alpha=.2); ax.legend()
-            ax.axvline(gamma,color="grey",lw=.7)
-        axes[1].text(.5,.02,"Blank near Γ: gap ≤ 10⁻⁵ eV",ha="center",transform=axes[1].transAxes,fontsize=9)
-        fig.suptitle("1H-MoS₂ · public VASP WAVECAR · bare-momentum approximation")
-        fig.savefig(output / "figure.png",dpi=170); plt.close(fig)
+            ax.set(xlabel="Wave vector",xlim=(distance[0],distance[-1]))
+            ax.tick_params(direction="in",right=True)
+            ax.axvline(gamma,color="0.65",lw=.6,zorder=0)
+            ax.legend(frameon=False,fontsize=9)
+            scale=ax.secondary_xaxis("top")
+            scale.set_xticks([distance[0],gamma,distance[-1]],
+                             [f"{value:.2f}" for value in (distance[0],gamma,distance[-1])])
+            scale.set_xlabel(r"Path distance ($\AA^{-1}$)",fontsize=9)
+            scale.tick_params(direction="in",labelsize=8)
+        fig.savefig(output / "figure.png",dpi=220)
+        fig.savefig(output / "figure.pdf")
+        plt.close(fig)
         checks = {"native_rows":len(rows), "source_kpoints":w.header.nkpoints,
             "source_bands":w.header.nbands, "valid_points_per_band":valid_counts,
             "minimum_isolation_gap_eV":min(r["min_gap_eV"] for r in summary),
@@ -110,6 +119,11 @@ def main():
         finish(output,record,{"feature_id":"kubo-curvature", "material":"1H-MoS2",
             "input_repository_path":"examples/1H-MoS2/KPATH/2.band/WAVECAR",
             "numerical_checks":checks,"units":{"energy":"eV (unchanged WAVECAR zero)","curvature":"Angstrom^2"},
+            "figure_conventions":{"energy_reference_eV":energy_reference,
+                "energy_reference_definition":"maximum of bands 17:18 along the supplied path; CSV energies remain unchanged",
+                "abscissa":"cumulative Cartesian k distance, reciprocal vectors include 2*pi, Angstrom^-1",
+                "symmetry_labels":["K","Gamma","Kprime"],
+                "symmetry_path_positions_inv_A":[float(distance[0]),float(gamma),float(distance[-1])]},
             "sampling":"48-point K-Gamma-Kprime line; duplicate Gamma records 24 and 25",
             "scope":"Actual native Fortran calculation, bands 17:18, intermediate bands 1:32. "
                 "Near-degenerate individual bands are masked at 1e-5 eV in the figure and summary; "

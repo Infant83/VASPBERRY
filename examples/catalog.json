@@ -2,6 +2,26 @@
   "schema_version": 1,
   "features": [
     {
+      "id": "fukui-berry-curvature",
+      "title": "MoS2 occupied-subspace Fukui Berry curvature over the first Brillouin zone",
+      "default_mode": "vasp_wavecar_calculation",
+      "dataset": "mos2-mesh",
+      "requires_fortran": true,
+      "input_description": "Actual full 12x12 SOC MoS2 WAVECAR regenerated from the public VASP charge density and setup",
+      "runner": "features/fukui-berry-curvature/run.py",
+      "readme": "features/fukui-berry-curvature/README.md",
+      "input": "features/fukui-berry-curvature/inputs/WAVECAR",
+      "input_bundled": false,
+      "input_preparation": "features/fukui-berry-curvature/inputs/README.md",
+      "reference": "features/fukui-berry-curvature/reference",
+      "required_outputs": [
+        "result.json",
+        "summary.csv",
+        "figure.png",
+        "figure.pdf"
+      ]
+    },
+    {
       "id": "fukui-chern",
       "title": "Bi occupied-subspace Berry curvature and Chern",
       "default_mode": "vasp_wavecar_calculation",
@@ -15,7 +35,8 @@
       "required_outputs": [
         "result.json",
         "summary.csv",
-        "figure.png"
+        "figure.png",
+        "figure.pdf"
       ]
     },
     {
@@ -32,7 +53,8 @@
       "required_outputs": [
         "result.json",
         "summary.csv",
-        "figure.png"
+        "figure.png",
+        "figure.pdf"
       ]
     },
     {
@@ -49,7 +71,8 @@
       "required_outputs": [
         "result.json",
         "summary.csv",
-        "figure.png"
+        "figure.png",
+        "figure.pdf"
       ]
     },
     {
@@ -66,7 +89,8 @@
       "required_outputs": [
         "result.json",
         "summary.csv",
-        "figure.png"
+        "figure.png",
+        "figure.pdf"
       ]
     },
     {
@@ -83,7 +107,8 @@
       "required_outputs": [
         "result.json",
         "summary.csv",
-        "figure.png"
+        "figure.png",
+        "figure.pdf"
       ]
     },
     {
@@ -100,7 +125,8 @@
       "required_outputs": [
         "result.json",
         "summary.csv",
-        "figure.png"
+        "figure.png",
+        "figure.pdf"
       ]
     }
   ]

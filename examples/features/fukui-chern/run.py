@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+import sys
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from bi_common import arguments, execute, write_result, wavecar_geometry, sha
+from bi_common import ROOT, arguments, execute, write_result, wavecar_geometry, sha
+sys.path.insert(0, str(ROOT / "tools"))
+from plot_berry_curvature import draw_plaquette_map
 
 
 COORDINATE_TOLERANCE = 5.1e-7  # Native coordinates have six decimal places.
@@ -70,6 +73,22 @@ def validate_field(raw, kpoints, reciprocal, reference):
     return field, maximum_error
 
 
+def make_figure(field, reciprocal, output):
+    """Draw the stored native plaquette values in the physical first BZ."""
+    with plt.rc_context({"font.size": 11, "axes.titlesize": 13, "axes.linewidth": .8}):
+        fig, ax = plt.subplots(figsize=(5.2, 4.5), layout="constrained")
+        artist, metadata = draw_plaquette_map(ax, field[:, 4:], field[:, 3], reciprocal, mesh=(12, 12), vmax=1e-4)
+        ax.set_title(r"Bi: occupied bands 1–10, $C=0$", pad=11)
+        colorbar = fig.colorbar(artist, ax=ax, shrink=.72, pad=.035, ticks=np.linspace(-1e-4, 1e-4, 5))
+        colorbar.set_label(r"$\Omega_z$ ($\mathrm{\AA}^{2}$)")
+        colorbar.formatter.set_powerlimits((-3, 3)); colorbar.update_ticks()
+        fig.savefig(output, dpi=300)
+        plt.close(fig)
+    metadata["plotter_sha256"] = sha(ROOT / "tools/plot_berry_curvature.py")
+    metadata["note"] = "All native curvature values round to zero at four decimal places; no smoothing."
+    return metadata
+
+
 def main():
     args = arguments(__doc__)
     out, provenance, edges, gaps = execute(args, "fukui-chern", ["-o", "BERRYCURV"])
@@ -91,25 +110,8 @@ def main():
                "max_abs_printed_curvature_A2": float(np.max(abs(field[:, 3]))),
                "max_reference_curvature_difference_A2": map_error, **gaps}
     np.savetxt(out / "plaquettes.csv", field, delimiter=",", header="kx_inv_A,ky_inv_A,kz_inv_A,printed_curvature_A2,q1,q2,q3", comments="", fmt="%.6f")
-    fig, axes = plt.subplots(1, 2, figsize=(10.4, 4.3))
-    mesh = axes[0].scatter(field[:, 0], field[:, 1], c=field[:, 3], marker="s", s=42,
-                           cmap="RdBu_r", vmin=-1e-4, vmax=1e-4)
-    axes[0].set(xlabel=r"$k_x$ ($\AA^{-1}$)", ylabel=r"$k_y$ ($\AA^{-1}$)",
-                title="Bi bands 1–10\nC = 0", aspect="equal")
-    colorbar = fig.colorbar(mesh, ax=axes[0], pad=.04, format="%.1e")
-    colorbar.set_label(r"Native printed curvature ($\AA^2$)")
-    colorbar.ax.tick_params(labelsize=8)
-    axes[1].plot(edges[:, 0], edges[:, 1], lw=1.1, label="Band 10 (occupied)")
-    axes[1].plot(edges[:, 0], edges[:, 2], lw=1.1, label="Band 11 (empty)")
-    axes[1].axhspan(edges[:, 1].max(), edges[:, 2].min(), color="#21918c", alpha=.13,
-                   label=f"Sampled global gap {gaps['sampled_global_gap_eV']:.6f} eV")
-    axes[1].set(xlabel="Full-mesh VASP k-point index", ylabel="Energy (eV; VASP reference)",
-                title="Selected bundle is separated on this mesh")
-    axes[1].legend(fontsize=8, loc="best")
-    fig.suptitle("Actual Bi WAVECAR → VASPBERRY Fukui calculation · 12 × 12 SOC", fontsize=13)
-    fig.text(.5, .015, "Native BERRYCURV.dat prints four decimals: every value rounds to zero here.\n"
-             "This is a sampled post-processing reference; denser-mesh convergence is not established.", ha="center", fontsize=9)
-    fig.tight_layout(rect=(0, .10, 1, .94)); fig.savefig(out / "figure.png", dpi=180); plt.close(fig)
+    provenance["figure"] = make_figure(field, reciprocal, out / "figure.png")
+    make_figure(field, reciprocal, out / "figure.pdf")
     write_result(out, "fukui-chern", provenance, summary, ["BERRYCURV.dat", "plaquettes.csv"], [
         "Real archived VASP input; reproduces VASPBERRY postprocessing, not an end-to-end new VASP calculation.",
         "Bi occupied bundle has C=0; this example does not demonstrate a nonzero-Chern material.",

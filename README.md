@@ -6,10 +6,11 @@ method of [Fukui, Hatsugai, and Suzuki, J. Phys. Soc. Jpn. 74, 1674
 (2005)](https://doi.org/10.1143/JPSJ.74.1674), together with circular
 dichroism and real-space wavefunction output.
 
-**Current source: 1.3.0, unreleased.** Record the exact commit with results.
+**Version 1.3.0 — development version.**
+
+[Technical report](docs/TECHNICAL_REPORT.md) ([PDF](docs/TECHNICAL_REPORT.pdf)) · [Examples](examples/README.md) · [Installation](docs/BUILD.md)
 See the [1.3.0 notes](docs/releases/v1.3.0.md) and
 [migration guide](docs/MIGRATION.md) for the legacy Kubo factor-of-two fix.
-No v1.3.0 tag or release archive is implied by this source version.
 
 # Download Git version
 The examples below are on the unreleased development branch:
@@ -36,19 +37,15 @@ Intel `ifx`/`mpiifx` and legacy `ifort` commands, the direct-access record
 length requirement, and BLAS/LAPACK ABI constraints are documented in the
 [`build guide`](docs/BUILD.md).
 
-> **WAVECAR compatibility:** The VASP writer and VASPBERRY reader must
-> use the same direct-access `RECL` convention. Byte-based `RECL` is
-> recommended; with Intel Fortran, compile both using
-> `-assume byterecl`. If the first WAVECAR header is readable but
-> `NKPOINT`, `NBANDS`, or `ENCUT` is zero/invalid, or the lattice
-> vectors are `NaN`, suspect a 4-byte `RECL` mismatch. Rebuilding VASP
-> with byte `RECL` and regenerating `WAVECAR` is the preferred fix.
+WAVECAR format and compiler compatibility are described in the
+[build guide](docs/BUILD.md).
 
 # Features
 
 | Quantity / task | Main interface and guide | Runnable example and results |
 |---|---|---|
-| Berry flux and Chern number of an isolated band or band bundle | Fortran; [guarded Python Fukui workflow](docs/VALLEY_TRANSPORT.md) | [Fukui/Chern](examples/features/fukui-chern/) |
+| Fukui Berry curvature across the Brillouin zone | Fortran wavefunction overlaps | [MoS₂ curvature map](examples/features/fukui-berry-curvature/) |
+| Chern number of an isolated band or band bundle | Fortran; [Python Fukui workflow](docs/VALLEY_TRANSPORT.md) | [Bi occupied Chern number](examples/features/fukui-chern/) |
 | Two-dimensional Z₂ invariant | Fortran `-z2 1`; [Fukui–Hatsugai guide](docs/Z2_FUKUI_HATSUGAI.md) | [Z₂ / Bi](examples/features/z2/) |
 | Circular dichroism / optical selectivity | Fortran `-cd`; [usage below](#usage) | [Circular dichroism](examples/features/circular-dichroism/) |
 | Real-space wavefunction at Gamma | Fortran `-wf`; [usage below](#usage) | [Wavefunction](examples/features/wavefunction/) |
@@ -73,7 +70,6 @@ The [user tutorials](examples/README.md) reproduce calculations from public
 **MoS₂ and Bi WAVECAR files**. Each explains the input files, the explicit
 VASPBERRY command and its options, original output files, plotting, comparison
 with a checked reference, and how to apply the command to your own material.
-The material examples do not require a model-configuration JSON.
 
 ```bash
 make serial
@@ -88,7 +84,7 @@ python3 examples/features/z2/run.py --wavecar results/inputs/bi/WAVECAR \
 ```
 
 The wrappers execute and record the production commands shown in each tutorial.
-The [input catalog](examples/INPUTS.md) lists actual VASP files and checksums.
+The [input catalog](examples/INPUTS.md) lists the available VASP files and their k sampling.
 For another material, follow [the transfer guide](examples/APPLY_TO_YOUR_SYSTEM.md)
 and set the mesh, bands, spinor setting and energies from your own VASP output.
 
@@ -156,6 +152,9 @@ Kubo data: version 1.3.0 corrects their factor-of-two normalization.
 
 # Examples and material datasets
 
+See the [technical report](docs/TECHNICAL_REPORT.md) for reciprocal-space maps,
+band-resolved curvature, optical spectra and their physical interpretation.
+
 - [Feature tutorials](examples/README.md): actual VASP files, production
   commands, numerical reference outputs, figures and application to your system.
 - [Material catalog](examples/materials/): existing MoS₂/Bi data, sampling and
@@ -163,7 +162,7 @@ Kubo data: version 1.3.0 corrects their factor-of-two normalization.
 - [1H-MoS₂](examples/1H-MoS2/): full-mesh stored maps and a separate band-path
   WAVECAR. A line-mode input cannot supply a full-BZ integral.
 - [Bi buckled honeycomb](examples/Bi_Z2/): reviewed input templates,
-  schema-2 Z₂ result and Git LFS wavefunction.
+  Z₂ result and full-mesh wavefunctions.
 - [Standalone Hall CSV plotting](examples/kubo/): reusable plotting for
   standardized transport output.
 - [Developer numerical checks](validation/models/): analytic/synthetic fixtures

@@ -1,144 +1,100 @@
-# Reproduce VASPBERRY calculations from VASP files
+# Examples: Berry curvature and response functions
 
-These tutorials start with **actual public VASP WAVECAR files**, run the current
-VASPBERRY programs, and compare the new output with committed numerical results
-and figures. Each tutorial shows the underlying VASPBERRY command, what its
-options mean, how to plot the result, and what to change for your own material.
+These examples illustrate VASPBERRY calculations for monolayer MoS₂ and a
+Bi bilayer. Each guide gives the VASP files, calculation parameters, commands,
+expected numerical results and figures. The [technical report](../docs/TECHNICAL_REPORT.md)
+introduces the methods and discusses the physical interpretation
+([PDF version](../docs/TECHNICAL_REPORT.pdf)).
 
-## 1. Choose a calculation
+## Fukui Berry curvature in the Brillouin zone
 
-| Tutorial | Actual VASP input | Result to reproduce |
+![MoS2 Fukui Berry curvature in Cartesian reciprocal space](features/fukui-berry-curvature/reference/figure.png)
+
+**Monolayer MoS₂.** Occupied-band Berry curvature from the Fukui method,
+shown in Cartesian reciprocal coordinates with the first Brillouin-zone
+boundary and high-symmetry points. The K and K′ valleys carry opposite
+curvature, while the full-zone Chern number vanishes. The figure comes from
+a new full-mesh VASP and VASPBERRY calculation. The [Fukui Berry-curvature tutorial](features/fukui-berry-curvature/)
+explains how to prepare the VASP mesh, run VASPBERRY and draw this map.
+
+## Calculation guides
+
+| Quantity | System and sampling | Result |
 |---|---|---|
-| [Berry curvature / Chern](features/fukui-chern/) | Bi, full 12×12 SOC mesh, occupied bands 1–10 | Occupied-subspace Chern = 0 and native curvature map |
-| [Z₂](features/z2/) | The same full-mesh Bi WAVECAR | Z₂ = 1, matching half-zone parities and n-field figure |
-| [Kubo Berry curvature](features/kubo-curvature/) | MoS₂, SOC K–Γ–K′ path | Canonical-momentum curvature versus k; unresolved band degeneracies are marked |
-| [Charge Hall in an insulating gap](features/hall-valley/) | Bi, full mesh and occupied-subspace Fukui flux | Charge Hall = 0 in the verified gap, plus diagnostics |
-| [Circular optical response](features/circular-dichroism/) | MoS₂, the same actual SOC band-path WAVECAR | Left/right optical response and meaningful selectivity |
-| [Gamma wavefunction](features/wavefunction/) | MoS₂ WAVECAR with its matching POSCAR/EIGENVAL | A selected actual spinor state and real-space figure |
+| [Fukui Berry curvature](features/fukui-berry-curvature/) | MoS₂, full 12×12 mesh | Ωz(kx, ky) across the hexagonal Brillouin zone |
+| [Occupied Chern number](features/fukui-chern/) | Bi, full 12×12 mesh | C = 0 for occupied bands 1–10 |
+| [Z₂ invariant](features/z2/) | Bi, full 12×12 mesh | Z₂ = 1 |
+| [Kubo Berry curvature](features/kubo-curvature/) | MoS₂, K–Γ–K′ path | Band dispersion and band-resolved Ωz |
+| [Charge Hall conductivity](features/hall-valley/) | Bi, full mesh, T = 0 | Zero charge-Hall response in the insulating gap |
+| [Circular optical transitions](features/circular-dichroism/) | MoS₂, K–Γ–K′ path | Opposite polarization selectivity at K and K′ |
+| [Real-space wavefunction](features/wavefunction/) | MoS₂, Γ point | Spinor-state density in the atomic unit cell |
 
-Bi is time-reversal symmetric: a zero charge Chern/Hall result is the expected
-reference, while its Z₂ invariant is nontrivial. The Hall tutorial uses the
-occupied-subspace Fukui route because individual Bi bands have unresolved
-Kramers degeneracies. It does not present those bands as valid point-Kubo input.
-The MoS₂ line is useful for k-resolved plots; it cannot provide a full-BZ Hall
-integral or Chern number.
+Full-zone integrals require a complete periodic mesh. The supplied MoS₂
+band-path WAVECAR serves the Kubo, optical and wavefunction examples. The
+MoS₂ full-mesh WAVECAR is generated once using the supplied VASP preparation
+and public charge density; its size is about 149 MB. The full Bi WAVECAR is
+available for direct recalculation.
 
-## 2. Prepare the real input files
-
-The MoS₂ band-path WAVECAR, POSCAR and EIGENVAL are already in
-[`1H-MoS2/KPATH/2.band/`](1H-MoS2/KPATH/2.band/). The Bi WAVECAR is stored with
-Git LFS. Obtain its actual payload using either:
-
-```bash
-git lfs pull --include='examples/Bi_Z2/WAVECAR'
-```
-
-or the public, checksum-pinned download helper (Git LFS is not required):
-
-```bash
-python3 examples/fetch_inputs.py bi --output-dir results/inputs/bi
-```
-
-The latter creates `results/inputs/bi/WAVECAR` (200,421,600 bytes) and a download
-record. A tiny Git LFS pointer is not the input payload. Missing inputs stop
-the calculation; the runners never substitute an analytic model or an old
-output. Reference comparisons identify the input by checksum. See
-[input files and provenance](INPUTS.md).
-
-## 3. Run VASPBERRY and compare the reference
-
-Build once and install the plotting/analysis dependencies:
+## Getting started
 
 ```bash
 make serial
 python3 -m pip install -r requirements-transport.txt
 ```
 
-Open the selected tutorial above and follow its explicit production commands.
-For example, the Bi Z₂ calculation itself is:
+The [input guide](INPUTS.md) lists the files. For Bi, download the wavefunctions:
 
 ```bash
-mkdir -p results/bi-z2-manual
-(
-cd results/bi-z2-manual
-../../build/vaspberry-gfortran -f ../inputs/bi/WAVECAR -o NFIELD \
-  -z2 1 -kx 12 -ky 12 -s 2 -ii 1 -if 10
-)
+python3 examples/fetch_inputs.py bi --output-dir results/inputs/bi
 ```
 
-It writes `NFIELD.dat` and `Z2_FIELD.csv`. The
-[Z₂ tutorial](features/z2/) explains their required PASS status, expected
-values, plotting and comparison. Its `run.py` performs the same steps and
-records the commands, input hashes and checks:
+Each guide shows the native VASPBERRY command. A short Python helper also
+combines the calculation and plotting, for example:
 
 ```bash
-# From the repository root:
+python3 examples/features/kubo-curvature/run.py --output-dir results/mos2-kubo
 python3 examples/features/z2/run.py \
   --wavecar results/inputs/bi/WAVECAR --output-dir results/bi-z2
 ```
 
-Each feature's `reference/` contains original VASPBERRY numerical output (or a
-lossless compressed copy), a comparison summary, provenance, and a figure
-produced from that output. These are **fresh calculations using the stated
-real VASP input**, not illustrative model curves. See its README for exact
-comparison tolerances and for formatted-output precision limits.
+Results are written to the chosen directory. Compare the numerical tables
+and figures with the guide, then follow [applying the calculation to your
+material](APPLY_TO_YOUR_SYSTEM.md). Set the mesh, bands and energy window from
+your own VASP output.
 
-### Run the native calculation with MPI
+## Parallel calculation
 
-For native Fortran calculations, build the MPI executable and use the same
-physical options. For example, the actual MoS₂ Kubo calculation with two ranks:
+Native Fortran calculations can use MPI. For the MoS₂ Kubo example:
 
 ```bash
 make mpi
 mkdir -p results/mos2-kubo-mpi
 (
-cd results/mos2-kubo-mpi
-mpiexec -np 2 ../../build/vaspberry-mpi \
-  -f ../../examples/1H-MoS2/KPATH/2.band/WAVECAR \
-  -s 2 -kubo 2 -ii 17 -if 18 -kubo_csv KUBO.csv -o BERRYCURV
+  cd results/mos2-kubo-mpi
+  mpiexec -np 2 ../../build/vaspberry-mpi \
+    -f ../../examples/1H-MoS2/KPATH/2.band/WAVECAR \
+    -s 2 -kubo 2 -ii 17 -if 18 -kubo_csv KUBO.csv -o BERRYCURV
 )
 ```
 
-Follow the [Kubo tutorial](features/kubo-curvature/) for output interpretation
-and the unresolved-state mask. Python tutorial wrappers, plotting and the
-Python occupied-subspace Hall path are serial programs; do not launch a
-wrapper once per MPI rank. See the [build guide](../docs/BUILD.md).
+Python plotting and transport helpers run serially. See the
+[build guide](../docs/BUILD.md) for compiler-specific instructions.
 
-## 4. Apply it to your own system
+## Further material
 
-Follow [applying a tutorial to your material](APPLY_TO_YOUR_SYSTEM.md).
-Replace the input path in the underlying production command and set the mesh,
-spinor setting, bands and energy window from your own VASP calculation.
-The Bi and Kubo tutorial wrappers require their named reference input. The
-optical and wavefunction wrappers also accept compatible user data, with the
-checks and limits stated in their README. For general use, adapt the documented
-production command; do not change a reference checksum to bypass a check.
+- [Material preparation](materials/): structures, VASP settings and available files.
+- [Technical report](../docs/TECHNICAL_REPORT.md): methods, figures and interpretation.
+- [Supplementary references](../docs/REFERENCE_MATERIALS.md): analytic comparisons and teaching exercises.
+- [Validation details](../docs/VALIDATION_1.3.0.md): numerical and implementation checks.
 
-## Optional: run the complete reference set
-
-After fetching Bi through the helper:
+The six calculations with supplied WAVECAR files can also be run together:
 
 ```bash
-python3 examples/run_examples.py --list
-python3 examples/run_examples.py --all \
+python3 examples/run_examples.py \
+  fukui-chern z2 hall-valley kubo-curvature circular-dichroism wavefunction \
   --bi-wavecar results/inputs/bi/WAVECAR --output-dir results/all-examples
 ```
 
-With a full Git LFS checkout, omit `--bi-wavecar`. Each output directory must
-be new. The batch runner records commands, elapsed times, exit codes and logs;
-it also requires a matching successful result manifest. No real calculation
-is silently replaced with a stored-field check. CI runs this same real-input
-reference set and retains the outputs as an artifact.
-
-## Materials, plots and developer checks
-
-- [Material catalog](materials/): retained MoS₂/Bi files and preparation notes.
-- [Standalone Hall CSV plotting](kubo/): plots standardized transport output.
-- [Developer numerical checks](../validation/models/): analytic models,
-  synthetic states and historical field checks, kept outside user tutorials.
-- [Supplementary reference map](../docs/REFERENCE_MATERIALS.md): connect these
-  examples and method checks for hands-on documents and release technical reports.
-
-VASP `POTCAR` files are not distributed. The supplied outputs reproduce
-VASPBERRY postprocessing; consult each material's provenance before claiming
-an end-to-end reproduction of its original VASP SCF/NSCF calculation.
+After preparing the MoS₂ full mesh, include all seven calculations with
+`--all --mos2-mesh-wavecar /path/to/full-mesh/WAVECAR`, together with
+`--bi-wavecar` and a new `--output-dir`.

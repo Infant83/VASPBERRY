@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "method": "Independent production Python wavecar_fukui.py versus native Fortran FHS, same actual VASP WAVECAR and occupied subspace 1:18.",
+  "wavecar_sha256": "e1955a6b3562870edd67030d7e64cb59b6956c53db7259b25a6adee400fc9e10",
+  "fortran_source_sha256": "dc6674ddde8bd4c3064015ffcaba89d9ea150124f111925c63c90ab44a223df3",
+  "python_source_sha256": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e",
+  "comparison_plaquettes": 144,
+  "max_abs_curvature_difference_A2": 5.007246286581335e-05,
+  "curvature_comparison_tolerance_A2": 5.1e-05,
+  "tolerance_note": "Native output prints four decimal places; observed difference agrees with rounding to about 5e-5 A^2.",
+  "native_printed_chern": -5.008648237051601e-07,
+  "python_chern": 5.654319433712919e-16,
+  "python_diagnostics": {
+    "label": "occupied",
+    "bands": [
+      1,
+      18
+    ],
+    "chern": 5.654319433712919e-16,
+    "flux_min_rad": -0.38747623094797334,
+    "flux_max_rad": 0.3874757232997994,
+    "max_abs_flux_rad": 0.38747623094797334,
+    "min_link_singular_value": 0.7139680798771325,
+    "max_link_condition_number": 1.8537365161734924,
+    "min_plane_wave_coverage": 0.9779193205944798,
+    "plane_wave_coverage_required": 0.9,
+    "plane_wave_coverage_pass": true
+  },
+  "prepared_inputs_match_executed_inputs": true,
+  "line_wavecar_rejected": true,
+  "command": [
+    "python3",
+    "tools/wavecar_fukui.py",
+    "$VASP_NSCF/WAVECAR",
+    "--nx",
+    "12",
+    "--ny",
+    "12",
+    "--energy-band",
+    "19",
+    "--map",
+    "occupied=1:18",
+    "--output-dir",
+    "results/mos2-python-fukui"
+  ],
+  "output_sha256": {
+    "python/fukui_occupied.csv": "007b7f8457d2166c0a9b80a516503febb8ebc673cb5caf62f3c500d2d4f43f59",
+    "python/diagnostics.json": "60d60d2cf1abbfe2f59835706a34e3a3f65276ba5cf814f62a00965924d338aa"
+  }
+}

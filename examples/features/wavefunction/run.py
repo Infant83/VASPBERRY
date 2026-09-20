@@ -151,17 +151,26 @@ def main():
                               "reference": "reference/summary.csv"}
             else:
                 comparison = {"status": "NOT_APPLICABLE", "reason": "different input/state; no MoS2 numerical match asserted"}
-        fig, axes = plt.subplots(1, 2, figsize=(9.6, 4), constrained_layout=True)
+        fig, axes = plt.subplots(1, 2, figsize=(8.0, 3.6), constrained_layout=True)
         projection = density.mean(axis=0)*lattice[2, 2]
-        artist = axes[0].imshow(projection, origin="lower", extent=(0, 1, 0, 1), interpolation="nearest", cmap="viridis")
-        axes[0].set(xlabel="Fraction along a₁", ylabel="Fraction along a₂", title="Density integrated along z")
-        fig.colorbar(artist, ax=axes[0], label="Pseudo-density (Å⁻²)", shrink=.82)
+        # Draw the oblique real-space cell with its Cartesian metric. Close
+        # periodic endpoint values explicitly; do not distort the cell to a square.
+        u, v = np.meshgrid(np.arange(grid[0]+1)/grid[0], np.arange(grid[1]+1)/grid[1])
+        x = u*lattice[0, 0] + v*lattice[1, 0]
+        y = u*lattice[0, 1] + v*lattice[1, 1]
+        periodic = np.pad(projection, ((0, 1), (0, 1)), mode="wrap")
+        artist = axes[0].pcolormesh(x, y, periodic, shading="gouraud", cmap="viridis", rasterized=True)
+        cell = np.array([[0., 0.], lattice[0, :2], (lattice[0]+lattice[1])[:2], lattice[1, :2], [0., 0.]])
+        axes[0].plot(cell[:, 0], cell[:, 1], color="0.2", linewidth=.8)
+        axes[0].set(xlabel="x (Å)", ylabel="y (Å)", title="(a)  Projected state density", aspect="equal")
+        fig.colorbar(artist, ax=axes[0], label=r"$\int |\psi|^2\,dz$ ($\mathrm{\AA}^{-2}$)", shrink=.82)
         z = np.arange(grid[2])*lattice[2, 2]/grid[2]
         axes[1].plot(z, density.mean(axis=(1, 2)), color="#265d92", linewidth=2)
-        axes[1].set(xlabel="z (Å)", ylabel="Plane-averaged pseudo-density (Å⁻³)", title="Both spinor components included")
-        axes[1].grid(alpha=.2)
-        fig.suptitle(f"{material.replace('MoS2', 'MoS₂')} · VASPBERRY -wf {args.band} -k {args.k_index} · Γ")
-        fig.savefig(out / "figure.png", dpi=170)
+        axes[1].set(xlabel="z (Å)", ylabel=r"$\langle |\psi|^2\rangle_{xy}$ ($\mathrm{\AA}^{-3}$)",
+                    title="(b)  Plane-averaged density", xlim=(0, lattice[2, 2]), ylim=(0, None))
+        axes[1].tick_params(direction="in", top=True, right=True)
+        fig.savefig(out / "figure.png", dpi=240)
+        fig.savefig(out / "figure.pdf")
         plt.close(fig)
         report.update(status="PASS", grid=grid, k_fractional=wavecar.kpoints[ik].tolist(),
                       state_energy_eV=float(wavecar.energies[ik, args.band-1]), cell_volume_A3=volume,
@@ -169,7 +178,7 @@ def main():
                       fft_comparison_max_error_inv_A_three_halves=error, fft_absolute_tolerance=1e-6,
                       raw_output_convention="raw = sqrt(V) * sum_G c_G exp(i G.r); psi_pseudo = raw / V",
                       reference_comparison=comparison,
-                      output_sha256={p.name: sha(p) for p in (out / "summary.csv", out / "figure.png")})
+                      output_sha256={p.name: sha(p) for p in (out / "summary.csv", out / "figure.png", out / "figure.pdf")})
         if {name: sha(p) for name, p in inputs.items()} != report["provenance"]["input_sha256"]:
             raise AssertionError("VASP inputs changed during calculation")
     except Exception as exc:

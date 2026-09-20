@@ -22,6 +22,8 @@ def export_reference(run_dir, destination):
         raise ValueError("only a successful actual-WAVECAR calculation can become a reference")
     feature = result["feature_id"]
     mapping = {name: name for name in ("summary.csv", "figure.png")}
+    if (run_dir / "figure.pdf").is_file():
+        mapping["figure.pdf"] = "figure.pdf"
     if feature == "kubo-curvature":
         mapping["native/KUBO.csv"] = "KUBO.csv"
     elif feature == "hall-valley":

@@ -69,8 +69,15 @@
     "Z2_FIELD.csv": "62c969a74d3611d023c6966959e233bfcb788acde4f61c07d2e8c6dfad0c2999",
     "band_edges.csv": "1fe1473cde6c4b71338365117683ef15edca31fbfa2419071c20e50bf6931892",
     "summary.csv": "20b2b08f1090d395acff7c90558ac0601bbb61b255e96329f0e9346a4d6a263a",
-    "figure.png": "4c933c7b69555891307e77b4dd69755f51e25f1debe01a1679730053d132524a",
+    "figure.png": "dcba7a270d8993dd8c5d72b8ce0ddd94e0c7ea0c4fa5eef9dbb1b5b7624d4da6",
     "fortran.log": "a71d588479528f1f5596c8b82b453894a9b360bafeb124f1809dc32396f85b49",
-    "command.json": "46c0fca82ac97057a9a8d120f0104428551981946326f22f74dc334457ac945e"
+    "command.json": "46c0fca82ac97057a9a8d120f0104428551981946326f22f74dc334457ac945e",
+    "figure.pdf": "dc9231d835b693b7fae06197403637db8d91f23e85fd8f0fce558e4338e7bab8",
+    "plotting.json": "b2fe59ef40e62cbcd958276636ba76db0452cc924b05866f997a9f927345dc9d"
+  },
+  "figure_provenance": {
+    "workflow_mode": "plot_existing_native_output",
+    "record": "plotting.json",
+    "note": "Only figures were redrawn on 2026-09-20; the recorded VASP/VASPBERRY numerical calculation is unchanged."
   }
 }

@@ -26,12 +26,17 @@ class FeatureExamplesTests(unittest.TestCase):
         self.assertEqual(catalog["schema_version"], 1)
         ids = [item["id"] for item in catalog["features"]]
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(set(ids), {"fukui-chern", "kubo-curvature", "hall-valley",
+        self.assertEqual(set(ids), {"fukui-berry-curvature", "fukui-chern", "kubo-curvature", "hall-valley",
                                     "z2", "circular-dichroism", "wavefunction"})
         for item in catalog["features"]:
             with self.subTest(feature=item["id"]):
-                for name in ("readme", "runner", "input"):
+                for name in ("readme", "runner"):
                     self.assertTrue((EXAMPLES / item[name]).is_file(), item[name])
+                if item.get("input_preparation"):
+                    self.assertTrue((EXAMPLES / item["input_preparation"]).is_file())
+                    self.assertFalse(item["input_bundled"])
+                else:
+                    self.assertTrue((EXAMPLES / item["input"]).is_file(), item["input"])
                 reference = EXAMPLES / item["reference"]
                 for name in item["required_outputs"]:
                     self.assertTrue((reference / name).is_file(), str(reference / name))
@@ -125,6 +130,17 @@ class FeatureExamplesTests(unittest.TestCase):
             run = self.run_cli("hall-valley", "--bi-wavecar", pointer, "--output-dir", out)
             self.assertNotEqual(run.returncode, 0)
             self.assertIn("LFS pointer", run.stderr)
+            self.assertFalse(out.exists())
+
+    def test_missing_full_mos2_mesh_points_to_vasp_preparation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "unused"
+            # Use an existing file for the executable preflight; it must not run.
+            run = self.run_cli("fukui-berry-curvature", "--binary", RUNNER,
+                               "--mos2-mesh-wavecar", Path(tmp) / "WAVECAR",
+                               "--output-dir", out)
+            self.assertNotEqual(run.returncode, 0)
+            self.assertIn("fukui-berry-curvature/inputs/README.md", run.stderr)
             self.assertFalse(out.exists())
 
     def test_zero_exit_rejected_result_is_not_reported_as_pass(self):

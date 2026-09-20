@@ -45,9 +45,9 @@
     "input_sha256": {
       "WAVECAR": "33f8546512856d6c04ad0a80454b18ac9b60e2af4b98f2f85b376ec49b1a8d9f"
     },
-    "script_sha256": "3b575949d25c03dba437f654327f808deedcfd9eb68eab29488e3ee33a608d1c",
+    "script_sha256": "78389e8ea35181d3b7c6e7ee3d2d021c3eb4e4ffb0a486eaa49f0fbb02c51f9b",
     "local_analysis_source_sha256": {
-      "run.py": "3b575949d25c03dba437f654327f808deedcfd9eb68eab29488e3ee33a608d1c",
+      "run.py": "78389e8ea35181d3b7c6e7ee3d2d021c3eb4e4ffb0a486eaa49f0fbb02c51f9b",
       "tools/wavecar_fukui.py": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e"
     },
     "analysis_checkout_version": "1.3.0",
@@ -98,13 +98,13 @@
   "last_k_peak_selectivity": 1.0,
   "output_sha256": {
     "summary.csv": "99b35dc9da7ae4fd97bb7a50ff5608bdf6d953187b343a29720ce6c2e0fba4e6",
-    "figure.png": "928043eff428f5b106743d6c88d3a60aef709984cb5b021cfd78a8dbad2b92bc"
+    "figure.png": "bc0bbe001b2769f3b62a8f1d21b54c212d96a472443cb548d0f5b68c4c2c9dc1",
+    "figure.pdf": "f0125b15f9f6fae3a19cc83bf737bc1cdc119a763ea839ff5bb9f05c7e4ef61e"
   },
-  "wall_seconds": 1.8361078051384538,
+  "wall_seconds": 3.035508146043867,
   "reference_generation": {
-    "date": "2026-09-19",
-    "source_base_commit": "18c0a1117923dd2b3001dc56f6202b8f41c0426e",
-    "procedure": "Execute run.py against the public VASP input, retain raw outputs, CSV, figure and provenance."
+    "date": "2026-09-20",
+    "procedure": "Repeat the same native VASPBERRY calculation; compare unchanged numerical outputs and produce Cartesian scientific figures."
   },
   "raw_output_sha256": {
     "CIRC_DICHROISM_W.optical_LEFT.dat": "19050fa637e9f15d64246b47e9ee131d2b5e3397000587fc19bb6a00b630f1d9",
@@ -208,21 +208,5 @@
     "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "stdout.log": "a8f70816fe91cb2692e2f63203c680f3b40cddcea14a7f7d0f2d41378bebee59"
   },
-  "raw_archive_sha256": "8b54948bcddb3ac09342ca715c5877cc536373c2e9744bae63e5ae67fb6a9af3",
-  "independent_formula_audit": {
-    "k_indices": [
-      1,
-      2,
-      13,
-      24,
-      25,
-      36,
-      47,
-      48
-    ],
-    "max_absolute_error_au": 4.991e-05,
-    "absolute_tolerance_au": 5.1e-05,
-    "formula": "sum_cv |p_x +/- i*p_y|^2 * Gaussian(w-Ec+Ev,sigma)/(Nk*w^2)",
-    "status": "PASS"
-  }
+  "raw_archive_sha256": "8b54948bcddb3ac09342ca715c5877cc536373c2e9744bae63e5ae67fb6a9af3"
 }

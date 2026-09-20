@@ -5,9 +5,9 @@ Material folders retain their existing paths. Feature tutorials in
 
 | Material / sampling | Available data | Reproduction boundary | Related feature |
 |---|---|---|---|
-| [1H-MoS₂, full 12 × 12 mesh](../1H-MoS2/) | Stored Berry-curvature maps and plotting scripts | Replot stored maps; regenerate a full-mesh SOC WAVECAR to recalculate | [Fukui/Chern](../features/fukui-chern/), [Kubo](../features/kubo-curvature/) |
+| [1H-MoS₂, full 12 × 12 mesh](../1H-MoS2/) | Public charge density, NSCF inputs and freshly calculated curvature | Generate the full-mesh SOC WAVECAR with VASP, then run VASPBERRY | [Fukui curvature](../features/fukui-berry-curvature/) |
 | [1H-MoS₂, K–Γ–K′ line](../1H-MoS2/KPATH/) | Line WAVECAR, EIGENVAL and plot data | A band-path example; no full-BZ Chern or Hall integral | [Kubo](../features/kubo-curvature/), [optical](../features/circular-dichroism/), [wavefunction](../features/wavefunction/) |
-| [Bi buckled honeycomb, 12 × 12 mesh](../Bi_Z2/) | Reviewed input templates, schema-2 Z₂ field, figure and historical archive | New Fukui/Z₂/gap-Hall calculations from the Git LFS WAVECAR payload | [Fukui](../features/fukui-chern/), [Z₂](../features/z2/), [Hall](../features/hall-valley/) |
+| [Bi buckled honeycomb, 12 × 12 mesh](../Bi_Z2/) | Input templates, wavefunctions, topological results and figures | New Fukui/Z₂/gap-Hall calculations from the Git LFS WAVECAR payload | [Fukui](../features/fukui-chern/), [Z₂](../features/z2/), [Hall](../features/hall-valley/) |
 
 The Bi `WAVECAR` is a Git LFS object of 200,421,600 bytes. A small text pointer
 is not the wavefunction payload. If Git LFS is available, retrieve this one

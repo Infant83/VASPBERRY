@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import csv
+import argparse
+import json
 from pathlib import Path
 import sys
 
@@ -14,9 +16,11 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 sys.path.insert(0, str(ROOT / "examples/features/fukui-chern"))
-from bi_common import arguments, execute, write_result
+from bi_common import arguments, execute, write_result, wavecar_geometry, sha
 sys.path.insert(0, str(ROOT / "examples/Bi_Z2/scripts"))
-from plot_nfield import read_field, validate_result, half_sums, integer_style, draw_field
+from plot_nfield import read_field, validate_result, half_sums, integer_style
+sys.path.insert(0, str(ROOT / "tools"))
+from plot_berry_curvature import draw_plaquette_map, reciprocal_from_poscar
 
 def validate_rows(path):
     field, metadata = read_field(path)
@@ -68,6 +72,54 @@ def validate_rows(path):
                             'half_bottom_sum': half_sums(field)[1], **recomputed}
 
 
+def make_figure(source, reciprocal, output):
+    """Draw categorical n-field values on the physical reciprocal-cell geometry."""
+    field, metadata, summary = validate_rows(Path(source))
+    with Path(source).open() as handle:
+        rows = list(csv.DictReader(line for line in handle if not line.startswith("#")))
+    q = np.array([[float(row[key]) for key in ("q1", "q2", "q3")] for row in rows])
+    cartesian = np.array([[float(row[key]) for key in ("kx_A-1", "ky_A-1", "kz_A-1")] for row in rows])
+    # Legacy reciprocal-vector conversion differs from exact 2*pi by ~3e-8
+    # relative; retain compatibility while rejecting a mismatched lattice.
+    if not np.allclose(cartesian, q @ reciprocal, atol=1e-7, rtol=1e-7):
+        raise ValueError("Z2 field coordinates disagree with the supplied lattice")
+    values = np.array([int(row["nfield_int"]) for row in rows])
+    cmap, norm, legend = integer_style(field)
+    with plt.rc_context({"font.size": 11, "axes.titlesize": 13, "axes.linewidth": .8}):
+        fig, ax = plt.subplots(figsize=(5.2, 4.5), layout="constrained")
+        artist, info = draw_plaquette_map(ax, q, values, reciprocal,
+                                        mesh=(summary["mesh_nx"], summary["mesh_ny"]), cmap=cmap, norm=norm)
+        ax.set_title(r"Bi: $Z_2=" + str(summary["z2"]) + r"$", pad=11)
+        colorbar = fig.colorbar(artist, ax=ax, shrink=.72, pad=.035, ticks=sorted(set(values)))
+        colorbar.set_label(r"Integer field $n(\mathbf{k})$")
+        fig.savefig(output, dpi=300)
+        plt.close(fig)
+    info.update(quantity="Fukui-Hatsugai integer n-field", source_field_sha256=sha(source),
+                plotter_sha256=sha(ROOT / "tools/plot_berry_curvature.py"),
+                note="Gauge-dependent integer plaquette field; not a local observable Berry curvature.")
+    return info
+
+
+def plot_existing():
+    parser = argparse.ArgumentParser(description="Plot an existing Z2_FIELD.csv in Cartesian reciprocal space")
+    parser.add_argument("--plot-only", type=Path, required=True, help="existing reportable Z2_FIELD.csv")
+    parser.add_argument("--poscar", type=Path, required=True, help="matching lattice POSCAR")
+    parser.add_argument("--figure", type=Path, required=True, help="new PNG/PDF/SVG figure")
+    args = parser.parse_args()
+    record = args.figure.with_suffix(args.figure.suffix + ".json")
+    if args.figure.exists() or record.exists():
+        parser.error("figure output exists; choose a new filename")
+    args.figure.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        info = make_figure(args.plot_only, reciprocal_from_poscar(args.poscar), args.figure)
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
+    info.update(workflow_mode="plot_existing_native_output", poscar_sha256=sha(args.poscar),
+                figure_sha256=sha(args.figure))
+    record.write_text(json.dumps(info, indent=2) + "\n")
+    print(args.figure)
+
+
 def main():
     args = arguments(__doc__)
     out, provenance, edges, gaps = execute(args, "z2", ["-o", "NFIELD", "-z2", "1"])
@@ -80,16 +132,9 @@ def main():
     if [summary["half_top_sum"], summary["half_bottom_sum"]] != [-3, 3]:
         raise ValueError("public input n-field differs from its reference; inspect the field and numerical diagnostics")
     summary.update(gaps)
-    cmap, norm, legend = integer_style(field)
-    fig, ax = plt.subplots(figsize=(6.4, 6.2))
-    draw_field(ax, field, "Bi: actual VASPBERRY calculation from WAVECAR", cmap, norm,
-               (summary["half_top_sum"], summary["half_bottom_sum"]))
-    fig.subplots_adjust(left=.14, right=.95, bottom=.19, top=.79)
-    fig.legend(handles=legend, loc="lower center", bbox_to_anchor=(.5, .065), ncol=3, frameon=False)
-    fig.suptitle("Bi 12 × 12 SOC · Fukui-Hatsugai Z2 = 1", y=.96, fontsize=15)
-    fig.text(.5, .015, "Pointwise n-field is gauge dependent; the half-zone parity is the invariant.\n"
-             "Fresh post-processing of the public VASP 5.4.1 spinor WAVECAR.", ha="center", fontsize=9)
-    fig.savefig(out / "figure.png", dpi=180, bbox_inches="tight"); plt.close(fig)
+    _, reciprocal = wavecar_geometry(args.wavecar)
+    provenance["figure"] = make_figure(out / "Z2_FIELD.csv", reciprocal, out / "figure.png")
+    make_figure(out / "Z2_FIELD.csv", reciprocal, out / "figure.pdf")
     write_result(out, "z2", provenance, summary, ["NFIELD.dat", "Z2_FIELD.csv"], [
         "Real archived VASP input; reproduces VASPBERRY postprocessing, not an end-to-end new VASP calculation.",
         "The pointwise n-field is gauge and branch dependent; the agreed half-zone parity is the reported invariant.",
@@ -98,4 +143,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    plot_existing() if "--plot-only" in sys.argv else main()

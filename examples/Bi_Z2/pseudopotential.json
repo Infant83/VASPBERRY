@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "potcar_sha256": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489",
+  "source": "Reference calculation and licensed PAW-PBE library",
+  "species_order": [
+    "Bi"
+  ]
+}

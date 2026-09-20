@@ -1,6 +1,6 @@
 # Local validation of the 1.3.0 development candidate
 
-Checked on 2026-09-19. This is a local source validation, not a hosted release
+Initial checks on 2026-09-19; scientific examples updated on 2026-09-20. This is a local source validation, not a hosted release
 or a completed material-convergence study.
 
 ## Reproducible public checks
@@ -40,7 +40,8 @@ against its pinned 200,421,600-byte SHA-256 payload.
 ```bash
 make serial
 python3 examples/fetch_inputs.py bi --output-dir results/inputs/bi
-python3 examples/run_examples.py --all \
+python3 examples/run_examples.py \
+  fukui-chern z2 hall-valley kubo-curvature circular-dichroism wavefunction \
   --bi-wavecar results/inputs/bi/WAVECAR --output-dir results/feature-examples
 python3 -m unittest discover -s tests -v
 ```
@@ -74,6 +75,34 @@ remain unchanged. Bi is a zero charge-Hall sanity check, not a nonzero-Chern
 or valley-Hall material demonstration. The MoS₂ path cannot supply a BZ
 integral. Native canonical momentum does not include all PAW/nonlocal/SOC
 velocity terms.
+
+## Cartesian figures and full-zone MoS₂ example
+
+The 2026-09-20 update adds a seventh real-material tutorial: occupied-subspace
+Fukui curvature on a full 12×12 MoS₂ mesh. VASP 5.4.4 regenerated the 26-band
+SOC WAVECAR from the public charge density and matching licensed potentials.
+The fixed-charge run converged in eight electronic iterations (about 144 s,
+peak resident memory 602 MB on the measured machine). Its minimum direct and
+global gaps are approximately 1.674 eV.
+
+Native VASPBERRY gives curvature extrema −12.3125 and +12.3124 Å²; integration
+of the rounded text map gives C ≈ −5.0e−7. An independent Python overlap
+calculation gives C ≈ 5.65e−16, with minimum link singular value 0.714 and
+minimum plane-wave coverage 0.978. The historical MoS₂ map is retained as a
+separate reference and is not claimed to be identical to the regenerated NSCF
+calculation.
+
+The final local suite passed **252 tests** with no skips. The first-BZ plotter
+preserves native plaquette values and Cartesian lattice geometry. Geometry tests cover hexagonal and square cells, skew and rotated
+bases, reversed orientation, area preservation, malformed meshes and lattice
+mismatches. Existing Bi native outputs and the six earlier numerical reference
+tables remain unchanged; the figure updates affect presentation only.
+
+The seventh tutorial requires a locally generated VASP mesh. Public CI runs
+the six tutorials with downloadable wavefunctions and tests the seventh
+workflow's discovery/input checks. The [scientific report](TECHNICAL_REPORT.md)
+and [MoS₂ tutorial](../examples/features/fukui-berry-curvature/) show the
+resulting figures and the complete VASP preparation commands.
 
 ## Separate developer checks and historical wavefunction fix
 
