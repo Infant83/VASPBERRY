@@ -18,9 +18,9 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(ROOT / "examples/features/fukui-chern"))
 from bi_common import arguments, execute, write_result, wavecar_geometry, sha
 sys.path.insert(0, str(ROOT / "examples/Bi_Z2/scripts"))
-from plot_nfield import read_field, validate_result, half_sums, integer_style
+from plot_nfield import read_field, validate_result, half_sums, integer_style, grid
 sys.path.insert(0, str(ROOT / "tools"))
-from plot_berry_curvature import draw_plaquette_map, reciprocal_from_poscar
+from plot_berry_curvature import reciprocal_from_poscar
 
 def validate_rows(path):
     field, metadata = read_field(path)
@@ -73,7 +73,7 @@ def validate_rows(path):
 
 
 def make_figure(source, reciprocal, output):
-    """Draw categorical n-field values on the physical reciprocal-cell geometry."""
+    """Draw native n-field plaquettes and half zones in reduced coordinates."""
     field, metadata, summary = validate_rows(Path(source))
     with Path(source).open() as handle:
         rows = list(csv.DictReader(line for line in handle if not line.startswith("#")))
@@ -83,25 +83,42 @@ def make_figure(source, reciprocal, output):
     # relative; retain compatibility while rejecting a mismatched lattice.
     if not np.allclose(cartesian, q @ reciprocal, atol=1e-7, rtol=1e-7):
         raise ValueError("Z2 field coordinates disagree with the supplied lattice")
-    values = np.array([int(row["nfield_int"]) for row in rows])
-    cmap, norm, legend = integer_style(field)
+    xs, ys, values = grid(field)
+    nx, ny = summary["mesh_nx"], summary["mesh_ny"]
+    xedges = np.linspace(-.5, .5, nx + 1)
+    yedges = np.linspace(-.5, .5, ny + 1)
+    if (not np.allclose(xs, (xedges[:-1] + xedges[1:]) / 2, atol=1e-6, rtol=0)
+            or not np.allclose(ys, (yedges[:-1] + yedges[1:]) / 2, atol=1e-6, rtol=0)):
+        raise ValueError("reduced n-field plot requires an unshifted uniform plaquette mesh")
+    cmap, norm, _ = integer_style(field)
     with plt.rc_context({"font.size": 11, "axes.titlesize": 13, "axes.linewidth": .8}):
         fig, ax = plt.subplots(figsize=(5.2, 4.5), layout="constrained")
-        artist, info = draw_plaquette_map(ax, q, values, reciprocal,
-                                        mesh=(summary["mesh_nx"], summary["mesh_ny"]), cmap=cmap, norm=norm)
+        artist = ax.pcolormesh(xedges, yedges, values, cmap=cmap, norm=norm,
+                              edgecolors="#d9d9d9", linewidth=.4, shading="flat",
+                              antialiased=False)
+        ax.axhline(0, color="#222222", linewidth=1.4)
+        ax.set(xlim=(-.5, .5), ylim=(-.5, .5), aspect="equal",
+               xlabel=r"Reduced $q_1$", ylabel=r"Reduced $q_2$")
+        ax.set_xticks([-.5, -.25, 0, .25, .5])
+        ax.set_yticks([-.5, -.25, 0, .25, .5])
         ax.set_title(r"Bi: $Z_2=" + str(summary["z2"]) + r"$", pad=11)
-        colorbar = fig.colorbar(artist, ax=ax, shrink=.72, pad=.035, ticks=sorted(set(values)))
+        colorbar = fig.colorbar(artist, ax=ax, shrink=.72, pad=.035, ticks=np.unique(values))
         colorbar.set_label(r"Integer field $n(\mathbf{k})$")
         fig.savefig(output, dpi=300)
         plt.close(fig)
-    info.update(quantity="Fukui-Hatsugai integer n-field", source_field_sha256=sha(source),
-                plotter_sha256=sha(ROOT / "tools/plot_berry_curvature.py"),
+    info = dict(mesh=[nx, ny], rendering="constant_native_plaquettes_in_reduced_coordinates",
+                interpolation="none", axes="Dimensionless reduced q1, q2",
+                coordinate_definition="k = q1*b1 + q2*b2", domain=[[-.5, .5], [-.5, .5]],
+                half_zone_boundary="q2 = 0", half_top_sum=summary["half_top_sum"],
+                half_bottom_sum=summary["half_bottom_sum"],
+                quantity="Fukui-Hatsugai integer n-field", source_field_sha256=sha(source),
+                plotter_sha256=sha(Path(__file__)),
                 note="Gauge-dependent integer plaquette field; not a local observable Berry curvature.")
     return info
 
 
 def plot_existing():
-    parser = argparse.ArgumentParser(description="Plot an existing Z2_FIELD.csv in Cartesian reciprocal space")
+    parser = argparse.ArgumentParser(description="Plot an existing Z2_FIELD.csv in reduced reciprocal coordinates")
     parser.add_argument("--plot-only", type=Path, required=True, help="existing reportable Z2_FIELD.csv")
     parser.add_argument("--poscar", type=Path, required=True, help="matching lattice POSCAR")
     parser.add_argument("--figure", type=Path, required=True, help="new PNG/PDF/SVG figure")

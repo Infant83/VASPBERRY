@@ -8,9 +8,10 @@ VASPBERRY evaluates geometric and response properties from VASP electronic
 states. This report illustrates the discrete-wavefunction and Kubo approaches
 with monolayer MoS₂ and a Bi bilayer. The examples cover reciprocal-space Berry
 curvature, Chern and Z₂ indices, intrinsic charge Hall response, circular
-optical transitions and real-space spinor densities. Figures use physical
-Cartesian coordinates or distances along named high-symmetry paths; the
-associated calculation guides provide the VASP files and executable commands.
+optical transitions and real-space spinor densities. Berry-curvature maps use
+Cartesian coordinates, band paths use distances along named high-symmetry
+directions, and the Z₂ n-field is shown in reduced coordinates to display its
+half-zone sums. The calculation guides provide the VASP files and executable commands.
 
 ## 1. Methods
 
@@ -170,18 +171,18 @@ $$
 **Figure 4.** Fukui–Hatsugai integer field $n(\mathbf k)$ calculated from the
 Bi VASP spinor wavefunctions. Red, white and blue denote +1, 0 and −1,
 respectively. The native plaquettes are displayed without interpolation in
-the hexagonal first Brillouin zone, with Cartesian $k_x,k_y$ axes in Å⁻¹.
-The occupied-band calculation gives **Z₂ = 1**.
+dimensionless reduced coordinates, $\mathbf k=q_1\mathbf b_1+q_2\mathbf b_2$,
+with opposite edges periodically identified. The line at $q_2=0$ separates
+the upper and lower half zones. The occupied-band calculation gives **Z₂ = 1**.
 
-The two complementary half-zone sums are **−3 and +3**. Both are odd,
+The upper and lower half-zone sums are **−3 and +3**, respectively. Both are odd,
 so their parities agree at **$\nu=1$**, identifying the nontrivial
 time-reversal-symmetric insulating phase for this calculation.
 The sampled minimum direct and global gaps are **0.592 eV** and **0.510 eV**.
 
 The local n-field depends on the gauge and logarithm branch; its half-zone
-parity is the invariant. The sums above use the original mesh half-zones.
-Folding the plaquettes into the hexagonal display does not redefine those
-summation domains. The separate occupied **C = 0** and zero charge-Hall
+parity is the invariant. The reduced-coordinate map shows the original mesh
+half-zones used for these sums. The separate occupied **C = 0** and zero charge-Hall
 response are consistent with this nontrivial Z₂ result.
 
 [Z₂ calculation and plotting guide](../examples/features/z2/) ·

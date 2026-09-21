@@ -61,17 +61,19 @@ python3 examples/features/z2/run.py \
   --figure results/bi-z2/nfield.png
 ```
 
-![Bi Z2 integer field in its Cartesian first Brillouin zone](reference/figure.png)
+![Bi Z2 integer field in reduced reciprocal coordinates](reference/figure.png)
 
-The axes are Cartesian **kx and ky in Å⁻¹**, with equal scales and the
-hexagonal Wigner–Seitz first Brillouin zone. Each tile shows its computed
-integer n(k); the categorical colors are not interpolated. K is `(1/3, 2/3)`
-and K′ is its time-reversed partner.
+The dimensionless reduced coordinates satisfy **k = q₁b₁ + q₂b₂**, where b₁
+and b₂ are reciprocal lattice vectors. The square covers −1/2 ≤ q₁, q₂ ≤ 1/2,
+with opposite edges periodically identified. Each tile shows the computed
+integer n(k) of one native plaquette, without interpolation. The horizontal
+line at q₂ = 0 separates the two half zones: the upper sum is **−3** and the
+lower sum is **+3**, both giving **Z₂ = 1**.
 
 **The integer field is gauge and branch dependent.** Its local appearance is
 not a measurable Berry-curvature distribution. Z₂ comes from the agreed
-half-zone parity in the original calculation; folding the plot into the
-hexagon does not redefine the half zones used for that calculation.
+half-zone parity in the original calculation. The reduced-coordinate display
+shows those summation domains directly.
 
 [Full field CSV](reference/Z2_FIELD.csv) ·
 [Native n-field output](reference/NFIELD.dat) ·
