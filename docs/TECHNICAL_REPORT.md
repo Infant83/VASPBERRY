@@ -63,6 +63,20 @@ canonical momentum of the stored pseudo-wavefunctions; full material velocity
 can require PAW, nonlocal and SOC terms. The exported-matrix interface permits
 an explicitly supplied physical operator.
 
+For an isolated occupied bundle $\mathcal V$, the trace curvature is
+
+$$
+\Omega^{\mathcal V}_{xy}=-2\,\mathrm{Im}
+\sum_{n\in\mathcal V}\sum_{m\notin\mathcal V}
+\frac{D_{x,nm}D_{y,mn}}{(E_n-E_m)^2}.
+$$
+
+Internal occupied-pair terms cancel in the sum of band curvatures. Excluding
+them before division avoids singular individual-band terms at internal
+degeneracies. The bundle must remain separated from the excluded bands.
+This occupied-to-unoccupied formulation and its numerical advantage are
+given by [Wang et al., Eq. (11) and Sec. III D](https://doi.org/10.1103/PhysRevB.74.195118).
+
 For a two-dimensional system, the intrinsic charge sheet conductivity is
 
 $$
@@ -82,8 +96,9 @@ it does not assign independent curvatures to unresolved Kramers partners.
 
 | Dataset | Wavefunctions and sampling | Quantities shown |
 |---|---|---|
-| Monolayer MoS₂, full zone | SOC; 12×12 mesh; 26 bands; 400 eV | Fukui occupied-group and Kubo band-18 curvature maps |
+| Monolayer MoS₂, full zone | SOC; 12×12 mesh; 26 bands; 400 eV | Fukui and Kubo occupied-bundle curvature, bands 1–18 |
 | Monolayer MoS₂, matching path | SOC; 49 K–Γ–K′ points; 26 bands; 400 eV | Band structure and Kubo curvature beside the maps |
+| Monolayer MoS₂, local valleys | SOC; two 9×9 patches; 26 bands; 400 eV | Isolated band-18 curvature near K and K′ |
 | Monolayer MoS₂, supplied path | SOC; 48 K–Γ–K′ points; 32 bands; 400 eV | Optical spectra and Γ-point state density |
 | Buckled Bi bilayer | SOC; full 12×12 mesh; 18 bands; occupied bands 1–10 | Fukui–Hatsugai n-field and Z₂ invariant |
 
@@ -99,12 +114,13 @@ The optical and real-space examples retain the separate supplied 32-band path.
 
 ### 3.1 MoS₂: Fukui Berry curvature over the full Brillouin zone
 
-![Fukui Berry curvature map, band structure and symmetry-path cut](../examples/features/fukui-berry-curvature/reference/map-path/figure.png)
+![Fukui Berry curvature map, band structure and symmetry-path cut](../examples/features/fukui-berry-curvature/reference/smooth/figure.png)
 
 **Figure 1.** (a) Fukui Berry curvature of occupied bands 1–18 in the
 Cartesian first Brillouin zone. The dashed line marks K–Γ–K′, with
 K = (1/3, 2/3) and K′ = −K in reciprocal coordinates. Native 12×12 plaquette
-values are shown without smoothing. (b) Band structure along that path;
+values are displayed with periodic bilinear interpolation onto a 401×401
+Cartesian grid. (b) Band structure along that path;
 energies are relative to the valence-band maximum, with occupied bands in
 blue and empty bands in gray. (c) A periodic bilinear cut of the plaquette
 field along the marked path. This line visualizes panel (a), rather than
@@ -123,38 +139,60 @@ The present map is a finite-mesh example rather than a convergence study.
 
 [Calculation and plotting commands](../examples/features/fukui-berry-curvature/)
 
-### 3.2 MoS₂: Kubo curvature in the Brillouin zone and along K–Γ–K′
+### 3.2 MoS₂: Kubo curvature of the occupied valence-band bundle
 
-![MoS2 Kubo curvature map, band structure and symmetry-path curvature](../examples/features/kubo-curvature/reference/map-path/figure.png)
+![MoS2 occupied-bundle Kubo curvature map, band structure and symmetry-path curvature](../examples/features/kubo-curvature/reference/bundle/figure.png)
 
-**Figure 2.** (a) Canonical-momentum Kubo curvature of band 18 on the
-12×12 mesh, using intermediate bands 1–26. Each colored cell represents one
-k-point sample. The dashed K–Γ–K′ path is the same as in Figure 1.
-(b) Band structure along the path, with band 18 highlighted in orange.
-(c) Kubo curvature calculated directly at the 49 path points, using the
-same intermediate-band window. Gray map cells and gaps in the curve mark
-states with a nearest-band separation of at most $10^{-5}$ eV. These
-unresolved individual-band values are omitted from both panels.
+**Figure 2.** (a) Canonical-momentum Kubo trace curvature of occupied bands
+1–18 on the 12×12 mesh. Only transitions to the stored empty bands 19–26
+enter the sum. The map uses the same periodic bilinear display interpolation
+and dashed K–Γ–K′ path as Figure 1. (b) Band structure, with occupied bands
+in blue and empty bands in gray. (c) Bundle curvature calculated directly
+at all 49 path points. Internal valence-band degeneracies do not interrupt
+the bundle curve.
 
-Band 18 has opposite valley curvatures, approximately **−6.41 Å² at K** and
-**+6.41 Å² at K′** for this 26-band window. The map and path use matching
-electronic-structure settings, and the band panel locates the selected state
-relative to the gap. The 12×12 sampling and intermediate-state sum still
-require convergence for quantitative material predictions.
+The occupied-bundle curvature is approximately **−13.18 Å² at K** and
+**+13.18 Å² at K′**. The occupied space stays separated from the empty states
+by at least **1.674 eV** on both samplings, so every mesh and path point is
+valid for the bundle calculation. The native option `-kubo_bundle 1` performs
+the external-band sum directly, avoiding large cancelling internal terms.
 
-Figure 1 shows the complete occupied-group plaquette curvature; Figure 2
-shows pointwise curvature of a single band in the canonical-momentum
-approximation. Their amplitudes therefore represent different quantities.
-Neither a line cut nor an individual-band map with unresolved states supplies
-the complete occupied-space integral for a Chern number or Hall conductivity.
+Figures 1 and 2 now describe the same occupied band space. Their numerical
+values need not coincide at this resolution: Fukui gives finite-plaquette
+averages, while this Kubo result uses pointwise canonical momentum and a
+finite empty-band window. The 12×12 mesh and 26 stored bands require
+convergence for quantitative predictions. NumPy interpolation smooths only
+the display; all integration and numerical checks use the original samples.
 
 [Calculation and interpretation](../examples/features/kubo-curvature/)
+
+### 3.2.1 MoS₂: an isolated single band near the valleys
+
+![Isolated MoS2 valence-band curvature near K and Kprime](../examples/features/kubo-curvature/valleys/reference/figure.png)
+
+**Figure 3.** Single-band Kubo curvature of the upper valence band, band 18,
+around K and K′. Each local Cartesian patch extends ±0.12 Å⁻¹ and contains
+9×9 VASP points. The upper maps use NumPy bilinear display interpolation;
+the dashed lines mark the cuts below. The lower panels show the two upper
+valence bands near both valleys and band-18 curvature at both valleys. Symbols mark
+the calculated curvature samples.
+
+Band 18 touches its Kramers partner at Γ, but is separated from every other
+stored band by at least **0.130 eV** throughout these valley patches. The
+17–18 splitting at K is **0.147 eV**, and the valley curvatures are
+approximately **−6.415/+6.415 Å² at K/K′**. This is a suitable local single-band example of
+the spin-split valley physics described by
+[Xiao et al.](https://doi.org/10.1103/PhysRevLett.108.196802).
+The patch data describe local curvature; a full-zone integral requires
+the appropriate isolated band bundle and complete BZ sampling.
+
+[VASP preparation, calculation and reference data](../examples/features/kubo-curvature/valleys/)
 
 ### 3.3 MoS₂: valley-selective circular transitions
 
 ![Circular optical spectra in MoS2](../examples/features/circular-dichroism/reference/figure.png)
 
-**Figure 3.** Left- and right-circular spectra at K and K′ and the selectivity
+**Figure 4.** Left- and right-circular spectra at K and K′ and the selectivity
 $\eta=(I_L-I_R)/(I_L+I_R)$ along the path. Normal incidence is used, with
 0.05 eV Gaussian broadening and transitions from occupied bands 1–18 to
 bands 19–20. White regions in the selectivity map exclude negligible intensity.
@@ -182,7 +220,7 @@ $$
 
 ![Bi Fukui-Hatsugai integer n-field and Z2 invariant](../examples/features/z2/reference/figure.png)
 
-**Figure 4.** Fukui–Hatsugai integer field $n(\mathbf k)$ calculated from the
+**Figure 5.** Fukui–Hatsugai integer field $n(\mathbf k)$ calculated from the
 Bi VASP spinor wavefunctions. Red, white and blue denote +1, 0 and −1,
 respectively. The native plaquettes are displayed without interpolation in
 dimensionless reduced coordinates, $\mathbf k=q_1\mathbf b_1+q_2\mathbf b_2$,
@@ -206,7 +244,7 @@ response are consistent with this nontrivial Z₂ result.
 
 ![MoS2 Gamma state in Cartesian real space](../examples/features/wavefunction/reference/figure.png)
 
-**Figure 5.** Projected pseudo-wavefunction density of band 18 at Γ and its
+**Figure 6.** Projected pseudo-wavefunction density of band 18 at Γ and its
 plane average along z. The in-plane plot uses the Cartesian geometry of the
 oblique primitive cell. Both spinor components are retained.
 
@@ -247,3 +285,6 @@ numerical files for reproducibility.
    Materials: Lattice Computation of Z₂ Topological Invariants and Its
    Application to Bi and Sb*,
    [J. Phys. Soc. Jpn. **76**, 053702 (2007)](https://doi.org/10.1143/JPSJ.76.053702).
+5. X. Wang, J. R. Yates, I. Souza and D. Vanderbilt, *Ab initio calculation
+   of the anomalous Hall conductivity by Wannier interpolation*,
+   [Phys. Rev. B **74**, 195118 (2006)](https://doi.org/10.1103/PhysRevB.74.195118).

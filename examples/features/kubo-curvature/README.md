@@ -1,49 +1,55 @@
-# MoS₂: Kubo curvature map, band structure and symmetry path
+# MoS₂: Kubo curvature of the occupied valence-band bundle
 
-The figure shows the Berry curvature of the highest valence band of monolayer
-1H-MoS₂ across the Brillouin zone and along **K–Γ–K′**. The dashed line on the
-map identifies the path used in the band and curvature panels on the right.
+The main figure shows the trace Berry curvature of **occupied bands 1–18**
+across the Brillouin zone and along **K–Γ–K′**. It uses the same occupied
+space and VASP inputs as the [Fukui example](../fukui-berry-curvature/).
 
-![MoS2 Kubo curvature map, matching bands and symmetry-path curve](reference/map-path/figure.png)
+![MoS2 occupied-bundle Kubo map, bands and symmetry-path curve](reference/bundle/figure.png)
 
-**Figure.** (a) Band-18 Kubo curvature on a full 12×12 mesh in Cartesian
-reciprocal coordinates. Each colored cell represents one k-point sample.
-(b) Band structure on the marked path, with band 18 highlighted in orange;
-energies are relative to the valence-band maximum. (c) Curvature calculated
-directly at the 49 path points. Gray cells and gaps in the curve indicate
-unresolved individual bands, with a nearest-band separation ≤10⁻⁵ eV.
+**Figure.** (a) Occupied-bundle curvature from a full 12×12 mesh, displayed
+with NumPy periodic bilinear interpolation in Cartesian reciprocal space.
+The dashed line marks the path used in both right-hand panels. (b) Actual
+VASP bands at 49 path points, with occupied states in blue and empty states
+in gray; energies are relative to the valence-band maximum. (c) Bundle Kubo
+curvature calculated directly at those path points.
 
 ## Method and inputs
 
-For a nondegenerate band, VASPBERRY evaluates
+For an isolated bundle $\mathcal V$, VASPBERRY evaluates
 
 $$
-\Omega_{n,z}(\mathbf{k})=-2\,\mathrm{Im}
-\sum_{m\ne n}\frac{D^x_{nm}(\mathbf{k})D^y_{mn}(\mathbf{k})}
-{[E_n(\mathbf{k})-E_m(\mathbf{k})]^2},\qquad D^a=\hbar v_a.
+\Omega^{\mathcal V}_{xy}=-2\,\mathrm{Im}
+\sum_{n\in\mathcal V}\sum_{m\notin\mathcal V}
+\frac{D^x_{nm}D^y_{mn}}{(E_n-E_m)^2},\qquad D^a=\hbar v_a.
 $$
 
-The native WAVECAR implementation uses the canonical-momentum approximation
-$v_a=p_a/m_e$. Curvature is in Å². PAW augmentation and nonlocal/SOC velocity
-corrections are not included. The sum uses all stored intermediate bands.
+This is the sum of the individual-band curvatures wherever those bands are
+resolved. Internal pair contributions cancel, so excluding them before
+calculating denominators gives a stable bundle result even at internal
+band degeneracies. The selected bundle must be separated from excluded
+states. See [Wang et al., Eq. (11) and Sec. III D](https://doi.org/10.1103/PhysRevB.74.195118).
+
+The native WAVECAR implementation uses canonical momentum, $v_a=p_a/m_e$,
+and exports curvature in Å². PAW augmentation and nonlocal/SOC velocity
+corrections are not included. The finite stored empty-band window must be
+converged for quantitative work.
 
 | Setting | BZ map and matching path |
 |---|---|
 | VASP input | Two SOC WAVECARs: full mesh and band path |
 | Electronic structure | Same public SCF density, structure, potentials, 400 eV cutoff and 26 bands |
 | BZ sampling | Full Γ-centered 12×12×1 mesh |
-| Path sampling | 49 points K–Γ–K′, Γ included once at index 25 |
-| Reciprocal path vertices | K = (1/3, 2/3, 0), Γ = (0, 0, 0), K′ = −K |
-| Selected output bands | 17 and 18; the figure displays band 18 |
-| Intermediate states | Bands 1–26 in both calculations |
-| Occupied-to-empty gap | Approximately 1.674 eV |
+| Path sampling | 49 K–Γ–K′ points; Γ occurs once at index 25 |
+| Reciprocal vertices | K = (1/3, 2/3, 0), Γ = (0, 0, 0), K′ = −K |
+| Selected bundle | Occupied bands 1–18 |
+| External intermediate states | Empty bands 19–26 |
+| Minimum bundle-to-external gap | Approximately 1.674 eV |
 
-The [full-mesh preparation](../fukui-berry-curvature/inputs/README.md) uses
-the public MoS₂ SCF charge density. The [matching path preparation](../fukui-berry-curvature/inputs/path/README.md)
-copies that setup and changes only the k-point list. Use those instructions
+Use the [full-mesh preparation](../fukui-berry-curvature/inputs/README.md)
+and [matching-path preparation](../fukui-berry-curvature/inputs/path/README.md)
 to generate `results/mos2-fullmesh-vasp/WAVECAR` and
 `results/mos2-path-vasp/WAVECAR` with your licensed VASP and PAW datasets.
-The same mesh WAVECAR supplies the [Fukui example](../fukui-berry-curvature/).
+Only the k-point list changes between these calculations.
 
 ## Calculate and plot
 
@@ -58,75 +64,90 @@ python3 examples/features/kubo-curvature/run_fullmesh.py \
   --output-dir results/mos2-kubo-panels
 ```
 
-The runner executes VASPBERRY for each WAVECAR, checks the mesh and path,
-exports the unchanged VASP energies, and writes PNG/PDF figures and CSV data.
-It takes about four seconds for these prepared inputs on the reference machine.
+The runner defaults to `--mode bundle --map-style smooth`. It executes
+VASPBERRY, validates coordinates and external gaps against both WAVECARs,
+and exports unchanged VASP energies, native CSV results, PNG/PDF figures
+and execution records. The prepared-input workflow takes about four seconds
+on the reference machine.
 
-The native command used in each calculation directory is:
+The native command in each calculation directory is:
 
 ```bash
 /path/to/vaspberry-gfortran \
-  -f /path/to/WAVECAR -s 2 -kubo 2 -ii 17 -if 18 \
-  -kubo_csv KUBO.csv -o BERRYCURV > vaspberry.log
+  -f /path/to/WAVECAR -s 2 -kubo 2 -kubo_bundle 1 -ii 1 -if 18 \
+  -kubo_csv KUBO.csv > vaspberry.log
 ```
 
-Run it once with the mesh WAVECAR and once with the matching path WAVECAR,
-in separate output directories. `-kubo 2` evaluates the actual k points
-stored in WAVECAR; it does not create a new mesh. For MPI, use `make mpi`
-and prefix the MPI executable with `mpiexec -n 2`.
+Run it separately for the mesh and path WAVECARs. `-kubo 2` uses their actual
+stored points; it creates no new sampling. `-kubo_bundle 1` writes one
+trace-curvature row per k point and spin, with its minimum external gap.
+It rejects external gaps ≤10⁻⁵ eV before creating the CSV. Internal
+valence-band degeneracies are allowed. This option writes a standalone
+bundle CSV; see the [output format](../../../docs/OUTPUT_FORMAT.md).
+For MPI, use `make mpi` and prefix the MPI executable with `mpiexec -n 2`.
 
 ## Redraw the supplied results
 
-The figures can be reproduced from the distributed numerical outputs without
-rerunning VASP or VASPBERRY:
-
 ```bash
 python3 tools/plot_berry_panels.py \
-  --method kubo \
-  --input examples/features/kubo-curvature/reference/map-path/KUBO_mesh.csv \
-  --path-input examples/features/kubo-curvature/reference/map-path/KUBO_path.csv \
-  --bands-csv examples/features/kubo-curvature/reference/map-path/bands.csv \
+  --method kubo-bundle \
+  --input examples/features/kubo-curvature/reference/bundle/KUBO_mesh.csv \
+  --path-input examples/features/kubo-curvature/reference/bundle/KUBO_path.csv \
+  --bands-csv examples/features/kubo-curvature/reference/bundle/bands.csv \
   --poscar examples/features/fukui-berry-curvature/inputs/POSCAR \
-  --band 18 --path-node-indices 1 25 49 --path-labels K Gamma Kprime \
+  --occupied 18 --path-node-indices 1 25 49 --path-labels K Gamma Kprime \
+  --map-style smooth --display-grid 401 \
   --title '1H-MoS2' --output results/mos2-kubo-replot.png
 ```
 
-For a new calculation, `--path-wavecar` can replace `--bands-csv` to read
-VASP energies directly. The general plotter also accepts other bands, path
-node indices, labels and structures. Use PDF as the output suffix for a
-vector figure. CSV energies retain their original VASP zero; the shift to
-the valence-band maximum is applied only in the figure.
+Use a PDF suffix for a vector figure. `--path-wavecar` can replace
+`--bands-csv` for new data. The general plotter accepts other structures,
+occupied counts, path vertices and labels; its bundle band table currently
+uses spin channel 1. The tutorial runner validates this specific MoS₂ setup.
+
+`--map-style cells` displays the original samples as cells. The smooth
+option uses **NumPy periodic bilinear interpolation**, then clips to the
+physical first BZ. The 401×401 display grid adds no calculated k points;
+raw native CSV values and any physical integrals remain unchanged.
+The Kubo path curve uses actual path calculations, independently of the
+map interpolation. No smoothing is applied across invalid single-band data.
 
 ## Reference results
 
-| Quantity | Band 18 |
+| Quantity | Occupied bands 1–18 |
 |---|---:|
-| Ωz(K), full mesh | −6.41478 Å² |
-| Ωz(K′), full mesh | +6.41477 Å² |
-| Ωz(K), matching path | −6.41480 Å² |
-| Ωz(K′), matching path | +6.41485 Å² |
-| Resolved points | 110/144 on the mesh; 46/49 on the path |
+| Ωz(K), full mesh | −13.17809 Å² |
+| Ωz(K′), full mesh | +13.17800 Å² |
+| Ωz(K), matching path | −13.17813 Å² |
+| Ωz(K′), matching path | +13.17815 Å² |
+| Valid bundle points | 144/144 on the mesh; 49/49 on the path |
 
-[Panel PNG](reference/map-path/figure.png) · [PDF](reference/map-path/figure.pdf) ·
-[Full-mesh Kubo CSV](reference/map-path/KUBO_mesh.csv) ·
-[Path Kubo CSV](reference/map-path/KUBO_path.csv) ·
-[Band energies](reference/map-path/bands.csv) ·
-[Plotted path curve](reference/map-path/path_curvature.csv) ·
-[Calculation record](reference/map-path/result.json)
+[Panel PNG](reference/bundle/figure.png) · [PDF](reference/bundle/figure.pdf) ·
+[Full-mesh Kubo CSV](reference/bundle/KUBO_mesh.csv) ·
+[Path Kubo CSV](reference/bundle/KUBO_path.csv) ·
+[Band energies](reference/bundle/bands.csv) ·
+[Plotted path curve](reference/bundle/path_curvature.csv) ·
+[Calculation record](reference/bundle/result.json)
 
-The bands and curvature share cumulative Cartesian path distance,
-$s_j=\sum_{i<j}|\mathbf{k}_{i+1}-\mathbf{k}_i|$, with reciprocal vectors
-containing 2π. Each K–Γ segment is approximately 1.320704 Å⁻¹.
-The finite cells in the map visualize pointwise Kubo samples; they are not
-Fukui plaquette averages. The line uses an actual path calculation rather
-than interpolation of the map.
+Bands and curvature share cumulative Cartesian path distance; each K–Γ
+segment is approximately 1.320704 Å⁻¹. Fukui and Kubo now cover the same
+occupied space. Their finite-resolution values can differ: Fukui uses
+plaquette averages, whereas native Kubo uses point samples, a finite
+empty-band window and the canonical-momentum approximation.
 
-The [Fukui figure](../fukui-berry-curvature/reference/map-path/figure.png)
-shows the complete occupied group, bands 1–18. Its amplitude is therefore
-a different quantity from the single-band Kubo curvature here. Near band
-degeneracies, use a suitable subspace treatment; do not interpret unstable
-individual-band denominators as physical peaks. Converge both k sampling
-and NBANDS before drawing quantitative conclusions.
+## A meaningful single-band example
+
+The [local K/K′ valley example](valleys/) provides two actual 9×9 VASP patches
+where band 18 is separated from every other band by at least 0.130 eV.
+It contains input preparation, native calculation, smooth maps, line cuts,
+band structure and numerical reference files. This region supports an
+individual-band interpretation; Γ does not because its partners touch there.
+
+The earlier whole-zone band-18 [cell map](reference/map-path/figure.png)
+and [raw results](reference/map-path/result.json) remain available. To
+reproduce that version, add `--mode band --map-style cells` to the runner
+above. It masks unresolved individual bands and is not the occupied-bundle
+quantity used in the main figure.
 
 ## Supplied 32-band path example
 

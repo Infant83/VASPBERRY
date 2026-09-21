@@ -54,7 +54,7 @@ class FortranSourceRegressionTests(unittest.TestCase):
             self.source.replace(" ", "").lower(),
         )
 
-    def test_fortran_command_line_interface_is_unchanged(self):
+    def test_fortran_existing_options_are_preserved_with_opt_in_bundle(self):
         expected_options = {
             "-atlist",
             "-cd",
@@ -102,7 +102,12 @@ class FortranSourceRegressionTests(unittest.TestCase):
                 self.parse,
             )
         )
-        self.assertEqual(actual_options, expected_options)
+        # Keep every existing switch and review additions explicitly. The new
+        # bundle calculation must not change the default individual-band path.
+        self.assertTrue(expected_options.issubset(actual_options),
+                        f"removed options: {expected_options - actual_options}")
+        self.assertEqual(actual_options - expected_options, {"-kubo_bundle"})
+        self.assertRegex(self.parse, r"(?im)^\s*ikubo_bundle\s*=\s*0\s*$")
         self.assertNotRegex(self.parse, r"(?i)transport|hall|ahc")
 
     def test_fortran_input_path_is_not_list_directed(self):

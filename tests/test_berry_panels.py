@@ -50,6 +50,32 @@ def write_kubo(path, q, values, gaps=None, normalization="STANDARD_MINUS_TWO_IM"
             writer.writerow([1, i + 1, 1, *p, -1. + p[0] ** 2, v, gap])
 
 
+def write_bundle(path, q, values, gaps=None, metadata=None, spins=None):
+    if gaps is None:
+        gaps = np.full(len(q), 2.)
+    if spins is None:
+        spins = np.ones(len(q), dtype=int)
+    headers = {
+        "schema": "VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1",
+        "normalization": "STANDARD_MINUS_TWO_IM",
+        "operator": "WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY",
+        "berry_connection": "A_i=i<u|d/dk_i u>",
+        "intermediate_bands": "EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS",
+        "result_status": "PASS", "result_kind": "ISOLATED_BUNDLE_TRACE",
+        "curvature": "TRACE_OF_SELECTED_BUNDLE", "internal_transitions": "EXCLUDED_ANALYTICALLY",
+        "occupation_weighting": "NONE", "band_min": "1", "band_max": "1", "band_rank": "1",
+        "source_nbands": "2", "no_external_states": "false", "gap_threshold_eV": "1e-5",
+    }
+    headers.update(metadata or {})
+    with path.open("w", newline="") as handle:
+        for key, value in headers.items():
+            handle.write(f"# {key}={value}\n")
+        writer = csv.writer(handle)
+        writer.writerow(["spin", "k_index", "kx_frac", "ky_frac", "kz_frac", "omega_z_A2", "min_external_gap_eV"])
+        for i, (p, v, gap, spin) in enumerate(zip(q, values, gaps, spins)):
+            writer.writerow([spin, i + 1, *p, v, gap])
+
+
 class PeriodicDisplayCutTests(unittest.TestCase):
     def test_constant_field_is_unchanged_far_outside_primitive_cell(self):
         q = grid()
@@ -79,6 +105,34 @@ class PeriodicDisplayCutTests(unittest.TestCase):
         q = grid()[:-1]
         with self.assertRaises(ValueError):
             panels.periodic_bilinear(q, np.ones(len(q)), np.array([[0., 0., 0.]]))
+
+    def test_unknown_neighbour_propagates_without_contaminating_exact_known_node(self):
+        q = grid(centered=False)
+        values = np.full(len(q), 7.)
+        values[0] = np.nan
+        # The cell interior uses the undefined origin, while its opposite known node does not.
+        target = np.array([[.125, .125, 0.], [.25, .25, 0.], [.25, 0., 0.], [0., 0., 0.]])
+        actual = panels.periodic_bilinear(q, values, target)
+        np.testing.assert_array_equal(np.isnan(actual), [True, False, False, True])
+        np.testing.assert_allclose(actual[[1, 2]], [7., 7.], atol=1e-13, rtol=0)
+        np.testing.assert_allclose(actual, panels.periodic_bilinear(q, values, target + [2., -3., 0.]),
+                                   atol=1e-13, rtol=0, equal_nan=True)
+
+    def test_unknown_mask_tracks_values_when_grid_is_reordered(self):
+        q = grid(centered=False)
+        values = 2 + q[:, 0] + q[:, 1]
+        values[5] = np.nan
+        order = np.random.default_rng(103).permutation(len(q))
+        target = np.array([[.3, .3, 0.], [.6, .6, 0.]])
+        np.testing.assert_allclose(panels.periodic_bilinear(q, values, target),
+                                   panels.periodic_bilinear(q[order], values[order], target),
+                                   atol=1e-13, rtol=0, equal_nan=True)
+
+    def test_infinite_values_are_rejected_and_unknown_field_remains_unknown(self):
+        q = grid()
+        with self.assertRaisesRegex(ValueError, "infinite"):
+            panels.periodic_bilinear(q, np.full(len(q), np.inf), q[:1])
+        self.assertTrue(np.isnan(panels.periodic_bilinear(q, np.full(len(q), np.nan), q[:1])).all())
 
 
 class PanelDataIntegrityTests(unittest.TestCase):
@@ -187,6 +241,117 @@ class PanelDataIntegrityTests(unittest.TestCase):
         self.assertEqual(output[1]["omega_z_A2"], "")
         self.assertEqual([float(output[i]["omega_z_A2"]) for i in [0, 2]], [-2., 2.])
         self.assertEqual(before, {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in sources})
+
+    def test_smooth_map_preserves_input_files_and_direct_path_curve(self):
+        sources = [self.mesh, self.path_kubo, self.bands]
+        before = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
+        captured = []
+        original = panels.plt.Axes.pcolormesh
+
+        def capture(axis, *args, **kwargs):
+            if len(args) >= 3 and np.shape(args[2]) == (25, 25):
+                captured.append(np.ma.asarray(args[2]).copy())
+            return original(axis, *args, **kwargs)
+
+        with mock.patch.object(panels.plt.Axes, "pcolormesh", new=capture):
+            metadata = self.call_plot(map_style="smooth", display_grid=25)
+        self.assertEqual(len(captured), 1)
+        displayed = captured[0]
+        self.assertTrue(np.ma.getmaskarray(displayed).any())
+        self.assertGreaterEqual(displayed.min(), self.native_values[1:].min())
+        self.assertLessEqual(displayed.max(), self.native_values.max())
+        self.assertEqual(metadata["map_interpolation"], "periodic_bilinear")
+        self.assertEqual(metadata["display_grid"], [25, 25])
+        self.assertEqual(metadata["masked_map_points"], 1)
+        with (self.path / "curve.csv").open() as handle:
+            output = list(csv.DictReader(handle))
+        self.assertEqual([r["valid"] for r in output], ["1", "0", "1"])
+        self.assertEqual(output[1]["omega_z_A2"], "")
+        self.assertEqual([float(output[i]["omega_z_A2"]) for i in [0, 2]], [-2., 2.])
+        self.assertEqual(before, {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in sources})
+
+    def test_bundle_reader_retains_finite_trace_and_checks_occupied_rank(self):
+        write_bundle(self.mesh, self.qmesh, self.native_values)
+        q, values, gaps = panels.read_bundle(self.mesh, 1, 1e-5)
+        np.testing.assert_allclose(q, self.qmesh)
+        np.testing.assert_array_equal(values, self.native_values)
+        np.testing.assert_array_equal(gaps, np.full(len(q), 2.))
+        for change in [{"band_min": "2"}, {"band_max": "2"}, {"band_rank": "2"}]:
+            with self.subTest(change=change):
+                write_bundle(self.mesh, self.qmesh, self.native_values, metadata=change)
+                with self.assertRaisesRegex(ValueError, "range"):
+                    panels.read_bundle(self.mesh, 1, 1e-5)
+
+    def test_bundle_reader_rejects_failed_or_noncurrent_result(self):
+        for change in [{"schema": "VASPBERRY_BARE_MOMENTUM_KUBO_V2"},
+                       {"normalization": "STANDARD_MINUS_FOUR_IM"}, {"result_status": "FAIL"},
+                       {"operator": "UNKNOWN_OPERATOR"}, {"berry_connection": "A=-i<u|dk u>"},
+                       {"intermediate_bands": "1:2"}, {"result_kind": "SUM_OF_MASKED_BAND_ROWS"}]:
+            with self.subTest(change=change):
+                write_bundle(self.mesh, self.qmesh, self.native_values, metadata=change)
+                with self.assertRaises(ValueError):
+                    panels.read_bundle(self.mesh, 1, 1e-5)
+
+    def test_bundle_reader_requires_consistent_soc_spin_one_rows(self):
+        cases = [np.full(len(self.qmesh), 2), np.zeros(len(self.qmesh), dtype=int),
+                 np.array([1] * (len(self.qmesh) - 1) + [2])]
+        for spins in cases:
+            with self.subTest(spins=spins.tolist()):
+                write_bundle(self.mesh, self.qmesh, self.native_values, spins=spins)
+                with self.assertRaises(ValueError):
+                    panels.read_bundle(self.mesh, 1, 1e-5)
+
+    def test_bundle_reader_rejects_nonisolated_or_nonfinite_external_gap(self):
+        for gap in [0., 1e-5, -1., float("nan"), float("inf")]:
+            with self.subTest(gap=gap):
+                gaps = np.full(len(self.qmesh), 2.)
+                gaps[3] = gap
+                write_bundle(self.mesh, self.qmesh, self.native_values, gaps)
+                with self.assertRaises(ValueError):
+                    panels.read_bundle(self.mesh, 1, 1e-5)
+
+    def test_bundle_reader_rejects_duplicate_k_index(self):
+        write_bundle(self.mesh, self.qmesh, self.native_values)
+        lines = self.mesh.read_text().splitlines()
+        with self.mesh.open("a") as handle:
+            handle.write(lines[-1] + "\n")
+        with self.assertRaisesRegex(ValueError, "one selected-spin row"):
+            panels.read_bundle(self.mesh, 1, 1e-5)
+
+    def test_bundle_panels_preserve_trace_and_matching_direct_path_values(self):
+        write_bundle(self.mesh, self.qmesh, self.native_values)
+        write_bundle(self.path_kubo, self.qpath, [-3., .01, 3.])
+        before = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in [self.mesh, self.path_kubo, self.bands]}
+        metadata = self.call_plot(method="kubo-bundle", map_style="smooth", display_grid=25)
+        self.assertEqual(metadata["map_quantity"], "pointwise_Kubo_bundle_trace")
+        self.assertEqual(metadata["masked_path_points"], 0)
+        self.assertIsNone(metadata["kubo_band"])
+        with (self.path / "curve.csv").open() as handle:
+            output = list(csv.DictReader(handle))
+        np.testing.assert_array_equal([float(r["omega_z_A2"]) for r in output], [-3., .01, 3.])
+        self.assertEqual(before, {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in before})
+
+    def test_bundle_path_gap_must_match_displayed_band_energies(self):
+        write_bundle(self.mesh, self.qmesh, self.native_values)
+        write_bundle(self.path_kubo, self.qpath, [-3., 0., 3.], gaps=[2., 2.1, 2.])
+        with self.assertRaisesRegex(ValueError, "gap"):
+            self.call_plot(method="kubo-bundle")
+        self.assertFalse((self.path / "figure.png").exists())
+
+    def test_small_bundle_ignores_unused_default_band_but_single_band_checks_bounds(self):
+        write_bundle(self.mesh, self.qmesh, self.native_values)
+        write_bundle(self.path_kubo, self.qpath, [-3., 0., 3.])
+        # Omit band deliberately: the default is 18, while this fixture has only two bands.
+        metadata = panels.plot_panels(
+            method="kubo-bundle", input_path=self.mesh, path_input=self.path_kubo,
+            poscar_path=self.poscar, bands_csv=self.bands,
+            output_path=self.path / "small_bundle.png", occupied=1,
+            node_indices=(1, 2, 3), node_labels=("A", "Gamma", "B"),
+        )
+        self.assertIsNone(metadata["kubo_band"])
+        self.assertEqual(metadata["occupied_bands"], [1, 1])
+        with self.assertRaisesRegex(ValueError, "outside band table"):
+            self.call_plot(method="kubo", band=18)
 
 
 class RealMoS2PanelInputTests(unittest.TestCase):

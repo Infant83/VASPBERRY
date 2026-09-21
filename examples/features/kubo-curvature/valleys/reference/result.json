@@ -1,0 +1,102 @@
+{
+  "status": "PASS",
+  "created_utc": "2026-09-21T14:13:51.444900+00:00",
+  "workflow": "VASP WAVECAR -> native VASPBERRY Kubo -> band-18 valley maps",
+  "input_source": "MoS2 SOC valley NSCF prepared from public full-mesh example",
+  "source_wavecar_sha256": "38095ea540dc57f2ac24f71faa53c95e514c27385a88989f42f4d563453085a7",
+  "binary_sha256": "3a9c6a2150b6212dbd1a581dc87ba0249a4c7430097b51266d7e147f812174b7",
+  "command": [
+    "vaspberry",
+    "-f",
+    "WAVECAR",
+    "-s",
+    "2",
+    "-kubo",
+    "2",
+    "-ii",
+    "17",
+    "-if",
+    "18",
+    "-kubo_csv",
+    "KUBO.csv",
+    "-o",
+    "BERRYCURV"
+  ],
+  "native_returncode": 0,
+  "native_seconds": 0.9680391978472471,
+  "material": "1H-MoS2",
+  "target_band": 18,
+  "other_exported_band": 17,
+  "intermediate_bands": [
+    1,
+    26
+  ],
+  "sampling": "9 x 9 Cartesian patches at each of K and Kprime",
+  "numerical_checks": {
+    "passed": true,
+    "minimum_band18_isolation_gap_eV": 0.13020291136206574,
+    "minimum_required_gap_eV": 0.01,
+    "isolated_points": 162,
+    "gap_agreement_max_eV": 0.0,
+    "energy_agreement_max_eV": 0.0,
+    "coordinate_agreement_max_fractional": 0.0,
+    "time_reversed_valley_residual_max_A2": 0.0001485716350986266,
+    "K_Kprime_omega18_A2": [
+      -6.4148231737905546,
+      6.414836443627795
+    ]
+  },
+  "figure_conventions": {
+    "map_and_cut_interpolation": "NumPy bilinear; same interpolant for map and line",
+    "display_grid_per_patch": [
+      401,
+      401
+    ],
+    "raw_grid_per_patch": [
+      9,
+      9
+    ],
+    "energy_reference_eV": -1.2748738807284172,
+    "energy_reference": "maximum E18 on the two sampled patches",
+    "color_bound_A2": 6.414836443627795,
+    "native_omega18_range_A2": [
+      -6.4148231737905546,
+      6.414836443627795
+    ]
+  },
+  "scope": "Locally isolated single-band curvature near the valleys; band 18 is not isolated across the full BZ. Canonical-momentum Kubo with 26 intermediate bands omits PAW augmentation and nonlocal/SOC velocity terms. Interpolation changes display only; these patches do not determine a full-BZ Chern number or conductivity.",
+  "output_sha256": {
+    "KUBO.csv": "88464600fa57672b2c3c6e58b288aa440b714df2101669fdf7e045eec5d4b932",
+    "bands.csv": "61f8537cd73bb9f63607c09f9194e3f22315b66a21a46fae32e4ef421da42fa1",
+    "summary.csv": "cf451c27df30bfa632da47827cc910ab37cf3ead3a5c3efc9d03936b7c88f572",
+    "line.csv": "81049a7ce941de5753d2f33421af622bb7d4a494039a1969acdcaf70915ccc60",
+    "figure.png": "b3eeb377d01d8b5b169dd6f1ddbb464ad3fa9173ac9a31a90326cfdaa5e990c0",
+    "figure.pdf": "3963ad32f51cf6be0472c92b4214c8c441f6cafac2d74a53632a4cac7b4ddc1d"
+  },
+  "vasp_run": {
+    "status": "PASS",
+    "threads": 1,
+    "wall_seconds": 161.08393581281416,
+    "sampled_peak_rss_bytes": 652705792,
+    "converged": true,
+    "normal_footer": true,
+    "input_sha256": {
+      "INCAR": "6d6c4278a139db5b59bfcdd71ad557d9569957e336c9d67796a882141ba5fc3d",
+      "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+      "CHGCAR": "e6d9d95d4d5f7afef4d69a9f13f780553b737f78974355923cb3fd532dff311d",
+      "KPOINTS": "348795eae42cf0757c0215c784098cab15ea77d3330771bb3a977b6bd2b90da8"
+    },
+    "output_sha256": {
+      "OUTCAR": "8b867ee73c222aac34d66ce0d30a7a77d90e1e36b724ffdcf618701523b7c2ec",
+      "EIGENVAL": "3fd042572acf2ffe8946fae7cc1a8a4db96ff62bd38e47a7d2cde1bb8c9c207a",
+      "OSZICAR": "38c68ec722446f74710dd193879180b3fc75fffebfdf76f15b7b698fcf50924e",
+      "WAVECAR": "38095ea540dc57f2ac24f71faa53c95e514c27385a88989f42f4d563453085a7"
+    }
+  },
+  "source_setup": "examples/features/fukui-berry-curvature/inputs; same public-derived CHGCAR and matching licensed Mo/S PAW potentials",
+  "code_sha256": {
+    "run.py": "1414d6eceff71bd77f118a4e81fe220e19d9a73c9666dff108e66783545ce395",
+    "plot.py": "9c14ee5a3a5a1f77134c2ab6c921798e7235f271ffc6861f5e501af66d2918ca",
+    "prepare.py": "eddba9792e1ea3bd559cfc9879e312bf0cd749981b9a3ae3321ed03bed6d7341"
+  }
+}

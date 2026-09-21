@@ -80,6 +80,7 @@
       real*8,    allocatable :: spectrum(:,:),xspectrum(:,:)
       real*8,    allocatable :: berrycurv_kubo(:),xberrycurv_kubo(:)
       real*8,    allocatable :: berrycurv_kubo_tot(:)
+      real*8,    allocatable :: kubo_bundle_gap(:)
       real*8,    allocatable :: e_range(:) 
       real*16,   allocatable :: ener(:)
       integer,   allocatable :: ig(:,:),nplist(:)
@@ -100,6 +101,7 @@
       complex*16 csum1,csum2
       complex*16  detS(4),detA,detLOOP
       integer k, n, nkx, nky,nini,nmax,ns,ne,icd,ivel
+      integer ikubo_bundle
       character*256 filename,foname,fonameo,fbz,ver_tag,vdirec
       character*256 klist_fname,sw_fname, atlist_fname, proj_fname
       character*256 kubo_csv
@@ -150,7 +152,7 @@
      &   ivel,ikubo,iz,ihf,nini,nmax,nn,kperiod,it,iskp,ine,ver_tag,
      &   iwf,ikwf,ng,rs,imag,init_e,fina_e,nediv,sigma,
      &   klist_fname,sw_fname,atlist_fname,flag_atom_project,
-     &   theta,phi,kubo_csv)
+     &   theta,phi,kubo_csv,ikubo_bundle)
       if(iz .ne. 0 .and. iz .ne. 1)then
        write(0,*) '*** error - Z2 option must be 0 or 1'
        call vaspberry_fail
@@ -268,6 +270,15 @@
         endif
       endif ! check multi or single ?
       ns=nmax-nini+1
+      if(ikubo_bundle.eq.1)then
+       if(nini.lt.1.or.nmax.lt.nini.or.nmax.gt.nband)then
+        write(0,*) '*** error - Kubo bundle range outside 1:NBANDS'
+        call vaspberry_fail
+       endif
+! Validate every spin/k before any bundle output is created.
+       call check_kubo_bundle_gaps(ispin,nk,nband,nini,nmax)
+       allocate(kubo_bundle_gap(nk))
+      endif
       if(iz .eq. 1)then
        if(ne .lt. 2 .or. ne .ge. nband)then
         write(0,*) '*** error - Z2 n-field needs 2 <= NE < NBANDS'
@@ -1003,6 +1014,22 @@
           time_2=MPI_WTIME()
          endif
 #endif
+         if(ikubo_bundle.eq.1)then
+          call kubo_bundle_curvature(berrycurv_kubo_tot,
+     &             kubo_bundle_gap,b1,b2,b3,wklist,isp,
+     &             nband,ecut,ispinor,nplist,nbmax,npmax,
+     &             nk,nini,nmax,nprocs,myrank,mpi_comm_earth)
+          if(myrank.eq.0)then
+           call write_kubo_bundle_csv(kubo_csv,isp,nk,nband,
+     &          nini,nmax,wklist,berrycurv_kubo_tot,kubo_bundle_gap)
+           if(ikubo.eq.1)then
+            chernnumber_total=sum(berrycurv_kubo_tot)*dSkxky/(2.*pi)
+            write(6,'(A,ES25.17E3)')
+     &       '# Kubo bundle curvature integral / 2pi = ',
+     &       chernnumber_total
+           endif
+          endif
+         else
          berrycurv_kubo_tot=0d0
          chernnumber_total=0d0
          do ie=nini, nmax
@@ -1079,6 +1106,7 @@
      &                    berrymax,berrymin,
      &                    iz2,icd,iz,ivel,ikubo,nprocs)
          endif
+         endif ! legacy band or bundle mode
 #ifdef MPI_USE
          if(myrank == 0)then
           time_3=MPI_WTIME()
@@ -1094,6 +1122,9 @@
       if(myrank==0)then
 #endif
       write(6,'(A)')"# DONE! "
+      if(ikubo_bundle.eq.1)then
+       write(6,'(A,A)')'# Bundle result: ',trim(kubo_csv)
+      else
       do isp=1, ispin
        if(isp .eq. 1 .and. ispinor .eq. 1 .and. ispin .eq. 2) then
         write(6,'(A,A,A)')"#  Results are summarized in ",TRIM(foname),
@@ -1109,6 +1140,7 @@
      &                     TRIM(foname),".dat"
        endif
       enddo
+      endif ! bundle or legacy output summary
 #ifdef MPI_USE
       endif
 #endif
@@ -3983,6 +4015,201 @@
       endif
       end subroutine write_kubo_band_csv
 
+! Trace curvature of a spectrally isolated selected subspace. Internal
+! selected-band pairs cancel analytically and are never divided by a gap.
+! The same bare-momentum approximation/normalization as the band route is
+! used; this does not add PAW or nonlocal velocity matrix elements.
+      subroutine kubo_bundle_gap(ener,nband,nfirst,nlast,gap)
+      use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+      implicit none
+      integer nband,nfirst,nlast,nn,mm
+      real*8 ener(nband),gap
+      gap=huge(1d0)
+      do nn=nfirst,nlast
+       do mm=1,nband
+        if(mm.ge.nfirst.and.mm.le.nlast)cycle
+        if(.not.ieee_is_finite(ener(nn)).or.
+     &     .not.ieee_is_finite(ener(mm)))then
+         gap=-1d0
+         return
+        endif
+        gap=min(gap,abs(ener(nn)-ener(mm)))
+       enddo
+      enddo
+      end subroutine kubo_bundle_gap
+
+      subroutine check_kubo_bundle_gaps(ispin,nk,nband,nfirst,nlast)
+      implicit none
+      integer ispin,nk,nband,nfirst,nlast,isp,ik
+      real*8 ener(nband),gap
+      do isp=1,ispin
+       do ik=1,nk
+        call ener_read(ener,isp,ik,nk,nband)
+        call kubo_bundle_gap(ener,nband,nfirst,nlast,gap)
+        if(gap.le.1d-5)then
+         write(0,*)'*** error - Kubo bundle is not isolated: ',
+     &    'spin,k,min_external_gap_eV = ',isp,ik,gap
+         write(0,*)'*** requires external gaps > 1e-5 eV'
+         call vaspberry_fail
+        endif
+       enddo
+      enddo
+      end subroutine check_kubo_bundle_gaps
+
+      subroutine kubo_bundle_curvature(omega,external_gap,
+     &           b1,b2,b3,wklist,isp,nband,ecut,ispinor,
+     &           nplist,nbmax,npmax,nk,nfirst,nlast,
+     &           nprocs,myrank,mpi_comm_earth)
+      implicit none
+#ifdef MPI_USE
+      include 'mpif.h'
+#endif
+      integer isp,nband,ispinor,npmax,nk,nfirst,nlast
+      integer nprocs,myrank,mpi_comm_earth,mpierr
+      integer nplist(nk),nbmax(3),ig(3,npmax)
+      integer ourjob(nprocs),ourjob_disp(0:nprocs-1)
+      integer ik,nn,mm,np,ncnt,iplane,i,irec
+      real*8 omega(nk),external_gap(nk),omega_reduce(nk)
+      real*8 gap_reduce(nk),wklist(3,nk),wk(3),ener(nband)
+      real*8 b1(3),b2(3),b3(3),ecut,gap,unit
+      real*8 xkgx(npmax),xkgy(npmax),hbar,c,em,metertoang
+      real*8, external :: kubo_interband_term
+      complex*8 coeff(npmax)
+      complex*16 coeffn(npmax),coeffm(npmax),px,py
+! Match the historical unit constants used by kubo_berry_curvature.
+      data hbar/6.582119569e-16/,c/2.99792458E+08/
+      data em/0.510998950E+6/,metertoang/1.E+10/
+      unit=hbar**4/em**2*metertoang**4*c**4
+      call mpi_job_distribution_chain(nk,ourjob,ourjob_disp,nprocs)
+      omega=0d0
+      external_gap=huge(1d0)
+      do ik=sum(ourjob(1:myrank))+1,sum(ourjob(1:myrank+1))
+       call ener_read(ener,isp,ik,nk,nband)
+       call kubo_bundle_gap(ener,nband,nfirst,nlast,gap)
+       external_gap(ik)=gap
+       if(gap.le.1d-5)then
+        write(0,*)'*** error - Kubo bundle is not isolated: ',
+     &   'spin,k,min_external_gap_eV = ',isp,ik,gap
+        write(0,*)'*** requires external gaps > 1e-5 eV'
+        call vaspberry_fail
+       endif
+! Selecting every retained state gives a zero finite-basis trace.
+       if(nfirst.eq.1.and.nlast.eq.nband)cycle
+       wk=wklist(:,ik)
+       np=nplist(ik)
+       call plindx(ig,ncnt,ispinor,wk,b1,b2,b3,nbmax,np,ecut,npmax)
+       do iplane=1,ncnt
+        xkgx(iplane)=(wk(1)+ig(1,iplane))*b1(1)+
+     &              (wk(2)+ig(2,iplane))*b2(1)+
+     &              (wk(3)+ig(3,iplane))*b3(1)
+        xkgy(iplane)=(wk(1)+ig(1,iplane))*b1(2)+
+     &              (wk(2)+ig(2,iplane))*b2(2)+
+     &              (wk(3)+ig(3,iplane))*b3(2)
+       enddo
+       irec=3+(ik-1)*(nband+1)+nk*(nband+1)*(isp-1)
+       do nn=nfirst,nlast
+        read(10,rec=irec+nn)(coeff(i),i=1,np)
+        coeffn(1:np)=coeff(1:np)
+        do mm=1,nband
+         if(mm.ge.nfirst.and.mm.le.nlast)cycle
+         read(10,rec=irec+mm)(coeff(i),i=1,np)
+         coeffm(1:np)=coeff(1:np)
+         px=(0d0,0d0)
+         py=(0d0,0d0)
+         do iplane=1,ncnt
+          px=px+conjg(coeffn(iplane))*xkgx(iplane)*coeffm(iplane)
+          py=py+conjg(coeffn(iplane))*xkgy(iplane)*coeffm(iplane)
+          if(ispinor.eq.2)then
+           px=px+conjg(coeffn(iplane+ncnt))*xkgx(iplane)*
+     &          coeffm(iplane+ncnt)
+           py=py+conjg(coeffn(iplane+ncnt))*xkgy(iplane)*
+     &          coeffm(iplane+ncnt)
+          endif
+         enddo
+         omega(ik)=omega(ik)+unit*kubo_interband_term(px,py,
+     &                                            ener(nn)-ener(mm))
+        enddo
+       enddo
+      enddo
+#ifdef MPI_USE
+      call MPI_ALLREDUCE(omega,omega_reduce,nk,MPI_DOUBLE_PRECISION,
+     &                   MPI_SUM,mpi_comm_earth,mpierr)
+      omega=omega_reduce
+      call MPI_ALLREDUCE(external_gap,gap_reduce,nk,
+     &                   MPI_DOUBLE_PRECISION,MPI_MIN,
+     &                   mpi_comm_earth,mpierr)
+      external_gap=gap_reduce
+#endif
+      end subroutine kubo_bundle_curvature
+
+      subroutine write_kubo_bundle_csv(path,isp,nk,nband,
+     &           nfirst,nlast,wklist,omega,external_gap)
+      implicit none
+      character*(*) path
+      integer isp,nk,nband,nfirst,nlast,ik,ios
+      real*8 wklist(3,nk),omega(nk),external_gap(nk)
+      if(isp.eq.1)then
+       open(96,file=trim(path),status='new',action='write',iostat=ios)
+      else
+       open(96,file=trim(path),status='old',position='append',
+     &      action='write',iostat=ios)
+      endif
+      if(ios.ne.0)then
+       write(0,*)'*** error - cannot open new Kubo bundle CSV: ',
+     &           trim(path)
+       call vaspberry_fail
+      endif
+      if(isp.eq.1)then
+       write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1'
+       write(96,'(A)')'# vaspberry_version=1.3.0'
+       write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
+       write(96,'(A)')'# operator='//
+     &  'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
+       write(96,'(A)')'# berry_connection=A_i=i<u|d/dk_i u>'
+       write(96,'(A)')'# occupation_weighting=NONE'
+       write(96,'(A)')'# result_kind=ISOLATED_BUNDLE_TRACE'
+       write(96,'(A)')'# result_status=PASS'
+       write(96,'(A)')'# curvature=TRACE_OF_SELECTED_BUNDLE'
+       write(96,'(A)')'# internal_transitions=EXCLUDED_ANALYTICALLY'
+       write(96,'(A)')'# degeneracy_policy='//
+     &  'ALLOW_INTERNAL_REJECT_EXTERNAL_GAP_LE_THRESHOLD'
+       write(96,'(A)')'# gap_threshold_eV=1e-5'
+       write(96,'(A)')'# index_base=1'
+       write(96,'(A,I0)')'# band_min=',nfirst
+       write(96,'(A,I0)')'# band_max=',nlast
+       write(96,'(A,I0)')'# band_rank=',nlast-nfirst+1
+       write(96,'(A,I0)')'# source_nbands=',nband
+       write(96,'(A)')'# intermediate_bands='//
+     &  'EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS'
+       if(nfirst.eq.1.and.nlast.eq.nband)then
+        write(96,'(A)')'# no_external_states=true'
+        write(96,'(A)')'# zero_trace_scope=TRUNCATED_WAVECAR_BASIS'
+       else
+        write(96,'(A)')'# no_external_states=false'
+       endif
+       write(96,'(A)')'spin,k_index,kx_frac,ky_frac,kz_frac,'//
+     &              'omega_z_A2,min_external_gap_eV'
+      endif
+      do ik=1,nk
+       if(nfirst.eq.1.and.nlast.eq.nband)then
+        write(96,'(I0,",",I0,4(",",ES25.17E3),A)',iostat=ios)
+     &   isp,ik,wklist(:,ik),omega(ik),',NA'
+       else
+        write(96,'(I0,",",I0,5(",",ES25.17E3))',iostat=ios)
+     &   isp,ik,wklist(:,ik),omega(ik),external_gap(ik)
+       endif
+       if(ios.ne.0)then
+        write(0,*)'*** error - cannot write Kubo bundle CSV'
+        call vaspberry_fail
+       endif
+      enddo
+      close(96,iostat=ios)
+      if(ios.ne.0)then
+       write(0,*)'*** error - cannot close Kubo bundle CSV'
+       call vaspberry_fail
+      endif
+      end subroutine write_kubo_bundle_csv
+
 !!$*  subroutine for computing velocity expectation value for state psi(n,k)
       subroutine vel_expectation(a1,a2,a3,b1,b2,b3,
      &   kperiod,nbmax,npmax,ecut,ispinor,ispin,nband,ne,nk,wklist,
@@ -4790,7 +5017,7 @@
      &    ivel,ikubo,iz,ihf,nini,nmax,nn,kperiod,it,iskp,ine,ver_tag,
      &    iwf,ikwf,ng,rs,imag,init_e,fina_e,nediv,sigma,
      &    klist_fname,sw_fname,atlist_fname,flag_atom_project,
-     &    theta,phi,kubo_csv)
+     &    theta,phi,kubo_csv,ikubo_bundle)
       implicit real*8(a-h,o-z)
       character*256 filename,foname,fbz,ver_tag,vdirec
       character*256 foname_base
@@ -4799,6 +5026,7 @@
       real*8 x,y
       character*256 option,value
       integer iarg,narg,ia,nkx,nky,ispinor,iskp,ine,ng(3)
+      integer ikubo_bundle
       dimension rs(3)
       real*8    init_e, fina_e
       real*8    theta, phi
@@ -4818,6 +5046,7 @@
       fbz="BERRYCURV.tot.dat"
       flag_atom_project = .false.
       kubo_csv=""
+      ikubo_bundle=0
       if(iarg.ne.2*nargs) then
          call help(ver_tag)
       endif
@@ -4878,6 +5107,8 @@
             read(value,*) ikubo
            else if(option == "-kubo_csv") then
             kubo_csv=trim(value)
+           else if(option == "-kubo_bundle") then
+            read(value,*) ikubo_bundle
            else if(option == "-nn") then ! band index nn
             read(value,*) nn
            else if(option == "-vel") then
@@ -4904,6 +5135,14 @@
       enddo
       if(ikubo.lt.0.or.ikubo.gt.2)then
        write(0,*) '*** error - Kubo option must be 0, 1 or 2'
+       call vaspberry_fail
+      endif
+      if(ikubo_bundle.lt.0.or.ikubo_bundle.gt.1)then
+       write(0,*) '*** error - -kubo_bundle must be 0 or 1'
+       call vaspberry_fail
+      endif
+      if(ikubo_bundle.eq.1.and.len_trim(kubo_csv).eq.0)then
+       write(0,*) '*** error - -kubo_bundle needs -kubo_csv PATH'
        call vaspberry_fail
       endif
       if(len_trim(kubo_csv).gt.0)then
@@ -5406,9 +5645,20 @@
       write(6,*)"                  : -kubo 2 has no Chern integral."
       write(6,*)"                  : Pre-1.3 Kubo values divide by 2;"
       write(6,*)"                  : never divide new outputs again."
-      write(6,*)" -kubo_csv PATH   : Opt-in band-resolved CSV, full"
+      write(6,*)" -kubo_bundle 1   : Trace curvature for bands -ii:-if."
+      write(6,*)"                  : Excludes internal transitions;"
+      write(6,*)"                  : internal degeneracies are allowed."
+      write(6,*)"                  : External gaps must exceed 1e-5 eV."
+      write(6,*)"                  : Requires -kubo 1/2 -kubo_csv PATH."
+      write(6,*)"                  : Writes bundle CSV only; default 0."
+      write(6,*)"                  : Empty external space gives zero"
+      write(6,*)"                  : in the truncated WAVECAR basis."
+      write(6,*)" -kubo_csv PATH   : Opt-in band/bundle CSV, full"
       write(6,*)"                  : precision, omega_z_A2 normalized."
-      write(6,*)"                  : Includes spin,k,band,E,min_gap."
+      write(6,*)"                  : Band: spin,k,band,E,min_gap."
+      write(6,*)"                  : Bundle: spin,k,min_external_gap;"
+      write(6,*)"                  : band range and source NBANDS."
+      write(6,*)"                  : omega_z_A2 is in both schemas."
       write(6,*)"                  : Used only with -kubo 1 or 2."
       write(6,*)"                  : PATH must not already exist."
       write(6,*)" -ixt np -fbz f   : **For the special purpose"

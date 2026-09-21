@@ -112,11 +112,29 @@ def validate_native(csv_path, wavecar):
     }
 
 
-def run_native(binary, wavecar, name, output, record):
+def validate_bundle(csv_path, wavecar):
+    from plot_berry_panels import read_bundle
+    q, omega, gaps = read_bundle(csv_path, occupied=18, threshold=GAP_THRESHOLD_EV)
+    if q.shape != wavecar.kpoints.shape or not np.allclose(q, wavecar.kpoints, atol=1e-10, rtol=0):
+        raise ValueError("bundle CSV coordinates disagree with WAVECAR")
+    external_gaps = np.min(abs(wavecar.energies[:, :18, None] - wavecar.energies[:, None, 18:]), axis=(1, 2))
+    if not np.allclose(gaps, external_gaps, atol=1e-10, rtol=0):
+        raise ValueError("bundle CSV external gaps disagree with WAVECAR")
+    return dict(native_rows=len(q), valid_bundle_points=len(q),
+                minimum_external_gap_eV=float(gaps.min()),
+                gap_agreement_max_eV=float(np.max(abs(gaps - external_gaps))),
+                coordinate_agreement_max_fractional=float(np.max(abs(q - wavecar.kpoints))),
+                omega_range_A2=[float(omega.min()), float(omega.max())])
+
+
+def run_native(binary, wavecar, name, output, record, mode):
     directory = output / name
     directory.mkdir()
     command = [str(binary), "-f", str(wavecar), "-s", "2", "-kubo", "2",
-               "-ii", "17", "-if", "18", "-kubo_csv", "KUBO.csv", "-o", "BERRYCURV"]
+               "-ii", "1" if mode == "bundle" else "17", "-if", "18",
+               "-kubo_csv", "KUBO.csv", "-o", "BERRYCURV"]
+    if mode == "bundle":
+        command += ["-kubo_bundle", "1"]
     stage = {"argv": command, "cwd": str(directory), "timeout_s": 180}
     record["commands"].append(stage)
     write_json(output / "provenance.json", record)
@@ -144,6 +162,9 @@ def main():
     parser.add_argument("--path-wavecar", required=True, type=Path, help="matched 49-point K-Gamma-Kprime SOC WAVECAR")
     parser.add_argument("--binary", type=Path, default=ROOT / "build/vaspberry-gfortran")
     parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument("--mode", choices=("bundle", "band"), default="bundle",
+                        help="occupied1:18 trace (default), or individual bands17:18")
+    parser.add_argument("--map-style", choices=("smooth", "cells"), default="smooth")
     args = parser.parse_args()
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -166,18 +187,21 @@ def main():
         mesh = Wavecar(wavecar, spin=1, spinor_components=2)
         path = Wavecar(path_wavecar, spin=1, spinor_components=2)
         settings = validate_inputs(mesh, path)
+        settings.update(mode=args.mode, selected_bands=[1, 18] if args.mode == "bundle" else [17, 18],
+                        intermediate_bands="19:26 (internal bundle pairs cancel)" if args.mode == "bundle" else "1:26")
         poscar = output / "POSCAR.lattice"
         poscar.write_text("MoS2 reciprocal geometry from WAVECAR\n1.0\n" +
             "\n".join(" ".join(f"{value:.17g}" for value in vector) for vector in mesh.header.lattice) +
             "\nX\n1\nDirect\n0 0 0\n")
-        mesh_csv = run_native(binary, wavecar, "native-map", output, record)
-        path_csv = run_native(binary, path_wavecar, "native-path", output, record)
-        numerical = {"mesh": validate_native(mesh_csv, mesh), "path": validate_native(path_csv, path)}
+        mesh_csv = run_native(binary, wavecar, "native-map", output, record, args.mode)
+        path_csv = run_native(binary, path_wavecar, "native-path", output, record, args.mode)
+        validator = validate_bundle if args.mode == "bundle" else validate_native
+        numerical = {"mesh": validator(mesh_csv, mesh), "path": validator(path_csv, path)}
         bands_csv = output / "bands.csv"
         band_metadata = export_bands(path_wavecar, bands_csv, occupied=18)
-        common = dict(method="kubo", input_path=mesh_csv, poscar_path=poscar,
+        common = dict(method="kubo-bundle" if args.mode == "bundle" else "kubo", input_path=mesh_csv, poscar_path=poscar,
                       bands_csv=bands_csv, band=18, path_input=path_csv,
-                      node_indices=(1, 25, 49), node_labels=("K", "Gamma", "Kprime"))
+                      node_indices=(1, 25, 49), node_labels=("K", "Gamma", "Kprime"), map_style=args.map_style)
         plot_metadata = plot_panels(**common, output_path=output / "figure.png",
                                     curve_output=output / "path_curvature.csv")
         plot_panels(**common, output_path=output / "figure.pdf")
@@ -188,9 +212,9 @@ def main():
                   "settings": settings, "numerical_checks": {**numerical, "passed": True},
                   "band_export": band_metadata, "figure_conventions": plot_metadata,
                   "units": {"energy": "eV (unchanged WAVECAR zero)", "curvature": "Angstrom^2"},
-                  "scope": "Actual native Fortran Kubo calculation. Bands 17:18, intermediate bands 1:26. "
-                           "The map and path figure show band 18; points with a nearest-band gap at most "
-                           "1e-5 eV are masked. Canonical momentum omits PAW augmentation and nonlocal/SOC "
+                  "scope": ("Native occupied1:18 Kubo trace; internal pairs excluded before division, external states19:26. "
+                            if args.mode == "bundle" else "Native individual-band Kubo; bands17:18, intermediate1:26, near-degenerate states masked. ") +
+                           "Canonical momentum omits PAW augmentation and nonlocal/SOC "
                            "velocity terms. The 12 x 12 mesh and 26-band sum are tutorial settings, not a "
                            "material-convergence study.", "output_sha256": output_hashes}
         record.update(status="PASS", output_sha256=output_hashes,

@@ -104,6 +104,30 @@ workflow's discovery/input checks. The [scientific report](TECHNICAL_REPORT.md)
 and [MoS₂ tutorial](../examples/features/fukui-berry-curvature/) show the
 resulting figures and the complete VASP preparation commands.
 
+## Occupied-bundle Kubo and local single-band examples
+
+The 2026-09-21 follow-up adds `-kubo_bundle 1`, which excludes internal
+selected-band transitions before evaluating the Kubo sum. The final local
+suite passes **287 tests**, including scalar/spinor bundle sums, internal
+degeneracies, external-gap rejection, legacy normalization, periodic masked
+interpolation and native-value preservation. GNU serial and MPI builds and
+the help/runtime checks pass; a two-rank actual MoS₂ bundle CSV is identical
+to serial. Existing individual-band Kubo CSV and all three DAT files remain
+byte-identical when rerun on the prior 144-point input.
+
+The occupied MoS₂ bundle has 144 valid mesh points and 49 valid path points,
+with minimum external gap 1.673550 eV. At 18 shared mesh/path samples,
+an independent complex128 WAVECAR momentum contraction agrees within
+3.56e−14 Å² when using the native constants convention. The main figure
+shows all occupied bands 1–18; the K/K′ values are approximately ∓13.178 Å².
+
+A separate VASP calculation supplies two 9×9 valley patches for band 18.
+Every one of the 162 points is isolated, with minimum separation 0.130203 eV.
+The VASP run took 161 s and 653 MB peak resident memory. Independent EIGENVAL
+gap checks, native rerun and figure regeneration pass. The new smooth maps
+use NumPy bilinear interpolation for display only. The original numerical
+references and un-smoothed figures remain available.
+
 ## Separate developer checks and historical wavefunction fix
 
 The earlier QWZ, analytic optical, synthetic wavefunction and stored-field

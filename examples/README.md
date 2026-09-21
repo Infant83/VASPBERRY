@@ -8,7 +8,7 @@ introduces the methods and discusses the physical interpretation
 
 ## Fukui Berry curvature in the Brillouin zone
 
-![MoS2 Fukui Berry curvature map, band structure and marked symmetry path](features/fukui-berry-curvature/reference/map-path/figure.png)
+![MoS2 Fukui Berry curvature map, band structure and marked symmetry path](features/fukui-berry-curvature/reference/smooth/figure.png)
 
 **Monolayer MoS₂.** Occupied-band Berry curvature from the Fukui method,
 shown in Cartesian reciprocal coordinates with the first Brillouin-zone
@@ -25,7 +25,8 @@ explains how to prepare the VASP mesh, run VASPBERRY and draw this map.
 | [Fukui Berry curvature](features/fukui-berry-curvature/) | MoS₂, full 12×12 mesh | BZ map, marked K–Γ–K′ cut and band structure |
 | [Occupied Chern number](features/fukui-chern/) | Bi, full 12×12 mesh | C = 0 for occupied bands 1–10 |
 | [Z₂ invariant](features/z2/) | Bi, full 12×12 mesh | Z₂ = 1 |
-| [Kubo Berry curvature](features/kubo-curvature/) | MoS₂, full 12×12 mesh and matching path | Band-18 BZ map, path curvature and band structure |
+| [Kubo Berry curvature](features/kubo-curvature/) | MoS₂, full 12×12 mesh and matching path | Occupied-bundle BZ map, path curvature and band structure |
+| [Single-band valley curvature](features/kubo-curvature/valleys/) | MoS₂, two 9×9 K/K′ patches | Isolated band-18 maps, line cuts and valence bands |
 | [Charge Hall conductivity](features/hall-valley/) | Bi, full mesh, T = 0 | Zero charge-Hall response in the insulating gap |
 | [Circular optical transitions](features/circular-dichroism/) | MoS₂, K–Γ–K′ path | Opposite polarization selectivity at K and K′ |
 | [Real-space wavefunction](features/wavefunction/) | MoS₂, Γ point | Spinor-state density in the atomic unit cell |

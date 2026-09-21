@@ -18,9 +18,11 @@ the interchange files; [migration](MIGRATION.md) covers older normalization.
 ## Start from actual VASP output
 
 Use the [MoS₂ tutorial](../examples/features/kubo-curvature/) to run the native
-Fortran Kubo calculation on the supplied real WAVECAR. It includes the actual
-command, raw high-precision CSV, plotted reference and unresolved-band mask.
-The band-path input is not a full integration mesh. The native operator is
+Fortran Kubo calculation on real VASP WAVECARs generated with the linked
+preparation recipes. It includes the actual
+commands, high-precision CSV files, occupied-bundle maps and a single-band
+valley example. The full mesh and band path are calculated separately; a path
+is not an integration mesh. The native operator is
 canonical momentum; PAW/nonlocal/SOC velocity corrections are not supplied by
 that approximation.
 
@@ -29,6 +31,54 @@ production route: full-mesh WAVECAR occupied-subspace Fukui transport in the
 insulating gap. Bi's unresolved Kramers pairs prevent treating its individual
 bands as isolated point-Kubo input. Its zero charge Hall plateau is an actual
 material sanity check, not a nonzero valley-Hall demonstration.
+
+## Native curvature of a band bundle
+
+Select `-kubo_bundle 1` to calculate the trace curvature of a separated group
+of bands directly from WAVECAR. For the eighteen occupied SOC bands in the
+MoS₂ example:
+
+```bash
+build/vaspberry-gfortran -f WAVECAR -s 2 -kubo 2 \
+  -ii 1 -if 18 -kubo_bundle 1 -kubo_csv KUBO_BUNDLE.csv
+```
+
+Choose `-ii` and `-if` for the physical subspace in your own material. The
+same options work with the MPI binary. `-kubo 2` preserves the input point
+order and performs no Chern integration. `-kubo 1` also prints the finite-mesh
+bundle integral using the existing mesh parameters; it requires the full
+uniform mesh with the correct `-kx` and `-ky` values.
+
+For a selected group \(I\), let \(D_{\alpha,nm}\) denote the matrix
+element of \(\partial_{k_\alpha}H\). Its eigenstate representation is
+
+\[
+\Omega_{I,xy}(k)=-2\operatorname{Im}
+\sum_{n\in I}\sum_{m\notin I}
+\frac{D_{x,nm}(k)D_{y,mn}(k)}{(E_n-E_m)^2}.
+\]
+
+When individual bands are isolated, this equals their summed curvature.
+Internal pairs contribute opposite terms and cancel. The bundle routine
+removes those pairs before division, so internal degeneracies do not produce
+undefined individual-band terms. For the occupied manifold, this is the
+occupied-to-empty formulation of [Wang et al., Eq. (11), Sec. III D and
+Appendix B](https://doi.org/10.1103/PhysRevB.74.195118).
+
+Before calculating, the native routine checks every spin channel and sampled
+k point. Any gap from the selected group to an excluded source band at or
+below **1e-5 eV** rejects the run before an output CSV is created. This checks
+the sampled points and available source states; k and `NBANDS` convergence
+remain necessary. The native operator retains the existing bare-momentum
+approximation.
+
+The required `-kubo_csv` path must be new. Bundle mode writes a
+[bundle CSV](OUTPUT_FORMAT.md#native-kubo-bundle-csv) with the selected range,
+source band count and external gaps; it produces no legacy `.dat` files.
+Without `-kubo_bundle 1`, the existing band calculation and outputs are
+unchanged. The bundle has unit occupation throughout its selected subspace.
+It cannot replace band energies and occupation weights in an arbitrary
+chemical-potential or temperature scan.
 
 The remainder of this guide describes the generic matrix and point-curvature
 interfaces. They require the actual exported operator/curvature data specified
@@ -161,6 +211,8 @@ source-energy check does not prove isolation from states absent from the source
 or between sampled k points. Internally
 degenerate groups require an appropriate separated-subspace calculation; this
 single-band matrix command is not a general non-Abelian bundle algorithm.
+The native `-kubo_bundle 1` route above explicitly supports an internally
+degenerate, externally separated selected group.
 
 An empty isolated band's unit-occupation Chern is a valid geometric question.
 It is not the occupied Hall response of that material. In metals, electron and
@@ -208,6 +260,7 @@ File-format validation and physical convergence answer different questions.
 ## References
 
 - [Xiao, Chang and Niu, Rev. Mod. Phys. 82, 1959 (2010), Eq.1.13](https://doi.org/10.1103/RevModPhys.82.1959): spectral curvature formula.
+- [Wang et al., Phys. Rev. B 74, 195118 (2006)](https://doi.org/10.1103/PhysRevB.74.195118): occupied-to-empty curvature, cancellation of occupied pairs and the subspace trace. See also the [2007 erratum](https://doi.org/10.1103/PhysRevB.76.169902).
 - [Wannier90 Berry module documentation](https://wannier90.readthedocs.io/en/latest/user_guide/postw90/berry/): connection, velocity and intrinsic Hall conventions.
 - [Fukui, Hatsugai and Suzuki, JPSJ 74, 1674 (2005)](https://doi.org/10.1143/JPSJ.74.1674): geometric lattice Chern calculation and continuum limit.
 - [Gajdoš et al., Phys. Rev. B 73, 045112 (2006)](https://doi.org/10.1103/PhysRevB.73.045112): PAW optical matrix elements and generalized overlap terms.

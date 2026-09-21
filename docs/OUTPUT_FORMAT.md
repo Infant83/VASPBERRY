@@ -5,6 +5,49 @@ Version 1.3.0 introduces `vaspberry.band-curvature` schema version **1** and
 contracts and are independent of the software version. These formats do not
 replace the existing Fukui plaquette or `VASPBERRY_Z2_FIELD` formats.
 
+## Native Kubo bundle CSV
+
+Native `-kubo_bundle 1 -kubo_csv PATH` writes
+`VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1`. It contains one row per spin channel
+and source k point, with comment metadata followed by a CSV header. The
+file stores the trace curvature of bands `-ii` through `-if`, with unit
+occupation. It has no per-band energy column or legacy `.dat` companion.
+
+| Column | Meaning |
+|---|---|
+| `spin` | One-based WAVECAR spin-channel index; SOC spinors are already represented |
+| `k_index` | One-based source k-point index |
+| `kx_frac`, `ky_frac`, `kz_frac` | Fractional coordinates in the source reciprocal basis |
+| `omega_z_A2` | Selected-bundle Cartesian Ωxy in Å² |
+| `min_external_gap_eV` | Smallest selected-to-excluded source-band gap at this point |
+
+| Metadata | Meaning |
+|---|---|
+| `result_kind` | `ISOLATED_BUNDLE_TRACE` |
+| `result_status` | `PASS` after the spin/k isolation check |
+| `normalization` | `STANDARD_MINUS_TWO_IM`, with `A_i=i<u\|d/dk_i u>` |
+| `operator` | `WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY` |
+| `band_min`, `band_max`, `band_rank` | Selected one-based contiguous range and its size |
+| `source_nbands` | All retained source bands, including excluded intermediate states |
+| `intermediate_bands` | `EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS` |
+| `internal_transitions` | `EXCLUDED_ANALYTICALLY` |
+| `gap_threshold_eV` | `1e-5`; every external gap must exceed this value |
+| `occupation_weighting` | `NONE`; no Fermi or multiplicity weighting is added |
+| `no_external_states` | `true` only when every retained source band is selected |
+
+All spin channels and k points are checked before opening the new output
+file. Internal degeneracies are allowed; unresolved external gaps reject the
+run. Selecting all retained source bands produces zero in that truncated
+basis, with `min_external_gap_eV=NA` and
+`zero_trace_scope=TRUNCATED_WAVECAR_BASIS`. This is not evidence that omitted
+higher states make no physical contribution.
+
+Keep the matching POSCAR or WAVECAR to recover the reciprocal lattice for
+Cartesian plots. This CSV does not carry energies, integration weights or
+the lattice, and it is not the `vaspberry.band-curvature` NPZ/JSON input of
+the `hall` command. The [native bundle guide](KUBO_TRANSPORT.md#native-curvature-of-a-band-bundle)
+explains the calculation and the occupied-state interpretation.
+
 ## Curvature directory
 
 The producer writes a new directory containing:

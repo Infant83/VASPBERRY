@@ -6,7 +6,7 @@ even though the local curvature is finite. This example calculates the **Fukui
 plaquette curvature Ωz(kx, ky)** from an actual VASP spinor WAVECAR and plots
 it in Cartesian reciprocal coordinates inside the hexagonal first Brillouin zone.
 
-![MoS2 Fukui curvature map, matching bands and symmetry-path cut](reference/map-path/figure.png)
+![MoS2 Fukui curvature map, matching bands and symmetry-path cut](reference/smooth/figure.png)
 
 The reference above was calculated with the current native VASPBERRY routine
 from a newly generated, complete **12 × 12 × 1 VASP mesh**. The public structure
@@ -100,6 +100,7 @@ python3 tools/plot_berry_panels.py \
   --poscar examples/features/fukui-berry-curvature/inputs/POSCAR \
   --path-wavecar results/mos2-path-vasp/WAVECAR \
   --path-node-indices 1 25 49 --path-labels K Gamma Kprime \
+  --map-style smooth --display-grid 401 \
   --title '1H-MoS2' --output results/mos2-fukui-native/panels.png
 ```
 
@@ -107,8 +108,10 @@ The [path input guide](inputs/path/README.md) provides the 49-point KPOINTS
 and preparation details. The path NSCF step took about 55 seconds and 367 MB
 peak resident memory on the reference machine.
 
-The left panel retains the original plaquette values, clipped to the
-hexagonal Cartesian first BZ. Its color map is not smoothed. The lower-right
+The left panel uses **NumPy periodic bilinear interpolation** of the native
+plaquette values onto a 401×401 Cartesian display grid, clipped to the first
+BZ. The original samples and their integral are unchanged. Use
+`--map-style cells` for the un-smoothed cell display. The lower-right
 line is a **periodic bilinear cut of the 12×12 plaquette field** at the path
 coordinates; the line does not add newly calculated pointwise curvature.
 The upper-right panel uses the actual path VASP energies, relative to the
@@ -140,8 +143,8 @@ result record. Its input is the VASP WAVECAR. JSON files record results and prov
 
 | Output | Contents |
 |---|---|
-| [Panel PNG](reference/map-path/figure.png), [PDF](reference/map-path/figure.pdf) | BZ map, marked path, band structure and curvature cut shown above |
-| [Path curve](reference/map-path/path_curvature.csv), [bands](reference/path/bands.csv) | Plotted line values and unchanged 26-band VASP energies |
+| [Panel PNG](reference/smooth/figure.png), [PDF](reference/smooth/figure.pdf) | BZ map, marked path, band structure and curvature cut shown above |
+| [Path curve](reference/smooth/path_curvature.csv), [bands](reference/path/bands.csv) | Plotted line values and unchanged 26-band VASP energies |
 | [Path EIGENVAL](reference/path/EIGENVAL), [OUTCAR](reference/path/OUTCAR) | Matching 49-point VASP calculation |
 | [Standalone map](reference/figure.png), [PDF](reference/figure.pdf) | Original Cartesian first-BZ map |
 | [BERRYCURV.dat](reference/BERRYCURV.dat) | Current native Fukui output; only the workstation path in its comment header is normalized |
@@ -168,6 +171,12 @@ quantitative material predictions, converge the SCF density, cutoff and
 k mesh; a 12 × 12 color map does not establish a converged valley peak.
 
 ### Historical comparison
+
+The original [contour script](../../1H-MoS2/contour.py) used SciPy
+`griddata` with its default linear interpolation onto a 300×300 Cartesian
+grid. The current smooth panels use NumPy bilinear interpolation with
+explicit periodic wrapping; both are display operations. The earlier
+[cell panels](reference/map-path/figure.png) are also retained.
 
 The original public [BERRYCURV.dat](../../1H-MoS2/BERRYCURV.dat) is preserved.
 Its separate [archived figure](reference/archive/figure.png) and

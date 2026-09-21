@@ -13,6 +13,9 @@ for required in \
   "Ver $version" \
   "-h               : Print this help and stop" \
   "-z2  1" \
+  "-kubo_bundle 1" \
+  "External gaps must exceed 1e-5 eV." \
+  "Writes bundle CSV only; default 0." \
   "Fukui-Hatsugai n-field Z2 index" \
   "full, even Gamma-centered mesh" \
   "ICHARG=11 run with ISYM=-1" \
