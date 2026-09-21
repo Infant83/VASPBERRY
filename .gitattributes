@@ -13,4 +13,10 @@ examples/features/fukui-berry-curvature/reference/python/*.csv whitespace=traili
 examples/features/fukui-berry-curvature/reference/vasp/OUTCAR -whitespace
 examples/features/fukui-berry-curvature/reference/vasp/EIGENVAL -whitespace
 examples/features/fukui-berry-curvature/reference/vasp/OSZICAR -whitespace
+# Preserve native VASP output and CSV line endings in the matching-path examples.
+examples/features/fukui-berry-curvature/reference/path/OUTCAR -whitespace
+examples/features/fukui-berry-curvature/reference/path/EIGENVAL -whitespace
+examples/features/fukui-berry-curvature/reference/path/OSZICAR -whitespace
+examples/features/**/reference/path/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/features/**/reference/map-path/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
 examples/Bi_Z2/WAVECAR filter=lfs diff=lfs merge=lfs -text

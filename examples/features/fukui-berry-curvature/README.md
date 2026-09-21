@@ -6,7 +6,7 @@ even though the local curvature is finite. This example calculates the **Fukui
 plaquette curvature Ωz(kx, ky)** from an actual VASP spinor WAVECAR and plots
 it in Cartesian reciprocal coordinates inside the hexagonal first Brillouin zone.
 
-![MoS2 occupied-band Fukui curvature](reference/figure.png)
+![MoS2 Fukui curvature map, matching bands and symmetry-path cut](reference/map-path/figure.png)
 
 The reference above was calculated with the current native VASPBERRY routine
 from a newly generated, complete **12 × 12 × 1 VASP mesh**. The public structure
@@ -76,23 +76,54 @@ The sign convention is `phi = −Arg(product of link determinants)` around
 `Omega_z = phi / deltaS`, and the Chern number is `sum(phi)/(2*pi)`.
 Since `deltaS` has units Å⁻², Ωz has units **Å²**.
 
-## 3. Plot the Cartesian first Brillouin zone
+## 3. Plot the BZ map, band structure and symmetry-path cut
+
+The figure pairs the BZ map with bands and curvature along **K–Γ–K′**.
+The dashed line in the map is the path used in both right-hand panels.
+K is (1/3, 2/3), Γ is (0, 0), and K′ is −K in reciprocal coordinates.
+
+First prepare a matching path calculation from the completed full-mesh VASP
+directory. It retains the same charge density, potentials, 400 eV cutoff and
+26 bands; only the k-point list changes:
 
 ```bash
-python3 tools/plot_berry_curvature.py \
-  --input results/mos2-fukui-native/BERRYCURV.dat \
+python3 examples/features/fukui-berry-curvature/prepare_path.py \
+  --mesh-dir results/mos2-fullmesh-vasp \
+  --output-dir results/mos2-path-vasp
+
+cd results/mos2-path-vasp
+/path/to/vasp_ncl > vasp.stdout.log 2> vasp.stderr.log
+cd ../..
+
+python3 tools/plot_berry_panels.py \
+  --method fukui --input results/mos2-fukui-native/BERRYCURV.dat \
   --poscar examples/features/fukui-berry-curvature/inputs/POSCAR \
-  --output results/mos2-fukui-native/berry-curvature.png \
-  --title '1H-MoS2'
+  --path-wavecar results/mos2-path-vasp/WAVECAR \
+  --path-node-indices 1 25 49 --path-labels K Gamma Kprime \
+  --title '1H-MoS2' --output results/mos2-fukui-native/panels.png
 ```
 
-The plot preserves each native plaquette value, tiles periodic copies, and
-clips them to the reciprocal Wigner–Seitz cell. The axes are Cartesian kx and
-ky in Å⁻¹ with equal geometric scale, and the color bar is centered on zero.
-No interpolation introduces an apparently finer mesh. K denotes reciprocal
-coordinates (1/3, 2/3), matching the material's K–Γ–K′ path; K′ is the opposite valley.
+The [path input guide](inputs/path/README.md) provides the 49-point KPOINTS
+and preparation details. The path NSCF step took about 55 seconds and 367 MB
+peak resident memory on the reference machine.
 
-An optional runner performs steps 2 and 3, verifies the complete mesh, occupied
+The left panel retains the original plaquette values, clipped to the
+hexagonal Cartesian first BZ. Its color map is not smoothed. The lower-right
+line is a **periodic bilinear cut of the 12×12 plaquette field** at the path
+coordinates; the line does not add newly calculated pointwise curvature.
+The upper-right panel uses the actual path VASP energies, relative to the
+valence-band maximum. Occupied bands are blue and empty bands gray. Both
+right-hand panels use cumulative Cartesian path distance.
+
+To redraw the supplied results directly, replace `--path-wavecar` with
+`--bands-csv examples/features/fukui-berry-curvature/reference/path/bands.csv`
+and use the supplied `reference/BERRYCURV.dat` as `--input`. The plotter also
+accepts PDF output. It writes the line data and a plotting record beside the
+figure; exported band energies retain their original VASP zero.
+
+For a standalone map, `tools/plot_berry_curvature.py` remains available.
+
+An optional runner calculates the standalone map, verifies the complete mesh, occupied
 window and sampled gap, and checks the expected zero integral and
 opposite-sign time-reversed curvature:
 
@@ -109,7 +140,10 @@ result record. Its input is the VASP WAVECAR. JSON files record results and prov
 
 | Output | Contents |
 |---|---|
-| [figure.png](reference/figure.png), [figure.pdf](reference/figure.pdf) | Cartesian first-BZ map shown above |
+| [Panel PNG](reference/map-path/figure.png), [PDF](reference/map-path/figure.pdf) | BZ map, marked path, band structure and curvature cut shown above |
+| [Path curve](reference/map-path/path_curvature.csv), [bands](reference/path/bands.csv) | Plotted line values and unchanged 26-band VASP energies |
+| [Path EIGENVAL](reference/path/EIGENVAL), [OUTCAR](reference/path/OUTCAR) | Matching 49-point VASP calculation |
+| [Standalone map](reference/figure.png), [PDF](reference/figure.pdf) | Original Cartesian first-BZ map |
 | [BERRYCURV.dat](reference/BERRYCURV.dat) | Current native Fukui output; only the workstation path in its comment header is normalized |
 | [summary.csv](reference/summary.csv) | 144 unique plaquette centers, Ωz and flux; fractional centers use a centered primitive cell |
 | [result.json](reference/result.json) | Input identity, numerical checks, units and plotting convention |
@@ -163,5 +197,4 @@ native CLI and plotting tool for other systems. Plot with the matching
 POSCAR so the Cartesian Brillouin zone follows the actual reciprocal lattice.
 
 For a supplied-WAVECAR calculation of a topological invariant, see the
-[Bi occupied-subspace example](../fukui-chern/). For pointwise Kubo curvature
-along a MoS₂ path, see the [Kubo example](../kubo-curvature/).
+[Bi occupied-subspace example](../fukui-chern/). For a pointwise Kubo map and matching path, see the [Kubo example](../kubo-curvature/).

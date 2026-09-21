@@ -82,29 +82,34 @@ it does not assign independent curvatures to unresolved Kramers partners.
 
 | Dataset | Wavefunctions and sampling | Quantities shown |
 |---|---|---|
-| Monolayer MoS₂, full zone | SOC; 12×12 mesh; 400 eV; occupied bands 1–18 | Fukui curvature map and Chern integral |
-| Monolayer MoS₂, band path | SOC; 48 K–Γ–K′ points; 32 bands; 400 eV | Kubo curvature, optical spectra, Γ-point state density |
+| Monolayer MoS₂, full zone | SOC; 12×12 mesh; 26 bands; 400 eV | Fukui occupied-group and Kubo band-18 curvature maps |
+| Monolayer MoS₂, matching path | SOC; 49 K–Γ–K′ points; 26 bands; 400 eV | Band structure and Kubo curvature beside the maps |
+| Monolayer MoS₂, supplied path | SOC; 48 K–Γ–K′ points; 32 bands; 400 eV | Optical spectra and Γ-point state density |
 | Buckled Bi bilayer | SOC; full 12×12 mesh; 18 bands; occupied bands 1–10 | Fukui–Hatsugai n-field and Z₂ invariant |
 
 The [input guide](../examples/INPUTS.md) links the structures and VASP files.
-The path and full-zone datasets are separate calculations. For the full-zone
-MoS₂ example, VASP 5.4.4 regenerated the 26-band SOC wavefunctions on a full
-12×12 mesh from the public SCF charge density, with `ICHARG=11` and `ISYM=-1`.
-The sampled occupied-to-empty direct gap is 1.674 eV. The tutorial supplies
-the preparation files and commands to generate this 149 MB WAVECAR locally.
-The other examples use supplied or downloadable WAVECAR files.
+The MoS₂ maps and their matching path use the same public SCF charge density,
+structure, potentials, cutoff and 26-band window. VASP 5.4.4 generated the
+12×12 mesh and 49-point path with `ICHARG=11` and `ISYM=-1`; only the k-point
+list changes. The sampled occupied-to-empty direct gap is 1.674 eV. The
+tutorial supplies preparation files and commands for both WAVECARs.
+The optical and real-space examples retain the separate supplied 32-band path.
 
 ## 3. Results
 
 ### 3.1 MoS₂: Fukui Berry curvature over the full Brillouin zone
 
-![Fukui Berry curvature of monolayer MoS2](../examples/features/fukui-berry-curvature/reference/figure.png)
+![Fukui Berry curvature map, band structure and symmetry-path cut](../examples/features/fukui-berry-curvature/reference/map-path/figure.png)
 
-**Figure 1.** Occupied-group Berry curvature of monolayer MoS₂ in Cartesian
-$k_x,k_y$ coordinates (Å⁻¹). The boundary is the hexagonal first Brillouin
-zone, with Γ, K, K′ and M identified. Colors represent curvature in Å²;
-the plotted cells retain the 12×12 sampling without interpolation. The source
-is a new full-zone VASP calculation followed by native VASPBERRY overlaps.
+**Figure 1.** (a) Fukui Berry curvature of occupied bands 1–18 in the
+Cartesian first Brillouin zone. The dashed line marks K–Γ–K′, with
+K = (1/3, 2/3) and K′ = −K in reciprocal coordinates. Native 12×12 plaquette
+values are shown without smoothing. (b) Band structure along that path;
+energies are relative to the valence-band maximum, with occupied bands in
+blue and empty bands in gray. (c) A periodic bilinear cut of the plaquette
+field along the marked path. This line visualizes panel (a), rather than
+adding an independent pointwise curvature calculation. Both right-hand
+panels share the same Cartesian path distance.
 
 The curvature has opposite signs near the time-reversed K and K′ valleys.
 The largest sampled magnitudes are approximately **12.31 Å²**, while the
@@ -118,21 +123,30 @@ The present map is a finite-mesh example rather than a convergence study.
 
 [Calculation and plotting commands](../examples/features/fukui-berry-curvature/)
 
-### 3.2 MoS₂: dispersion and Kubo curvature along K–Γ–K′
+### 3.2 MoS₂: Kubo curvature in the Brillouin zone and along K–Γ–K′
 
-![MoS2 band dispersion and Kubo curvature](../examples/features/kubo-curvature/reference/figure.png)
+![MoS2 Kubo curvature map, band structure and symmetry-path curvature](../examples/features/kubo-curvature/reference/map-path/figure.png)
 
-**Figure 2.** Valence-band dispersion and canonical-momentum Kubo curvature
-of bands 17 and 18 along K–Γ–K′. The horizontal positions follow Cartesian
-path distance. Gaps in the curvature curves indicate unresolved individual
-states near Γ; those values are not connected through the degeneracy.
+**Figure 2.** (a) Canonical-momentum Kubo curvature of band 18 on the
+12×12 mesh, using intermediate bands 1–26. Each colored cell represents one
+k-point sample. The dashed K–Γ–K′ path is the same as in Figure 1.
+(b) Band structure along the path, with band 18 highlighted in orange.
+(c) Kubo curvature calculated directly at the 49 path points, using the
+same intermediate-band window. Gray map cells and gaps in the curve mark
+states with a nearest-band separation of at most $10^{-5}$ eV. These
+unresolved individual-band values are omitted from both panels.
 
-Band 18 has opposite curvature at the two valleys, approximately
-−6.67 Å² at K and +6.67 Å² at K′ for this band window. These values are
-pointwise, band-resolved quantities. Figure 1 instead shows the finite-cell
-curvature of the complete occupied group, so the two figures are not a
-point-for-point comparison of identical observables. A band path also
-cannot supply the area integral needed for a Chern number or Hall conductivity.
+Band 18 has opposite valley curvatures, approximately **−6.41 Å² at K** and
+**+6.41 Å² at K′** for this 26-band window. The map and path use matching
+electronic-structure settings, and the band panel locates the selected state
+relative to the gap. The 12×12 sampling and intermediate-state sum still
+require convergence for quantitative material predictions.
+
+Figure 1 shows the complete occupied-group plaquette curvature; Figure 2
+shows pointwise curvature of a single band in the canonical-momentum
+approximation. Their amplitudes therefore represent different quantities.
+Neither a line cut nor an individual-band map with unresolved states supplies
+the complete occupied-space integral for a Chern number or Hall conductivity.
 
 [Calculation and interpretation](../examples/features/kubo-curvature/)
 

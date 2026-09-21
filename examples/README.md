@@ -8,11 +8,12 @@ introduces the methods and discusses the physical interpretation
 
 ## Fukui Berry curvature in the Brillouin zone
 
-![MoS2 Fukui Berry curvature in Cartesian reciprocal space](features/fukui-berry-curvature/reference/figure.png)
+![MoS2 Fukui Berry curvature map, band structure and marked symmetry path](features/fukui-berry-curvature/reference/map-path/figure.png)
 
 **Monolayer MoS₂.** Occupied-band Berry curvature from the Fukui method,
 shown in Cartesian reciprocal coordinates with the first Brillouin-zone
-boundary and high-symmetry points. The K and K′ valleys carry opposite
+boundary and the K–Γ–K′ path marked. The adjacent panels show the matching
+band structure and a curvature cut along that path. The K and K′ valleys carry opposite
 curvature, while the full-zone Chern number vanishes. The figure comes from
 a new full-mesh VASP and VASPBERRY calculation. The [Fukui Berry-curvature tutorial](features/fukui-berry-curvature/)
 explains how to prepare the VASP mesh, run VASPBERRY and draw this map.
@@ -21,10 +22,10 @@ explains how to prepare the VASP mesh, run VASPBERRY and draw this map.
 
 | Quantity | System and sampling | Result |
 |---|---|---|
-| [Fukui Berry curvature](features/fukui-berry-curvature/) | MoS₂, full 12×12 mesh | Ωz(kx, ky) across the hexagonal Brillouin zone |
+| [Fukui Berry curvature](features/fukui-berry-curvature/) | MoS₂, full 12×12 mesh | BZ map, marked K–Γ–K′ cut and band structure |
 | [Occupied Chern number](features/fukui-chern/) | Bi, full 12×12 mesh | C = 0 for occupied bands 1–10 |
 | [Z₂ invariant](features/z2/) | Bi, full 12×12 mesh | Z₂ = 1 |
-| [Kubo Berry curvature](features/kubo-curvature/) | MoS₂, K–Γ–K′ path | Band dispersion and band-resolved Ωz |
+| [Kubo Berry curvature](features/kubo-curvature/) | MoS₂, full 12×12 mesh and matching path | Band-18 BZ map, path curvature and band structure |
 | [Charge Hall conductivity](features/hall-valley/) | Bi, full mesh, T = 0 | Zero charge-Hall response in the insulating gap |
 | [Circular optical transitions](features/circular-dichroism/) | MoS₂, K–Γ–K′ path | Opposite polarization selectivity at K and K′ |
 | [Real-space wavefunction](features/wavefunction/) | MoS₂, Γ point | Spinor-state density in the atomic unit cell |
@@ -32,7 +33,9 @@ explains how to prepare the VASP mesh, run VASPBERRY and draw this map.
 Full-zone integrals require a complete periodic mesh. The supplied MoS₂
 band-path WAVECAR serves the Kubo, optical and wavefunction examples. The
 MoS₂ full-mesh WAVECAR is generated once using the supplied VASP preparation
-and public charge density; its size is about 149 MB. The full Bi WAVECAR is
+and public charge density; its size is about 149 MB. The map/path figures
+use a matching 49-point, 26-band VASP path generated with the same setup.
+The full Bi WAVECAR is
 available for direct recalculation.
 
 ## Getting started

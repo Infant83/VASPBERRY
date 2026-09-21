@@ -49,7 +49,7 @@ WAVECAR format and compiler compatibility are described in the
 | Two-dimensional Z₂ invariant | Fortran `-z2 1`; [Fukui–Hatsugai guide](docs/Z2_FUKUI_HATSUGAI.md) | [Z₂ / Bi](examples/features/z2/) |
 | Circular dichroism / optical selectivity | Fortran `-cd`; [usage below](#usage) | [Circular dichroism](examples/features/circular-dichroism/) |
 | Real-space wavefunction at Gamma | Fortran `-wf`; [usage below](#usage) | [Wavefunction](examples/features/wavefunction/) |
-| WAVECAR Kubo Berry curvature | Fortran canonical-momentum implementation; [Kubo guide](docs/KUBO_TRANSPORT.md) | [Actual MoS₂ band-path calculation](examples/features/kubo-curvature/) |
+| WAVECAR Kubo Berry curvature | Fortran canonical-momentum implementation; [Kubo guide](docs/KUBO_TRANSPORT.md) | [MoS₂ BZ map, symmetry path and bands](examples/features/kubo-curvature/) |
 | Exported interband-matrix curvature and transport | [Matrix interface and physical-operator contract](docs/KUBO_TRANSPORT.md) | [Developer numerical checks](validation/models/kubo-curvature/) |
 | Two-dimensional intrinsic charge Hall response and reciprocal-space regions | Standardized curvature and occupations; [Hall guide](docs/KUBO_TRANSPORT.md) | [Actual Bi occupied-subspace Hall](examples/features/hall-valley/) |
 | WAVECAR-direct Fukui export and guarded geometric transport | `tools/wavecar_fukui.py`; [valley-transport guide](docs/VALLEY_TRANSPORT.md) | [Actual Bi occupied-subspace calculation](examples/features/hall-valley/) |
@@ -125,8 +125,9 @@ transport workflow with its occupation and band-window checks.
 
 ### Python workflows
 
-The [MoS₂ Kubo tutorial](examples/features/kubo-curvature/) starts from a real
-WAVECAR and exports canonical-momentum curvature along a band path. The
+The [MoS₂ Kubo tutorial](examples/features/kubo-curvature/) starts from real
+WAVECARs and pairs a Brillouin-zone curvature map with a marked symmetry path,
+band structure and path curvature. The
 [Bi Hall tutorial](examples/features/hall-valley/) uses full-mesh occupied-subspace
 Fukui flux in its insulating gap. Its unresolved Kramers partners are not
 used as separately isolated Kubo bands.

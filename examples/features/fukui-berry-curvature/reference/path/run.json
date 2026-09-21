@@ -1,0 +1,136 @@
+{
+  "status": "PASS",
+  "command": [
+    "vasp_ncl"
+  ],
+  "started_utc": "2026-09-21T13:28:29.009800+00:00",
+  "source_case": "Full-mesh setup in ../vasp/run.json and ../../inputs/",
+  "input_source": "Identical public-derived fullmesh inputs; only KPOINTS changed",
+  "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+  "threads": 1,
+  "timeout_seconds": 300,
+  "stack_bytes": 67104768,
+  "input_sha256": {
+    "INCAR": "6d6c4278a139db5b59bfcdd71ad557d9569957e336c9d67796a882141ba5fc3d",
+    "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+    "POTCAR": "b8f5bccb188e7a8b1082445abe307e62f27d3cd9f9f7b128325dacee3e9192a0",
+    "CHGCAR": "e6d9d95d4d5f7afef4d69a9f13f780553b737f78974355923cb3fd532dff311d",
+    "KPOINTS": "537f954647a6640ab12f018d8d5b703b9c0635977cede96c2d76c3304b2eba75"
+  },
+  "path_node_indices_1based": [
+    1,
+    25,
+    49
+  ],
+  "path_labels": [
+    "K",
+    "Gamma",
+    "Kprime"
+  ],
+  "path_nodes_fractional": [
+    [
+      0.3333333333333333,
+      0.6666666666666666,
+      0
+    ],
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      -0.3333333333333333,
+      -0.6666666666666666,
+      0
+    ]
+  ],
+  "returncode": 0,
+  "wall_seconds": 54.60752714588307,
+  "converged": true,
+  "normal_footer": true,
+  "peak_rss_bytes": 367398912.0,
+  "sampled_peak_rss_bytes": 348614656,
+  "finished_utc": "2026-09-21T13:29:23.693829+00:00",
+  "output_bytes": {
+    "WAVECAR": 50646800,
+    "OUTCAR": 132123,
+    "OSZICAR": 832,
+    "EIGENVAL": 45322,
+    "vasprun.xml": 135645,
+    "stdout.log": 1586,
+    "stderr.log": 0
+  },
+  "command_note": "Local executable path normalized; no VASP executable or PAW datasets are distributed.",
+  "original_full_run_output_sha256": {
+    "WAVECAR": "4388ac495bf5e1b689c7272b71bb26c4635becbbe4f67fc0a8c185a0249b0a69",
+    "OUTCAR": "f8ee80529f988344e65b30494d6435c2b379546d0cbfd1dbabba1a481443b5f4",
+    "OSZICAR": "38f09fae8f08da4cf1a2f1283cd1d78f83519e2a7d49fcd48b9ac71451d0e6b6",
+    "EIGENVAL": "dc312998c45e59c07d1f97395ac691c6f4b763f8e98e7a08dda2a52375f78861",
+    "vasprun.xml": "22c5fb03dd0141035a1e6277c9b31dd8890bbe3cf931d9eeb54b333a62b548cd",
+    "stdout.log": "92d06f892dd0de1bbfd347edcdea5a5c5f4e7e65abb146b4e6483ad61e6c9721",
+    "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "output_sha256": {
+    "EIGENVAL": "dc312998c45e59c07d1f97395ac691c6f4b763f8e98e7a08dda2a52375f78861",
+    "OUTCAR": "f8ee80529f988344e65b30494d6435c2b379546d0cbfd1dbabba1a481443b5f4",
+    "OSZICAR": "38f09fae8f08da4cf1a2f1283cd1d78f83519e2a7d49fcd48b9ac71451d0e6b6",
+    "bands.csv": "e7082383919d9cbb79fac30f653ba3e42726d61fdc941305f0dad3b0d415454f",
+    "shared_point_comparison.csv": "8fd72bd1942947f86237dc32c61703c8f5c6831f31ffc0ce2f094a4193236928",
+    "shared_curvature_comparison.csv": "cf82c375178874e2f94fe095f0727f574556ca69a4af03e47bfe36b3c5f5b377"
+  },
+  "checks": {
+    "source_nkpoints": 49,
+    "source_nbands": 26,
+    "native_rows": 98,
+    "bands_csv_rows": 1274,
+    "coordinate_energy_gap_agreement": {
+      "energy_eV": 0.0,
+      "coordinates_fractional": 0.0,
+      "min_gap_eV": 0.0
+    },
+    "minimum_occupied_unoccupied_gap_eV": 1.6735503639546383,
+    "global_gap_eV": 1.673550360127252,
+    "minimum_individual_isolation_eV": 3.1321434335040976e-09,
+    "valid_points_per_band": {
+      "17": 46,
+      "18": 46
+    },
+    "masked_indices_per_band": {
+      "17": [
+        24,
+        25,
+        26
+      ],
+      "18": [
+        24,
+        25,
+        26
+      ]
+    },
+    "odd_curvature_parity_max_abs_A2": {
+      "17": 0.00046062692976921865,
+      "18": 0.0001905883679967288
+    },
+    "shared_point_count": 9,
+    "fullmesh_shared_max_energy_error_all26_eV": 0.0008664319843294521,
+    "fullmesh_shared_max_energy_error_occupied18_eV": 2.5901906397507446e-08,
+    "fullmesh_shared_max_energy_error_bands17_18_eV": 7.291856007896058e-11,
+    "passed": true
+  },
+  "shared_curvature_checks": {
+    "status": "PASS",
+    "compared_rows": 18,
+    "valid_compared_rows": 16,
+    "masked_points_1based": [
+      25
+    ],
+    "max_absolute_difference_A2": 0.0002641898702631096,
+    "endpoint_max_absolute_difference_A2": 8.078046370840752e-05,
+    "per_band_max_absolute_difference_A2": {
+      "17": 0.0002641898702631096,
+      "18": 0.0001525567079405099
+    },
+    "note": "Identical fixed density and INCAR settings, separately converged VASP k-point lists. Differences in the finite unoccupied manifold remain; not an exact bitwise reproduction."
+  },
+  "wavecar_distribution": "Generate with ../../inputs/path/README.md; matching WAVECAR is not bundled."
+}
