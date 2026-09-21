@@ -74,7 +74,7 @@ Within an insulating gap at zero temperature, this becomes
 $\sigma_{xy}=-(e^2/h)C_\mathrm{occ}$ in the stated convention. General
 background on Berry curvature and electronic transport is given in
 [Xiao, Chang and Niu](https://doi.org/10.1103/RevModPhys.82.1959).
-The gap-only Bi example below evaluates the occupied-group flux directly;
+The [Bi Hall example](../examples/features/hall-valley/) evaluates the occupied-group flux directly;
 it does not assign independent curvatures to unresolved Kramers partners.
 
 ## 2. Materials and numerical settings
@@ -83,7 +83,7 @@ it does not assign independent curvatures to unresolved Kramers partners.
 |---|---|---|
 | Monolayer MoS₂, full zone | SOC; 12×12 mesh; 400 eV; occupied bands 1–18 | Fukui curvature map and Chern integral |
 | Monolayer MoS₂, band path | SOC; 48 K–Γ–K′ points; 32 bands; 400 eV | Kubo curvature, optical spectra, Γ-point state density |
-| Buckled Bi bilayer | SOC; full 12×12 mesh; 18 bands; occupied bands 1–10 | Chern number, Z₂ and insulating-gap charge Hall response |
+| Buckled Bi bilayer | SOC; full 12×12 mesh; 18 bands; occupied bands 1–10 | Fukui–Hatsugai n-field and Z₂ invariant |
 
 The [input guide](../examples/INPUTS.md) links the structures and VASP files.
 The path and full-zone datasets are separate calculations. For the full-zone
@@ -153,29 +153,39 @@ optical matrix elements.
 
 [Optical calculation guide](../examples/features/circular-dichroism/)
 
-### 3.4 Bi: Chern number, Z₂ and charge Hall response
+### 3.4 Bi: Fukui–Hatsugai Z₂ invariant and n-field map
 
-The complete occupied group of the Bi bilayer gives **C = 0** and
-**Z₂ = 1**. These results are compatible: the Z₂ invariant diagnoses a
-time-reversal-symmetric topological phase even when the charge Chern number
-vanishes. The sampled minimum direct gap is about **0.592 eV**, and the
-global band gap is about **0.510 eV**.
+For the Bi bilayer, VASPBERRY evaluates the
+[Fukui–Hatsugai lattice n-field](https://doi.org/10.1143/JPSJ.76.053702)
+from the occupied SOC bands 1–10 on a full Γ-centered 12×12 mesh.
+With the time-reversal-compatible gauge used in this construction, the
+Z₂ invariant is the parity of the integer-field sum over a half Brillouin zone:
 
-![Bi insulating-gap Hall conductivity](../examples/features/hall-valley/reference/figure.png)
+$$
+\nu=\left[\sum_{p\in B_{1/2}} n(p)\right]\bmod 2.
+$$
 
-**Figure 4.** Intrinsic charge sheet conductivity at zero temperature across
-the sampled Bi insulating gap. The occupied-group Fukui result is zero
-throughout the calculated chemical-potential interval. Band-edge markers
-show the available gap; no metallic response is inferred beyond the scan.
+![Bi Fukui-Hatsugai integer n-field and Z2 invariant](../examples/features/z2/reference/figure.png)
 
-The result is the expected charge-Hall cancellation for this time-reversal
-symmetric system. It does not represent a nonzero valley-Hall signal.
-The [Chern guide](../examples/features/fukui-chern/) and
-[Z₂ guide](../examples/features/z2/) provide the corresponding full-zone
-figures. The Z₂ n-field is gauge dependent; its parity, rather than its local
-color pattern, is the reported topological invariant.
+**Figure 4.** Fukui–Hatsugai integer field $n(\mathbf k)$ calculated from the
+Bi VASP spinor wavefunctions. Red, white and blue denote +1, 0 and −1,
+respectively. The native plaquettes are displayed without interpolation in
+the hexagonal first Brillouin zone, with Cartesian $k_x,k_y$ axes in Å⁻¹.
+The occupied-band calculation gives **Z₂ = 1**.
 
-[Hall calculation guide](../examples/features/hall-valley/)
+The two complementary half-zone sums are **−3 and +3**. Both are odd,
+so their parities agree at **$\nu=1$**, identifying the nontrivial
+time-reversal-symmetric insulating phase for this calculation.
+The sampled minimum direct and global gaps are **0.592 eV** and **0.510 eV**.
+
+The local n-field depends on the gauge and logarithm branch; its half-zone
+parity is the invariant. The sums above use the original mesh half-zones.
+Folding the plaquettes into the hexagonal display does not redefine those
+summation domains. The separate occupied **C = 0** and zero charge-Hall
+response are consistent with this nontrivial Z₂ result.
+
+[Z₂ calculation and plotting guide](../examples/features/z2/) ·
+[Numerical n-field data](../examples/features/z2/reference/Z2_FIELD.csv)
 
 ### 3.5 MoS₂: a real-space Γ state
 
@@ -218,3 +228,7 @@ numerical files for reproducibility.
 3. D. Xiao, G.-B. Liu, W. Feng, X. Xu and W. Yao, *Coupled Spin and Valley
    Physics in Monolayers of MoS₂ and Other Group-VI Dichalcogenides*,
    [Phys. Rev. Lett. **108**, 196802 (2012)](https://doi.org/10.1103/PhysRevLett.108.196802).
+4. T. Fukui and Y. Hatsugai, *Quantum Spin Hall Effect in Three Dimensional
+   Materials: Lattice Computation of Z₂ Topological Invariants and Its
+   Application to Bi and Sb*,
+   [J. Phys. Soc. Jpn. **76**, 053702 (2007)](https://doi.org/10.1143/JPSJ.76.053702).
