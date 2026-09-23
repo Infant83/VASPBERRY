@@ -6,7 +6,8 @@
 
 VASPBERRY evaluates geometric and response properties from VASP electronic
 states. This report illustrates the discrete-wavefunction and Kubo approaches
-with monolayer MoS₂ and a Bi bilayer. The examples cover reciprocal-space Berry
+with monolayer MoS₂, a Bi bilayer and a three-septuple-layer MnBi₂Te₄ film.
+The examples cover reciprocal-space Berry
 curvature, Chern and Z₂ indices, intrinsic charge Hall response, circular
 optical transitions and real-space spinor densities. Berry-curvature maps use
 Cartesian coordinates, band paths use distances along named high-symmetry
@@ -92,6 +93,48 @@ background on Berry curvature and electronic transport is given in
 The [Bi Hall example](../examples/features/hall-valley/) evaluates the occupied-group flux directly;
 it does not assign independent curvatures to unresolved Kramers partners.
 
+For chemical potentials crossing band edges, the Kubo implementation uses
+unordered interband pairs. With $N^{xy}_{nm}=-2\,\mathrm{Im}(D_{x,nm}D_{y,mn})$,
+the occupation-weighted integrand is
+$\sum_{n<m}(f_n-f_m)N^{xy}_{nm}/(E_n-E_m)^2$.
+Equal-occupation pairs cancel before division. Changes from a gap reference
+are evaluated with occupation differences before summation. This preserves
+small doping responses without subtracting large filled-band baselines.
+The temperature enters only the Fermi function; the electronic structure
+remains fixed. Regional contributions integrate the same charge response over
+specified parts of the BZ, with a K−K′ difference defined without a factor of
+one-half. Such a partition is not a separately conserved valley-current operator.
+
+### 1.3 PAW optical matrices and dense-mesh references
+
+For an insulating occupied bundle, the supported standard VASP longitudinal
+optical calculation supplies matrix elements
+$C_{cv,\alpha}=\langle u_c|\partial_{k_\alpha}u_v\rangle$ in Å. Here $v$ and
+$c$ label occupied and empty states. Their contribution to the trace is
+
+$$
+\Omega^{\rm occ}_{xy}=-2\,\mathrm{Im}
+\sum_{v,c} C_{cv,x}^{*} C_{cv,y}.
+$$
+
+The energy denominator is already contained in these derivatives. The
+longitudinal PAW optical expression includes projector and augmentation terms,
+as described by [Gajdoš et al.](https://doi.org/10.1103/PhysRevB.73.045112).
+The `waveder-hall` route checks the actual VASP output, occupied filling and
+global gap before integration. Its present scope is VASP 5.4.4, zero
+temperature and a fixed insulating bundle; the occupied–empty separation
+must exceed the producer's 2 meV degeneracy threshold. Mesh and empty-state
+convergence remain separate requirements.
+
+For narrow curvature peaks, Wannier interpolation provides an independent
+dense-mesh reference using Hamiltonian and position-operator matrix elements.
+The full formulation, including the basis-connection terms, follows
+[Wang et al.](https://doi.org/10.1103/PhysRevB.74.195118).
+An interpolated result must be checked against directly calculated bands and
+local curvature. Results from the `postw90` program in
+[Wannier90](https://doi.org/10.1088/1361-648X/ab51ff) are identified separately
+from the VASPBERRY WAVECAR and WAVEDER calculations.
+
 ## 2. Materials and numerical settings
 
 | Dataset | Wavefunctions and sampling | Quantities shown |
@@ -99,8 +142,10 @@ it does not assign independent curvatures to unresolved Kramers partners.
 | Monolayer MoS₂, full zone | SOC; 12×12 mesh; 26 bands; 400 eV | Fukui and Kubo occupied-bundle curvature, bands 1–18 |
 | Monolayer MoS₂, matching path | SOC; 49 K–Γ–K′ points; 26 bands; 400 eV | Band structure and Kubo curvature beside the maps |
 | Monolayer MoS₂, local valleys | SOC; two 9×9 patches; 26 bands; 400 eV | Isolated band-18 curvature near K and K′ |
+| Monolayer MoS₂, transport | SOC; 12×12 to 36×36 meshes; stored and retained band windows varied separately; 400 eV | Chemical-potential and temperature dependence of regional Hall response |
 | Monolayer MoS₂, supplied path | SOC; 48 K–Γ–K′ points; 32 bands; 400 eV | Optical spectra and Γ-point state density |
 | Buckled Bi bilayer | SOC; full 12×12 mesh; 18 bands; occupied bands 1–10 | Fukui–Hatsugai n-field and Z₂ invariant |
+| MnBi₂Te₄, three septuple layers | SOC+U; 21 atoms; full 6×6 VASP mesh; 192 bands; occupied bands 1–123; 270 eV | Magnetic Chern invariant, bands and Hall-integration checks |
 
 The [input guide](../examples/INPUTS.md) links the structures and VASP files.
 The MoS₂ maps and their matching path use the same public SCF charge density,
@@ -188,11 +233,51 @@ the appropriate isolated band bundle and complete BZ sampling.
 
 [VASP preparation, calculation and reference data](../examples/features/kubo-curvature/valleys/)
 
+### 3.2.2 MoS₂: intrinsic charge and regional valley Hall response
+
+![MoS2 regional Hall response, bands and mesh refinement](../examples/features/kubo-hall/reference/figures/mos2-hall.png)
+
+**Figure 4.** (a) Cartesian first BZ with periodic K/K′ disks of radius
+0.35 Å⁻¹ and the marked K–Γ–K′ line. (b) The matching 26-band dispersion,
+with the chemical-potential interval shaded. (c) Regional Hall changes at
+300 K on the 36×36 mesh, using 60 stored bands and pairs within bands 1–40.
+(d) Mesh refinement at that fixed band window. Energies are relative to each
+source's valence-band maximum; the band path uses the same density and cutoff.
+
+The 61-point scan covers $E_v-0.20$ to $E_v+0.10$ eV at 0 and 300 K.
+We define $\Delta\sigma(\mu)=\sigma(\mu)-\sigma(\mu_{\rm ref})$ with a midgap
+reference, and the valley difference as $\Delta\sigma_K-\Delta\sigma_{K'}$.
+The total charge response remains below **$2.24\times10^{-9}\,e^2/h$**,
+consistent with time-reversal symmetry. Numerical tables also give absolute
+conductivities and carrier counts.
+
+Two numerical choices were varied separately at 300 K. The relative L2
+difference below is the norm of the curve change divided by the finer curve's
+norm, on a common $\mu-E_v$ grid.
+
+| Test | Refinement | Relative L2 change |
+|---|---|---:|
+| k mesh; 60 stored bands, pair cutoff 40 | 12×12 → 24×24 | 12.89% |
+| k mesh; same band window | 24×24 → 36×36 | 1.482% |
+| Pair cutoff; one 12×12, 96-band source | 60 → 80 | 1.263% |
+| Pair cutoff; same source | 80 → 90 | 0.202% |
+
+The final mesh change exceeds the stated 1% criterion. The last cutoff
+increment is below 1%; these separate tests do not establish joint
+convergence. The [reference guide](../examples/features/kubo-hall/) includes
+the commands and additional checks on empty-state accuracy and numerical
+degeneracy grouping.
+
+This rigid-band response uses canonical momentum, omitting PAW augmentation
+and nonlocal/SOC velocity terms. Numerical refinement does not remove those
+approximations. The [supplementary plot](../examples/features/kubo-hall/reference/figures/mos2-hall-checks.pdf)
+retains the finite-mesh steps at 0 K.
+
 ### 3.3 MoS₂: valley-selective circular transitions
 
 ![Circular optical spectra in MoS2](../examples/features/circular-dichroism/reference/figure.png)
 
-**Figure 4.** Left- and right-circular spectra at K and K′ and the selectivity
+**Figure 5.** Left- and right-circular spectra at K and K′ and the selectivity
 $\eta=(I_L-I_R)/(I_L+I_R)$ along the path. Normal incidence is used, with
 0.05 eV Gaussian broadening and transitions from occupied bands 1–18 to
 bands 19–20. White regions in the selectivity map exclude negligible intensity.
@@ -220,7 +305,7 @@ $$
 
 ![Bi Fukui-Hatsugai integer n-field and Z2 invariant](../examples/features/z2/reference/figure.png)
 
-**Figure 5.** Fukui–Hatsugai integer field $n(\mathbf k)$ calculated from the
+**Figure 6.** Fukui–Hatsugai integer field $n(\mathbf k)$ calculated from the
 Bi VASP spinor wavefunctions. Red, white and blue denote +1, 0 and −1,
 respectively. The native plaquettes are displayed without interpolation in
 dimensionless reduced coordinates, $\mathbf k=q_1\mathbf b_1+q_2\mathbf b_2$,
@@ -244,7 +329,7 @@ response are consistent with this nontrivial Z₂ result.
 
 ![MoS2 Gamma state in Cartesian real space](../examples/features/wavefunction/reference/figure.png)
 
-**Figure 6.** Projected pseudo-wavefunction density of band 18 at Γ and its
+**Figure 7.** Projected pseudo-wavefunction density of band 18 at Γ and its
 plane average along z. The in-plane plot uses the Cartesian geometry of the
 oblique primitive cell. Both spinor components are retained.
 
@@ -254,6 +339,59 @@ plot, so a unit density integral is not imposed. The example illustrates
 conversion of complex amplitudes into a physical-coordinate density map.
 
 [Wavefunction calculation guide](../examples/features/wavefunction/)
+
+### 3.6 MnBi₂Te₄: a magnetic Chern insulator
+
+A three-septuple-layer MnBi₂Te₄ film provides a compact magnetic example:
+21 atoms with out-of-plane +z/−z/+z layer magnetization. The geometry retains bulk layer spacings
+from [Yan et al.](https://doi.org/10.1103/PhysRevMaterials.3.064202), with
+in-plane $a=4.336$ Å, PBE+SOC and Mn $U_{\rm eff}=5.34$ eV following
+[Otrokov et al.](https://doi.org/10.1103/PhysRevLett.122.107202).
+This unrelaxed geometry is distinct from the relaxed films in that study.
+
+![MnBi2Te4 magnetic bands, gap Hall response and integration refinement](../examples/materials/mnbi2te4-qah/reference/figures/mnbi2te4-qah.png)
+
+**Figure 8.** (a) Wannier-interpolated bands along Γ–M–K–Γ, with direct VASP
+checks; the inset resolves the gap along K–Γ–M near Γ. (b) Full-connection
+Kubo sheet conductivity at three chemical potentials inside the gap, at
+zero temperature. (c) Deviation $|\sigma_{xy}/(e^2/h)-1|$ under integration refinement at fixed
+Wannier operators. Labels specify the base mesh, local subdivision and
+Γ-region radius in Å⁻¹.
+The dashed line in (b) is the topological expectation, not a fitted value.
+
+The sampled VASP gap is **17.10 meV**. The occupied 123-band Fukui calculation
+gives **C = −1**, corresponding to $\sigma_{xy}=+e^2/h$ in our convention.
+Direct PAW optical curvature reaches approximately $-1.52\times10^4$ Å² at
+Γ; a uniform 6×6 integration consequently gives **163.109 $e^2/h$**.
+Resolving this narrow peak is essential even though the discrete Chern
+number is already an integer.
+
+The dense reference uses 138 VASP-derived Wannier orbitals and all Hamiltonian
+and position-operator terms in `postw90`. Its 87 occupied states exclude
+36 deep bands whose independently calculated Chern number is zero.
+Near Γ, direct VASP band edges agree within **1.26 meV** and local curvature
+within **1.44%**. The DFT trace includes the 36 deep bands omitted from the
+Wannier model, so this local comparison retains that subspace difference.
+Across all twelve validation locations, the largest band-edge difference is
+18.14 meV.
+
+Expanding the refined Γ region from 0.12 to 0.18 Å⁻¹ changes the integral by
+$5.42\times10^{-4}\,e^2/h$. The final 27,600-point calculation gives
+**$\sigma_{xy}=1.000385\,e^2/h$** at all three gap chemical potentials.
+It uses an 80×80 base mesh with 9×9 subdivisions in the wider region.
+The last refinement changes the result by **$2.07\times10^{-4}\,e^2/h$**,
+below the stated $10^{-3}\,e^2/h$ criterion. The residual from the integer
+expectation is $3.85\times10^{-4}\,e^2/h$; no integer rounding is applied.
+A separate 160×160 energy scan confirms that all three chemical potentials
+remain inside the sampled model gap.
+
+These checks concern numerical integration of this fixed finite model.
+The 6×6 source mesh, structure and empty-state window need further convergence
+for quantitative material predictions; the 300-step localization also did not
+reach its spread tolerance. The [material guide](../examples/materials/mnbi2te4-qah/)
+provides the VASP preparation files, numerical results and independent
+full-operator reproduction commands. This external reference is distinguished
+from the native canonical-momentum workflow.
 
 ## 4. Practical use
 
@@ -288,3 +426,13 @@ numerical files for reproducibility.
 5. X. Wang, J. R. Yates, I. Souza and D. Vanderbilt, *Ab initio calculation
    of the anomalous Hall conductivity by Wannier interpolation*,
    [Phys. Rev. B **74**, 195118 (2006)](https://doi.org/10.1103/PhysRevB.74.195118).
+6. M. Gajdoš et al., *Linear optical properties in the projector-augmented
+   wave methodology*,
+   [Phys. Rev. B **73**, 045112 (2006)](https://doi.org/10.1103/PhysRevB.73.045112).
+7. M. M. Otrokov et al., *Unique Thickness-Dependent Properties of the van der
+   Waals Interlayer Antiferromagnet MnBi₂Te₄ Films*,
+   [Phys. Rev. Lett. **122**, 107202 (2019)](https://doi.org/10.1103/PhysRevLett.122.107202).
+8. J.-Q. Yan et al., *Crystal growth and magnetic structure of MnBi₂Te₄*,
+   [Phys. Rev. Materials **3**, 064202 (2019)](https://doi.org/10.1103/PhysRevMaterials.3.064202).
+9. G. Pizzi et al., *Wannier90 as a community code: new features and applications*,
+   [J. Phys.: Condens. Matter **32**, 165902 (2020)](https://doi.org/10.1088/1361-648X/ab51ff).

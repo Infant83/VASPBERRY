@@ -1,0 +1,41 @@
+{
+  "status": "PASS",
+  "scope": "Exact fixed Wannier Hamiltonian energy gap only; Hall calculations use full connection independently",
+  "mesh": [
+    160,
+    160,
+    1
+  ],
+  "point_count": 25600,
+  "vbm_eV": 3.253435610461075,
+  "cbm_eV": 3.2705369926800127,
+  "indirect_gap_eV": 0.017101382218937644,
+  "min_direct_gap_eV": 0.017101382218937644,
+  "vbm_q": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "cbm_q": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "actual_mu_eV": [
+    3.254290679571569,
+    3.2619863015705284,
+    3.269681923569488
+  ],
+  "all_three_mu_in_sampled_model_gap": true,
+  "max_antihermitian_eV": 1.790180836524724e-15,
+  "source_sha256": "54a572f1525287a91b5d983d545261501144df1a0ac7a0c5747e9b4aa2d3cca0",
+  "wall_seconds": 271.8049888270907,
+  "compute_time_limit_seconds": 900,
+  "batch_size": 32,
+  "early_timing": {
+    "completed_points": 512,
+    "elapsed_seconds": 5.011661349795759,
+    "points_per_second": 102.16173126319991,
+    "projected_full_compute_seconds": 250.58306748978794
+  }
+}

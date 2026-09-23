@@ -106,7 +106,7 @@ class FortranSourceRegressionTests(unittest.TestCase):
         # bundle calculation must not change the default individual-band path.
         self.assertTrue(expected_options.issubset(actual_options),
                         f"removed options: {expected_options - actual_options}")
-        self.assertEqual(actual_options - expected_options, {"-kubo_bundle"})
+        self.assertEqual(actual_options - expected_options, {"-kubo_bundle", "-kubo_pairs"})
         self.assertRegex(self.parse, r"(?im)^\s*ikubo_bundle\s*=\s*0\s*$")
         self.assertNotRegex(self.parse, r"(?i)transport|hall|ahc")
 

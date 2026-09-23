@@ -45,11 +45,13 @@ WAVECAR format and compiler compatibility are described in the
 | Quantity / task | Main interface and guide | Runnable example and results |
 |---|---|---|
 | Fukui Berry curvature across the Brillouin zone | Fortran wavefunction overlaps | [MoS₂ curvature map](examples/features/fukui-berry-curvature/) |
-| Chern number of an isolated band or band bundle | Fortran; [Python Fukui workflow](docs/VALLEY_TRANSPORT.md) | [Bi occupied Chern number](examples/features/fukui-chern/) |
+| Chern number of an isolated band or band bundle | Fortran; [Python Fukui workflow](docs/VALLEY_TRANSPORT.md) | [Bi occupied Chern number](examples/features/fukui-chern/); [magnetic MnBi₂Te₄](examples/materials/mnbi2te4-qah/) |
 | Two-dimensional Z₂ invariant | Fortran `-z2 1`; [Fukui–Hatsugai guide](docs/Z2_FUKUI_HATSUGAI.md) | [Z₂ / Bi](examples/features/z2/) |
 | Circular dichroism / optical selectivity | Fortran `-cd`; [usage below](#usage) | [Circular dichroism](examples/features/circular-dichroism/) |
 | Real-space wavefunction at Gamma | Fortran `-wf`; [usage below](#usage) | [Wavefunction](examples/features/wavefunction/) |
 | WAVECAR Kubo Berry curvature | Fortran canonical-momentum implementation; [Kubo guide](docs/KUBO_TRANSPORT.md) | [MoS₂ BZ map, symmetry path and bands](examples/features/kubo-curvature/) |
+| WAVECAR Kubo charge Hall versus chemical potential and temperature | Native pair export plus bundled Python integration; [one-command guide](docs/KUBO_TRANSPORT.md#wavecar-to-charge-hall-in-one-command) | [MoS₂ bands, regions and Hall curves](examples/features/kubo-hall/) |
+| Insulating PAW optical Hall response | Standard VASP optical files; [`waveder-hall` guide](docs/KUBO_TRANSPORT.md#standard-waveder-insulating-paw-hall-response) | [MnBi₂Te₄ optical integration and convergence checks](examples/materials/mnbi2te4-qah/) |
 | Exported interband-matrix curvature and transport | [Matrix interface and physical-operator contract](docs/KUBO_TRANSPORT.md) | [Developer numerical checks](validation/models/kubo-curvature/) |
 | Two-dimensional intrinsic charge Hall response and reciprocal-space regions | Standardized curvature and occupations; [Hall guide](docs/KUBO_TRANSPORT.md) | [Actual Bi occupied-subspace Hall](examples/features/hall-valley/) |
 | WAVECAR-direct Fukui export and guarded geometric transport | `tools/wavecar_fukui.py`; [valley-transport guide](docs/VALLEY_TRANSPORT.md) | [Actual Bi occupied-subspace calculation](examples/features/hall-valley/) |
@@ -124,6 +126,18 @@ supply the changing occupations for metallic Hall transport. Use the
 transport workflow with its occupation and band-window checks.
 
 ### Python workflows
+
+Use `tools/vaspberry_kubo.py wavecar-hall` for a complete WAVECAR-to-Kubo-Hall
+calculation. Fortran computes the matrix elements; the bundled Python tool
+integrates occupations, temperatures and user-defined regions. `pair-hall`
+reuses saved matrix data for further scans. Numerical output can be CSV, DAT
+or NPZ, with JSON conditions; `tools/plot_hall.py` reads any of these and writes
+PNG, PDF or SVG. See the [actual MoS₂ transport example](examples/features/kubo-hall/).
+
+For the supported standard VASP optical output, `waveder-hall` integrates the
+PAW occupied-to-empty matrix elements directly inside a global insulating
+gap at zero temperature. Its [input and operator scope](docs/KUBO_TRANSPORT.md#standard-waveder-insulating-paw-hall-response)
+is distinct from the native canonical-momentum calculation.
 
 The [MoS₂ Kubo tutorial](examples/features/kubo-curvature/) starts from real
 WAVECARs and pairs a Brillouin-zone curvature map with a marked symmetry path,

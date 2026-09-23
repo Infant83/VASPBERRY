@@ -19,6 +19,8 @@ from berry_data import (CurvatureData, base_metadata, hall_spectrum, read_curvat
 from exported_matrix_kubo import (ARRAYS as MATRIX_ARRAYS, SCHEMA, UNITS, _band_range,
                                  berry_curvature, read_matrix_bundle, sha256)
 from wavecar_fukui import Wavecar
+from kubo_hall_workflow import COMMANDS as PAIR_COMMANDS, add_commands as add_pair_commands
+from waveder_hall import add_command as add_waveder_command, command as waveder_hall_command
 
 __version__ = '1.3.0'
 
@@ -158,7 +160,7 @@ def hall_command(args):
     paths = [args.curvature/'curvature.npz',args.curvature/'curvature.json']
     if args.regions: paths.append(args.regions)
     meta['provenance'] = provenance(args,paths)
-    return write_hall(args.output_dir,rows,meta)
+    return write_hall(args.output_dir,rows,meta,formats=args.formats)
 
 
 def demo(args):
@@ -226,9 +228,12 @@ def parser():
     h.add_argument('--allow-partial-bands',action='store_true',help='explicit partial contribution; output cannot claim total occupied response')
     h.add_argument('--band-resolved',action='store_true'); h.add_argument('--mu-chunk',type=int,default=64)
     h.add_argument('--output-dir',type=Path,required=True)
+    h.add_argument('--formats',nargs='+',choices=['csv','dat','npz'],default=['csv','npz'])
     d=sub.add_parser('demo',help='generate open analytic QWZ interband matrix fixture')
     d.add_argument('--mesh',type=int,default=32); d.add_argument('--mass',type=float,default=-1.)
     d.add_argument('--output-dir',type=Path,required=True)
+    add_pair_commands(sub)
+    add_waveder_command(sub)
     return p
 
 
@@ -236,7 +241,7 @@ def main(argv=None):
     p=parser(); args=p.parse_args(argv)
     try:
         require(not args.output_dir.exists(),'output directory exists; choose a new directory')
-        meta={'matrix':matrix_command,'import-legacy':import_legacy,'hall':hall_command,'demo':demo}[args.command](args)
+        meta={**PAIR_COMMANDS,'waveder-hall':waveder_hall_command,'matrix':matrix_command,'import-legacy':import_legacy,'hall':hall_command,'demo':demo}[args.command](args)
     except (ValueError, OSError, KeyError, TypeError) as exc:
         p.error(str(exc))
     print(json.dumps({'output':str(args.output_dir),'schema':meta['schema'],'version':meta['version']}))

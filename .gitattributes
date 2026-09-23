@@ -27,3 +27,23 @@ examples/features/**/reference/smooth/*.csv whitespace=trailing-space,space-befo
 examples/features/kubo-curvature/valleys/reference/vasp/OUTCAR -whitespace
 examples/features/kubo-curvature/valleys/reference/vasp/EIGENVAL -whitespace
 examples/features/kubo-curvature/valleys/reference/vasp/OSZICAR -whitespace
+
+# Preserve computed material records and transport reference tables exactly.
+examples/materials/mnbi2te4-qah/inputs/POSCAR -whitespace
+examples/materials/mnbi2te4-qah/inputs/scf/OUTCAR -whitespace
+examples/materials/mnbi2te4-qah/inputs/scf/OSZICAR -whitespace
+examples/materials/mnbi2te4-qah/reference/**/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/materials/mnbi2te4-qah/reference/**/*.dat -whitespace
+examples/materials/mnbi2te4-qah/reference/**/*.wout -whitespace
+examples/materials/mnbi2te4-qah/reference/**/*.wpout -whitespace
+examples/materials/mnbi2te4-qah/reference/**/*.kpt -whitespace
+examples/materials/mnbi2te4-qah/reference/**/*.gnu -whitespace
+# Empty context lines in unified patches contain a required leading space.
+examples/materials/mnbi2te4-qah/inputs/wannier/toolchain/*.patch -whitespace
+examples/features/kubo-hall/reference/vasp/**/POSCAR -whitespace
+
+# Preserve nested transport tables and Matplotlib SVG path records exactly.
+examples/features/kubo-hall/reference/**/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/features/kubo-hall/reference/**/*.dat -whitespace
+examples/features/kubo-hall/reference/**/*.svg -whitespace
+examples/materials/mnbi2te4-qah/reference/figures/*.svg -whitespace

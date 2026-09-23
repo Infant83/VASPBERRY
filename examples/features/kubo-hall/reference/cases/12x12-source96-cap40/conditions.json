@@ -1,0 +1,28 @@
+{
+  "mesh": [
+    12,
+    12
+  ],
+  "nbands": 96,
+  "pair_band_max": 40,
+  "vbm_eV": -1.2748738807166569,
+  "cbm_eV": 0.3986764787330007,
+  "gap_eV": 1.6735503594496577,
+  "mu_reference_eV": -0.43809870099182807,
+  "temperatures_K": [
+    0,
+    300
+  ],
+  "encut_eV": 400,
+  "spinor_components": 2,
+  "spin_multiplicity": 1,
+  "occupied_bands": [
+    1,
+    18
+  ],
+  "charge_density": "examples/1H-MoS2/KPATH/1.scf/CHGCAR.gz",
+  "icharg": 11,
+  "isym": -1,
+  "source_record": "../../vasp/12x12-source96/conditions.json",
+  "regional_radius_inv_A": 0.35
+}

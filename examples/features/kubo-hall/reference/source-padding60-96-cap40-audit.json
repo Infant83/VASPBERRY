@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "scope": "eigenstate source padding stability at fixed12x12 mesh and fixed pair cutoff40",
+  "source_nbands": [
+    60,
+    96
+  ],
+  "max_abs_delta_valley_change_e2h": 3.66398184015182e-09,
+  "relative_L2_difference": 2.2576959635846154e-08
+}

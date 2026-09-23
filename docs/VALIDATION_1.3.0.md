@@ -1,6 +1,6 @@
 # Local validation of the 1.3.0 development candidate
 
-Initial checks on 2026-09-19; scientific examples updated on 2026-09-20. This is a local source validation, not a hosted release
+Initial checks on 2026-09-19; scientific examples and transport checks updated through 2026-09-24. This is a local source validation, not a hosted release
 or a completed material-convergence study.
 
 ## Reproducible public checks
@@ -128,6 +128,162 @@ gap checks, native rerun and figure regeneration pass. The new smooth maps
 use NumPy bilinear interpolation for display only. The original numerical
 references and un-smoothed figures remain available.
 
+## Native Kubo pairs and occupation-weighted transport
+
+The 2026-09-22 transport update passed the full **331-test** local suite,
+including compiled native pair checks, independent pair-occupation formulas,
+exact-degenerate-subspace rotations, finite-temperature integration, regional
+partitions, orientation and explicit spin multiplicity. Native serial/MPI
+help and two-rank runtime checks pass. Failure tests distinguish a native
+zero exit code from the required completed-export footer.
+
+On actual 12×12 MoS₂ data, the native pair export reproduces occupied-bundle
+curvature within 2.67e−15 Å² for 26 bands; separate 40/60-band comparisons agree
+within 4e−15 Å². An independent complex128 wavefunction contraction at five
+representative points verifies all three numerator components for 40 and 60
+bands. Existing per-band CSV/DAT and bundle CSV outputs remain byte-identical.
+Serial and two-rank Hall tables agree, as do CSV, DAT and NPZ values. NPZ-only
+output and subsequent cached rescans are tested; plots read all three formats.
+
+Large native CSV files are imported in bounded row chunks with complete
+coordinate, energy, index and row-coverage checks. On the measured 26-band
+example, the same WAVECAR-to-Hall workflow took 3.22 s after this change versus
+13.66 s before it; timings on the shared machine are illustrative. Cached
+arrays and common-grid Hall values remain exactly equal.
+
+The real-material study also distinguishes numerical pipeline checks from
+input convergence. Occupied MoS₂ energies can be stable while the highest
+empty states still violate time-reversal energy equality. Therefore a VASP
+`EDIFF` completion alone is not used as evidence for an accurate virtual-state
+sum. The [transport example](../examples/features/kubo-hall/) reports the
+measured k/band-window dependence and source-state checks.
+
+The standard WAVEDER adapter adds 15 checks covering occupied-bundle signs,
+all Cartesian components, internal occupied-space rotations, selection-rule
+zeros, producer restrictions, collinear filling, formats and guarded chunk
+combination. Genuine chunks reproduce the same full-grid fixture; mixed
+Hamiltonians, duplicate points and incomplete meshes are rejected. An actual
+standard VASP MnBi₂Te₄ Γ/K/M optical probe agrees with an independent optical
+contraction, and its three-point sampling is correctly rejected as a full-BZ
+Hall input. That probe alone establishes no material Chern number or plateau.
+
+The eighth feature, MoS₂ Kubo Hall, also passes an actual catalog-driven run
+with all required numerical and figure outputs. Its baseline reference and
+the seven catalog/orchestration checks pass.
+
+## Actual MoS₂ transport refinement
+
+The completed 2026-09-24 study separates mesh refinement, the retained pair
+window and accuracy of the stored VASP states. At 300 K, on the common
+chemical-potential grid, the K−K′ Hall-change curve differs by 12.890% for
+12×12 → 24×24 and 1.482% for 24×24 → 36×36. Both comparisons use 60 stored
+bands and pairs within bands 1–40. The last mesh increment does not meet the
+stated 1% criterion.
+
+On one 12×12, 96-band source, increasing the pair cutoff from 60 to 80 changes
+that curve by 1.263%; 80 → 90 changes it by 0.202%. These are separate
+refinement tests, not evidence of joint mesh/window convergence. At the same
+12×12 mesh and cutoff 40, replacing the 60-band source with the 96-band source
+changes the curve by at most 3.664e−9 e²/h. The final 36×36 total charge-Hall
+residual is below 2.24e−9 e²/h, without imposed time-reversal averaging.
+Increasing the explicitly requested energy-grouping tolerance from 1e−7 to
+1e−6 eV changes the Hall difference by less than 2.2e−13 e²/h in the checked
+final cases.
+
+All eight refinement cases have exactly matching CSV, DAT and NPZ fields
+(240 comparisons). The public references retain the VASP input conditions,
+compressed original outputs, calculation metadata and two figures. Source
+and output integrity checks, figure regeneration and relative-link checks
+pass. The original 12×12, 26-band catalog reference remains separate.
+
+The largest calculation used six fixed-charge 216-point jobs for the 36×36,
+60-band mesh, followed by a byte-preserving WAVECAR assembly. The final warm
+stages took 161 worker-minutes in total and at most 1.27 GiB resident memory
+per job on the measured host; earlier seed/checkpoint stages are additional.
+These measurements describe this run, rather than a general runtime promise.
+See the [reference tables and conditions](../examples/features/kubo-hall/reference/).
+
+## Actual magnetic Chern and optical checks
+
+The three-septuple-layer MnBi₂Te₄ example uses a 21-atom film with alternating
+out-of-plane Mn moments. Six completed, fixed-charge VASP optical runs form
+the full 6×6 mesh, with 192 stored SOC bands and 123 occupied bands. Independent
+checks compare every assembled coefficient record with its original source.
+The calculation has a sampled direct/global gap of 17.101 meV.
+
+The Python WAVECAR Fukui routine gives occupied C = −1, with maximum
+plaquette phase 2.060 rad and minimum link singular value 0.305. Independently,
+the PAW overlap matrices give C = −1. The standard WAVEDER adapter and an
+independent optical contraction agree within 2.85e−14 e²/h on the full mesh.
+Its coarse Hall result is +163.109 e²/h: the sharp Γ curvature is unresolved.
+A constant T=0 response while the chemical potential remains inside the gap
+only demonstrates unchanged occupations; it is not evidence of quantization.
+
+The public preparation/runner audit passes source-state association,
+Hamiltonian consistency, charge-density integrity and original-output checks.
+It validates the actual VASP inputs and guarded workflow. The
+[material example](../examples/materials/mnbi2te4-qah/) reports the separate
+dense-integration reference and its validation scope.
+
+The full-connection Wannier reference retains both Hamiltonian and position
+matrices. At the seven near-Γ comparison points, its band-edge differences
+from direct VASP are at most 1.26 meV and its curvature differences at most
+1.44%. Across all 12 comparison points, the largest band-edge difference is
+18.14 meV. These compare different finite subspaces: the 36 omitted deep
+bands have zero total Chern number but can contribute local curvature.
+The model uses 300 localization iterations and did not reach its requested
+spread tolerance; it is not presented as a converged Wannier optimization.
+
+An independent Hamiltonian-only scan of 160×160 points finds the minimum
+direct and global gaps at Γ, both 17.101 meV. All three chemical potentials
+spanning the central 90% of the DFT gap remain inside this sampled model gap.
+This energy check took 271.8 s with batched Fourier transforms; it is separate
+from the full-connection Hall calculation.
+
+For portable reproduction, exact full operators and pair-dependent
+translations are exported without dropping nonzero elements. The documented
+Wannier90 3.1.0 effective-model reader needs one dimension-initialization fix;
+its response formulas are unchanged. Independent operator, derivative and
+curl comparisons agree within 2.2e−14. Local band/curvature values, a weighted
+50-point test, and the entire 3,088-point integral reproduce the unmodified
+original producer at its printed precision, including each J0/J1/J2 term.
+The latter gives 1.0001934839919 e²/h before further quadrature refinement.
+This is an operator-equivalence check, not a mesh-convergence estimate.
+
+Nine independently compressed parts reproduce the complete numerical
+operators. Public restoration checks all parts and complete operators before
+creating an output directory; damaged input and existing output are rejected.
+The patches, source version, GPL license and regeneration instructions are
+provided alongside the numerical inputs. Licensed VASP code is not included.
+
+Ten additional public workflow tests pass using synthetic process fixtures.
+They cover incomplete Fortran termination, nonzero exits, missing connection
+terms, wrong producer versions, stale or modified files, worker limits and
+CSV/DAT/NPZ agreement. These test the external runner's safeguards; they are
+separate from the 331-test full-suite run and the actual material calculations.
+The public prepare/run/collect commands also pass a genuine 4×4, two-part
+execution with the supplied full operators and patched reader. Execution and
+collection took 23.6 s and 2.0 s, respectively, using one scientific worker.
+Original exit statuses, completion messages, partition sums, units and all
+three output formats agree. This deliberately coarse execution check is not
+used as a quantization or convergence reference.
+
+The final full-connection integral uses 27,600 weighted two-dimensional
+points: an 80×80 base mesh with 9×9 subdivisions of cells within 0.18 Å⁻¹
+of Γ. All eight producers finish normally with zero exit status. The result
+is **1.0003849765685957 e²/h** at each of the three gap chemical potentials.
+The preceding 60×60/refinement-11 calculation over the same region gives
+1.0005919239860739 e²/h; their difference, **2.06947e−4 e²/h**, meets the
+predeclared 1e−3 criterion for this finite model's quadrature.
+
+The controls are not monotonic: expanding the refined radius from 0.12 to
+0.18 Å⁻¹ at fixed 60×60/refinement-11 changes the result by 5.42162e−4 e²/h,
+whereas increasing the inner subdivision from 7 to 11 at radius 0.12 Å⁻¹
+changes it by only 5.03784e−6 e²/h. All completed controls are retained.
+The final deviation from +1 is 3.84977e−4 e²/h; no symmetry average or integer
+rounding is imposed. This verifies numerical integration at the stated
+settings, separately from convergence of the VASP/Wannier model itself.
+
 ## Separate developer checks and historical wavefunction fix
 
 The earlier QWZ, analytic optical, synthetic wavefunction and stored-field
@@ -143,21 +299,13 @@ flag. Both complete Fortran sources pass a regression compiled with
 The actual MoS₂ tutorial independently checks the retained amplitude convention.
 No production numerical kernel changed during the real-input tutorial update.
 
-## Supplemental historical comparisons
+## Historical normalization
 
-Retained local 14×14 SOC data were replayed without changing original inputs
-or results. The private material files are not distributed with this source.
-
-| Comparison | Result |
-|---|---|
-| Historical canonical **raw/2**, 40 bands, 1,002 chemical potentials, two temperatures | Total/per-band Hall reproduced; maximum absolute difference below `5.3e-14 e^2/h` |
-| Historical PAW optical curvature, 196×40 states | Curvature arrays exactly equal |
-| Historical PAW Hall spectrum, 2,006 rows | Maximum absolute difference below `1.6e-14 e^2/h` |
-| Material Fukui bands 31/32 | Same +1/−1 and identical sampled output contents |
-
-Small Hall differences are consistent with summation order. Reproducibility
-targets the previously corrected canonical result; the old doubled curvature
-is retained only as historical input with an explicit migration record.
+The [migration guide](MIGRATION.md) and public import tests distinguish legacy
+doubled Kubo data from already corrected data. Reproducibility targets the
+corrected normalization; importing a historical doubled file applies the
+documented conversion exactly once. Public material comparisons in this
+record use the named reproducible examples above.
 
 ## Scope
 

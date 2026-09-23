@@ -48,13 +48,20 @@ nonzero Chern-insulator benchmark.
 
 For point-curvature transport, the [Kubo/Hall guide](../docs/KUBO_TRANSPORT.md)
 explains normalized curvature, occupations, intermediate-band windows and
-user-defined reciprocal-space regions. The native WAVECAR Kubo implementation
+user-defined reciprocal-space regions. The [MoS₂ Hall tutorial](features/kubo-hall/)
+starts from a full VASP WAVECAR and runs native pair export followed by the
+bundled occupation and integration routines in one command. It includes
+chemical-potential and temperature scans, regional contributions and
+independent mesh and band-window checks. Reuse its general command with your
+material's band filling, energy reference and region definitions.
+
+The native WAVECAR Kubo implementation
 uses canonical momentum; full material velocity can require PAW, nonlocal,
 SOC or other corrections. The general matrix interface accepts an explicitly
 declared physical operator. It is a separate data-export route and does not
 turn a JSON configuration into a VASP calculation.
 
 The [output specification](../docs/OUTPUT_FORMAT.md) defines units and formats.
-Use the saved arrays/CSV in your own analysis; preserve normalization,
+Use CSV, text DAT or NumPy NPZ tables in your own analysis; preserve normalization,
 provenance, excluded points and region definitions. See [migration](../docs/MIGRATION.md)
 before combining results with older doubled Kubo files.

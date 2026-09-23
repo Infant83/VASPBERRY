@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "feature_id": "kubo-hall",
+  "workflow_mode": "vasp_wavecar_calculation",
+  "status": "PASS",
+  "mesh": [
+    12,
+    12
+  ],
+  "nbands": 60,
+  "pair_band_max": 40,
+  "vbm_eV": -1.2748738807312185,
+  "cbm_eV": 0.3986764787753092,
+  "gap_eV": 1.6735503595065278,
+  "mu_reference_eV": -0.43809870097795467,
+  "mu_minus_vbm_range_eV": [
+    -0.2,
+    0.1
+  ],
+  "temperatures_K": [
+    0,
+    300
+  ],
+  "source_wavecar_sha256": "3798f9ea551582b3f97b11d519ea29275e19e01df97d782325db78415cebe851",
+  "native_binary_sha256": "ff62d89c0e54bb50a77cf28b7b4ba7df154201fced8600dbe42cfae29c66944a",
+  "source_sha256": {
+    "examples/features/kubo-hall/run.py": "7a8163075e7cd98ac0b35cc84b7441629c9e739bece260447514612333aa1e14",
+    "examples/features/kubo-hall/regions.json": "32f39a23d8a6096ee08e54ae2b064b03f9c5b60914bd1344c32462ca52b0a832",
+    "tools/vaspberry_kubo.py": "ea09a2dfc0b3cc8696830178f10b7a71f6b00101fd365f055312aa8425a37207",
+    "tools/kubo_pairs.py": "1f9cee49e1eeac355cf054df2133be28c8f41886aa21aa101c64af18befd6014",
+    "tools/berry_data.py": "fa45cb3fd93ab576e12009d17ca010716aaf89487ee29edda9905f37b8e6b435",
+    "tools/plot_hall.py": "97bbd2000f8908f4d1083034dfc6462438278d83dd8b80804b08127867b21ed6"
+  },
+  "command": [
+    "python",
+    "tools/vaspberry_kubo.py",
+    "wavecar-hall",
+    "--binary",
+    "build/vaspberry-gfortran",
+    "--wavecar",
+    "INPUT/WAVECAR",
+    "--spinor-components",
+    "2",
+    "--spin-multiplicity",
+    "1",
+    "--mesh",
+    "12",
+    "12",
+    "--energy-reference",
+    "unchanged VASP eigenvalue zero",
+    "--mu-min",
+    "-1.4748738807312185",
+    "--mu-max",
+    "-1.1748738807312185",
+    "--mu-num",
+    "61",
+    "--mu-reference",
+    "-0.43809870097795467",
+    "--temperatures",
+    "0",
+    "300",
+    "--regions",
+    "examples/features/kubo-hall/regions.json",
+    "--difference",
+    "valley:K:Kprime",
+    "--degeneracy-policy",
+    "coalesce",
+    "--degeneracy-threshold-eV",
+    "1e-7",
+    "--formats",
+    "csv",
+    "dat",
+    "npz",
+    "--mpi-procs",
+    "1",
+    "--output-dir",
+    "OUTPUT/calculation",
+    "--pair-band-max",
+    "40"
+  ],
+  "interpretation": "rigid-band intrinsic regional charge Hall response; valley = K - Kprime without a factor of one half",
+  "returncode": 0,
+  "wall_seconds": 27.14372409391217,
+  "checks": {
+    "row_count": 610,
+    "max_abs_total_sigma_e2h": 6.7568860709432046e-09,
+    "max_abs_total_delta_sigma_e2h": 5.029621043744503e-09,
+    "regional_sum_max_error_e2h": 3.885780586188048e-16,
+    "valley_difference_max_error_e2h": 5.551115123125783e-17,
+    "probe_delta_valley_e2h": {
+      "0.0": {
+        "-0.2": -0.2998230662590839,
+        "-0.15": -0.12176367559419077,
+        "-0.1": -0.06680563943832826,
+        "-0.05": -0.06680563943832826,
+        "0.0": 0.0,
+        "0.05": 0.0
+      },
+      "300.0": {
+        "-0.2": -0.22778997135056966,
+        "-0.15": -0.12953983770794042,
+        "-0.1": -0.07892100955702178,
+        "-0.05": -0.06049043163889042,
+        "0.0": -0.03371373570589017,
+        "0.05": -0.008482516033036508
+      }
+    }
+  },
+  "execution_output_sha256": {
+    "calculation/hall/conductivity.csv": "6a8cb729de14896522fd2392bf0b59bae589d6b9913986bdf342845424ff3314",
+    "calculation/hall/conductivity.dat": "1b53b211947d5f9f287029a3785646b02550a7c26e43a38c84a6b6807f1f0b8d",
+    "calculation/hall/conductivity.json": "67983b50b134436ac61a0c1fddbaa7e5361be0d1046dbc91ac8b1dc69f937716",
+    "calculation/hall/conductivity.npz": "1bb2fca63514dd20aed7e9a2cdd4aa8e9092897564e845f17340776ca4114fb8"
+  },
+  "execution_figure_sha256": {
+    "plot/hall.svg": "558cb58473e75c1820f82810e8634702c0bd96a7eee1621971e6db894421a907",
+    "plot/hall.pdf": "c1e18f48bce24890e235133a04932f29e317685ba3986829a1b77f6a683ad60c",
+    "plot/hall.png": "f3c170a01134b1d5083fcb67f58fc9c82b8fb1c01baffd45a6f70e4a2dbdea3e"
+  },
+  "published_metadata_note": "Workstation paths are logical INPUT/OUTPUT names. Numerical table bytes are unchanged. Licensed WAVECAR/POTCAR and the large PAIRS.csv remain in the private execution archive.",
+  "output_sha256": {
+    "conductivity.csv": "6a8cb729de14896522fd2392bf0b59bae589d6b9913986bdf342845424ff3314",
+    "conditions.json": "2d61bc254b4ca7919d468561e9603211d172f53bc9c5160a4174445048d47905",
+    "conductivity.json": "d24e358bda6e682dd24df402aa3d342bbd6b3f95960552ac9a2200ca12e79c12",
+    "conductivity.npz": "1bb2fca63514dd20aed7e9a2cdd4aa8e9092897564e845f17340776ca4114fb8",
+    "conductivity.dat": "1b53b211947d5f9f287029a3785646b02550a7c26e43a38c84a6b6807f1f0b8d"
+  }
+}

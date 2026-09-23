@@ -1,0 +1,207 @@
+ 
+             +---------------------------------------------------+
+             |                                                   |
+             |                   WANNIER90                       |
+             |                                                   |
+             +---------------------------------------------------+
+             |                                                   |
+             |        Welcome to the Maximally-Localized         |
+             |        Generalized Wannier Functions code         |
+             |            http://www.wannier.org                 |
+             |                                                   |
+             |                                                   |
+             |  Wannier90 Developer Group:                       |
+             |    Giovanni Pizzi    (EPFL)                       |
+             |    Valerio Vitale    (Cambridge)                  |
+             |    David Vanderbilt  (Rutgers University)         |
+             |    Nicola Marzari    (EPFL)                       |
+             |    Ivo Souza         (Universidad del Pais Vasco) |
+             |    Arash A. Mostofi  (Imperial College London)    |
+             |    Jonathan R. Yates (University of Oxford)       |
+             |                                                   |
+             |  For the full list of Wannier90 3.x authors,      |
+             |  please check the code documentation and the      |
+             |  README on the GitHub page of the code            |
+             |                                                   |
+             |                                                   |
+             |  Please cite                                      |
+             |                                                   |
+             |  [ref] "Wannier90 as a community code:            |
+             |        new features and applications",            |
+             |        G. Pizzi et al., J. Phys. Cond. Matt. 32,  |
+             |        165902 (2020).                             |
+             |        http://doi.org/10.1088/1361-648X/ab51ff    |
+             |                                                   |
+             |  in any publications arising from the use of      |
+             |  this code. For the method please cite            |
+             |                                                   |
+             |  [ref] "Maximally Localized Generalised Wannier   |
+             |         Functions for Composite Energy Bands"     |
+             |         N. Marzari and D. Vanderbilt              |
+             |         Phys. Rev. B 56 12847 (1997)              |
+             |                                                   |
+             |  [ref] "Maximally Localized Wannier Functions     |
+             |         for Entangled Energy Bands"               |
+             |         I. Souza, N. Marzari and D. Vanderbilt    |
+             |         Phys. Rev. B 65 035109 (2001)             |
+             |                                                   |
+             |                                                   |
+             | Copyright (c) 1996-2020                           |
+             |        The Wannier90 Developer Group and          |
+             |        individual contributors                    |
+             |                                                   |
+             |      Release: 3.1.0        5th March    2020      |
+             |                                                   |
+             | This program is free software; you can            |
+             | redistribute it and/or modify it under the terms  |
+             | of the GNU General Public License as published by |
+             | the Free Software Foundation; either version 2 of |
+             | the License, or (at your option) any later version|
+             |                                                   |
+             | This program is distributed in the hope that it   |
+             | will be useful, but WITHOUT ANY WARRANTY; without |
+             | even the implied warranty of MERCHANTABILITY or   |
+             | FITNESS FOR A PARTICULAR PURPOSE. See the GNU     |
+             | General Public License for more details.          |
+             |                                                   |
+             | You should have received a copy of the GNU General|
+             | Public License along with this program; if not,   |
+             | write to the Free Software Foundation, Inc.,      |
+             | 675 Mass Ave, Cambridge, MA 02139, USA.           |
+             |                                                   |
+             +---------------------------------------------------+
+             |    Execution started on 24Sep2026 at 03:01:48     |
+             +---------------------------------------------------+
+ 
+ ******************************************************************************
+ * -> Using CODATA 2006 constant values                                       *
+ *    (http://physics.nist.gov/cuu/Constants/index.html)                      *
+ * -> Using Bohr value from CODATA                                            *
+ ******************************************************************************
+ 
+
+ Running in serial (with serial executable)
+ 
+                                    ------
+                                    SYSTEM
+                                    ------
+ 
+                              Lattice Vectors (Ang)
+                    a_1     4.336000   0.000000   0.000000
+                    a_2    -2.168000   3.755086   0.000000
+                    a_3     0.000000   0.000000  52.891133
+ 
+                   Unit Cell Volume:     861.17625  (Ang^3)
+ 
+                        Reciprocal-Space Vectors (Ang^-1)
+                    b_1     1.449074   0.836623   0.000000
+                    b_2     0.000000   1.673247   0.000000
+                    b_3     0.000000   0.000000   0.118795
+  
+                         No atom positions specified
+  
+  
+ *-------------------------------- POSTW90 -----------------------------------*
+ |  Number of Wannier Functions               :               138             |
+ |  Number of electrons per state             :                 1             |
+ |  Scissor shift applied to conduction bands :             0.000             |
+ |  Number of valence bands                   :       not defined             |
+ |  Fermi energy     :       3 steps from    3.254 to    3.270 eV             |
+ |  Output verbosity (1=low, 5=high)          :                 2             |
+ |  Timing Level (1=low, 5=high)              :                 1             |
+ |  Optimisation (0=memory, 3=speed)          :                 3             |
+ |  Length Unit                               :               Ang             |
+ *----------------------------------------------------------------------------*
+ *------------------------ Global Smearing Parameters ------------------------*
+ |  Adaptive width smearing                   :                 T             |
+ |  Adaptive smearing factor                  :             1.414             |
+ |  Maximum allowed smearing width (eV)       :             1.000             |
+ |  Smearing Function                                             Gaussian    |
+ |  Global interpolation k-points defined     :                 F             |
+ *----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*
+ *--------------------------------- BERRY ------------------------------------*
+ |  Compute Berry Phase related properties    :                 T             |
+ |  Compute Optical Conductivity and JDOS     :                 F             |
+ |  Compute Anomalous Hall Conductivity       :                 T             |
+ |  Compute Shift Current                     :                 F             |
+ |  Compute Orbital Magnetisation             :                 F             |
+ |  Compute Spin Hall Conductivity            :                 F             |
+ |  Lower frequency for optical responses     :             0.000             |
+ |  Upper frequency for optical responses     :             1.667             |
+ |  Step size for optical responses           :             0.010             |
+ |  Upper eigenvalue for optical responses    :             0.667             |
+ |  Using global smearing parameters                                          |
+ |  Grid size                                 :    80 x  80 x   1             |
+ |  Adaptive refinement                       :              none             |
+ *----------------------------------------------------------------------------*
+ Time to read parameters        0.006 (sec)
+
+ Time to read and process       0.012 (sec)
+
+ Reading real-space Hamiltonian from file wannier90_HH_R.dat
+
+ Reading position matrix elements from file wannier90_AA_R.dat
+
+
+ Properties calculated in module  b e r r y
+ ------------------------------------------
+
+   * Anomalous Hall conductivity
+
+ Reading interpolation grid from file kpoint.dat:       3450 points
+  
+
+ ---------------------------------
+ Output data files related to AHC:
+ ---------------------------------
+
+   * wannier90-ahc-fermiscan.dat                                                                                             
+
+ Fermi energy (ev):    3.2543
+  Points triggering refinement:    0( 0.00%)
+
+ AHC (S/cm)       x          y          z
+ ==========
+ J0 term :      0.0115    -0.0479    -0.1622
+ J1 term :     -0.0122    -0.0369     0.2870
+ J2 term :     -0.0007     0.2068     8.5533
+ -------------------------------------------
+ Total   :     -0.0014     0.1220     8.6781
+
+
+ Fermi energy (ev):    3.2620
+  Points triggering refinement:    0( 0.00%)
+
+ AHC (S/cm)       x          y          z
+ ==========
+ J0 term :      0.0115    -0.0479    -0.1622
+ J1 term :     -0.0122    -0.0369     0.2870
+ J2 term :     -0.0007     0.2068     8.5533
+ -------------------------------------------
+ Total   :     -0.0014     0.1220     8.6781
+
+
+ Fermi energy (ev):    3.2697
+  Points triggering refinement:    0( 0.00%)
+
+ AHC (S/cm)       x          y          z
+ ==========
+ J0 term :      0.0115    -0.0479    -0.1622
+ J1 term :     -0.0122    -0.0369     0.2870
+ J2 term :     -0.0007     0.2068     8.5533
+ -------------------------------------------
+ Total   :     -0.0014     0.1220     8.6781
+
+
+ Total Execution Time        2206.801 (sec)
+
+ *===========================================================================*
+ |                             TIMING INFORMATION                            |
+ *===========================================================================*
+ |    Tag                                                Ncalls      Time (s)|
+ |---------------------------------------------------------------------------|
+ *---------------------------------------------------------------------------*
+ 
+
+ All done: postw90 exiting

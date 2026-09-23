@@ -1,7 +1,7 @@
 # Examples: Berry curvature and response functions
 
-These examples illustrate VASPBERRY calculations for monolayer MoS₂ and a
-Bi bilayer. Each guide gives the VASP files, calculation parameters, commands,
+These examples illustrate VASPBERRY calculations for monolayer MoS₂, a
+Bi bilayer and a three-septuple-layer MnBi₂Te₄ film. Each guide gives the VASP files, calculation parameters, commands,
 expected numerical results and figures. The [technical report](../docs/TECHNICAL_REPORT.md)
 introduces the methods and discusses the physical interpretation
 ([PDF version](../docs/TECHNICAL_REPORT.pdf)).
@@ -27,9 +27,11 @@ explains how to prepare the VASP mesh, run VASPBERRY and draw this map.
 | [Z₂ invariant](features/z2/) | Bi, full 12×12 mesh | Z₂ = 1 |
 | [Kubo Berry curvature](features/kubo-curvature/) | MoS₂, full 12×12 mesh and matching path | Occupied-bundle BZ map, path curvature and band structure |
 | [Single-band valley curvature](features/kubo-curvature/valleys/) | MoS₂, two 9×9 K/K′ patches | Isolated band-18 maps, line cuts and valence bands |
+| [Kubo Hall conductivity](features/kubo-hall/) | MoS₂, full meshes; chemical potential and temperature scans | Total and regional Hall curves, band reference and convergence studies |
 | [Charge Hall conductivity](features/hall-valley/) | Bi, full mesh, T = 0 | Zero charge-Hall response in the insulating gap |
 | [Circular optical transitions](features/circular-dichroism/) | MoS₂, K–Γ–K′ path | Opposite polarization selectivity at K and K′ |
 | [Real-space wavefunction](features/wavefunction/) | MoS₂, Γ point | Spinor-state density in the atomic unit cell |
+| [Magnetic Chern insulator](materials/mnbi2te4-qah/) | MnBi₂Te₄, three septuple layers | Nonzero occupied Chern number, band structure and Hall-integration checks |
 
 Full-zone integrals require a complete periodic mesh. The supplied MoS₂
 band-path WAVECAR serves the Kubo, optical and wavefunction examples. The
@@ -38,6 +40,11 @@ and public charge density; its size is about 149 MB. The map/path figures
 use a matching 49-point, 26-band VASP path generated with the same setup.
 The full Bi WAVECAR is
 available for direct recalculation.
+
+The MnBi₂Te₄ material guide supplies the actual fixed SCF charge density,
+structure and NSCF inputs for a 21-atom magnetic film. It combines the Fukui
+and PAW optical workflows with an independent Wannier reference. Its VASP
+and Wannier preparation steps are separate from the eight-feature batch command.
 
 ## Getting started
 
@@ -99,6 +106,20 @@ python3 examples/run_examples.py \
   --bi-wavecar results/inputs/bi/WAVECAR --output-dir results/all-examples
 ```
 
-After preparing the MoS₂ full mesh, include all seven calculations with
+After preparing the MoS₂ full mesh, include all eight calculations with
 `--all --mos2-mesh-wavecar /path/to/full-mesh/WAVECAR`, together with
 `--bi-wavecar` and a new `--output-dir`.
+
+The Kubo Hall tutorial also accepts this full-mesh input on its own:
+
+```bash
+python3 examples/run_examples.py kubo-hall \
+  --mos2-mesh-wavecar /path/to/full-mesh/WAVECAR \
+  --output-dir results/mos2-transport
+```
+
+Its preparation guide explains how to enlarge the mesh and retain extra empty
+states for convergence checks. The general command combines native matrix
+export and Python integration; saved pair data can be reused for additional
+chemical potentials or temperatures. CSV, text DAT and NumPy NPZ are selectable
+table formats; PNG, PDF and SVG are supported for figures.

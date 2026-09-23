@@ -26,7 +26,7 @@ class FeatureExamplesTests(unittest.TestCase):
         self.assertEqual(catalog["schema_version"], 1)
         ids = [item["id"] for item in catalog["features"]]
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(set(ids), {"fukui-berry-curvature", "fukui-chern", "kubo-curvature", "hall-valley",
+        self.assertEqual(set(ids), {"fukui-berry-curvature", "fukui-chern", "kubo-curvature", "kubo-hall", "hall-valley",
                                     "z2", "circular-dichroism", "wavefunction"})
         for item in catalog["features"]:
             with self.subTest(feature=item["id"]):

@@ -5,6 +5,65 @@ Version 1.3.0 introduces `vaspberry.band-curvature` schema version **1** and
 contracts and are independent of the software version. These formats do not
 replace the existing Fukui plaquette or `VASPBERRY_Z2_FIELD` formats.
 
+## Native Kubo pair export and reusable cache
+
+`-kubo 2 -kubo_pairs PAIRS.csv` writes
+`VASPBERRY_BARE_MOMENTUM_KUBO_PAIRS_V1`. Each row describes one unordered
+pair `n_band < m_band` at a source k point and spin channel:
+
+| Columns | Meaning |
+|---|---|
+| `spin`, `k_index`, `n_band`, `m_band` | One-based source indices |
+| `kx_frac`, `ky_frac`, `kz_frac` | Source reduced coordinates |
+| `energy_n_eV`, `energy_m_eV`, `gap_eV` | Raw energies and absolute energy difference |
+| `numerator_yz_eV2_A2`, `numerator_zx_eV2_A2`, `numerator_xy_eV2_A2` | Undivided `−2 Im(D_a,nm D_b,mn)` in eV² Å² |
+
+Comments declare the real and reciprocal lattices, source dimensions,
+component order, units, normalization and operator. No occupation, spin
+multiplicity or denominator is included in the numerators. Only a final
+`result_status=PASS` footer certifies that the native exporter completed.
+The importer additionally verifies every selected-spin row against WAVECAR;
+a partial export is not an integration input.
+
+`import-pairs` writes `pairs.npz` and `pairs.json`, schema
+`vaspberry.kubo-pairs` version 1. For K k points, B stored bands and
+P=B(B−1)/2 pairs, the arrays are:
+
+| Array | Shape / meaning |
+|---|---|
+| `k_ids`, `band_ids` | Integer one-based consecutive source IDs |
+| `pair_n`, `pair_m` | Integer zero-based band-array positions, lexicographic n<m |
+| `kpoints_fractional`, `weights` | K×3 coordinates and K normalized weights |
+| `energies_eV` | K×B raw eigenvalues |
+| `numerator_eV2_A2` | K×P×3 real values, component order yz,zx,xy |
+| `lattice_A`, `reciprocal_inv_A` | 3×3 row vectors, reciprocal includes 2π |
+
+Numerical floating arrays are float64. JSON records full-mesh geometry,
+energy reference, multiplicity, source operator and the matching NPZ checksum.
+Load NPZ with `allow_pickle=False`. A full uniform 2D mesh is required for
+Hall integration; line paths and irreducible meshes are not accepted.
+
+`--pair-band-max M` selects a finite pair space from the complete cache without
+changing its source arrays. Hall metadata keeps `source_nbands`, records
+`pair_band_window=[1,M]` and the cutoff gap. A reduced virtual-state window is
+`truncated_pair_space`, and the full stored window is `all_source_bands`.
+If an occupied upper cutoff is explicitly allowed with `--allow-partial-bands`,
+the scope is instead `partial_band_contribution`. M never replaces the source
+VASP band count.
+
+`pair-hall` and `bundle-hall` use the existing Hall-spectrum schema below.
+`wavecar-hall` places native logs in `native/`, reusable arrays in `pairs/`,
+and final numerical results in `hall/`. Its `workflow.json` records overall
+status and an error on failure; native subprocess logs give execution details.
+A failed workflow does not create a valid Hall result.
+
+`waveder-hall` also uses the Hall-spectrum schema. Its method is
+`standard_waveder_occupied_bundle_T0`; metadata identifies the longitudinal
+PAW optical operator, producer settings, occupied count, stored empty-band
+coverage, source files and checked gap. These tables describe a constant
+zero-temperature response within the same global insulating gap. They do
+not contain a metallic or finite-temperature extension of WAVEDER.
+
 ## Native Kubo bundle CSV
 
 Native `-kubo_bundle 1 -kubo_csv PATH` writes
@@ -167,11 +226,17 @@ validate the physical exporter.
 
 ## Hall directory
 
-`hall` writes `conductivity.csv`, `conductivity.npz`, and `conductivity.json`.
-The CSV and NPZ use the same long-form rows, one per chemical potential,
-temperature, region and band channel. JSON includes hashes for both files,
-the source curvature metadata, reciprocal area/normal, region definitions,
+Numerical outputs are independently selectable with `--formats csv dat npz`.
+`hall` preserves its CSV+NPZ default; the new pair/bundle workflows default to
+all three. `conductivity.json` is always written. CSV, tab-separated DAT
+(commented column header) and NPZ use identical long-form rows, one per chemical
+potential, temperature, region and band channel. JSON includes the selected
+formats, source metadata, reciprocal area/normal, region definitions,
 occupation-window checks and algorithm settings.
+
+`plot_hall.py` reads any of these numerical formats and writes PNG, PDF and/or
+SVG. Pair and bundle integrations use `band_id=0` for the total represented
+subspace; they do not assign a gauge-dependent curvature to each degenerate band.
 
 | Column / NPZ key | Meaning |
 |---|---|
@@ -198,9 +263,11 @@ occupation boundary, while finite-temperature chunks use occupation differences.
 The reported mathematical quantity remains the response change at fixed
 electronic states.
 
-The default integration checks require a complete represented source-band
-window and negligible occupation of its highest band over the requested μ/T
-range. `--allow-partial-bands` labels the result `partial_band_contribution`;
+The point-curvature `hall` command requires a complete represented source-band
+window by default. Pair integration also permits a reduced virtual-state
+window 1:M, with its cutoff recorded as described above. Both require negligible
+occupation of the highest included band over the requested μ/T range.
+`--allow-partial-bands` labels an incomplete occupation window `partial_band_contribution`;
 it does not add omitted occupied bands. A successful window check still does
 not prove that the source calculation includes enough unoccupied states for
 curvature convergence.

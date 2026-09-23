@@ -1,0 +1,130 @@
+{
+  "status": "VALIDATED_FULL_OPERATOR_INPUT",
+  "source": "Official Wannier90 v3.1.0 localized 138-function model from the public-literature MnBi2Te4 3-septuple-layer VASP reference",
+  "source_sha256": "28f2f29d51940ff694764ccbe2400ea099405d3b00ca76fec00a0905e8febada",
+  "num_wann": 138,
+  "original_nrpts": 43,
+  "expanded_nrpts": 165,
+  "source_transl_inv": false,
+  "source_use_ws_distance": true,
+  "effective_use_ws_distance": false,
+  "source_operator": "Full official postw90 HH_R and Hermitized AA_R",
+  "filtering": "Only exact complex zeros omitted; no magnitude cutoff",
+  "effective_ndegen": 1,
+  "lattice_A": [
+    [
+      4.336,
+      0.0,
+      0.0
+    ],
+    [
+      -2.168,
+      3.755086150809,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      52.891132533333
+    ]
+  ],
+  "HH": {
+    "rows": 1425532,
+    "max_serialization_absolute_error": 5.000340419503146e-16,
+    "bytes": 71276659,
+    "sha256": "e86ca77b885029917b0338e939ff9e553b2f80c8910008a235d84b4d67aaf2b8",
+    "compressed_parts": [
+      {
+        "file": "wannier90_HH_R.dat.part000.gz",
+        "bytes": 6808751,
+        "uncompressed_bytes": 25165824,
+        "sha256": "464e2f5f61aecf634163fc4ed22909c2e052bbf217cffd58c4e44394b01800b6"
+      },
+      {
+        "file": "wannier90_HH_R.dat.part001.gz",
+        "bytes": 6798823,
+        "uncompressed_bytes": 25165824,
+        "sha256": "9133f37d3fa065fdf335ba94f7636ebb2571b07e16f5db849af8f01fa061e517"
+      },
+      {
+        "file": "wannier90_HH_R.dat.part002.gz",
+        "bytes": 5659883,
+        "uncompressed_bytes": 20945011,
+        "sha256": "dd1d424b035dfedb95225c3cc7c389102bb52b5f36b0008e4d1a6784e4f26b58"
+      }
+    ]
+  },
+  "AA": {
+    "rows": 1425532,
+    "max_serialization_absolute_error": 8.881784197001252e-16,
+    "bytes": 139702207,
+    "sha256": "6553127389bb726ed31ec1bc40fd01b31c296704e8e3b7e05ece34d131fe8be0",
+    "compressed_parts": [
+      {
+        "file": "wannier90_AA_R.dat.part000.gz",
+        "bytes": 8777905,
+        "uncompressed_bytes": 25165824,
+        "sha256": "7774dc7d4fd2aa03b089c58cf86509d5ae643d48a5539df8af66027879d4755d"
+      },
+      {
+        "file": "wannier90_AA_R.dat.part001.gz",
+        "bytes": 8760087,
+        "uncompressed_bytes": 25165824,
+        "sha256": "276fb0eb8cc606d214fd91c47f5faf3012b3b8d807d98df345934716932c2e5c"
+      },
+      {
+        "file": "wannier90_AA_R.dat.part002.gz",
+        "bytes": 8735263,
+        "uncompressed_bytes": 25165824,
+        "sha256": "9c977ea174c8054f011c50f9817be7b83ea6fef67f0ecd49ebde0384ad2c6c23"
+      },
+      {
+        "file": "wannier90_AA_R.dat.part003.gz",
+        "bytes": 8729886,
+        "uncompressed_bytes": 25165824,
+        "sha256": "1bbc8bba41fee7d612f541ba4bbcc21b2cecc685a08151609d12af9f834804df"
+      },
+      {
+        "file": "wannier90_AA_R.dat.part004.gz",
+        "bytes": 8759747,
+        "uncompressed_bytes": 25165824,
+        "sha256": "08f4e654edba817350b104fbea6ed28aef0b8bf2201dc6e74728cd143178baf0"
+      },
+      {
+        "file": "wannier90_AA_R.dat.part005.gz",
+        "bytes": 4842051,
+        "uncompressed_bytes": 13873087,
+        "sha256": "4f7aca5057385c18bbcf0f7a9f0397a107f8b30c5124ca937ccf56cf4652f7f3"
+      }
+    ]
+  },
+  "reconstruction": "Concatenate decompressed .partNNN.gz files in numeric order.",
+  "complete_payload_order": [
+    "HH",
+    "AA"
+  ],
+  "complete_uncompressed_payload_sha256": "b88fe30f2d2bbbb0db18a650f9d5c2c2403f2c9daa6d1adb66d19316fd60895c",
+  "complete_ordered_gzip_archive_sha256": "f36716cd08b16551c75a56e54c79b4d9ed93c23f6c537149f9cf3e7e17414683",
+  "complete_archive_definition": "Concatenate compressed_parts in listed order, HH then AA; uncompressed payload consists of full HH then full AA, boundaries fixed by each operator byte count.",
+  "required_reader_patch": "effective-reader-modern31.patch",
+  "reader_patch_reason": "Initialize effective model dimension only; no operator or response-formula change",
+  "source_model": {
+    "num_wann": 138,
+    "excluded_dft_bands": "1:36",
+    "dft_stored_bands": 192,
+    "retained_source_bands": 156,
+    "occupied_model_bands": 87,
+    "outer_window_eV": [
+      -4.0,
+      7.48
+    ],
+    "frozen_window_eV": [
+      -4.0,
+      4.3
+    ],
+    "localization_iterations": 300,
+    "localization_tolerance_converged": false
+  },
+  "interpretation": "Exact representation of this finite Wannier model. Interpolation and Brillouin-zone convergence are separate from the conversion/parity checks.",
+  "reader_patch": "../toolchain/effective-reader-modern31.patch"
+}

@@ -1,0 +1,58 @@
+{
+  "structure_source": "https://doi.org/10.1103/PhysRevMaterials.3.064202 Table I, 10 K",
+  "structure_pdf": "https://iopex6.iphy.ac.cn/PDFlist/2019/MnBi2Te4_PRM2019_JQYan.pdf",
+  "calculation_reference": "https://doi.org/10.1103/PhysRevLett.122.107202",
+  "methods_source": "https://journals.aps.org/prl/supplemental/10.1103/PhysRevLett.122.107202/Supp_Inf_MBT_films_Otrokov_et_al.pdf",
+  "construction": "R-3m hexagonal 3a+6c expansion of Yan et al. (2019), Table I (10 K); select three complete septuple layers with Mn centres at z=0,1/3,2/3; retain bulk vertical atomic distances, set in-plane a=4.336 Angstrom from Otrokov et al. (2019), add 15 Angstrom surface vacuum, and hold the slab fixed without relaxation",
+  "bulk_table_values": {
+    "a_A": 4.309,
+    "c_A": 40.679,
+    "Bi_z": 0.4247,
+    "Te1_z": 0.1324,
+    "Te2_z": 0.2943
+  },
+  "atoms": 21,
+  "cell_c_A": 52.891132533333334,
+  "slab_extent_A": 37.891132533333334,
+  "vacuum_A": 15,
+  "initial_Mn_moments_muB": [
+    5,
+    -5,
+    5
+  ],
+  "electrons": 123,
+  "source_is_original_relaxed_QAH_slab": false,
+  "potential_metadata": [
+    {
+      "element": "Mn",
+      "titel": "PAW_PBE Mn 06Sep2000",
+      "sha256": "791c87526310ff945dc83749a51ee60ee299d345ff72743aeb14609b9ed68bfc"
+    },
+    {
+      "element": "Bi",
+      "titel": "PAW_PBE Bi 08Apr2002",
+      "sha256": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+    },
+    {
+      "element": "Te",
+      "titel": "PAW_PBE Te 08Apr2002",
+      "sha256": "e13b0861f25acb1fe6cdc17458a3647985498b67a429eb77ddc1eac05a1775b1"
+    }
+  ],
+  "geometry_status": "Fixed unrelaxed bulk-derived slab; not the original relaxed thin-film structure",
+  "occupied_spinor_bands": 123,
+  "nscf_reference_bands": 192,
+  "nscf_reference_mesh": [
+    6,
+    6,
+    1
+  ],
+  "scf_mesh": [
+    3,
+    3,
+    1
+  ],
+  "scf_convergence_eV": 1e-05,
+  "potcar_sha256": "1b8c187ed713f782aa33f97b764ddea6ada93ceff2e820b87aa05958590a0123",
+  "charge_sha256": "106744fae300dac95624d292b67c2192bea7ea73ba69f960d3be8904934c3ec7"
+}

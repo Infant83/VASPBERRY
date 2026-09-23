@@ -353,14 +353,25 @@ def hall_spectrum(data, mus, temperatures, *, mu_reference, region_spec=None,
     return rows, metadata
 
 
-def write_hall(directory, rows, metadata):
+def write_hall(directory, rows, metadata, formats=('csv', 'npz')):
+    formats = tuple(formats)
+    require(bool(rows) and bool(formats) and len(set(formats)) == len(formats)
+            and set(formats) <= {'csv', 'dat', 'npz'}, 'choose distinct CSV, DAT or NPZ output formats')
     out = Path(directory)
     require(not out.exists(), 'output directory exists; choose a new directory')
     out.mkdir(parents=True)
-    with (out/'conductivity.csv').open('w', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+    if 'csv' in formats:
+        with (out/'conductivity.csv').open('w', newline='') as f:
+            w = csv.DictWriter(f, fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+    if 'dat' in formats:
+        with (out/'conductivity.dat').open('w', newline='') as f:
+            f.write('# ')
+            w = csv.DictWriter(f, fieldnames=list(rows[0]), delimiter='\t')
+            w.writeheader(); w.writerows(rows)
     # Long-form arrays make both CSV and NPZ independently usable without reshaping guesses.
-    np.savez_compressed(out/'conductivity.npz', **{key: np.array([r[key] for r in rows]) for key in rows[0]})
-    meta = dict(metadata, output_sha256={name: sha256(out/name) for name in ('conductivity.csv', 'conductivity.npz')})
+    if 'npz' in formats:
+        np.savez_compressed(out/'conductivity.npz', **{key: np.array([r[key] for r in rows]) for key in rows[0]})
+    meta = dict(metadata, output_formats=list(formats),
+                output_sha256={f'conductivity.{fmt}': sha256(out/f'conductivity.{fmt}') for fmt in formats})
     (out/'conductivity.json').write_text(json.dumps(meta, indent=2, allow_nan=False)+'\n')
     return meta

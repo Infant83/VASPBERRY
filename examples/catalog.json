@@ -58,6 +58,30 @@
       ]
     },
     {
+      "id": "kubo-hall",
+      "title": "MoS2 chemical-potential and temperature dependent Kubo Hall response",
+      "default_mode": "vasp_wavecar_calculation",
+      "dataset": "mos2-mesh",
+      "requires_fortran": true,
+      "input_description": "Actual full SOC MoS2 WAVECAR regenerated from the public VASP charge density and setup",
+      "runner": "features/kubo-hall/run.py",
+      "readme": "features/kubo-hall/README.md",
+      "input": "features/fukui-berry-curvature/inputs/WAVECAR",
+      "input_bundled": false,
+      "input_preparation": "features/kubo-hall/README.md",
+      "reference": "features/kubo-hall/reference",
+      "required_outputs": [
+        "result.json",
+        "calculation/hall/conductivity.csv",
+        "calculation/hall/conductivity.dat",
+        "calculation/hall/conductivity.npz",
+        "calculation/hall/conductivity.json",
+        "plot/hall.png",
+        "plot/hall.pdf",
+        "plot/hall.svg"
+      ]
+    },
+    {
       "id": "hall-valley",
       "title": "Bi insulating-gap charge Hall from occupied-subspace Fukui flux",
       "default_mode": "vasp_wavecar_calculation",

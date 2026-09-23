@@ -1,0 +1,6 @@
+{
+  "regions": [
+    {"name": "K", "center_fractional": [0.3333333333333333, 0.6666666666666666, 0], "radius_inv_A": 0.35},
+    {"name": "Kprime", "center_fractional": [-0.3333333333333333, -0.6666666666666666, 0], "radius_inv_A": 0.35}
+  ]
+}

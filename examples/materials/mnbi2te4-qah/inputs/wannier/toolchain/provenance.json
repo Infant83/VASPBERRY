@@ -1,0 +1,30 @@
+{
+  "export": {
+    "changed_source_files": [
+      "postw90/get_oper.F90"
+    ],
+    "binary_sha256": "571e5cfdf0a73596c24cc1e853e6b55fa3397d8b1a1632bad54801a645b6d0f6",
+    "license_sha256": "ddb9db7630752f8fdc6898f7c99a99eaeeac5213627ecb093df9c82f56175dc7",
+    "build_command": "make -j1 -C wannier90-modern-export-only post",
+    "compile_and_link_settings": "F90 = /usr/local/bin/ifort\nCOMMS = serial\nFCOPTS = -O2\nLDOPTS = -O2 -Wl,-rpath,/opt/intel/mkl/lib\nLIBS = -L/opt/intel/mkl/lib -lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lpthread\n"
+  },
+  "reader": {
+    "changed_source_files": [
+      "parameters.F90"
+    ],
+    "binary_sha256": "760f626ed8d259b9f9ddf2adef6996399ea5671e9accf057041f50aeaacc80fc",
+    "license_sha256": "ddb9db7630752f8fdc6898f7c99a99eaeeac5213627ecb093df9c82f56175dc7",
+    "build_command": "make -j1 -C wannier90-modern-effective-reader post",
+    "compile_and_link_settings": "F90 = /usr/local/bin/ifort\nCOMMS = serial\nFCOPTS = -O2\nLDOPTS = -O2 -Wl,-rpath,/opt/intel/mkl/lib\nLIBS = -L/opt/intel/mkl/lib -lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lpthread\n"
+  },
+  "unchanged_original_postw90_sha256": "6218811315ce52e78c44c1cc2162fd301731223a2ef468dbfc31eb3c2f054330",
+  "official_release": "3.1.0",
+  "source_url": "https://github.com/wannier-developers/wannier90/archive/refs/tags/v3.1.0.tar.gz",
+  "source_commit": "1d6b187374a2d50b509e5e79e2cab01a79ff7ce1",
+  "source_archive_sha256": "40651a9832eb93dec20a8360dd535262c261c34e13c41b6755fa6915c936b254",
+  "scope": "Only numerical DFT-derived matrices and open-source Wannier90 patches; no VASP source, executable or PAW datasets are included.",
+  "patches": {
+    "effective-reader-modern31.patch": "fd3b2261d5f2048bbc480d68f6c275dc5bf0a5c082da0919dc68eeafa10c453b",
+    "export-only-modern31.patch": "292f26c9ac4fa8c6d6bf0d320a91e31e5a5bceb25720f19f7bf1be6175c8d77d"
+  }
+}

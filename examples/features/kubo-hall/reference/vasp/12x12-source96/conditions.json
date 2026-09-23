@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "mesh": [
+    12,
+    12
+  ],
+  "nbands": 96,
+  "source_wavecar_sha256": "ba2e894d456df08917ceccdb13241f48d156712fba70d4ec9fe6a5d89f87e537",
+  "stages": [
+    {
+      "status": "PASS",
+      "nbands": 60,
+      "wall_seconds": 619.5255918230396,
+      "sampled_peak_rss_bytes": 975175680,
+      "converged": true,
+      "normal_footer": true,
+      "stop_reason": null,
+      "electronic_iterations": 8,
+      "input_incar": "SYSTEM = 1H-MoS2 public-CHGCAR SOC NSCF\nISTART = 0\nICHARG = 11\nPREC = Normal\nENCUT = 400\nEDIFF = 1E-6\nNELM = 200\nNBANDS = 60\nALGO = Normal\nLREAL = .FALSE.\nLASPH = .FALSE.\nISMEAR = 0\nSIGMA = 0.02\nISYM = -1\nLSORBIT = .TRUE.\nSAXIS = 0 0 1\nMAGMOM = 0 0 0 0 0 0 0 0 0\nGGA_COMPAT = .FALSE.\nLMAXMIX = 2\nNSW = 0\nIBRION = -1\nLWAVE = .TRUE.\nLCHARG = .FALSE.\nLVTOT = .FALSE.\n"
+    },
+    {
+      "status": "PASS",
+      "nbands": 96,
+      "wall_seconds": 165.33331921510398,
+      "sampled_peak_rss_bytes": 1361588224,
+      "converged": true,
+      "normal_footer": true,
+      "stop_reason": null,
+      "restart_input_wavecar_sha256": "0fd0ce5f46334a18c685f92a6b8bd1ce34269a0ab49230799f963494d602ca66",
+      "electronic_iterations": 2,
+      "input_incar": "SYSTEM = 1H-MoS2 public-CHGCAR SOC NSCF\nISTART = 1\nICHARG = 11\nPREC = Normal\nENCUT = 400\nEDIFF = 1E-6\nNELM = 200\nNBANDS = 96\nALGO = Normal\nLREAL = .FALSE.\nLASPH = .FALSE.\nISMEAR = 0\nSIGMA = 0.02\nISYM = -1\nLSORBIT = .TRUE.\nSAXIS = 0 0 1\nMAGMOM = 0 0 0 0 0 0 0 0 0\nGGA_COMPAT = .FALSE.\nLMAXMIX = 2\nNSW = 0\nIBRION = -1\nLWAVE = .TRUE.\nLCHARG = .FALSE.\nLVTOT = .FALSE.\n"
+    },
+    {
+      "status": "PASS",
+      "nbands": 96,
+      "ediff_eV": 1e-08,
+      "nelmin": 16,
+      "wall_seconds": 1927.3202065450605,
+      "sampled_peak_rss_bytes": 1390510080,
+      "converged": true,
+      "normal_footer": true,
+      "stop_reason": null,
+      "restart_input_wavecar_sha256": "41797577eedcac97743d049e62bed8560560a46c440ff593b6bd034ca49f07af",
+      "electronic_iterations": 16,
+      "input_incar": "SYSTEM = 1H-MoS2 public-CHGCAR SOC NSCF\nISTART = 1\nICHARG = 11\nPREC = Normal\nENCUT = 400\nEDIFF = 1e-08\nNELM = 200\nNBANDS = 96\nALGO = Normal\nLREAL = .FALSE.\nLASPH = .FALSE.\nISMEAR = 0\nSIGMA = 0.02\nISYM = -1\nLSORBIT = .TRUE.\nSAXIS = 0 0 1\nMAGMOM = 0 0 0 0 0 0 0 0 0\nGGA_COMPAT = .FALSE.\nLMAXMIX = 2\nNSW = 0\nIBRION = -1\nLWAVE = .TRUE.\nLCHARG = .FALSE.\nLVTOT = .FALSE.\nNELMIN = 16\n"
+    }
+  ],
+  "raw_files_sha256": {
+    "INCAR": "7426ac6617a017460ac71ed3b02ef90ce896484b6e66847d70234e81b4c968f3",
+    "OUTCAR.gz": "09948d9f4cae6515782e982cd0d1e2aef55bba9f154f870cbad9d119f6659e07",
+    "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+    "OSZICAR.gz": "a83ed65a70e89b07bce9b8b43b97a30edbd2a5c47971830db45e297b4ff9ec41",
+    "KPOINTS": "823f81dfcc69cdeae53f87ffda2293ca07e37c8cd77fb2dc95271954a3a3850f",
+    "EIGENVAL.gz": "c47ca627e5ef313bc9ee85bdcd72ac353616e17f51d068b5af8ed5b947a0556d"
+  }
+}

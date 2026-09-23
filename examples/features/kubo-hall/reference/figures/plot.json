@@ -1,0 +1,130 @@
+{
+  "status": "PASS",
+  "temperature_K": 300,
+  "alignment": "each mesh's own VBM; common mu-VBM grid",
+  "comparison": [
+    {
+      "parameter": "mesh",
+      "source_nbands": 60,
+      "fixed_value": 40,
+      "coarse": [
+        12,
+        12
+      ],
+      "fine": [
+        24,
+        24
+      ],
+      "temperature_K": 300,
+      "max_abs_difference_e2h": 0.02115581320008117,
+      "relative_l2_difference": 0.12889697909444395,
+      "criterion_relative_l2": 0.01,
+      "below_one_percent": false
+    },
+    {
+      "parameter": "mesh",
+      "source_nbands": 60,
+      "fixed_value": 40,
+      "coarse": [
+        24,
+        24
+      ],
+      "fine": [
+        36,
+        36
+      ],
+      "temperature_K": 300,
+      "max_abs_difference_e2h": 0.003102799420281993,
+      "relative_l2_difference": 0.01482416078302136,
+      "criterion_relative_l2": 0.01,
+      "below_one_percent": false
+    },
+    {
+      "parameter": "pair_band_max",
+      "source_nbands": 96,
+      "fixed_value": [
+        12,
+        12
+      ],
+      "coarse": 26,
+      "fine": 40,
+      "temperature_K": 300,
+      "max_abs_difference_e2h": 0.010205878199373436,
+      "relative_l2_difference": 0.042701595141989034,
+      "criterion_relative_l2": 0.01,
+      "below_one_percent": false
+    },
+    {
+      "parameter": "pair_band_max",
+      "source_nbands": 96,
+      "fixed_value": [
+        12,
+        12
+      ],
+      "coarse": 40,
+      "fine": 60,
+      "temperature_K": 300,
+      "max_abs_difference_e2h": 0.00854596042310965,
+      "relative_l2_difference": 0.03338789862018526,
+      "criterion_relative_l2": 0.01,
+      "below_one_percent": false
+    },
+    {
+      "parameter": "pair_band_max",
+      "source_nbands": 96,
+      "fixed_value": [
+        12,
+        12
+      ],
+      "coarse": 60,
+      "fine": 80,
+      "temperature_K": 300,
+      "max_abs_difference_e2h": 0.002863548064048871,
+      "relative_l2_difference": 0.01262648519910562,
+      "criterion_relative_l2": 0.01,
+      "below_one_percent": false
+    },
+    {
+      "parameter": "pair_band_max",
+      "source_nbands": 96,
+      "fixed_value": [
+        12,
+        12
+      ],
+      "coarse": 80,
+      "fine": 90,
+      "temperature_K": 300,
+      "max_abs_difference_e2h": 0.0005116100890463493,
+      "relative_l2_difference": 0.0020237816887597746,
+      "criterion_relative_l2": 0.01,
+      "below_one_percent": true
+    }
+  ],
+  "source_table_sha256": {
+    "12x12-source60-cap40": "6a8cb729de14896522fd2392bf0b59bae589d6b9913986bdf342845424ff3314",
+    "12x12-source96-cap26": "a44209feca1d4d222e3dc0853c35c6143453c706a4770b008d9dee016a88bad3",
+    "12x12-source96-cap40": "c71ef258864ccb18fa025d7e2a0eeaa87e64276201830a6e8561619ca5c36187",
+    "12x12-source96-cap60": "51b2928855f1f5b0bd992526e1169c8c9603cace8a62e85a7f278108646c43d5",
+    "12x12-source96-cap80": "5260450010976ee5e27c96a666cb538db4d7498800d2fd396088a00c8d1bc18b",
+    "12x12-source96-cap90": "71cc715e0ccb1283080f74fb5b2f336942cd3af0261365002a812a5d00323911",
+    "24x24-source60-cap40": "b199f480d86c792dca63b5a61b8b6730aeba86524a227a03deb8e9c1bd88d7c6",
+    "36x36-source60-cap40": "2e83b895cce5c105a3fed39db908d5ea9df5b35a077523cf666a3a61c8d7b6cb"
+  },
+  "band_path_sha256": "e7082383919d9cbb79fac30f653ba3e42726d61fdc941305f0dad3b0d415454f",
+  "structure_sha256": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+  "plot_script_sha256": "e7ae66e727a55637654bfdcfeaea4e6106e6af93918c11cd306c37174da5fcc1",
+  "source_sha256": {
+    "examples/features/kubo-hall/plot.py": "e7ae66e727a55637654bfdcfeaea4e6106e6af93918c11cd306c37174da5fcc1",
+    "tools/plot_hall.py": "97bbd2000f8908f4d1083034dfc6462438278d83dd8b80804b08127867b21ed6",
+    "tools/plot_berry_curvature.py": "56cfaeb920befa1c38e3d20930eacf5f276abcfb4222efb3fa825aa47f91fc2b",
+    "tools/plot_berry_panels.py": "ed9896d490a790b76dca91d87c17e99c57895016f1490ffb182e524b5fa99547"
+  },
+  "output_sha256": {
+    "mos2-hall.png": "5007602c0871cd2936e8a0e84b3a86cbfb1cdcd3cc587af34c2ec87190f4ac05",
+    "mos2-hall.pdf": "47fe01ca632e647fef38a48ec3f4bafa02cf0e8241a2d6b9211a0166e37ff23b",
+    "mos2-hall-checks.svg": "88925060027b9323445bbe2fbb6f058dc141d5eb8351448b5a0c13fcbd1a3716",
+    "mos2-hall-checks.png": "9a3fa6e638813c47f4acd57c722995764a005f719ce6cc6f8aa63c63debe0502",
+    "mos2-hall-checks.pdf": "292828348219d3983c370f6c1ca779a8d52cb51f2887302836c626f154f4cd05",
+    "mos2-hall.svg": "17281e9104c5682e4f4ac610d7201213142d999af947b4a6bf82c9245ad5f0c7"
+  }
+}

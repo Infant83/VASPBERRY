@@ -1,0 +1,261 @@
+{
+  "material": "MnBi2Te4 three septuple layers",
+  "geometry": "Fixed unrelaxed bulk-derived slab; converged electronic source on a coarse 3x3 mesh",
+  "producer": "Wannier90 3.1.0 postw90 with effective-model dimension initialization fix",
+  "operator": "Full postw90 J0+J1+J2 using the Hamiltonian and PAW-overlap-derived position connection",
+  "lattice_A": [
+    [
+      4.336,
+      0.0,
+      0.0
+    ],
+    [
+      -2.168,
+      3.755086150809,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      52.891132533333
+    ]
+  ],
+  "reference_midgap_eV": 3.2619863015705284,
+  "dft_sampled_vbm_eV": 3.2534356104605733,
+  "dft_sampled_cbm_eV": 3.2705369926804835,
+  "dft_sampled_gap_eV": 0.0171013822199102,
+  "direct_fukui_chern": -1.0,
+  "band_path": "Gamma-M-K-Gamma",
+  "band_path_point_count": 3280,
+  "published_band_indices_1based": [
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100,
+    101,
+    102
+  ],
+  "band_csv_selection": "Every model band entering the plotted energy window; the original output archive contains all 138 model bands",
+  "use_ws_distance": true,
+  "optimization_iterations": 300,
+  "localization_spread_tolerance_reached": false,
+  "retained_original_bands": "37:192; outer window [-4,7.48] eV, frozen window [-4,4.3] eV",
+  "num_wann": 138,
+  "occupied_model_bands": 87,
+  "excluded_deep_bundle": "Original bands 1:36; independently computed Fukui C=1.17058e-16. Local curvature need not vanish.",
+  "sheet_conversion": "sigma_xy[e2/h] = sigma_z[S/cm] * full simulation-cell normal height[A] * 1e-8 / conductance_quantum[S]",
+  "final_conductivity_status": "Completed and independently cross-checked full-connection quadrature",
+  "schema": "vaspberry.external_reference.postw90.v1",
+  "source_use_ws_distance": true,
+  "effective_reader_use_ws_distance": false,
+  "source_transl_inv": false,
+  "operator_archive": "../../inputs/wannier/operators/export.json",
+  "toolchain": "../../inputs/wannier/toolchain/README.md",
+  "reader_patch_sha256": "fd3b2261d5f2048bbc480d68f6c275dc5bf0a5c082da0919dc68eeafa10c453b",
+  "sigma_xy_e2_over_h": [
+    1.0003849765685957,
+    1.0003849765685957,
+    1.0003849765685957
+  ],
+  "sigma_xy_S_per_cm": [
+    73.273857,
+    73.273857,
+    73.273857
+  ],
+  "chemical_potentials_eV": [
+    3.254291,
+    3.261986,
+    3.269682
+  ],
+  "all_three_mu_in_sampled_model_gap": true,
+  "model_gap_check": {
+    "mesh": [
+      160,
+      160,
+      1
+    ],
+    "vbm_eV": 3.253435610461075,
+    "cbm_eV": 3.2705369926800127,
+    "indirect_gap_eV": 0.017101382218937644
+  },
+  "quadrature": {
+    "base_mesh": [
+      80,
+      80,
+      1
+    ],
+    "refined_submesh": [
+      9,
+      9,
+      1
+    ],
+    "fixed_refinement_radius_Ainv": 0.18,
+    "refined_parent_count": 265,
+    "local_equivalent_uniform_mesh": [
+      720,
+      720,
+      1
+    ],
+    "point_count": 27600,
+    "weight_sum": 0.9999999999999998,
+    "fixed_kz": 0
+  },
+  "sheet_conversion_factor": 0.01365268620387481,
+  "simulation_cell_normal_height_A": 52.89113253333297,
+  "conversion_constants": "exact modern SI e and h; retain raw producer S/cm",
+  "conductance_quantum_S": 3.8740458649318244e-05,
+  "full_J_terms_S_per_cm": [
+    [
+      [
+        0.0946,
+        -0.2625,
+        -1.1604999999999999
+      ],
+      [
+        0.0946,
+        -0.2625,
+        -1.1604999999999999
+      ],
+      [
+        0.0946,
+        -0.2625,
+        -1.1604999999999999
+      ]
+    ],
+    [
+      [
+        -0.09490000000000001,
+        0.26280000000000003,
+        1.1604
+      ],
+      [
+        -0.09490000000000001,
+        0.26280000000000003,
+        1.1604
+      ],
+      [
+        -0.09490000000000001,
+        0.26280000000000003,
+        1.1604
+      ]
+    ],
+    [
+      [
+        0.0003999999999999992,
+        -0.0024000000000000687,
+        73.2741
+      ],
+      [
+        0.0003999999999999992,
+        -0.0024000000000000687,
+        73.2741
+      ],
+      [
+        0.0003999999999999992,
+        -0.0024000000000000687,
+        73.2741
+      ]
+    ]
+  ],
+  "source_binary_sha256": "760f626ed8d259b9f9ddf2adef6996399ea5671e9accf057041f50aeaacc80fc",
+  "source_operator_sha256": {
+    "wannier90_HH_R.dat": "e86ca77b885029917b0338e939ff9e553b2f80c8910008a235d84b4d67aaf2b8",
+    "wannier90_AA_R.dat": "6553127389bb726ed31ec1bc40fd01b31c296704e8e3b7e05ece34d131fe8be0"
+  },
+  "timings": [
+    {
+      "part": 0,
+      "wall_seconds": 2361.9830954039935,
+      "peak_rss_bytes": 445329408
+    },
+    {
+      "part": 1,
+      "wall_seconds": 2361.3740065861493,
+      "peak_rss_bytes": 445427712
+    },
+    {
+      "part": 2,
+      "wall_seconds": 2227.8534023519605,
+      "peak_rss_bytes": 445296640
+    },
+    {
+      "part": 3,
+      "wall_seconds": 2225.973315916024,
+      "peak_rss_bytes": 445181952
+    },
+    {
+      "part": 4,
+      "wall_seconds": 2221.104906550143,
+      "peak_rss_bytes": 445046784
+    },
+    {
+      "part": 5,
+      "wall_seconds": 1079.8023625139613,
+      "peak_rss_bytes": 445362176
+    },
+    {
+      "part": 6,
+      "wall_seconds": 1071.562404371798,
+      "peak_rss_bytes": 433397760
+    },
+    {
+      "part": 7,
+      "wall_seconds": 907.1986003790516,
+      "peak_rss_bytes": 444100608
+    }
+  ],
+  "convergence_assessment": {
+    "prescribed_final_comparison": "80/ref9/R0.18 minus 60/ref11/R0.18; retain all narrower-domain controls",
+    "absolute_change_e2_over_h": 0.00020694741747817602,
+    "criterion_e2_over_h": 0.001,
+    "criterion_pass": true,
+    "absolute_difference_from_one": 0.0003849765685957074,
+    "scope": "Integration of this fixed validated model, not convergence of its underlying material calculation. No integer rounding or symmetry averaging."
+  }
+}

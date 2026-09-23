@@ -2,6 +2,7 @@
 
 Actual VASP-based tutorials and reference results are provided for
 [native MoS₂ Kubo curvature](../examples/features/kubo-curvature/) and
+[MoS₂ Kubo charge-Hall scans](../examples/features/kubo-hall/), and
 [Bi occupied-subspace Fukui Hall](../examples/features/hall-valley/). Their
 methods and required sampling are explicitly different.
 
@@ -31,6 +32,133 @@ production route: full-mesh WAVECAR occupied-subspace Fukui transport in the
 insulating gap. Bi's unresolved Kramers pairs prevent treating its individual
 bands as isolated point-Kubo input. Its zero charge Hall plateau is an actual
 material sanity check, not a nonzero valley-Hall demonstration.
+
+## WAVECAR to charge Hall in one command
+
+The native Fortran program computes the wavefunction matrix elements. The
+bundled Python tool applies Fermi occupations and integrates over the full
+Brillouin zone. `wavecar-hall` executes both stages; no user-written Python
+postprocessing is needed. For the actual MoS₂ 12×12 reference WAVECAR:
+
+```bash
+python3 tools/vaspberry_kubo.py wavecar-hall \
+  --wavecar WAVECAR --binary build/vaspberry-gfortran \
+  --spinor-components 2 --spin-multiplicity 1 --mesh 12 12 \
+  --energy-reference 'unchanged VASP eigenvalue zero' \
+  --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 121 \
+  --mu-reference -0.43809870 --temperatures 0 300 \
+  --degeneracy-policy coalesce --degeneracy-threshold-eV 1e-7 \
+  --formats csv dat npz --output-dir results/mos2-hall
+```
+
+These energies belong to this MoS₂ reference. Choose the range and reference
+from your own bands. The tutorial adds periodic K/K′ regions, their difference,
+band plots and convergence comparisons. The default degeneracy policy is
+`error`; the explicit `coalesce` choice above is explained below.
+
+The output directory contains:
+
+- `native/PAIRS.csv` and native execution logs;
+- `pairs/pairs.npz` plus `pairs.json`, reusable without WAVECAR;
+- `hall/conductivity.csv`, `.dat`, `.npz` and `.json`;
+- `workflow.json`, including overall status and any reported error.
+
+`--formats npz` alone is valid. JSON records units, the operator, occupations,
+regions and numerical diagnostics. CSV and DAT are readable long tables;
+NPZ stores typed arrays. Plot any selected table without a format conversion:
+
+```bash
+python3 tools/plot_hall.py results/mos2-hall/hall/conductivity.npz \
+  --quantity delta-sigma --formats png pdf svg \
+  --output-dir results/mos2-hall-plot
+```
+
+To change temperature or chemical potential, reuse the expensive matrix data:
+
+```bash
+python3 tools/vaspberry_kubo.py pair-hall \
+  --pairs-dir results/mos2-hall/pairs \
+  --mu-min -1.47 --mu-max -1.17 --mu-num 121 \
+  --mu-reference -0.43809870 --temperatures 100 300 \
+  --degeneracy-policy coalesce --formats dat npz \
+  --output-dir results/mos2-hall-rescan
+```
+
+For explicit separate stages, run the native exporter and then `import-pairs`:
+
+```bash
+build/vaspberry-gfortran -f WAVECAR -s 2 -kubo 2 -kubo_pairs PAIRS.csv
+python3 tools/vaspberry_kubo.py import-pairs \
+  --csv PAIRS.csv --wavecar WAVECAR --spinor-components 2 \
+  --spin-multiplicity 1 --mesh 12 12 \
+  --energy-reference 'unchanged VASP eigenvalue zero' \
+  --output-dir results/pairs
+```
+
+The native export includes every stored band pair and all three Cartesian
+components. Omit `-ii`, `-if` and `-is` in pair mode. The importer checks the
+coordinates, energies, lattice and complete selected-spin pair coverage against
+the WAVECAR. For a collinear two-channel calculation, import and integrate each
+spin with multiplicity one, then sum the two charge responses.
+
+For a clean intermediate-state convergence test, generate a sufficiently large,
+well-converged WAVECAR once and rescan its cache with `--pair-band-max M`.
+This restricts both ends of each pair to bands 1:M while retaining the actual
+source `NBANDS` in the metadata. A reduced virtual-state window is labeled
+`truncated_pair_space`; using all stored bands is labeled `all_source_bands`.
+The cutoff must leave the occupied window complete and must not split an
+unresolved degenerate group. Comparing M values on identical eigenstates
+separates truncation of the virtual-state sum from changes in the VASP solver.
+Check the highest empty eigenstates themselves: convergence of the occupied
+total energy alone does not guarantee their accuracy. For nonmagnetic MoS₂,
+the equality of energies at k and −k provides a useful additional check.
+
+For MPI, supply the MPI binary and `--mpi-procs N` to `wavecar-hall`, or run
+`mpiexec -np N build/vaspberry-mpi ... -kubo_pairs PAIRS.csv` directly. Native
+k-point work is distributed across ranks; Python integration then uses NumPy
+and bounded chemical-potential chunks. Coefficient caching is capped at 64 MiB
+per native rank, with a direct-read fallback. The complete pair cache still
+scales as the number of k points times the square of `NBANDS`.
+
+### Occupations and degeneracies
+
+For an unordered pair, the exporter stores
+\(N^{ab}_{nm}=-2\operatorname{Im}(D^a_{nm}D^b_{mn})\). Integration uses
+
+\[
+\frac{\sigma_{xy}}{e^2/h}=-\frac{S_{\rm BZ}}{2\pi}g_s
+\sum_k w_k\sum_{n<m}(f_n-f_m)
+\frac{N^{xy}_{nm}}{(E_n-E_m)^2}.
+\]
+
+Equal-occupation pairs cancel before division. Thus exact internal degeneracies
+of a filled band bundle need no individual-band curvature. A small denominator
+with unequal occupations rejects the calculation by default. This is the
+intrinsic clean-limit formula; it does not introduce lifetime broadening.
+
+`--degeneracy-policy coalesce` explicitly approximates numerical energy groups
+whose total spread is within the supplied tolerance by their mean energy.
+Fermi occupations and denominators use those means; the original energies are
+retained. Output records the largest energy and occupation changes. At T=0, a
+chemical potential cutting the original unresolved spread is rejected. Check
+that the result is insensitive to a tolerance small compared with physical
+band splittings and thermal energies; this option does not resolve a real
+band crossing or establish transport in a disordered metal.
+
+For an existing occupied-bundle CSV, `bundle-hall` provides a simpler adapter:
+use `--csv`, `--wavecar`, `--occupied`, mesh/spin options and a μ range strictly
+inside its common global insulating gap. It accepts only T=0 and a sampling
+plane parallel to Cartesian xy, because the native bundle CSV stores only
+the xy curvature. Use `pair-hall` for changes in occupation across band edges
+or at finite temperature.
+
+Both workflows preserve the native bare-momentum approximation. Increasing
+k sampling or `NBANDS` cannot supply missing PAW/nonlocal/SOC velocity terms.
+The total charge response of nonmagnetic MoS₂ should vanish by time-reversal
+symmetry. Regional K/K′ contributions can be nonzero, but their cancellation
+alone does not validate the physical magnitude of the approximate operator.
+A quantitative QAH plateau additionally requires an appropriate full velocity
+operator and convergence against an independent topological calculation.
 
 ## Native curvature of a band bundle
 
@@ -123,7 +251,8 @@ this charge response into a spin/layer-current calculation.
 
 At T=0, a state at `E==mu` is fully occupied. At finite temperature the code
 uses Fermi occupations, processing chemical potentials in chunks controlled
-by `--mu-chunk` (default 64). Changes from `--mu-reference` are integrated
+by `--mu-chunk` (default 64 for `hall`, 32 for `pair-hall` and `wavecar-hall`).
+Changes from `--mu-reference` are integrated
 from occupation differences. The zero-temperature path accumulates states
 around the reference occupation boundary, and the finite-temperature path
 uses `f(mu,T)-f(mu_reference,T)`. This avoids subtracting two large filled-band
@@ -256,6 +385,72 @@ outputs. Record the original energy reference, source band count, chosen n/m
 windows, mesh/weights, region definitions, temperature and chemical-potential
 range. Repeat with denser k sampling and larger accurately computed m windows.
 File-format validation and physical convergence answer different questions.
+
+## Standard WAVEDER: insulating PAW Hall response
+
+`waveder-hall` reads the standard `WAVEDER`, `WAVECAR`, `INCAR` and `OUTCAR`
+from one completed VASP optical run. It evaluates the occupied-to-empty PAW
+optical matrix elements at **T=0**, with every requested chemical potential
+strictly inside the same global insulating gap. No custom VASP exporter is
+needed. This route does not support metallic or finite-temperature scans.
+
+The initial supported producer is **VASP 5.4.4** with explicit
+`LOPTICS=.TRUE.`, `LPEAD=.FALSE.` and `LNABLA=.FALSE.`, a static `NSW=0` run,
+`ISYM=-1`, and `LREAL=.FALSE.`. Hybrid, meta-GGA, PEAD and other optical
+branches are rejected. The producer must report exactly `DEG_THRESHOLD=0.002`
+eV; altered producer thresholds are unsupported. The selected occupied and
+empty states must be separated by more than this **2 meV** threshold at every
+k point. Internal occupied-band degeneracies are allowed.
+
+Use the actual occupied count, full mesh and energies from your run. For
+example, after defining `N_OCC`, `NX`, `NY`, `MU_LO`, `MU_HI` and `MU_REF`
+for a spinor calculation:
+
+```bash
+python3 tools/vaspberry_kubo.py waveder-hall \
+  --run-dir path/to/optics-run --occupied "$N_OCC" \
+  --spinor-components 2 --spin-multiplicity 1 --mesh "$NX" "$NY" \
+  --energy-reference 'unchanged VASP eigenvalue zero' \
+  --mu-min "$MU_LO" --mu-max "$MU_HI" --mu-reference "$MU_REF" \
+  --formats csv dat npz --output-dir results/paw-insulating-hall
+```
+
+The equivalent standalone command is `python3 tools/waveder_hall.py` with
+the same arguments. Output uses the standard Hall tables and can be plotted
+with `tools/plot_hall.py`. The insulating scan gives a constant response because
+the T=0 occupations do not change within the gap; constancy alone does not
+establish quantization. `delta_sigma_e2_over_h` is zero there. Collinear spin channels are
+selected with `--spin` and summed separately, with multiplicity one.
+
+For a mesh calculated as several VASP jobs, pass their genuine run directories
+together, for example `--run-dir optics-part01 optics-part02 optics-part03`.
+Every job must use `ICHARG=11`, `LCHARG=.FALSE.`, the same retained `CHGCAR`,
+`POTCAR` and `POSCAR`, and identical INCAR parameters apart from `SYSTEM`.
+The adapter checks each completed run and integrates only after their union
+forms the declared full mesh without duplicates. It combines the calculated
+curvatures in memory; it does not construct replacement WAVEDER or OUTCAR
+files. For region definitions using k-point IDs, IDs follow run-directory
+order followed by each run's original k-point order.
+
+WAVEDER stores optical matrix elements in Å with complex64 precision. The
+adapter accumulates their occupied-bundle trace in complex128, without an
+extra energy denominator, factor one-half, or integer rounding. Valid zero
+matrix elements remain zero. This is the longitudinal PAW optical operator
+including projector and augmentation terms described by
+[Gajdoš et al., Eqs. (29)–(30)](https://doi.org/10.1103/PhysRevB.73.045112).
+
+The adapter checks dimensions, final OUTCAR eigenvalues and occupations,
+lattice, k points, electron count and mesh against WAVECAR. Keep the four
+files from the same run: WAVEDER itself has no energies or coordinates, so
+their association cannot be proven from its header. Source records are
+generated automatically. Finite-smearing source occupations are allowed;
+the postprocessing filling is explicitly T=0.
+
+Converge both the k mesh and accurately computed empty states. The
+[MnBi₂Te₄ example](../examples/materials/mnbi2te4-qah/) compares the Fukui
+invariant with actual unmodified VASP optical runs. It separates the coarse
+WAVEDER integral from the independent dense-mesh Wannier reference; a
+successful file/producer check does not establish integration convergence.
 
 ## References
 

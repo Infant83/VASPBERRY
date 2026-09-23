@@ -14,6 +14,8 @@ for required in \
   "-h               : Print this help and stop" \
   "-z2  1" \
   "-kubo_bundle 1" \
+  "-kubo_pairs PATH" \
+  "No gap division or occupations." \
   "External gaps must exceed 1e-5 eV." \
   "Writes bundle CSV only; default 0." \
   "Fukui-Hatsugai n-field Z2 index" \

@@ -6,6 +6,24 @@ All notable changes to VASPBERRY are recorded here.
 
 ### Added
 
+- Native `-kubo_pairs` export of unordered interband numerators, with serial/MPI
+  parity and bounded coefficient caching. Occupation-weighted pair integration
+  cancels equal-occupation internal transitions before denominator evaluation.
+- `wavecar-hall`, `import-pairs`, `pair-hall` and insulating `bundle-hall`
+  commands, reusable NPZ data, independently selectable CSV/DAT/NPZ tables and
+  a common PNG/PDF/SVG plotting tool. Numerical degeneracy coalescing is explicit
+  and records the energy/occupation approximation; the default rejects unresolved
+  unequal occupations.
+- An explicit `--pair-band-max` cutoff separates the Kubo intermediate-state
+  window from the stored VASP `NBANDS`, retaining source dimensions and checking
+  occupations and unresolved degeneracies at the cutoff.
+- `waveder-hall` for zero-temperature insulating occupied-bundle response from
+  standard VASP 5.4.4 longitudinal PAW optical files, with source consistency,
+  operator, electron-count and global-gap validation.
+- Actual MoS₂ Hall scans and separate mesh/pair-window studies, with original
+  VASP conditions, numerical references in CSV/DAT/NPZ and PNG/PDF/SVG figures.
+  A 21-atom MnBi₂Te₄ film adds magnetic Chern, optical integration and independent
+  Wannier-reference examples, with preparation files and a public SCF density.
 - Native selected-bundle Kubo trace via `-kubo_bundle 1`, with analytic
   exclusion of internal transitions, external-gap checks and a versioned
   `-kubo_csv` output. Serial and MPI support the same interface; the default
@@ -58,6 +76,9 @@ All notable changes to VASPBERRY are recorded here.
 
 ### Performance and numerical stability
 
+- Validate native pair CSV in bounded row chunks and stream Hall integration
+  over k points and chemical-potential blocks. Reuse the imported pair cache
+  for additional scans without repeating native matrix-element calculations.
 - Evaluate only selected-to-excluded pairs for native bundle curvature and
   construct plane-wave momentum coordinates once per k point. Coefficient
   storage remains proportional to the plane-wave count.
