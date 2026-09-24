@@ -29,6 +29,24 @@ the current interpretation and convergence limits.
   inaccurate highest source states are excluded.
 - `padded-source-independent-summary.json`: finite-band and same-cutoff
   eigensolver stability controls, with retained doublet and boundary gaps.
+- [Public-package reproduction](public-package-reproduction.json): the matrix
+  quickstart, bands and 20-cell edge calculation repeated from the published
+  files in an isolated checkout. All numerical arrays and three NPZ/seven
+  uncompressed CSV/DAT files match exactly. Commands, resources and the
+  originating audit identity are included.
+- `actual-18x18-b64-retained-independent-audit.json`: all 324 points, source
+  association, tensor components and local/integrated text rows checked with
+  the independent raw-stream contraction.
+- `mesh18-quality-public-summary.json`: completed VASP chunk quality, shared
+  k-point checks, measured costs and retained-state limitations.
+- `mesh-refinement-summary.json`: matched 6×6/12×12/18×18 responses, Γ-point
+  weights and nearest sampling radii. The last response change remains 6.75%.
+- `fit6-16-sp-final-heldout18.json` and its NPZ: the unchanged Wannier model
+  compared with the direct 18×18 VASP eigenvalues, without an energy shift.
+- `heldout18-offgrid-summary.json`: error statistics restricted to the 288
+  validation points outside the original 6×6 training mesh.
+- `final-mesh18-public-summary.json`: original-output preservation, exact
+  convergence-table values and unchanged tested numerical implementation.
 
 The spin-current oracle uses the same exported physical operators with an
 independent contraction, so this verifies calculation and data association,

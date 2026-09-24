@@ -214,8 +214,8 @@ gives the operator contract and reproduction commands.
 | Monolayer MoS₂, local valleys | SOC; two 9×9 patches; 26 bands; 400 eV | Isolated band-18 curvature near K and K′ |
 | Monolayer MoS₂, transport | SOC; 12×12 to 36×36 meshes; stored and retained band windows varied separately; 400 eV | Chemical-potential and temperature dependence of regional Hall response |
 | Monolayer MoS₂, supplied path | SOC; 48 K–Γ–K′ points; 32 bands; 400 eV | Optical spectra and Γ-point state density |
-| Buckled Bi bilayer | Two atoms; PBE+SOC; 400 eV; fresh 12×12 SCF density; full 6×6 and 12×12 meshes; occupied bands 1–10 | Z₂ n-field, PAW spin Hall response, source-band and mesh checks |
-| Bi Wannier representation | 16 s/p spinor orbitals; 6×6 VASP training mesh; independent 12×12 comparison; strips of 20 and 40 cells | Bulk dispersion and ideal-edge connectivity |
+| Buckled Bi bilayer | Two atoms; PBE+SOC; 400 eV; fresh 12×12 SCF density; full 6×6, 12×12 and 18×18 meshes; occupied bands 1–10 | Z₂ n-field, PAW spin Hall response, source-band and mesh checks |
+| Bi Wannier representation | 16 s/p spinor orbitals; 6×6 VASP training mesh; separate 12×12 and 18×18 comparisons; strips of 20 and 40 cells | Bulk dispersion and ideal-edge connectivity |
 | MnBi₂Te₄, three septuple layers | SOC+U; 21 atoms; full 6×6 VASP mesh; 192 bands; occupied bands 1–123; 270 eV | Magnetic Chern invariant, bands and Hall-integration checks |
 
 The [input guide](../examples/INPUTS.md) links the structures and VASP files.
@@ -424,10 +424,11 @@ of the sampled VASP bulk gap. The edge branches connect the valence and
 conduction manifolds across that gap.
 
 The model reproduces the training states within the frozen window to
-$4.0\times10^{-12}$ eV. On the separate 12×12 mesh, its gap differs from VASP
-by 1.725 meV; the maximum error in bands 9–12 is 30.67 meV. Thus the original
-VASP markers provide a check beyond the interpolation mesh. The maximum
-model $E(\mathbf k)-E(-\mathbf k)$ residual is $7.13\times10^{-8}$ eV.
+$4.0\times10^{-12}$ eV. On separate 12×12 and 18×18 meshes, its gap differs
+from VASP by 1.725 and 2.426 meV; the maximum errors in bands 9–12 are
+30.67 and 33.23 meV. Thus the original VASP markers and the denser validation
+mesh check the model beyond its training points. The maximum tested
+model $E(\mathbf k)-E(-\mathbf k)$ residual is $9.56\times10^{-8}$ eV.
 No time-reversal averaging was applied. The fixed localization run used
 16,000 iterations; its last spread change, approximately
 $1.6\times10^{-8}$ Å², did not meet the requested $10^{-8}$ Å² tolerance.
@@ -459,15 +460,14 @@ color map. (b) Mesh refinement retaining 48 bands from 64-band VASP sources.
 (c) Retained-band studies from 48- and 80-band VASP sources at a fixed 6×6 mesh. The numerical integrals always use the
 original k points and weights.
 
-For 48 source bands, the 6×6 and 12×12 meshes give
-$\sigma^z_{xy}=1.3825549946$ and $0.6907212357$ in
-$(\hbar/e)(e^2/h)$, respectively. **These meshes do not establish a converged
-spin Hall conductivity.** The large change comes primarily from the narrow
-response near Γ: the local Γ value is essentially unchanged at
-245.903 Å², but its contribution to the mesh sum decreases from 1.286414 to
-0.321604 as the weight is reduced. The nearest sampled radius falls from
-0.276 to 0.138 Å⁻¹. Smoothing the plot cannot supply the missing integration
-resolution.
+Retaining 48 states from 64-band VASP calculations, the 6×6, 12×12 and
+18×18 meshes give $\sigma^z_{xy}=1.382558$, $0.690723$ and $0.647020$ in
+$(\hbar/e)(e^2/h)$. The last change is 0.04370, or 6.75% of the 18×18 value.
+**These meshes do not establish a converged spin Hall conductivity.**
+The main difficulty is the narrow response near Γ: its local value stays
+near 245.9 Å², but its weighted contribution falls from 1.286413 to 0.321603
+and 0.142934. The nearest sampled radius falls from 0.276 to 0.138 and
+0.092 Å⁻¹. Smoothing the plot cannot supply the missing integration resolution.
 
 The band study probes a different error. At fixed 6×6 sampling, retaining
 40, 44 and 48 bands from the 48-band source gives 1.386328, 1.384098 and
@@ -483,7 +483,8 @@ Neither band stability nor an integer Z₂ invariant establishes k convergence.
 The 12×12 charge response is $1.82\times10^{-7}\,e^2/h$, consistent with the
 vanishing anomalous charge Hall effect of this nonmagnetic system. With
 64 source bands and the accurate first 48 retained, that residual falls to
-$-2.29\times10^{-12}\,e^2/h$, without imposing time-reversal averaging. The finite
+$-2.29\times10^{-12}\,e^2/h$; the 18×18 residual is
+$4.91\times10^{-9}\,e^2/h$, without time-reversal averaging. The finite
 spin response uses a different current vertex and is allowed by time reversal.
 Its noninteger value is not a failed Chern-number calculation. The finite-band
 current-product approximation, conventional-current definition, sampling and

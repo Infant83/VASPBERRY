@@ -1,6 +1,7 @@
 study,mesh,source_nbands,retained_bands,sigma_zxy,interpretation
 mesh,6,64,48,1.382557631912924,same_retained_space_with_accurate_empty_eigenstates
 mesh,12,64,48,0.6907226657440981,same_retained_space_with_accurate_empty_eigenstates
+mesh,18,64,48,0.6470204611530637,same_retained_space_with_accurate_empty_eigenstates
 bands,6,48,18,1.3793163326573834,source48_retained_band_study
 bands,6,48,24,1.4345017460760776,source48_retained_band_study
 bands,6,48,28,1.4321362378151616,source48_retained_band_study

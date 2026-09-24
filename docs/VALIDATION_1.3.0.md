@@ -436,7 +436,17 @@ This is distinct from the native reconstructed-gauge self-consistency check.
 
 The public PAW matrix archives restore exactly. Re-running `spin-hall` on
 the restored 12×12 input produces byte-identical CSV, DAT and NPZ scientific
-outputs. Independent raw-matrix contractions agree for the 48/64/80-band
+outputs. A separate checkout extracted only the published tools, Bi example
+and dependency declaration, then repeated the matrix quickstart, 301-point
+bands and 20-cell edge calculation. Every numerical array was exactly equal;
+all three NPZ files and seven uncompressed CSV/DAT files were byte-identical
+to the references. Only elapsed-time metadata differed, and all 217 source
+and reference files remained unchanged. This checks the distributed example
+without private VASP files or previous run directories. The
+[portable reproduction record](../examples/materials/bi-spin-hall/reference/diagnostics/public-package-reproduction.json)
+provides commands, resource measurements and the comparisons.
+
+Independent raw-matrix contractions agree for the 48/64/80-band
 sources and tested retained windows to better than 3.1e−14 in integrated
 spin units. The actual 80-band source stabilizes its first 64 eigenstates;
 the 56→64 retained-band response change at fixed 6×6 is 0.1482%. This is
@@ -465,3 +475,38 @@ and reproducible plotting. Its preparation helper splits a 12×12 mesh into
 four disjoint 36-point chunks with the same physical inputs. Their ordered
 union is byte-identical to the complete KPOINTS list. Invalid chunk choices,
 SCF partitioning and overwrites are rejected before creating a run directory.
+
+The published implementation passes all 16 jobs across its
+[push CI](https://github.com/Infant83/VASPBERRY/actions/runs/36014658962) and
+[PR CI](https://github.com/Infant83/VASPBERRY/actions/runs/36014664181).
+Hosted Python 3.10/3.12 discover 431 tests and skip two MPI-dependent tests;
+the separate GNU/OpenMPI jobs pass. The local suite above executes all 431
+without skips. The dedicated Bi workflow has no matching changed paths and
+does not trigger; its older runs are not used as evidence for this update.
+
+## Direct 18×18 Bi extension
+
+All nine 36-point, 64-band VASP chunks completed normally with electronic
+convergence and both matrix exports. The public `spin-merge` completed in
+58.45 s and `spin-hall`, retaining 48 bands, in 2.92 s. The response is
+**0.6470204611530637 (ħ/e)(e²/h)**. The 12×12→18×18 increment is 0.0437022,
+or 6.7544% of the latter value, so k convergence is not established.
+
+The independent raw-stream calculation agrees with all 27 spin and nine
+charge components within 5.45e−15 and 1.10e−14, respectively. All 324
+coordinates/weights, original source arrays and 8,748 local text rows pass.
+Retained-state Kramers splitting is at most 3.319e−6 eV and the cutoff gap
+is 43.207 meV. The inaccurate highest 64-band states remain excluded.
+
+The unchanged 16-orbital model was also compared against these direct VASP
+energies without an energy shift. The 18×18 direct/model gaps are
+0.450991/0.453417 eV, differing by 2.426 meV. Of the 324 points, 288 are
+outside the original 6×6 training grid; their bands 9–12 have maximum/RMS
+errors of 33.227/9.946 meV. These checks preserve all earlier 12×12 results.
+
+The [convergence input supplement](../examples/materials/bi-spin-hall/inputs/convergence/)
+contains the actual INCAR/KPOINTS variants, same-k restart associations,
+observed execution costs and checkpoint/completion distinctions. It keeps
+the archived initialization history separate from the uninterrupted fresh
+reproduction procedure. The [reference diagnostics](../examples/materials/bi-spin-hall/reference/diagnostics/)
+contain the independent tensor, source-quality and interpolation checks.

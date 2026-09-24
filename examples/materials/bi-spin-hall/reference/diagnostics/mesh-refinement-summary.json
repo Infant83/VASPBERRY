@@ -1,0 +1,44 @@
+{
+  "status": "PASS",
+  "scope": "Diagnostics read from completed original quadrature files; no interpolation, new DFT or current approximation introduced.",
+  "cases": [
+    {
+      "mesh": 6,
+      "source_bands": 64,
+      "retained_bands": 48,
+      "sigma_zxy": 1.382557631912924,
+      "charge_xy": -3.0800610422102026e-10,
+      "gap_eV": 0.535028374756481,
+      "gamma_omega_A2": 245.90289344667468,
+      "gamma_contribution": 1.2864131023655285,
+      "nearest_k_inv_A": 0.2755167609306333,
+      "source_sha256": "743245894b47fa6e2e87abec716648a61e0ec81aff8076a7759f1ce4238d41a8"
+    },
+    {
+      "mesh": 12,
+      "source_bands": 64,
+      "retained_bands": 48,
+      "sigma_zxy": 0.6907226657440981,
+      "charge_xy": -2.2877726696266973e-12,
+      "gap_eV": 0.49727140626960664,
+      "gamma_omega_A2": 245.90285280406874,
+      "gamma_contribution": 0.32160322243708606,
+      "nearest_k_inv_A": 0.13775838046531666,
+      "source_sha256": "cf3f0b2d86f9841536b507d394bb8d375a6d68b11011b7112fb4511af55bdb8d"
+    },
+    {
+      "mesh": 18,
+      "source_bands": 64,
+      "retained_bands": 48,
+      "sigma_zxy": 0.6470204611530637,
+      "charge_xy": 4.9082330249806236e-09,
+      "gap_eV": 0.45099103176048705,
+      "gamma_omega_A2": 245.90215706964517,
+      "gamma_contribution": 0.14293436112140018,
+      "nearest_k_inv_A": 0.09183892031021122,
+      "source_sha256": "89921cb49539b9cdd68b48c15997bb8147d47624b08e9b1a60a5b70585f032f7"
+    }
+  ],
+  "last_relative_change": 0.06754377522026458,
+  "convergence": "NOT_CONVERGED_IN_K_MESH"
+}

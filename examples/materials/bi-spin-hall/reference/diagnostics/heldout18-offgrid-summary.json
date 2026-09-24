@@ -1,0 +1,32 @@
+{
+  "status": "MEASURED_COORDINATE_HOLDOUT_SUBSET",
+  "total18_mesh_points": 324,
+  "coordinates_shared_with_training6_mesh": 36,
+  "new_coordinate_count": 288,
+  "energy_shift_applied_eV": 0.0,
+  "groups": {
+    "occupied1to10": {
+      "new_coordinate_max_abs_eV": 0.0227374198826249,
+      "new_coordinate_rms_eV": 0.007062206686118424,
+      "absolute_percentiles_eV": {
+        "50": 0.0028362950746620985,
+        "90": 0.012398623950196795,
+        "95": 0.015440711875926003,
+        "99": 0.020453608662263072,
+        "100": 0.0227374198826249
+      }
+    },
+    "frontier9to12": {
+      "new_coordinate_max_abs_eV": 0.03322719640623395,
+      "new_coordinate_rms_eV": 0.009946395833812832,
+      "absolute_percentiles_eV": {
+        "50": 0.00728705335109156,
+        "90": 0.014829996104144252,
+        "95": 0.01733696299978103,
+        "99": 0.029023460455082774,
+        "100": 0.03322719640623395
+      }
+    }
+  },
+  "scope": "Main validation reports all324 independently calculated18-grid points. This supplemental subset excludes36 coordinates shared with the6-grid modeltraining; no original array or result was modified."
+}

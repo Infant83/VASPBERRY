@@ -107,13 +107,15 @@ def response(ref,out,meta):
     fig,axes=plt.subplots(1,3,figsize=(11.5,3.6),layout='constrained',gridspec_kw={'width_ratios':[1.15,1,1]})
     ax,ak,ab=axes
     image=ax.pcolormesh(xx,yy,z.reshape(xx.shape),cmap='RdBu_r',vmin=-limit,vmax=limit,shading='auto',rasterized=True)
-    draw_bz_outline(ax,polygon,reciprocal)
+    draw_bz_outline(ax,polygon,reciprocal,k_fractional=(2/3,1/3))
+    ax.tick_params(top=False,right=False)
     ax.set(xlabel=r'$k_x$ (Å$^{-1}$)',ylabel=r'$k_y$ (Å$^{-1}$)')
     cb=fig.colorbar(image,ax=ax,pad=.025,fraction=.055);cb.set_label(r'$\Omega^z_{xy}$ (Å$^2$)',fontsize=10)
     mesh=[r for r in rows if r['study']=='mesh']
     mesh.sort(key=lambda r:int(r['mesh']))
     ak.plot([int(r['mesh']) for r in mesh],[float(r['sigma_zxy']) for r in mesh],'o-',color='#176B53',ms=5)
     ak.set(xlabel=r'Full $N\times N$ mesh: $N$',ylabel=r'$\sigma^z_{xy}$ [$(\hbar/e)(e^2/h)$]')
+    ak.set_xticks([int(r['mesh']) for r in mesh])
     for source in sorted({int(r['source_nbands']) for r in rows if r['study']=='bands'}):
         selected=sorted([r for r in rows if r['study']=='bands' and int(r['source_nbands'])==source],key=lambda r:int(r['retained_bands']))
         ab.plot([int(r['retained_bands']) for r in selected],[float(r['sigma_zxy']) for r in selected],'o-',ms=4,label=f'VASP NBANDS={source}')

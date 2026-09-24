@@ -1,7 +1,7 @@
 {
   "hardware": "10 physical-core Intel CPU workstation; 64 GiB RAM",
   "scientific_threads_per_process": 1,
-  "maximum_simultaneous_vasp_processes": 6,
+  "maximum_simultaneous_vasp_processes": 7,
   "measured_cases": [
     {
       "case": "bi-scf-12x12-symmetry",
@@ -26,7 +26,81 @@
       "peak_rss_bytes": 1244672000,
       "converged": true,
       "normal_footer": true
+    },
+    {
+      "case": "bi-18x18-b64-chunk00",
+      "status": "FINISHED",
+      "wall_seconds": 2315.314244551817,
+      "peak_rss_bytes": 2192351232,
+      "converged": true,
+      "normal_footer": true
+    },
+    {
+      "case": "bi-18x18-b64-chunk01",
+      "status": "FINISHED",
+      "wall_seconds": 2769.151287961984,
+      "peak_rss_bytes": 2192142336,
+      "converged": true,
+      "normal_footer": true
+    },
+    {
+      "case": "bi-18x18-b64-chunk02",
+      "status": "FINISHED",
+      "wall_seconds": 2771.8009000949096,
+      "peak_rss_bytes": 2110996480,
+      "converged": true,
+      "normal_footer": true
+    },
+    {
+      "case": "bi-18x18-b64-chunk03",
+      "status": "FINISHED",
+      "wall_seconds": 2770.412021163851,
+      "peak_rss_bytes": 2107674624,
+      "converged": true,
+      "normal_footer": true
+    },
+    {
+      "case": "bi-18x18-b64-chunk04",
+      "status": "FINISHED",
+      "wall_seconds": 2756.897200977197,
+      "peak_rss_bytes": 2142375936,
+      "converged": true,
+      "normal_footer": true
+    },
+    {
+      "case": "bi-18x18-b64-chunk05",
+      "status": "FINISHED",
+      "wall_seconds": 2756.52168836887,
+      "peak_rss_bytes": 2138243072,
+      "converged": true,
+      "normal_footer": true
+    },
+    {
+      "case": "bi-18x18-b64-chunk06",
+      "status": "FINISHED",
+      "wall_seconds": 2022.7897396059707,
+      "peak_rss_bytes": 2163331072,
+      "converged": true,
+      "normal_footer": true
+    },
+    {
+      "case": "bi-18x18-b64-chunk07",
+      "status": "FINISHED",
+      "wall_seconds": 1153.409371318994,
+      "peak_rss_bytes": 2132197376,
+      "converged": true,
+      "normal_footer": true
+    },
+    {
+      "case": "bi-18x18-b64-chunk08",
+      "status": "FINISHED",
+      "wall_seconds": 1152.8943250339944,
+      "peak_rss_bytes": 2066964480,
+      "converged": true,
+      "normal_footer": true
     }
   ],
-  "scope": "Observed timings and sampled process RSS; hardware and source settings affect cost."
+  "scope": "Observed timings and sampled process RSS; hardware and source settings affect cost.",
+  "production_concurrency_target": 6,
+  "concurrency_note": "The 18x18 batch briefly reached seven processes; later launches were held until the six-process target was restored."
 }

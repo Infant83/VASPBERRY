@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "actual_input_files_byte_identical": true,
+  "full_mesh_union_each_group": "PASS",
+  "same_k_restart_source_wavecar_hashes": "PASS",
+  "common_fixed_hamiltonian_hashes": "PASS",
+  "no_absolute_private_paths_or_licensed_payload": "PASS",
+  "study_complete": true,
+  "input_group_count": 7,
+  "case_count": 27,
+  "manifest_sha256": "1218a30d9b318c86e0c27a7538cae5dd6166a4565e1dd707efaf68caa513c9d3"
+}

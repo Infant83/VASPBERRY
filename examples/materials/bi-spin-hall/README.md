@@ -26,6 +26,7 @@ the coarse-grid conductivity is not a converged material prediction.
 | [POSCAR](inputs/POSCAR), [SCF inputs](inputs/scf/), [NSCF template](inputs/INCAR.nscf) | Actual structure and calculation settings |
 | [Pseudopotential provenance](PSEUDOPOTENTIAL.md) | Matching licensed VASP PAW dataset |
 | [Fresh SCF density](inputs/provenance.json) | Compressed parts restored automatically by the preparation helper |
+| [Convergence-study inputs and commands](inputs/convergence/) | Actual mesh/band variants, same-k restarts and observed execution costs |
 | [6×6 matrices](inputs/matrices-6x6-b48/), [12×12 matrices](inputs/matrices-12x12-b48/) | Actual complex PAW spin and full velocity matrices, all 48 source bands |
 | [Wannier operators](inputs/wannier-operators/) | Actual 16-orbital Hamiltonian and position matrices |
 | [Wannier source and regeneration](inputs/wannier-source/) | Actual overlaps/projections, localization sequence and licensed VASP export recipe |
@@ -78,7 +79,22 @@ degenerate groups, inspect their actual numerical splittings, and increase
 both controls independently. The accurate first 64 states of an 80-band
 run give a 56→64 retained-band change of about 0.15% on the 6×6 mesh.
 This does not settle the larger k-sampling error. See
-[convergence.csv](reference/convergence.csv).
+[convergence.csv](reference/convergence.csv) and the
+[convergence reproduction procedure](inputs/convergence/README.md).
+
+The matched mesh study uses 64 VASP bands and retains the accurate first 48:
+
+| Full mesh | σᶻₓᵧ in (ħ/e)(e²/h) |
+|---|---:|
+| 6×6 | 1.3825576319 |
+| 12×12 | 0.6907226657 |
+| 18×18 | 0.6470204612 |
+
+The last change is 6.75% of the 18×18 value, so **k convergence is still not
+established**. All 324 points were calculated directly with VASP and integrated
+without display interpolation. The 18×18 sampled global gap is 0.450991 eV.
+The independent full-tensor check and source-state diagnostics are supplied
+in [the reference diagnostics](reference/diagnostics/).
 
 ## 2. Generate the PAW matrices with VASP
 
@@ -136,8 +152,12 @@ python3 tools/vaspberry_kubo.py spin-export \
 The reference calculations used disjoint, uniformly weighted fixed-charge
 chunks, without symmetry reconstruction. The new SCF took about 447 s and
 0.88 GB peak memory on the measured workstation. The 18-point, 48-band
-NSCF chunks took approximately 24 minutes and 1.27 GB each. Retaining extra
-empty states increases the cost. In comparison, VASPBERRY's 12×12 response
+NSCF chunks took approximately 24 minutes and 1.27 GB each. Generating more
+VASP empty states increases the cost. The nine 36-point, 64-band chunks for 18×18
+took 19–46 minutes each, with a maximum observed 2.19 GB per process; the
+whole queued batch took about 69 minutes on the 10-core, 64 GiB workstation.
+Its VASPBERRY integration took 2.92 seconds after matrix assembly.
+In comparison, VASPBERRY's 12×12 response
 integration took only a few seconds; the 40-cell edge spectrum took about
 three minutes. These are measured examples, not timing guarantees. The
 wrapper rejects interrupted or electronically unconverged runs, and the
@@ -195,9 +215,11 @@ python3 tools/vaspberry_kubo.py wannier-edge \
 
 The Wannier model contains Bi s/p spinors, 16 orbitals per cell, and all ten
 occupied bands. No occupied bands are excluded. It was fitted on the actual
-6×6 mesh and checked against separate 12×12 VASP energies. On those points,
-the model gap differs by **1.725 meV**, while bands 9–12 have a maximum error
-of **30.67 meV**. These are interpolation errors, not DFT convergence errors.
+6×6 mesh and checked against separate 12×12 and 18×18 VASP energies. The
+sampled model gaps differ by **1.725 and 2.426 meV**, while the maximum errors
+in bands 9–12 are **30.67 and 33.23 meV**. The 18×18 comparison includes
+288 points outside the training grid. These are interpolation errors,
+not DFT convergence errors.
 The [source guide](inputs/wannier-source/) reproduces the localization and
 effective operators from the actual VASP overlaps, and explains how to export
 new overlaps from the licensed VASP calculation. This full reproduction was
