@@ -1,0 +1,86 @@
+{
+  "schema": "vaspberry.wannier-bands",
+  "version": 1,
+  "complete": true,
+  "method": "VASPBERRY Hamiltonian Fourier sum and NumPy eigvalsh",
+  "source_metadata": {
+    "schema": "vaspberry.wannier-operators",
+    "version": 1,
+    "complete": true,
+    "source_format": "wannier90_effective_HH_R_AA_R",
+    "num_wann": 138,
+    "nrpts": 165,
+    "units": {
+      "hamiltonian": "eV",
+      "position": "Angstrom",
+      "lattice": "Angstrom"
+    },
+    "fourier_phase": "exp(+2*pi*i*q_fractional.dot(R_integer))",
+    "real_space_degeneracy": "already_absorbed",
+    "position_components": [
+      "x",
+      "y",
+      "z"
+    ],
+    "spinor_components": 2,
+    "spin_multiplicity": 1,
+    "energy_reference": "Unshifted VASP-derived Wannier eigenvalues in eV",
+    "source_operator": {
+      "kind": "Hamiltonian_and_position_connection",
+      "scope": "represented finite Wannier subspace",
+      "physical_accuracy": "not established by format validation; retain producer provenance"
+    },
+    "source_sha256": {
+      "HH_R": "e86ca77b885029917b0338e939ff9e553b2f80c8910008a235d84b4d67aaf2b8",
+      "AA_R": "6553127389bb726ed31ec1bc40fd01b31c296704e8e3b7e05ece34d131fe8be0"
+    },
+    "source_files": {
+      "HH_R": "wannier90_HH_R.dat",
+      "AA_R": "wannier90_AA_R.dat"
+    },
+    "source_rows": {
+      "HH_R": 1425532,
+      "AA_R": 1425532
+    },
+    "sparse_semantics": "omitted entries are zero; duplicate entries summed without a magnitude cutoff",
+    "lattice_association": "Caller-supplied direct lattice rows; operator files do not encode the lattice.",
+    "hermiticity_tolerance": {
+      "absolute_eV_or_Angstrom": 1e-08,
+      "relative": 1e-10
+    },
+    "hermiticity_residual": {
+      "hamiltonian_eV": 5.38306378639053e-16,
+      "position_A": 1.0000680839006293e-15
+    },
+    "lattice_source": {
+      "format": "VASP POSCAR",
+      "filename": "POSCAR",
+      "sha256": "f8a259f0ae8328b36f0a63e2fb9c6c90bb5d7115ea1afa020136be96e99f1af7"
+    },
+    "data_npz_sha256": "0f74a8e0679db924b89c17a5f1b3d8afe7131f4fa34f381e160bd6116f006053"
+  },
+  "source_cache_sha256": {
+    "operators.npz": "0f74a8e0679db924b89c17a5f1b3d8afe7131f4fa34f381e160bd6116f006053",
+    "operators.json": "12a0f339fb56c0f3bc40e8917cd08780f6aa79c916247ccf2b27ca8bd9f5b43c"
+  },
+  "units": {
+    "energy": "eV",
+    "distance": "Angstrom^-1"
+  },
+  "labels": [
+    "Gamma",
+    "M",
+    "K",
+    "Gamma"
+  ],
+  "output_formats": [
+    "npz"
+  ],
+  "point_count": 3601,
+  "band_count": 138,
+  "elapsed_seconds": 14.246309083886445,
+  "implementation_sha256": "62f2ae14d3730cb37d0b62da7d3e054a22ebaed0e6dda2ada1377d14e094c777",
+  "output_sha256": {
+    "npz": "e4ce8b9917b09d1fd6f6fdd0ba41d481b80f6fe470eb1b105b6ee22b72ad0590"
+  }
+}

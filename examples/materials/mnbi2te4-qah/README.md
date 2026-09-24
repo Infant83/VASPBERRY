@@ -1,9 +1,10 @@
 # MnBi₂Te₄: a magnetic Chern-insulator example
 
 This example starts from an actual VASP calculation of a three-septuple-layer
-MnBi₂Te₄ slab. It compares the occupied-bundle Fukui invariant with a
-Berry-curvature Hall integral and shows why an integer topological invariant
-does not establish convergence of the latter.
+MnBi₂Te₄ slab. The main workflow computes the occupied-bundle Fukui invariant from VASP
+wavefunctions, imports the actual VASP-derived Hamiltonian and position
+operators, and evaluates their full Berry-curvature Hall response with
+VASPBERRY. A separate postw90 calculation checks the interpolated result.
 
 ## Material and reference calculation
 
@@ -74,7 +75,7 @@ uses a coarse 3×3 SCF mesh; converge the density, structure, basis, magnetic
 state, and NSCF sampling separately before using this setup for a material
 prediction.
 
-## 2. Run VASPBERRY
+## 2. Calculate the occupied Fukui invariant and optical diagnostic
 
 Return to the repository root and run:
 
@@ -98,10 +99,109 @@ energies, plane-wave bases, and all complex coefficients against those
 source runs. Independently recomputed or interpolated wavefunctions do not
 satisfy this assembly contract.
 
-## 3. Reproduce the full Wannier Hall reference
+## 3. Compute the full Hall response with VASPBERRY
 
-The dense reference uses **Wannier90/postw90**, independently of the
-VASPBERRY optical diagnostic above. It retains the Hamiltonian and all
+Follow [the native Wannier workflow](NATIVE_WANNIER.md): restore the actual
+Hamiltonian and position matrices, import them with the general
+`wannier-import` command, then run `wannier-hall`. VASPBERRY performs the
+Fourier transforms, diagonalization, occupied-bundle J0 + J1 + J2 calculation,
+and numerical integration in its own NumPy backend. Postw90 is not called
+by this solver.
+
+The [supplied operators](inputs/wannier/operators/README.md) come from this
+actual VASP-derived Wannier model. Both H and all three position-connection
+components are needed; a WAVECAR alone does not contain the latter. No fitted
+analytic Hamiltonian or smoothed Fukui map replaces the response.
+
+Three distinctions matter for this example:
+
+- The WAVECAR momentum route is a canonical-momentum approximation and omits
+  PAW/nonlocal velocity terms.
+- The standard-WAVEDER 6×6 result contains the audited optical matrix elements,
+  but its grid badly undersamples the narrow Γ peak.
+- A dense result calculated by postw90 establishes an independent reference.
+  The VASPBERRY result must come from the native solver's own output.
+
+All five native integration runs below were completed and independently
+checked against postw90 on identical points and weights, including all three
+curvature components and their J0/J1/J2 contributions.
+
+The model has 138 spinor Wannier functions and 87 occupied model bands.
+The omitted original bands 1–36 form a separately checked C = 0 bundle.
+Its local curvature need not vanish. Near Γ, the full Wannier and
+192-band PAW optical curvature differ by at most 1.44% at the seven
+sampled points; corresponding band-edge differences are at most 1.26 meV.
+Across all 12 comparison points, the largest band-edge difference is
+18.14 meV. These differences include the different finite subspaces and
+the omitted deep-band curvature, as well as interpolation error.
+
+This is a **fixed, validated numerical model**: localization stopped after
+300 optimization iterations before the requested spread tolerance was
+reached. The quadrature study tests integration of that model. It does
+not establish convergence with respect to the source 6×6 DFT mesh,
+SCF density, basis, structural relaxation, or Wannier optimization.
+
+### VASPBERRY results and convergence
+
+The completed VASPBERRY full-connection integral is **σ_xy = 1.000384978 e²/h**
+at each of three calculated chemical potentials spanning the central 90% of
+the sampled gap. A separate 160×160 energy scan of the same model finds a
+17.1014 meV global sampled gap, with all three points inside it.
+
+| Base grid | Local subdivision | Refined radius (Å⁻¹) | Points | σ_xy/(e²/h) |
+|---|---|---:|---:|---:|
+| 40×40 | 7×7 | 0.12 | 3,088 | 1.000193491 |
+| 60×60 | 7×7 | 0.12 | 6,528 | 1.000054804 |
+| 60×60 | 11×11 | 0.12 | 10,920 | 1.000049773 |
+| 60×60 | 11×11 | 0.18 | 21,720 | 1.000591930 |
+| 80×80 | 9×9 | 0.18 | 27,600 | 1.000384978 |
+
+Each refined region replaces whole coarse cells by the stated two-dimensional
+subdivision. The full periodic integration domain and total weight remain
+unchanged; all chemical potentials use the same points and weights. The
+last refinement changes σ_xy by 0.000207 e²/h, below the predefined
+10⁻³ e²/h criterion. The wider-domain check is deliberately retained even
+though it moves the value farther from an integer. These checks establish
+numerical quantization to the reported quadrature accuracy for this fixed
+model; they do not establish full material convergence. No result was rounded
+to an integer or selected for being closest to one.
+
+The [native reference data](reference/vaspberry-wannier/README.md) contain
+matching common CSV/DAT/NPZ Hall tables, all sampled curvatures, run records
+and all 138 bands. The [convergence table](reference/vaspberry-wannier/convergence.csv)
+retains every native control beside its independent postw90 comparison.
+The final native run took 9.6 minutes with four NumPy workers and about
+2.2 GiB peak resident memory on the reference computer; timings vary by host.
+The independently calculated postw90 value is 1.000384977 e²/h, agreeing
+within its recorded output precision.
+
+## 4. Plot the reference
+
+```sh
+python examples/materials/mnbi2te4-qah/plot.py \
+  --output-dir work/mbt3-reference-figures
+```
+
+The figure combines VASPBERRY bands with actual VASP sample markers and a
+gap enlargement, the three native Hall samples inside the gap, and unrounded
+integration convergence. Hollow markers show the independent postw90
+calculation. VASPBERRY integrates the sheet response directly from reciprocal
+area; the external S/cm reference uses the full simulation-cell height for
+comparison, without a guessed slab thickness.
+
+![MnBi₂Te₄ bands, sheet Hall response, and quadrature convergence](reference/figures/mnbi2te4-qah.png)
+
+Blue band curves and filled Hall/convergence markers are calculated by
+VASPBERRY from the actual VASP-derived H and position operators. Open band
+circles are direct VASP samples; the gap inset follows K–Γ–M. Hollow Hall
+and convergence markers are the independent postw90 values on the same
+grids. All five prescribed quadrature controls are shown. The independent
+occupied-bundle Fukui invariant is C = −1; the Hall values are not rounded.
+
+## 5. Run the independent postw90 crosscheck
+
+The independent reference uses **Wannier90/postw90** to check the
+VASPBERRY full-connection calculation on the same finite operators. It retains the Hamiltonian and all
 three position-connection matrices from the actual VASP-derived model;
 postw90 evaluates the full J0 + J1 + J2 expression. This is not a fitted
 analytic Hamiltonian or an integral of a smoothed Fukui map.
@@ -131,73 +231,10 @@ without that private interface. Generating a new model from another VASP
 installation requires checking its own spinor-projection interface and
 exported band/projection counts.
 
-The model has 138 spinor Wannier functions and 87 occupied model bands.
-The omitted original bands 1–36 form a separately checked C = 0 bundle.
-Its local curvature need not vanish. Near Γ, the full Wannier and
-192-band PAW optical curvature differ by at most 1.44% at the seven
-sampled points; corresponding band-edge differences are at most 1.26 meV.
-Across all 12 comparison points, the largest band-edge difference is
-18.14 meV. These differences include the different finite subspaces and
-the omitted deep-band curvature, as well as interpolation error.
-
-This is a **fixed, validated numerical model**: localization stopped after
-300 optimization iterations before the requested spread tolerance was
-reached. The quadrature study tests integration of that model. It does
-not establish convergence with respect to the source 6×6 DFT mesh,
-SCF density, basis, structural relaxation, or Wannier optimization.
-
-### Calculated Hall response and quadrature checks
-
-The final full-connection integral is **σ_xy = 1.000384977 e²/h**
-at each of three calculated chemical potentials spanning the central 90% of
-the sampled gap. A separate 160×160 energy scan of the same model finds a
-17.1014 meV global sampled gap, with all three points inside it.
-
-| Base grid | Local subdivision | Refined radius (Å⁻¹) | Points | σ_xy/(e²/h) |
-|---|---|---:|---:|---:|
-| 40×40 | 7×7 | 0.12 | 3,088 | 1.000193484 |
-| 60×60 | 7×7 | 0.12 | 6,528 | 1.000054800 |
-| 60×60 | 11×11 | 0.12 | 10,920 | 1.000049762 |
-| 60×60 | 11×11 | 0.18 | 21,720 | 1.000591924 |
-| 80×80 | 9×9 | 0.18 | 27,600 | 1.000384977 |
-
-Each refined region replaces whole coarse cells by the stated two-dimensional
-subdivision. The full periodic integration domain and total weight remain
-unchanged; all chemical potentials use the same points and weights. The
-last refinement changes σ_xy by 0.000207 e²/h, below the predefined
-10⁻³ e²/h criterion. The wider-domain check is deliberately retained even
-though it moves the value farther from an integer. These checks establish
-numerical quantization to the reported quadrature accuracy for this fixed
-model; they do not establish full material convergence. No result was rounded
-to an integer or selected for being closest to one.
-
-The [conductivity tables](reference/wannier/README.md) retain raw S/cm and
-converted e²/h values; the [convergence table](reference/wannier/convergence.csv)
-also retains the independent original-supercell crosschecks.
-
-## 4. Plot the reference
-
-```sh
-python examples/materials/mnbi2te4-qah/plot.py \
-  --output-dir work/mbt3-reference-figures
-```
-
-The figure combines the interpolated bands with actual VASP sample
-markers and a gap enlargement, the three computed chemical potentials
-inside the gap, and the unrounded Hall-integration convergence. The
-full simulation-cell height converts postw90 S/cm to the sheet response
-in e²/h; no guessed slab thickness is used.
-
-![MnBi₂Te₄ bands, sheet Hall response, and quadrature convergence](reference/figures/mnbi2te4-qah.png)
-
-Blue curves are Wannier bands; open circles are actual VASP samples.
-The gap inset follows K–Γ–M. The Hall markers are the three computed
-chemical potentials, and the final panel retains every prescribed
-true-distance quadrature control. The dense Hall producer is postw90;
-the independently calculated occupied-bundle Fukui invariant is C = −1.
 
 ## Reference data
 
+- [VASPBERRY bands, Hall response and all five convergence runs](reference/vaspberry-wannier/README.md).
 - [Occupied-bundle Fukui map](reference/fukui/fukui_occupied.csv) and
   [link diagnostics](reference/fukui/diagnostics.json).
 - [Actual VASP band samples](reference/direct-dft/sample-bands.csv),

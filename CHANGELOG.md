@@ -6,6 +6,17 @@ All notable changes to VASPBERRY are recorded here.
 
 ### Added
 
+- VASPBERRY-owned `wannier-import`, `wannier-bands` and `wannier-hall` commands
+  for complete real-space Hamiltonian/position inputs. The NumPy kernel retains
+  full J0/J1/J2, uses only cross-gap denominators and handles internal occupied
+  degeneracies. Fixed insulating T=0 sheet response supports uniform or locally
+  refined full-zone quadrature, shared-memory batches, resource estimates,
+  source-integrity checks and the common CSV/DAT/NPZ Hall output.
+- Reorganize the MnBi₂Te₄ example around VASPBERRY-computed bands and Hall
+  response from its actual VASP-derived operators, with postw90 retained as an
+  independent comparison. Distinguish the 123-band VASP Fukui bundle from the
+  87 occupied model states and retain the unconverged direct optical diagnostic.
+
 - Native `-kubo_pairs` export of unordered interband numerators, with serial/MPI
   parity and bounded coefficient caching. Occupation-weighted pair integration
   cancels equal-occupation internal transitions before denominator evaluation.

@@ -52,6 +52,7 @@ WAVECAR format and compiler compatibility are described in the
 | WAVECAR Kubo Berry curvature | Fortran canonical-momentum implementation; [Kubo guide](docs/KUBO_TRANSPORT.md) | [MoS₂ BZ map, symmetry path and bands](examples/features/kubo-curvature/) |
 | WAVECAR Kubo charge Hall versus chemical potential and temperature | Native pair export plus bundled Python integration; [one-command guide](docs/KUBO_TRANSPORT.md#wavecar-to-charge-hall-in-one-command) | [MoS₂ bands, regions and Hall curves](examples/features/kubo-hall/) |
 | Insulating PAW optical Hall response | Standard VASP optical files; [`waveder-hall` guide](docs/KUBO_TRANSPORT.md#standard-waveder-insulating-paw-hall-response) | [MnBi₂Te₄ optical integration and convergence checks](examples/materials/mnbi2te4-qah/) |
+| Full-connection Wannier bands and insulating Hall response | VASPBERRY `wannier-import`, `wannier-bands`, `wannier-hall`; [operator and transport guide](docs/WANNIER_TRANSPORT.md) | [VASP-derived MnBi₂Te₄ QAH workflow](examples/materials/mnbi2te4-qah/NATIVE_WANNIER.md) |
 | Exported interband-matrix curvature and transport | [Matrix interface and physical-operator contract](docs/KUBO_TRANSPORT.md) | [Developer numerical checks](validation/models/kubo-curvature/) |
 | Two-dimensional intrinsic charge Hall response and reciprocal-space regions | Standardized curvature and occupations; [Hall guide](docs/KUBO_TRANSPORT.md) | [Actual Bi occupied-subspace Hall](examples/features/hall-valley/) |
 | WAVECAR-direct Fukui export and guarded geometric transport | `tools/wavecar_fukui.py`; [valley-transport guide](docs/VALLEY_TRANSPORT.md) | [Actual Bi occupied-subspace calculation](examples/features/hall-valley/) |
@@ -138,6 +139,12 @@ For the supported standard VASP optical output, `waveder-hall` integrates the
 PAW occupied-to-empty matrix elements directly inside a global insulating
 gap at zero temperature. Its [input and operator scope](docs/KUBO_TRANSPORT.md#standard-waveder-insulating-paw-hall-response)
 is distinct from the native canonical-momentum calculation.
+
+For a validated VASP-derived Wannier representation, `wannier-import`,
+`wannier-bands` and `wannier-hall` compute full-connection bands and insulating
+Hall response inside VASPBERRY. Both Hamiltonian and position matrices are
+required. See the [general guide](docs/WANNIER_TRANSPORT.md) and
+[actual magnetic-film tutorial](examples/materials/mnbi2te4-qah/NATIVE_WANNIER.md).
 
 The [MoS₂ Kubo tutorial](examples/features/kubo-curvature/) starts from real
 WAVECARs and pairs a Brillouin-zone curvature map with a marked symmetry path,

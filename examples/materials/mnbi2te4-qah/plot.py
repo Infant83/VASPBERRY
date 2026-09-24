@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plot measured DFT bands, an external full-connection Hall reference and convergence."""
+"""Plot native VASPBERRY bands/Hall response against DFT and independent postw90."""
 from __future__ import annotations
 import argparse
 import csv
@@ -44,16 +44,27 @@ def main():
     p.add_argument("--output-dir", type=Path, required=True)
     a = p.parse_args()
     ref = a.reference_dir.resolve()
-    meta = json.loads((ref / "wannier/metadata.json").read_text())
-    bands = records(ref / "wannier/bands.csv")
+    native = ref / "vaspberry-wannier"
+    meta = json.loads((native / "metadata.json").read_text())
+    if not meta.get("complete") or meta.get("completed_convergence_cases") != 5:
+        raise ValueError("Five completed native convergence cases are required for the final figure")
+    with np.load(native / "bands.npz", allow_pickle=False) as bands:
+        band_energy = bands["energies_eV"]
+        distance = bands["distance_inv_A"]
+        lattice = bands["lattice_A"]
+        vertices = bands["vertices_fractional"]
+        ticks = bands["tick_distance_inv_A"]
     direct = records(ref / "direct-dft/sample-bands.csv")
-    hall = records(ref / "wannier/conductivity.csv")
-    convergence = [r for r in records(ref / "wannier/convergence.csv") if r["plot"] == "true"]
+    hall = records(native / "cases/n80-r9-R018/hall/conductivity.csv")
+    if len(hall) != 3 or any(r["region"] != "total" or float(r["temperature_K"]) != 0 for r in hall):
+        raise ValueError("Expected the three actual total-region T=0 native Hall samples")
+    independent_hall = records(ref / "wannier/conductivity.csv")
+    convergence = records(native / "convergence.csv")
+    independent_convergence = [r for r in records(ref / "wannier/convergence.csv") if r["plot"] == "true"]
+    if len(convergence) != 5 or [int(r["point_count"]) for r in convergence] != [int(r["point_count"]) for r in independent_convergence]:
+        raise ValueError("Native and independent convergence controls must cover the same five grids")
     mid = float(meta["reference_midgap_eV"])
-    lattice = np.asarray(meta["lattice_A"])
     reciprocal = 2*np.pi*np.linalg.inv(lattice).T
-    vertices = np.array([[0, 0, 0], [.5, 0, 0], [1/3, 1/3, 0], [0, 0, 0]])
-    ticks = np.r_[0., np.cumsum(np.linalg.norm(np.diff(vertices, axis=0) @ reciprocal, axis=1))]
     plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 11.5,
                          "axes.labelsize": 12, "axes.titlesize": 12,
                          "axes.spines.top": False, "axes.spines.right": False,
@@ -61,13 +72,12 @@ def main():
     fig, axes = plt.subplots(1, 3, figsize=(10.0, 4.0), gridspec_kw={"width_ratios": [1.4, 1, 1.1]})
     ax, ah, ac = axes
     inset = ax.inset_axes([.46, .60, .52, .35])
-    for band in sorted({int(r["wannier_band"]) for r in bands}):
-        selected = [r for r in bands if int(r["wannier_band"]) == band]
-        x = np.array([float(r["distance_Ainv"]) for r in selected])
-        e = np.array([float(r["energy_eV"])-mid for r in selected])
+    for band in range(band_energy.shape[1]):
+        x = distance
+        e = band_energy[:, band]-mid
         if e.max() >= -1.35 and e.min() <= 1.35:
             ax.plot(x, e, color="#2864A0", lw=.85, zorder=1)
-        if band in (87, 88):
+        if band in (86, 87):
             mask = x <= .024
             inset.plot(x[mask], 1000*e[mask], color="#2864A0", lw=1.1)
             mask = x >= ticks[-1]-.024
@@ -90,7 +100,7 @@ def main():
            xticklabels=[r"$\Gamma$", "M", "K", r"$\Gamma$"], ylabel="Energy − midgap (eV)")
     for value in ticks[1:-1]: ax.axvline(value, color=".85", lw=.6, zorder=0)
     ax.axhline(0, color=".75", lw=.6, zorder=0)
-    ax.legend(handles=[Line2D([], [], color="#2864A0", lw=1, label="Wannier90"),
+    ax.legend(handles=[Line2D([], [], color="#2864A0", lw=1, label="VASPBERRY"),
                        Line2D([], [], marker="o", color="none", markeredgecolor=".3",
                               markerfacecolor="white", markersize=3.5, label="VASP")],
               frameon=True, facecolor="white", framealpha=.95, edgecolor="none",
@@ -106,22 +116,29 @@ def main():
     inset.text(.98, .94, f"{1000*float(meta['dft_sampled_gap_eV']):.1f} meV", transform=inset.transAxes,
                fontsize=10.5, va="top", ha="right",
                bbox=dict(facecolor="white", edgecolor="none", pad=.5))
-    mu = np.array([float(r["mu_minus_dft_midgap_eV"])*1000 for r in hall])
-    sigma = np.array([float(r["sigma_xy_e2_over_h"]) for r in hall])
+    mu = np.array([float(r["mu_minus_reference_eV"])*1000 for r in hall])
+    sigma = np.array([float(r["sigma_e2_over_h"]) for r in hall])
+    independent_mu = np.array([float(r["mu_minus_dft_midgap_eV"])*1000 for r in independent_hall])
+    independent_sigma = np.array([float(r["sigma_xy_e2_over_h"]) for r in independent_hall])
     vbm = 1000*(float(meta["dft_sampled_vbm_eV"])-mid)
     cbm = 1000*(float(meta["dft_sampled_cbm_eV"])-mid)
     ah.axvspan(vbm, cbm, color="#E6F1E8", zorder=0, label="DFT gap")
     ah.axhline(1, color=".55", lw=.7, ls="--", zorder=1)
-    ah.plot(mu, sigma, "o-", color="#176B53", lw=1.4, ms=3.5, label="postw90 Kubo")
+    ah.plot(mu, sigma, "o-", color="#176B53", lw=1.4, ms=3.5, label="VASPBERRY")
+    ah.plot(independent_mu, independent_sigma, "o", color="#444444", mfc="none",
+            ms=7, mew=.9, label="postw90")
     ah.set(xlabel="Chemical potential\n− midgap (meV)", ylabel=r"$\sigma_{xy}$ ($e^2/h$)")
     ah.text(.97, .07, r"$C_{\mathrm{Fukui}}=-1$", ha="right", transform=ah.transAxes)
     ah.legend(frameon=False, fontsize=10.5, loc="lower left",
               bbox_to_anchor=(0, .17), handlelength=1.1, borderaxespad=.3)
     ah.set_ylim(min(0, float(sigma.min())-.08), max(1.12, float(sigma.max())+.08))
     x = np.array([int(r["point_count"]) for r in convergence])
-    values = np.array([float(r["sigma_xy_e2_over_h"]) for r in convergence])
+    values = np.array([float(r["sigma_e2_over_h"]) for r in convergence])
+    independent_values = np.array([float(r["sigma_xy_e2_over_h"]) for r in independent_convergence])
     errors = np.abs(values-1)
-    ac.plot(x, errors, "o-", color="#8054A2", lw=1.2, ms=4)
+    ac.plot(x, errors, "o-", color="#8054A2", lw=1.2, ms=4, label="VASPBERRY")
+    ac.plot(x, np.abs(independent_values-1), "o", color="#444444", mfc="none",
+            ms=7, mew=.9, label="postw90")
     ac.set(xscale="log", yscale="log", xlabel="Integration points",
            ylabel=r"$|\sigma_{xy}/(e^2/h)-1|$")
     ac.set_xlim(min(2500, .8*x.min()), max(45000, 1.5*x.max()))
@@ -138,6 +155,8 @@ def main():
                     ha="right" if offset[0] < 0 else "left",
                     bbox=dict(facecolor="white", edgecolor="none", alpha=.94, pad=.5))
     ac.grid(True, which="major", color=".9", lw=.6)
+    ac.legend(frameon=False, fontsize=10, loc="upper left", handlelength=1.1,
+              borderaxespad=.25, labelspacing=.25)
     for panel, label in zip(axes, ["(a) Bands", "(b) Sheet Hall response", "(c) Sampling convergence"]):
         panel.set_title(label, loc="left", pad=10)
     fig.tight_layout(w_pad=1.6)

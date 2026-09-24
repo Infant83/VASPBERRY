@@ -64,6 +64,44 @@ coverage, source files and checked gap. These tables describe a constant
 zero-temperature response within the same global insulating gap. They do
 not contain a metallic or finite-temperature extension of WAVEDER.
 
+## Full-connection Wannier operators and results
+
+`wannier-import` writes `operators.npz` and `operators.json`, schema
+`vaspberry.wannier-operators` version 1. The input is the paired effective-model
+HH_R/AA_R format with translation weights already absorbed. It is not the
+usual Hamiltonian-only hr.dat format. The arrays are:
+
+| Array | Shape / units |
+|---|---|
+| `irvec` | R×3 int64 integer translations |
+| `hamiltonian_eV` | R×N×N complex128 Hamiltonian in eV |
+| `position_A` | R×3×N×N complex128 position connection, Cartesian x,y,z in Å |
+| `lattice_A` | 3×3 float64 direct row vectors in Å |
+
+Metadata declares the positive Fourier phase, unit real-space degeneracy,
+model dimensions, energy zero, spin convention and source integrity. An
+imported cache establishes format consistency, not model convergence.
+
+`wannier-hall` writes the common Hall schema in `hall/`, with method
+`vaspberry_wannier_full_connection_T0`. The zero-temperature scan has one
+fixed occupied model bundle; electron counts describe this represented model,
+not omitted deep DFT bands. `sigma_terms_e2_over_h` is 3×3, with rows J0/J1/J2
+and columns yz/zx/xy. The scalar Hall table projects their sum onto the
+oriented plane normal. Spin multiplicity is explicit.
+
+The accompanying `curvature.npz` contains K×3 `kpoints_fractional`, K
+normalized area `weights`, K integer `parent_cell` IDs, K×3×3
+`omega_terms_A2`, K×3 `omega_A2`, K×2 valence/conduction `band_edges_eV`,
+and the direct/reciprocal lattices. A complete parent-cell partition replaces
+coarse cells with refined children; a partial point cloud is not renormalized.
+Internal occupied/empty degeneracies require no individual-band curvature.
+
+`wannier-bands` writes CSV and/or NPZ with all represented model bands.
+`bands.npz` stores K×3 `kpoints_fractional`, K `distance_inv_A`, K×N
+`energies_eV`, direct lattice and path vertices/ticks. `bands.json` uses
+schema `vaspberry.wannier-bands` version 1 and records path labels, source,
+units and output formats. See [the workflow guide](WANNIER_TRANSPORT.md).
+
 ## Native Kubo bundle CSV
 
 Native `-kubo_bundle 1 -kubo_csv PATH` writes

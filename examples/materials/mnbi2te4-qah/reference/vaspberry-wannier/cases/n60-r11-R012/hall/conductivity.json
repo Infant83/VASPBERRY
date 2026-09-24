@@ -1,0 +1,198 @@
+{
+  "schema": "vaspberry.hall-spectrum",
+  "version": 1,
+  "complete": true,
+  "units": {
+    "sigma_e2_over_h": "e^2/h",
+    "sigma_S": "S",
+    "energy": "eV",
+    "temperature": "K"
+  },
+  "energy_reference": "Unshifted VASP-derived Wannier eigenvalues in eV",
+  "mu_reference_eV": 3.2619863015705284,
+  "source_metadata": {
+    "schema": "vaspberry.wannier-operators",
+    "version": 1,
+    "complete": true,
+    "source_format": "wannier90_effective_HH_R_AA_R",
+    "num_wann": 138,
+    "nrpts": 165,
+    "units": {
+      "hamiltonian": "eV",
+      "position": "Angstrom",
+      "lattice": "Angstrom"
+    },
+    "fourier_phase": "exp(+2*pi*i*q_fractional.dot(R_integer))",
+    "real_space_degeneracy": "already_absorbed",
+    "position_components": [
+      "x",
+      "y",
+      "z"
+    ],
+    "spinor_components": 2,
+    "spin_multiplicity": 1,
+    "energy_reference": "Unshifted VASP-derived Wannier eigenvalues in eV",
+    "source_operator": {
+      "kind": "Hamiltonian_and_position_connection",
+      "scope": "represented finite Wannier subspace",
+      "physical_accuracy": "not established by format validation; retain producer provenance"
+    },
+    "source_sha256": {
+      "HH_R": "e86ca77b885029917b0338e939ff9e553b2f80c8910008a235d84b4d67aaf2b8",
+      "AA_R": "6553127389bb726ed31ec1bc40fd01b31c296704e8e3b7e05ece34d131fe8be0"
+    },
+    "source_files": {
+      "HH_R": "wannier90_HH_R.dat",
+      "AA_R": "wannier90_AA_R.dat"
+    },
+    "source_rows": {
+      "HH_R": 1425532,
+      "AA_R": 1425532
+    },
+    "sparse_semantics": "omitted entries are zero; duplicate entries summed without a magnitude cutoff",
+    "lattice_association": "Caller-supplied direct lattice rows; operator files do not encode the lattice.",
+    "hermiticity_tolerance": {
+      "absolute_eV_or_Angstrom": 1e-08,
+      "relative": 1e-10
+    },
+    "hermiticity_residual": {
+      "hamiltonian_eV": 5.38306378639053e-16,
+      "position_A": 1.0000680839006293e-15
+    },
+    "lattice_source": {
+      "format": "VASP POSCAR",
+      "filename": "POSCAR",
+      "sha256": "f8a259f0ae8328b36f0a63e2fb9c6c90bb5d7115ea1afa020136be96e99f1af7"
+    },
+    "data_npz_sha256": "0f74a8e0679db924b89c17a5f1b3d8afe7131f4fa34f381e160bd6116f006053",
+    "sampling": {
+      "kind": "full_2d_cell_partition",
+      "mesh": [
+        60,
+        60
+      ],
+      "plane_axes": [
+        0,
+        1
+      ],
+      "refine": 11,
+      "refine_radius_inv_A": 0.12,
+      "refine_centers_fractional": [
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "refined_parent_count": 61
+    }
+  },
+  "spin_multiplicity": 1,
+  "bz_area_inv_A2": 2.424658381287594,
+  "normal": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "regions": {
+    "regions": []
+  },
+  "differences": [],
+  "region_points": {
+    "total": 10920
+  },
+  "band_id_zero": "total represented subspace; no gauge-dependent individual-band decomposition",
+  "zero_T_equal_energy_occupation": 1.0,
+  "convergence_status": "not_established_by_format_validation",
+  "limitations": [
+    "Intrinsic clean-limit charge sheet response; no scattering or lifetime broadening.",
+    "Region differences depend on the supplied partition; not a conserved valley-current operator.",
+    "Fixed-band chemical-potential scan; no self-consistent doping or thermal magnetism.",
+    "Operator approximations are preserved in source_metadata."
+  ],
+  "method": "vaspberry_wannier_full_connection_T0",
+  "scope": "fixed_occupied_model_bundle",
+  "producer": "VASPBERRY NumPy kernel; no postw90 response input or process",
+  "formula": "Omega=J0+J1+J2; sigma/(e^2/h)=-A_BZ/(2*pi)*g_s*sum_k w_k Omega_normal",
+  "occupied_model_bands": [
+    1,
+    87
+  ],
+  "valence_max_eV": 3.253435610461073,
+  "conduction_min_eV": 3.2705369926800096,
+  "global_gap_eV": 0.017101382218936756,
+  "minimum_cross_gap_eV": 0.017101382218936756,
+  "max_hermiticity_defect": 2.0850682379167186e-13,
+  "gap_threshold_eV": 1e-08,
+  "sigma_terms_e2_over_h": [
+    [
+      0.0012935792608749152,
+      -0.0035841939361004184,
+      -0.015844484223256478
+    ],
+    [
+      -0.0013216322383475297,
+      0.00361060886331263,
+      0.015826607807367693
+    ],
+    [
+      7.88787487221961e-05,
+      -0.00010013471273382746,
+      1.000067648973895
+    ]
+  ],
+  "term_order": [
+    "J0",
+    "J1",
+    "J2"
+  ],
+  "axial_component_order": [
+    "yz",
+    "zx",
+    "xy"
+  ],
+  "weight_sum": 1.0,
+  "point_count": 10920,
+  "integer_rounding_applied": false,
+  "electron_count_scope": "represented occupied model bands only",
+  "model_scope": "Full response of supplied finite H/position model; source/basis/model convergence is separate.",
+  "algorithm": {
+    "batch_size": 16,
+    "workers": 4,
+    "time_limit_seconds": 3600.0,
+    "estimated_working_memory_MiB": 1755.7349853515625,
+    "memory_estimate_limit_MiB": 4096.0,
+    "memory_limit_scope": "preflight estimate, not an operating-system RSS cap",
+    "time_limit_scope": "checked between batches; running batches finish on failure",
+    "thread_environment": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1"
+    }
+  },
+  "implementation_sha256": {
+    "wannier_hall.py": "566c0d89ac2259afce6181cd64f0ad203307213764f74534cfe2bae2c2c7d812",
+    "wannier_operators.py": "a254f240594b957f5cb095a9ec53f27d1298734345683300261fd20a65821a62",
+    "wannier_workflow.py": "f15c59551cd7a06b452986114175c9d198f08695a42567d8a493acb9d4332467"
+  },
+  "source_cache_sha256": {
+    "operators.npz": "0f74a8e0679db924b89c17a5f1b3d8afe7131f4fa34f381e160bd6116f006053",
+    "operators.json": "12a0f339fb56c0f3bc40e8917cd08780f6aa79c916247ccf2b27ca8bd9f5b43c"
+  },
+  "spatial_scope": "Declared two-dimensional periodic model; zero fractional coordinate on the excluded axis, not bulk 3D conductivity.",
+  "references": [
+    "https://doi.org/10.1103/PhysRevB.74.195118",
+    "https://doi.org/10.1103/PhysRevB.85.014435"
+  ],
+  "curvature_npz_sha256": "0e19f984c7177e13b7fefb6cadf212e5be1ec3826a3259175ef52cc06288b4e3",
+  "output_formats": [
+    "csv",
+    "dat",
+    "npz"
+  ],
+  "output_sha256": {
+    "conductivity.csv": "dcb6f34dc7714a4f459ec19ed4a5afcdd6fb9d56c988a5fcadad98713b65fcfd",
+    "conductivity.dat": "e5484d7de79881808f304e7f4bcc765e4daa7117684e1815c4d29886109dac79",
+    "conductivity.npz": "cfd21c982e357ab6d62d820ec79dddf4c5baa856a71f47b8efe5dddec04b5a6c"
+  }
+}

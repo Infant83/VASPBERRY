@@ -315,7 +315,57 @@ for an arbitrary material or the physical completeness of an exporter.
 Experimental matrix inputs retain their labels, and the bare-momentum path
 retains its missing-velocity-term limitations.
 
-The new Hall path computes intrinsic charge sheet response on uniform full
-2D meshes. Invalid individual-band curvature is rejected. Spin/layer currents,
-adaptive integration and general 3D bulk response need separate implementations.
+The WAVECAR Hall path computes intrinsic charge sheet response on uniform full
+2D meshes. Invalid individual-band curvature is rejected. The full-connection
+Wannier path described below additionally supports local cell refinement.
+Spin/layer currents and general 3D bulk response need separate implementations.
 Existing Fukui subspace workflows remain available for their documented scope.
+
+## VASPBERRY full-connection Wannier backend
+
+The complete local suite now contains **372 tests**, all executed and passing
+with no skips (76.221 s). The GNU Fortran/Open MPI regression tests ran in this
+suite. Production source hashes were unchanged before and after the run.
+
+The 31 new tests comprise 12 effective-operator parser/cache checks, seven
+independent physics checks and 12 command/workflow checks. Physical oracles
+include analytical two-band curvature, Wilson plaquettes of explicit physical
+wavefunctions with a nonzero basis connection, k-dependent integer orbital
+gauge changes, exact internal degeneracies, Cartesian axis signs and length
+scaling. Workflow tests cover actual CLI import, normalized output, whole-zone
+cell partition, threaded/serial equality, source mutation, no-clobber, failed
+partial output, memory preflight and band-path serialization.
+
+The actual 138-orbital effective HH_R/AA_R input imports within 8.9e−16 of the
+independently expanded source arrays. VASPBERRY's own 12-point energies and all
+three curvature components agree with unmodified postw90 within each original
+printed value's rounding interval. A 50-point weighted comparison also checks
+all three J0/J1/J2 components. S/cm comparisons retain the reference producer's
+CODATA-2006 conversion; it differs from the modern SI conductance convention
+by a relative 3.668e−9. This conversion difference is not a kernel discrepancy.
+
+The public `wannier-import` command was executed on the actual archived inputs,
+and `wannier-bands` computed 3,601 path points with all 138 model bands.
+The original postw90 output remains a separate independent reference.
+
+The final public-command 27,600-point VASPBERRY calculation gives
+**1.0003849781827807 e²/h** at all three gap chemical potentials. Its complete
+quadrature coordinates, weights and parent cells are exactly equal to the
+independent reference. The preceding wider-region 21,720-point result is
+1.0005919297781898 e²/h, a final change of 2.06951595409e−4 e²/h.
+The independently accumulated totals and all J0/J1/J2 components agree within
+the original postw90 output rounding intervals. Modern/legacy physical constants
+are accounted for before comparing the three components. The final command
+completed in 576.64 s using four single-BLAS-thread workers while another
+four-worker calculation ran; observed peak process RSS was 2.365 GB.
+
+All five production conditions pass independent audits of command exit status,
+operator and output hashes, complete integration partitions, all three curvature
+components, J0/J1/J2 contributions and common CSV/DAT/NPZ table fields. The
+small-region results are 1.0001934913592478 (3,088 points),
+1.0000548041196191 (6,528 points), and 1.0000497725580064 (10,920 points) e²/h.
+The wider-region controls above are retained because the convergence is not
+monotonic with refinement radius. After accounting for the physical-constant
+convention, the maximum scalar difference from postw90 is 6.73e−9 e²/h, within
+the producer's printed precision. The complete five-condition queue took about
+12.3 minutes; observed peak RSS remained below 2.37 GB per calculation.

@@ -65,3 +65,20 @@ The [output specification](../docs/OUTPUT_FORMAT.md) defines units and formats.
 Use CSV, text DAT or NumPy NPZ tables in your own analysis; preserve normalization,
 provenance, excluded points and region definitions. See [migration](../docs/MIGRATION.md)
 before combining results with older doubled Kubo files.
+
+## Dense full-connection Wannier response
+
+For a validated VASP-derived Wannier representation, import **both** real-space
+Hamiltonian and position operators with `wannier-import`, compute bands with
+`wannier-bands`, and integrate an insulating occupied bundle with `wannier-hall`.
+These calculations run inside VASPBERRY. The [general guide](../docs/WANNIER_TRANSPORT.md)
+defines the input format, Cartesian conventions, full-zone refinement and
+resource controls; the [MnBi₂Te₄ example](materials/mnbi2te4-qah/NATIVE_WANNIER.md)
+provides actual inputs and reference results.
+
+Replace the lattice, operator pair, spin convention, occupied count and energy
+zero with your own system's values. Validate the Wannier bands and local
+curvature against direct calculations, then converge the BZ integral. This
+backend currently requires T=0 and all chemical potentials inside a sampled
+global gap; use the documented μ/T workflows for their supported operators
+when studying metallic occupations.

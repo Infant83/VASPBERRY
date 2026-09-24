@@ -43,7 +43,8 @@ available for direct recalculation.
 
 The MnBi₂Te₄ material guide supplies the actual fixed SCF charge density,
 structure and NSCF inputs for a 21-atom magnetic film. It combines the Fukui
-and PAW optical workflows with an independent Wannier reference. Its VASP
+and PAW optical diagnostics, VASPBERRY full-connection Wannier bands/Hall,
+and an independent postw90 reference. Its VASP
 and Wannier preparation steps are separate from the eight-feature batch command.
 
 ## Getting started

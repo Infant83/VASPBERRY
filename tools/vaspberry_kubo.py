@@ -21,6 +21,8 @@ from exported_matrix_kubo import (ARRAYS as MATRIX_ARRAYS, SCHEMA, UNITS, _band_
 from wavecar_fukui import Wavecar
 from kubo_hall_workflow import COMMANDS as PAIR_COMMANDS, add_commands as add_pair_commands
 from waveder_hall import add_command as add_waveder_command, command as waveder_hall_command
+from wannier_workflow import COMMANDS as WANNIER_COMMANDS, add_commands as add_wannier_commands
+from wannier_bands import add_command as add_wannier_bands, command as wannier_bands_command
 
 __version__ = '1.3.0'
 
@@ -234,6 +236,8 @@ def parser():
     d.add_argument('--output-dir',type=Path,required=True)
     add_pair_commands(sub)
     add_waveder_command(sub)
+    add_wannier_commands(sub)
+    add_wannier_bands(sub)
     return p
 
 
@@ -241,7 +245,7 @@ def main(argv=None):
     p=parser(); args=p.parse_args(argv)
     try:
         require(not args.output_dir.exists(),'output directory exists; choose a new directory')
-        meta={**PAIR_COMMANDS,'waveder-hall':waveder_hall_command,'matrix':matrix_command,'import-legacy':import_legacy,'hall':hall_command,'demo':demo}[args.command](args)
+        meta={**PAIR_COMMANDS,**WANNIER_COMMANDS,'wannier-bands':wannier_bands_command,'waveder-hall':waveder_hall_command,'matrix':matrix_command,'import-legacy':import_legacy,'hall':hall_command,'demo':demo}[args.command](args)
     except (ValueError, OSError, KeyError, TypeError) as exc:
         p.error(str(exc))
     print(json.dumps({'output':str(args.output_dir),'schema':meta['schema'],'version':meta['version']}))

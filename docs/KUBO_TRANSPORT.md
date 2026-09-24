@@ -449,8 +449,23 @@ the postprocessing filling is explicitly T=0.
 Converge both the k mesh and accurately computed empty states. The
 [MnBi₂Te₄ example](../examples/materials/mnbi2te4-qah/) compares the Fukui
 invariant with actual unmodified VASP optical runs. It separates the coarse
-WAVEDER integral from the independent dense-mesh Wannier reference; a
+WAVEDER integral from VASPBERRY's dense full-connection Wannier calculation; a
 successful file/producer check does not establish integration convergence.
+
+## Full-connection Wannier bands and Hall response
+
+For dense integration of a VASP-derived Wannier model, use `wannier-import`,
+`wannier-bands` and `wannier-hall`. VASPBERRY evaluates Hamiltonian and position
+Fourier sums, occupied-bundle J0/J1/J2 and the weighted 2D Hall integral itself.
+The separate `postw90` calculation is an independent verification. Both full
+operator matrices are required; a conventional Hamiltonian-only `_hr.dat`
+does not provide the missing basis connection.
+
+See [the general guide](WANNIER_TRANSPORT.md) for input contracts, commands,
+sampling and resource controls, and [the actual MnBi₂Te₄ tutorial](../examples/materials/mnbi2te4-qah/NATIVE_WANNIER.md)
+for reproduction. This backend currently supports fixed insulating bundles
+at T=0. It complements the existing WAVECAR μ/T workflow and retains explicit
+model-convergence and operator provenance.
 
 ## References
 

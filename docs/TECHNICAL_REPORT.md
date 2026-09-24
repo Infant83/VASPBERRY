@@ -105,7 +105,7 @@ remains fixed. Regional contributions integrate the same charge response over
 specified parts of the BZ, with a K−K′ difference defined without a factor of
 one-half. Such a partition is not a separately conserved valley-current operator.
 
-### 1.3 PAW optical matrices and dense-mesh references
+### 1.3 PAW optical matrices and full-connection interpolation
 
 For an insulating occupied bundle, the supported standard VASP longitudinal
 optical calculation supplies matrix elements
@@ -126,14 +126,17 @@ temperature and a fixed insulating bundle; the occupied–empty separation
 must exceed the producer's 2 meV degeneracy threshold. Mesh and empty-state
 convergence remain separate requirements.
 
-For narrow curvature peaks, Wannier interpolation provides an independent
-dense-mesh reference using Hamiltonian and position-operator matrix elements.
-The full formulation, including the basis-connection terms, follows
-[Wang et al.](https://doi.org/10.1103/PhysRevB.74.195118).
-An interpolated result must be checked against directly calculated bands and
-local curvature. Results from the `postw90` program in
-[Wannier90](https://doi.org/10.1088/1361-648X/ab51ff) are identified separately
-from the VASPBERRY WAVECAR and WAVEDER calculations.
+For narrow curvature peaks, VASPBERRY also interpolates the full Hamiltonian
+and position matrices of a VASP-derived Wannier model. Its own Fourier,
+diagonalization and occupied-trace routines evaluate $\Omega=J0+J1+J2$:
+the basis-connection curl, the mixed connection/Hamiltonian-derivative term,
+and the derivative-pair term. Only occupied-to-empty denominators occur;
+internal degeneracies are allowed. The formulation follows
+[Wang et al.](https://doi.org/10.1103/PhysRevB.74.195118) and
+[Lopez et al., Eq. (51)](https://doi.org/10.1103/PhysRevB.85.014435).
+Bands and local curvature are checked against direct VASP data. The separate
+`postw90` calculation in [Wannier90](https://doi.org/10.1088/1361-648X/ab51ff)
+provides an independent check of VASPBERRY's evaluation of the same finite model.
 
 ## 2. Materials and numerical settings
 
@@ -340,58 +343,60 @@ conversion of complex amplitudes into a physical-coordinate density map.
 
 [Wavefunction calculation guide](../examples/features/wavefunction/)
 
-### 3.6 MnBi₂Te₄: a magnetic Chern insulator
+### 3.6 MnBi₂Te₄: Chern number and VASPBERRY Hall response
 
-A three-septuple-layer MnBi₂Te₄ film provides a compact magnetic example:
-21 atoms with out-of-plane +z/−z/+z layer magnetization. The geometry retains bulk layer spacings
-from [Yan et al.](https://doi.org/10.1103/PhysRevMaterials.3.064202), with
-in-plane $a=4.336$ Å, PBE+SOC and Mn $U_{\rm eff}=5.34$ eV following
-[Otrokov et al.](https://doi.org/10.1103/PhysRevLett.122.107202).
-This unrelaxed geometry is distinct from the relaxed films in that study.
+This example connects an occupied-band topological invariant to a Hall integral
+computed by VASPBERRY. The three-septuple-layer MnBi₂Te₄ film has 21 atoms
+with +z/−z/+z Mn magnetization. Its fixed, unrelaxed geometry retains bulk
+vertical spacings from Yan et al., with in-plane $a=4.336$ Å, PBE+SOC and
+Mn $U_{\rm eff}=5.34$ eV following Otrokov et al. It is distinct from the
+relaxed films in that study.
 
-![MnBi2Te4 magnetic bands, gap Hall response and integration refinement](../examples/materials/mnbi2te4-qah/reference/figures/mnbi2te4-qah.png)
+![MnBi2Te4 bands and VASPBERRY Hall convergence](../examples/materials/mnbi2te4-qah/reference/figures/mnbi2te4-qah.png)
 
-**Figure 8.** (a) Wannier-interpolated bands along Γ–M–K–Γ, with direct VASP
-checks; the inset resolves the gap along K–Γ–M near Γ. (b) Full-connection
-Kubo sheet conductivity at three chemical potentials inside the gap, at
-zero temperature. (c) Deviation $|\sigma_{xy}/(e^2/h)-1|$ under integration refinement at fixed
-Wannier operators. Labels specify the base mesh, local subdivision and
-Γ-region radius in Å⁻¹.
-The dashed line in (b) is the topological expectation, not a fitted value.
+**Figure 8.** (a) VASPBERRY-interpolated bands along Γ–M–K–Γ, with direct
+VASP checks; the inset resolves the K–Γ–M gap near Γ. (b) VASPBERRY
+full-connection sheet Hall response at three chemical potentials inside the
+gap, at zero temperature; open markers show the independent `postw90`
+comparison. The dashed line is the topological expectation. (c) Deviation
+$|\sigma_{xy}/(e^2/h)-1|$ under integration refinement. Labels give the base
+mesh, local subdivision and Γ-region radius in Å⁻¹. Both solvers use the
+same model and weights; their agreement is distinct from mesh convergence.
 
-The sampled VASP gap is **17.10 meV**. The occupied 123-band Fukui calculation
-gives **C = −1**, corresponding to $\sigma_{xy}=+e^2/h$ in our convention.
-Direct PAW optical curvature reaches approximately $-1.52\times10^4$ Å² at
-Γ; a uniform 6×6 integration consequently gives **163.109 $e^2/h$**.
-Resolving this narrow peak is essential even though the discrete Chern
-number is already an integer.
+The VASP gap is **17.10 meV**. Fukui links of the **complete occupied
+valence-band bundle, bands 1–123, give C = −1**, corresponding to
+$\sigma_{xy}=+e^2/h$ in our convention. A direct 6×6 PAW optical integral
+instead gives **163.109 $e^2/h$**: the Γ-point curvature reaches approximately
+$-1.52\times10^4$ Å², and this coarse mesh overweights the narrow peak.
+An integer Fukui result does not establish convergence of the pointwise integral.
 
-The dense reference uses 138 VASP-derived Wannier orbitals and all Hamiltonian
-and position-operator terms in `postw90`. Its 87 occupied states exclude
-36 deep bands whose independently calculated Chern number is zero.
-Near Γ, direct VASP band edges agree within **1.26 meV** and local curvature
-within **1.44%**. The DFT trace includes the 36 deep bands omitted from the
-Wannier model, so this local comparison retains that subspace difference.
-Across all twelve validation locations, the largest band-edge difference is
-18.14 meV.
+For dense integration, VASPBERRY's `wannier-hall` evaluates all J0/J1/J2
+terms from the supplied VASP-derived Hamiltonian and position matrices.
+`wannier-bands` independently generates the plotted dispersion. The model
+contains 138 orbitals and **87 occupied states**; the omitted 36 deep VASP
+bands form a separately checked C = 0 bundle. Near Γ, direct VASP band edges
+agree within 1.26 meV and local curvature within 1.44%; the latter comparison
+retains the full-123 versus model-87 subspace difference. The maximum
+band-edge difference across all twelve validation locations is 18.14 meV.
 
-Expanding the refined Γ region from 0.12 to 0.18 Å⁻¹ changes the integral by
-$5.42\times10^{-4}\,e^2/h$. The final 27,600-point calculation gives
-**$\sigma_{xy}=1.000385\,e^2/h$** at all three gap chemical potentials.
-It uses an 80×80 base mesh with 9×9 subdivisions in the wider region.
+VASPBERRY's final 27,600-point result is
+**$\sigma_{xy}=1.000384978\,e^2/h$** at all three gap chemical potentials.
+It uses an 80×80 base mesh and 9×9 subdivisions in the 0.18 Å⁻¹ Γ region.
 The last refinement changes the result by **$2.07\times10^{-4}\,e^2/h$**,
-below the stated $10^{-3}\,e^2/h$ criterion. The residual from the integer
-expectation is $3.85\times10^{-4}\,e^2/h$; no integer rounding is applied.
-A separate 160×160 energy scan confirms that all three chemical potentials
-remain inside the sampled model gap.
+below the stated $10^{-3}\,e^2/h$ comparison criterion. The nonmonotonic
+region-expansion control is retained; no integer rounding is applied.
+Independent `postw90` totals and all three component decompositions agree
+within their original output precision. A separate 160×160 energy scan
+places all three chemical potentials inside the sampled model gap.
 
-These checks concern numerical integration of this fixed finite model.
-The 6×6 source mesh, structure and empty-state window need further convergence
-for quantitative material predictions; the 300-step localization also did not
-reach its spread tolerance. The [material guide](../examples/materials/mnbi2te4-qah/)
-provides the VASP preparation files, numerical results and independent
-full-operator reproduction commands. This external reference is distinguished
-from the native canonical-momentum workflow.
+This validates VASPBERRY's full-connection evaluation of a fixed finite model.
+The source 6×6 mesh, structure and basis still require convergence for
+quantitative material predictions; localization stopped before its spread
+tolerance. The [material tutorial](../examples/materials/mnbi2te4-qah/NATIVE_WANNIER.md)
+provides the actual inputs, VASPBERRY commands and outputs. The independent
+external reference is retained separately. This input route requires both
+Wannier operators; it does not infer missing PAW/nonlocal/SOC velocity terms
+from a WAVECAR alone.
 
 ## 4. Practical use
 
@@ -436,3 +441,7 @@ numerical files for reproducibility.
    [Phys. Rev. Materials **3**, 064202 (2019)](https://doi.org/10.1103/PhysRevMaterials.3.064202).
 9. G. Pizzi et al., *Wannier90 as a community code: new features and applications*,
    [J. Phys.: Condens. Matter **32**, 165902 (2020)](https://doi.org/10.1088/1361-648X/ab51ff).
+
+10. M. Lopez, D. Vanderbilt, T. Thonhauser and I. Souza, *Wannier-based
+    calculation of the orbital magnetization in crystals*,
+    [Phys. Rev. B **85**, 014435 (2012)](https://doi.org/10.1103/PhysRevB.85.014435).

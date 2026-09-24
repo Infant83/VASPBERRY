@@ -11,7 +11,7 @@ spectra.
 | MoS₂ Kubo transport | [VASP preparation and Hall commands](features/kubo-hall/) | Full periodic meshes, occupations at specified chemical potentials and temperatures; separate mesh and intermediate-band checks |
 | Bi full mesh | [WAVECAR](Bi_Z2/WAVECAR), [band energies](Bi_Z2/archive-2016-run/EIGENVAL) | SOC; 12×12 mesh; 18 bands. Occupied Chern number, Z₂ and insulating-gap Hall response |
 | Bi VASP preparation | [SCF and NSCF inputs](Bi_Z2/inputs/) | Templates for a new calculation |
-| MnBi₂Te₄, three septuple layers | [Structure and VASP inputs](materials/mnbi2te4-qah/inputs/), [fixed SCF density](materials/mnbi2te4-qah/inputs/scf/) | 21 atoms; SOC+U; full 6×6 optical mesh and independent band/curvature validation points |
+| MnBi₂Te₄, three septuple layers | [Structure and VASP inputs](materials/mnbi2te4-qah/inputs/), [fixed SCF density](materials/mnbi2te4-qah/inputs/scf/), [full Hamiltonian/position operators](materials/mnbi2te4-qah/inputs/wannier/operators/) | 21 atoms; SOC+U; full 6×6 optical mesh; supplied actual VASP-derived operators for VASPBERRY bands and dense Hall |
 
 ## Download the Bi wavefunctions
 
@@ -50,8 +50,10 @@ The [material guide](materials/mnbi2te4-qah/) starts from an actual compressed
 SCF charge density and a fixed bulk-derived slab. Generate the matching licensed
 Mn/Bi/Te POTCAR and run the supplied NSCF preparation command. The optical
 workflow retains ordinary VASP WAVECAR, WAVEDER, INCAR and OUTCAR files from
-the same calculation. Wannier interpolation has its own input and validation
-steps in that guide; it is identified separately from direct VASPBERRY output.
+the same calculation. The supplied full Hamiltonian/position operators support
+VASPBERRY's own dense Wannier calculation without rerunning the external
+response solver. The guide distinguishes this model input from the direct
+WAVECAR/WAVEDER routes and retains postw90 as an independent comparison.
 
 ## Preparing new VASP data
 
