@@ -1,0 +1,1814 @@
+{
+  "status": "PASS",
+  "wavecar_sha256": "388af65deabea328595677d3693094a535ed1ffd72a98c5cf8c423d72a9c45f9",
+  "occupied": 10,
+  "mesh": [
+    12,
+    12
+  ],
+  "points": 144,
+  "unique_TR_pairs": 74,
+  "TRIM_count": 4,
+  "maximum_relative_projection_residual": 4.573683069329387e-08,
+  "minimum_principal_cosine": 0.9999999999999927,
+  "maximum_occupied_energy_difference_eV": 5.4941384775020197e-11,
+  "projection_residual_tolerance": 1e-05,
+  "energy_tolerance_eV": 1e-05,
+  "elapsed_seconds": 18.661614975892007,
+  "linear_algebra_dtype": "complex128; raw complex64 source values cast exactly, no normalization or coefficient modification",
+  "method": "Theta=i sigma_y K acts as [down*,-up*]; sourceG maps to targetG=-sourceG-round(k+kprime). Cartesian momenta independently checked. Euclidean QR compares occupied coefficient spans only; stored source coefficients and producer gauge remain unchanged.",
+  "scope": "Raw-pseudo occupied-space time-reversal closure supporting the native WAVECAR topology input. Euclidean subspace residual is not a physical PAW-metric fidelity and does not validate missing augmentation. Physical spin Hall is checked separately using augmented operators.",
+  "source_reader_sha256": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e",
+  "records": [
+    {
+      "k_index": 1,
+      "partner_index": 1,
+      "k": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "partner": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4531,
+      "minimum_principal_cosine": 0.9999999999999982,
+      "relative_projection_residual": 3.5969611993560385e-08,
+      "cartesian_momentum_match_inv_A": 0.0,
+      "maximum_occupied_energy_difference_eV": 0.0
+    },
+    {
+      "k_index": 2,
+      "partner_index": 12,
+      "k": [
+        0.0,
+        0.0833333333333333,
+        0.0
+      ],
+      "partner": [
+        0.0,
+        -0.0833333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4551,
+      "minimum_principal_cosine": 0.999999999999998,
+      "relative_projection_residual": 4.573683069329387e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 3.532507619752323e-11
+    },
+    {
+      "k_index": 3,
+      "partner_index": 11,
+      "k": [
+        0.0,
+        0.1666666666666667,
+        0.0
+      ],
+      "partner": [
+        0.0,
+        -0.1666666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4527,
+      "minimum_principal_cosine": 0.9999999999999972,
+      "relative_projection_residual": 3.942257401434693e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 5.089972887617478e-11
+    },
+    {
+      "k_index": 4,
+      "partner_index": 10,
+      "k": [
+        0.0,
+        0.25,
+        0.0
+      ],
+      "partner": [
+        0.0,
+        -0.25,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4560,
+      "minimum_principal_cosine": 0.9999999999999951,
+      "relative_projection_residual": 3.6565365426931615e-08,
+      "cartesian_momentum_match_inv_A": 0.0,
+      "maximum_occupied_energy_difference_eV": 4.0897063513511966e-11
+    },
+    {
+      "k_index": 5,
+      "partner_index": 9,
+      "k": [
+        0.0,
+        0.3333333333333333,
+        0.0
+      ],
+      "partner": [
+        0.0,
+        -0.3333333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4546,
+      "minimum_principal_cosine": 0.9999999999999983,
+      "relative_projection_residual": 3.561415337519601e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.759215244121151e-11
+    },
+    {
+      "k_index": 6,
+      "partner_index": 8,
+      "k": [
+        0.0,
+        0.4166666666666667,
+        0.0
+      ],
+      "partner": [
+        0.0,
+        -0.4166666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4550,
+      "minimum_principal_cosine": 0.9999999999999976,
+      "relative_projection_residual": 3.7102035041282386e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.694022948115162e-11
+    },
+    {
+      "k_index": 7,
+      "partner_index": 7,
+      "k": [
+        0.0,
+        0.5,
+        0.0
+      ],
+      "partner": [
+        0.0,
+        0.5,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        1,
+        0
+      ],
+      "plane_waves_per_spin": 4548,
+      "minimum_principal_cosine": 0.9999999999999984,
+      "relative_projection_residual": 3.638572036934955e-08,
+      "cartesian_momentum_match_inv_A": 0.0,
+      "maximum_occupied_energy_difference_eV": 0.0
+    },
+    {
+      "k_index": 13,
+      "partner_index": 133,
+      "k": [
+        0.0833333333333333,
+        0.0,
+        0.0
+      ],
+      "partner": [
+        -0.0833333333333334,
+        0.0,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4551,
+      "minimum_principal_cosine": 0.9999999999999967,
+      "relative_projection_residual": 4.255915683792334e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 3.47313289239537e-11
+    },
+    {
+      "k_index": 14,
+      "partner_index": 144,
+      "k": [
+        0.0833333333333333,
+        0.0833333333333333,
+        0.0
+      ],
+      "partner": [
+        -0.0833333333333334,
+        -0.0833333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4551,
+      "minimum_principal_cosine": 0.9999999999999952,
+      "relative_projection_residual": 4.551445867198137e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.341949022546032e-11
+    },
+    {
+      "k_index": 15,
+      "partner_index": 143,
+      "k": [
+        0.0833333333333333,
+        0.1666666666666667,
+        0.0
+      ],
+      "partner": [
+        -0.0833333333333334,
+        -0.1666666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4543,
+      "minimum_principal_cosine": 0.9999999999999988,
+      "relative_projection_residual": 3.7896591907300086e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 3.046918273241772e-11
+    },
+    {
+      "k_index": 16,
+      "partner_index": 142,
+      "k": [
+        0.0833333333333333,
+        0.25,
+        0.0
+      ],
+      "partner": [
+        -0.0833333333333334,
+        -0.25,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4537,
+      "minimum_principal_cosine": 0.9999999999999981,
+      "relative_projection_residual": 3.886431568542762e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 5.4941384775020197e-11
+    },
+    {
+      "k_index": 17,
+      "partner_index": 141,
+      "k": [
+        0.0833333333333333,
+        0.3333333333333333,
+        0.0
+      ],
+      "partner": [
+        -0.0833333333333334,
+        -0.3333333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4534,
+      "minimum_principal_cosine": 0.9999999999999973,
+      "relative_projection_residual": 3.5478260679350194e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.7825743365592643e-11
+    },
+    {
+      "k_index": 18,
+      "partner_index": 140,
+      "k": [
+        0.0833333333333333,
+        0.4166666666666667,
+        0.0
+      ],
+      "partner": [
+        -0.0833333333333334,
+        -0.4166666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4546,
+      "minimum_principal_cosine": 0.9999999999999961,
+      "relative_projection_residual": 3.56302343604069e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.61017890529547e-11
+    },
+    {
+      "k_index": 19,
+      "partner_index": 139,
+      "k": [
+        0.0833333333333333,
+        0.5,
+        0.0
+      ],
+      "partner": [
+        -0.0833333333333334,
+        0.5,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        1,
+        0
+      ],
+      "plane_waves_per_spin": 4549,
+      "minimum_principal_cosine": 0.9999999999999972,
+      "relative_projection_residual": 3.643202948999748e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 3.0590641131311713e-11
+    },
+    {
+      "k_index": 20,
+      "partner_index": 138,
+      "k": [
+        0.0833333333333333,
+        -0.4166666666666666,
+        0.0
+      ],
+      "partner": [
+        -0.0833333333333334,
+        0.4166666666666667,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4549,
+      "minimum_principal_cosine": 0.9999999999999989,
+      "relative_projection_residual": 3.514242544262372e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 2.1440627051561023e-11
+    },
+    {
+      "k_index": 21,
+      "partner_index": 137,
+      "k": [
+        0.0833333333333333,
+        -0.3333333333333334,
+        0.0
+      ],
+      "partner": [
+        -0.0833333333333334,
+        0.3333333333333333,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4546,
+      "minimum_principal_cosine": 0.9999999999999994,
+      "relative_projection_residual": 3.5908817094501135e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 3.459144082285093e-11
+    },
+    {
+      "k_index": 22,
+      "partner_index": 136,
+      "k": [
+        0.0833333333333333,
+        -0.25,
+        0.0
+      ],
+      "partner": [
+        -0.0833333333333334,
+        0.25,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4534,
+      "minimum_principal_cosine": 0.9999999999999969,
+      "relative_projection_residual": 3.687473889461214e-08,
+      "cartesian_momentum_match_inv_A": 4.440892098500626e-16,
+      "maximum_occupied_energy_difference_eV": 4.082956195361476e-11
+    },
+    {
+      "k_index": 23,
+      "partner_index": 135,
+      "k": [
+        0.0833333333333333,
+        -0.1666666666666666,
+        0.0
+      ],
+      "partner": [
+        -0.0833333333333334,
+        0.1666666666666667,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4537,
+      "minimum_principal_cosine": 0.9999999999999949,
+      "relative_projection_residual": 3.897287242207008e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 3.774180967752727e-11
+    },
+    {
+      "k_index": 24,
+      "partner_index": 134,
+      "k": [
+        0.0833333333333333,
+        -0.0833333333333334,
+        0.0
+      ],
+      "partner": [
+        -0.0833333333333334,
+        0.0833333333333333,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4543,
+      "minimum_principal_cosine": 1.0,
+      "relative_projection_residual": 3.738561956908298e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 5.043920836556026e-11
+    },
+    {
+      "k_index": 25,
+      "partner_index": 121,
+      "k": [
+        0.1666666666666667,
+        0.0,
+        0.0
+      ],
+      "partner": [
+        -0.1666666666666666,
+        0.0,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4527,
+      "minimum_principal_cosine": 0.9999999999999947,
+      "relative_projection_residual": 3.933439825749192e-08,
+      "cartesian_momentum_match_inv_A": 4.440892098500626e-16,
+      "maximum_occupied_energy_difference_eV": 4.197353575818852e-11
+    },
+    {
+      "k_index": 26,
+      "partner_index": 132,
+      "k": [
+        0.1666666666666667,
+        0.0833333333333333,
+        0.0
+      ],
+      "partner": [
+        -0.1666666666666666,
+        -0.0833333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4543,
+      "minimum_principal_cosine": 0.9999999999999967,
+      "relative_projection_residual": 3.959580745987687e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.637579209543219e-11
+    },
+    {
+      "k_index": 27,
+      "partner_index": 131,
+      "k": [
+        0.1666666666666667,
+        0.1666666666666667,
+        0.0
+      ],
+      "partner": [
+        -0.1666666666666666,
+        -0.1666666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4527,
+      "minimum_principal_cosine": 0.9999999999999976,
+      "relative_projection_residual": 3.901920056314256e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.311395684908348e-11
+    },
+    {
+      "k_index": 28,
+      "partner_index": 130,
+      "k": [
+        0.1666666666666667,
+        0.25,
+        0.0
+      ],
+      "partner": [
+        -0.1666666666666666,
+        -0.25,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4537,
+      "minimum_principal_cosine": 0.9999999999999981,
+      "relative_projection_residual": 3.7903084608027876e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.058264835293812e-11
+    },
+    {
+      "k_index": 29,
+      "partner_index": 129,
+      "k": [
+        0.1666666666666667,
+        0.3333333333333333,
+        0.0
+      ],
+      "partner": [
+        -0.1666666666666666,
+        -0.3333333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4539,
+      "minimum_principal_cosine": 0.9999999999999969,
+      "relative_projection_residual": 3.635531662429035e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.0394354527961696e-11
+    },
+    {
+      "k_index": 30,
+      "partner_index": 128,
+      "k": [
+        0.1666666666666667,
+        0.4166666666666667,
+        0.0
+      ],
+      "partner": [
+        -0.1666666666666666,
+        -0.4166666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4531,
+      "minimum_principal_cosine": 0.9999999999999967,
+      "relative_projection_residual": 3.649444374357883e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.9965365178650245e-11
+    },
+    {
+      "k_index": 31,
+      "partner_index": 127,
+      "k": [
+        0.1666666666666667,
+        0.5,
+        0.0
+      ],
+      "partner": [
+        -0.1666666666666666,
+        0.5,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        1,
+        0
+      ],
+      "plane_waves_per_spin": 4547,
+      "minimum_principal_cosine": 0.9999999999999982,
+      "relative_projection_residual": 3.5556669793806756e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.1589842680878064e-11
+    },
+    {
+      "k_index": 32,
+      "partner_index": 126,
+      "k": [
+        0.1666666666666667,
+        -0.4166666666666666,
+        0.0
+      ],
+      "partner": [
+        -0.1666666666666666,
+        0.4166666666666667,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4563,
+      "minimum_principal_cosine": 0.9999999999999931,
+      "relative_projection_residual": 3.6175710701129384e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 2.962607936751738e-11
+    },
+    {
+      "k_index": 33,
+      "partner_index": 125,
+      "k": [
+        0.1666666666666667,
+        -0.3333333333333334,
+        0.0
+      ],
+      "partner": [
+        -0.1666666666666666,
+        0.3333333333333333,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4547,
+      "minimum_principal_cosine": 0.9999999999999967,
+      "relative_projection_residual": 3.619275107671954e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 3.0179414522990555e-11
+    },
+    {
+      "k_index": 34,
+      "partner_index": 124,
+      "k": [
+        0.1666666666666667,
+        -0.25,
+        0.0
+      ],
+      "partner": [
+        -0.1666666666666666,
+        0.25,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4531,
+      "minimum_principal_cosine": 0.9999999999999953,
+      "relative_projection_residual": 3.572728054485349e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 2.476241434123949e-11
+    },
+    {
+      "k_index": 35,
+      "partner_index": 123,
+      "k": [
+        0.1666666666666667,
+        -0.1666666666666666,
+        0.0
+      ],
+      "partner": [
+        -0.1666666666666666,
+        0.1666666666666667,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4539,
+      "minimum_principal_cosine": 0.9999999999999969,
+      "relative_projection_residual": 3.8692844962634116e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 2.3212542998862773e-11
+    },
+    {
+      "k_index": 36,
+      "partner_index": 122,
+      "k": [
+        0.1666666666666667,
+        -0.0833333333333334,
+        0.0
+      ],
+      "partner": [
+        -0.1666666666666666,
+        0.0833333333333333,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4537,
+      "minimum_principal_cosine": 0.9999999999999984,
+      "relative_projection_residual": 3.5827353618158806e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 3.653610747278435e-11
+    },
+    {
+      "k_index": 37,
+      "partner_index": 109,
+      "k": [
+        0.25,
+        0.0,
+        0.0
+      ],
+      "partner": [
+        -0.25,
+        0.0,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4560,
+      "minimum_principal_cosine": 0.9999999999999962,
+      "relative_projection_residual": 3.6556308986981344e-08,
+      "cartesian_momentum_match_inv_A": 0.0,
+      "maximum_occupied_energy_difference_eV": 4.7478465603489894e-11
+    },
+    {
+      "k_index": 38,
+      "partner_index": 120,
+      "k": [
+        0.25,
+        0.0833333333333333,
+        0.0
+      ],
+      "partner": [
+        -0.25,
+        -0.0833333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4537,
+      "minimum_principal_cosine": 0.9999999999999977,
+      "relative_projection_residual": 3.844599107641846e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 3.948708027223802e-11
+    },
+    {
+      "k_index": 39,
+      "partner_index": 119,
+      "k": [
+        0.25,
+        0.1666666666666667,
+        0.0
+      ],
+      "partner": [
+        -0.25,
+        -0.1666666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4537,
+      "minimum_principal_cosine": 0.999999999999997,
+      "relative_projection_residual": 3.6217240846918296e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.616573789917311e-11
+    },
+    {
+      "k_index": 40,
+      "partner_index": 118,
+      "k": [
+        0.25,
+        0.25,
+        0.0
+      ],
+      "partner": [
+        -0.25,
+        -0.25,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4560,
+      "minimum_principal_cosine": 0.9999999999999978,
+      "relative_projection_residual": 3.771583808828982e-08,
+      "cartesian_momentum_match_inv_A": 0.0,
+      "maximum_occupied_energy_difference_eV": 3.370814738445915e-11
+    },
+    {
+      "k_index": 41,
+      "partner_index": 117,
+      "k": [
+        0.25,
+        0.3333333333333333,
+        0.0
+      ],
+      "partner": [
+        -0.25,
+        -0.3333333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4534,
+      "minimum_principal_cosine": 0.9999999999999989,
+      "relative_projection_residual": 3.682407910804552e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 5.008171655163096e-11
+    },
+    {
+      "k_index": 42,
+      "partner_index": 116,
+      "k": [
+        0.25,
+        0.4166666666666667,
+        0.0
+      ],
+      "partner": [
+        -0.25,
+        -0.4166666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4531,
+      "minimum_principal_cosine": 0.9999999999999979,
+      "relative_projection_residual": 3.5708507612380976e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.0461856087858905e-11
+    },
+    {
+      "k_index": 43,
+      "partner_index": 115,
+      "k": [
+        0.25,
+        0.5,
+        0.0
+      ],
+      "partner": [
+        -0.25,
+        0.5,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        1,
+        0
+      ],
+      "plane_waves_per_spin": 4559,
+      "minimum_principal_cosine": 0.9999999999999927,
+      "relative_projection_residual": 3.57202469986397e-08,
+      "cartesian_momentum_match_inv_A": 0.0,
+      "maximum_occupied_energy_difference_eV": 3.9668712759066693e-11
+    },
+    {
+      "k_index": 44,
+      "partner_index": 114,
+      "k": [
+        0.25,
+        -0.4166666666666666,
+        0.0
+      ],
+      "partner": [
+        -0.25,
+        0.4166666666666667,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4569,
+      "minimum_principal_cosine": 0.9999999999999958,
+      "relative_projection_residual": 3.608022472059588e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 2.990852010498202e-11
+    },
+    {
+      "k_index": 45,
+      "partner_index": 113,
+      "k": [
+        0.25,
+        -0.3333333333333334,
+        0.0
+      ],
+      "partner": [
+        -0.25,
+        0.3333333333333333,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4569,
+      "minimum_principal_cosine": 0.9999999999999961,
+      "relative_projection_residual": 3.671192786835868e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.253886132232765e-11
+    },
+    {
+      "k_index": 46,
+      "partner_index": 112,
+      "k": [
+        0.25,
+        -0.25,
+        0.0
+      ],
+      "partner": [
+        -0.25,
+        0.25,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4559,
+      "minimum_principal_cosine": 0.9999999999999973,
+      "relative_projection_residual": 3.536720077796472e-08,
+      "cartesian_momentum_match_inv_A": 0.0,
+      "maximum_occupied_energy_difference_eV": 4.616929061285191e-11
+    },
+    {
+      "k_index": 47,
+      "partner_index": 111,
+      "k": [
+        0.25,
+        -0.1666666666666666,
+        0.0
+      ],
+      "partner": [
+        -0.25,
+        0.1666666666666667,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4531,
+      "minimum_principal_cosine": 0.9999999999999996,
+      "relative_projection_residual": 3.663558588457228e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.74997818855627e-11
+    },
+    {
+      "k_index": 48,
+      "partner_index": 110,
+      "k": [
+        0.25,
+        -0.0833333333333334,
+        0.0
+      ],
+      "partner": [
+        -0.25,
+        0.0833333333333333,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4534,
+      "minimum_principal_cosine": 0.9999999999999987,
+      "relative_projection_residual": 3.539797421387807e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.4515502395370277e-11
+    },
+    {
+      "k_index": 49,
+      "partner_index": 97,
+      "k": [
+        0.3333333333333333,
+        0.0,
+        0.0
+      ],
+      "partner": [
+        -0.3333333333333334,
+        0.0,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4546,
+      "minimum_principal_cosine": 0.9999999999999977,
+      "relative_projection_residual": 3.7740068941689085e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.015188181938356e-11
+    },
+    {
+      "k_index": 50,
+      "partner_index": 108,
+      "k": [
+        0.3333333333333333,
+        0.0833333333333333,
+        0.0
+      ],
+      "partner": [
+        -0.3333333333333334,
+        -0.0833333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4534,
+      "minimum_principal_cosine": 0.9999999999999974,
+      "relative_projection_residual": 3.703861065316496e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.8048676148937375e-11
+    },
+    {
+      "k_index": 51,
+      "partner_index": 107,
+      "k": [
+        0.3333333333333333,
+        0.1666666666666667,
+        0.0
+      ],
+      "partner": [
+        -0.3333333333333334,
+        -0.1666666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4539,
+      "minimum_principal_cosine": 0.9999999999999962,
+      "relative_projection_residual": 3.656089032340321e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.688827104359916e-11
+    },
+    {
+      "k_index": 52,
+      "partner_index": 106,
+      "k": [
+        0.3333333333333333,
+        0.25,
+        0.0
+      ],
+      "partner": [
+        -0.3333333333333334,
+        -0.25,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4534,
+      "minimum_principal_cosine": 0.9999999999999999,
+      "relative_projection_residual": 3.674423976071218e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.9691806225382606e-11
+    },
+    {
+      "k_index": 53,
+      "partner_index": 105,
+      "k": [
+        0.3333333333333333,
+        0.3333333333333333,
+        0.0
+      ],
+      "partner": [
+        -0.3333333333333334,
+        -0.3333333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4546,
+      "minimum_principal_cosine": 0.9999999999999979,
+      "relative_projection_residual": 3.644289111106618e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.0601300099751825e-11
+    },
+    {
+      "k_index": 54,
+      "partner_index": 104,
+      "k": [
+        0.3333333333333333,
+        0.4166666666666667,
+        0.0
+      ],
+      "partner": [
+        -0.3333333333333334,
+        -0.4166666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4546,
+      "minimum_principal_cosine": 0.9999999999999964,
+      "relative_projection_residual": 3.761281351689935e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 3.835154416265141e-11
+    },
+    {
+      "k_index": 55,
+      "partner_index": 103,
+      "k": [
+        0.3333333333333333,
+        0.5,
+        0.0
+      ],
+      "partner": [
+        -0.3333333333333334,
+        0.5,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        1,
+        0
+      ],
+      "plane_waves_per_spin": 4547,
+      "minimum_principal_cosine": 0.9999999999999974,
+      "relative_projection_residual": 3.5405427770090094e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 3.398259451614649e-11
+    },
+    {
+      "k_index": 56,
+      "partner_index": 102,
+      "k": [
+        0.3333333333333333,
+        -0.4166666666666666,
+        0.0
+      ],
+      "partner": [
+        -0.3333333333333334,
+        0.4166666666666667,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4569,
+      "minimum_principal_cosine": 0.9999999999999967,
+      "relative_projection_residual": 3.7126774279764943e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.652589424836151e-11
+    },
+    {
+      "k_index": 57,
+      "partner_index": 101,
+      "k": [
+        0.3333333333333333,
+        -0.3333333333333334,
+        0.0
+      ],
+      "partner": [
+        -0.3333333333333334,
+        0.3333333333333333,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4575,
+      "minimum_principal_cosine": 0.9999999999999959,
+      "relative_projection_residual": 3.551335188791398e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.6837200784466404e-11
+    },
+    {
+      "k_index": 58,
+      "partner_index": 100,
+      "k": [
+        0.3333333333333333,
+        -0.25,
+        0.0
+      ],
+      "partner": [
+        -0.3333333333333334,
+        0.25,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4569,
+      "minimum_principal_cosine": 0.9999999999999982,
+      "relative_projection_residual": 3.669247684286762e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 3.254152503018304e-11
+    },
+    {
+      "k_index": 59,
+      "partner_index": 99,
+      "k": [
+        0.3333333333333333,
+        -0.1666666666666666,
+        0.0
+      ],
+      "partner": [
+        -0.3333333333333334,
+        0.1666666666666667,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4547,
+      "minimum_principal_cosine": 0.9999999999999982,
+      "relative_projection_residual": 3.674485197200662e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 5.219824572577636e-11
+    },
+    {
+      "k_index": 60,
+      "partner_index": 98,
+      "k": [
+        0.3333333333333333,
+        -0.0833333333333334,
+        0.0
+      ],
+      "partner": [
+        -0.3333333333333334,
+        0.0833333333333333,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4546,
+      "minimum_principal_cosine": 1.0,
+      "relative_projection_residual": 3.6247139517634223e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.2660985855036415e-11
+    },
+    {
+      "k_index": 61,
+      "partner_index": 85,
+      "k": [
+        0.4166666666666667,
+        0.0,
+        0.0
+      ],
+      "partner": [
+        -0.4166666666666666,
+        0.0,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4550,
+      "minimum_principal_cosine": 0.9999999999999962,
+      "relative_projection_residual": 3.499982919862147e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 3.576339224764524e-11
+    },
+    {
+      "k_index": 62,
+      "partner_index": 96,
+      "k": [
+        0.4166666666666667,
+        0.0833333333333333,
+        0.0
+      ],
+      "partner": [
+        -0.4166666666666666,
+        -0.0833333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4546,
+      "minimum_principal_cosine": 0.999999999999998,
+      "relative_projection_residual": 3.641386440555277e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 3.5857539160133456e-11
+    },
+    {
+      "k_index": 63,
+      "partner_index": 95,
+      "k": [
+        0.4166666666666667,
+        0.1666666666666667,
+        0.0
+      ],
+      "partner": [
+        -0.4166666666666666,
+        -0.1666666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4531,
+      "minimum_principal_cosine": 0.9999999999999972,
+      "relative_projection_residual": 3.513670371433833e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 3.0318858534883475e-11
+    },
+    {
+      "k_index": 64,
+      "partner_index": 94,
+      "k": [
+        0.4166666666666667,
+        0.25,
+        0.0
+      ],
+      "partner": [
+        -0.4166666666666666,
+        -0.25,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4531,
+      "minimum_principal_cosine": 0.9999999999999969,
+      "relative_projection_residual": 3.7253540170627074e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.6213699533836916e-11
+    },
+    {
+      "k_index": 65,
+      "partner_index": 93,
+      "k": [
+        0.4166666666666667,
+        0.3333333333333333,
+        0.0
+      ],
+      "partner": [
+        -0.4166666666666666,
+        -0.3333333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4546,
+      "minimum_principal_cosine": 0.9999999999999982,
+      "relative_projection_residual": 3.821439304049492e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.278000176327623e-11
+    },
+    {
+      "k_index": 66,
+      "partner_index": 92,
+      "k": [
+        0.4166666666666667,
+        0.4166666666666667,
+        0.0
+      ],
+      "partner": [
+        -0.4166666666666666,
+        -0.4166666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4550,
+      "minimum_principal_cosine": 0.9999999999999959,
+      "relative_projection_residual": 3.6145532843300346e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.924061158817494e-11
+    },
+    {
+      "k_index": 67,
+      "partner_index": 91,
+      "k": [
+        0.4166666666666667,
+        0.5,
+        0.0
+      ],
+      "partner": [
+        -0.4166666666666666,
+        0.5,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        1,
+        0
+      ],
+      "plane_waves_per_spin": 4549,
+      "minimum_principal_cosine": 0.9999999999999974,
+      "relative_projection_residual": 3.56166240977302e-08,
+      "cartesian_momentum_match_inv_A": 4.440892098500626e-16,
+      "maximum_occupied_energy_difference_eV": 3.54756224396624e-11
+    },
+    {
+      "k_index": 68,
+      "partner_index": 90,
+      "k": [
+        0.4166666666666667,
+        -0.4166666666666666,
+        0.0
+      ],
+      "partner": [
+        -0.4166666666666666,
+        0.4166666666666667,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4563,
+      "minimum_principal_cosine": 0.999999999999997,
+      "relative_projection_residual": 3.6699537397873166e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.0028425019045244e-11
+    },
+    {
+      "k_index": 69,
+      "partner_index": 89,
+      "k": [
+        0.4166666666666667,
+        -0.3333333333333334,
+        0.0
+      ],
+      "partner": [
+        -0.4166666666666666,
+        0.3333333333333333,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4569,
+      "minimum_principal_cosine": 0.999999999999996,
+      "relative_projection_residual": 3.593080404329455e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 3.43889361431593e-11
+    },
+    {
+      "k_index": 70,
+      "partner_index": 88,
+      "k": [
+        0.4166666666666667,
+        -0.25,
+        0.0
+      ],
+      "partner": [
+        -0.4166666666666666,
+        0.25,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4569,
+      "minimum_principal_cosine": 0.9999999999999966,
+      "relative_projection_residual": 3.7618671386766406e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 2.8249402816982183e-11
+    },
+    {
+      "k_index": 71,
+      "partner_index": 87,
+      "k": [
+        0.4166666666666667,
+        -0.1666666666666666,
+        0.0
+      ],
+      "partner": [
+        -0.4166666666666666,
+        0.1666666666666667,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4563,
+      "minimum_principal_cosine": 0.9999999999999978,
+      "relative_projection_residual": 3.6224942115476184e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.810019049727998e-11
+    },
+    {
+      "k_index": 72,
+      "partner_index": 86,
+      "k": [
+        0.4166666666666667,
+        -0.0833333333333334,
+        0.0
+      ],
+      "partner": [
+        -0.4166666666666666,
+        0.0833333333333333,
+        0.0
+      ],
+      "reciprocal_shift": [
+        0,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4549,
+      "minimum_principal_cosine": 0.9999999999999983,
+      "relative_projection_residual": 3.569989916060637e-08,
+      "cartesian_momentum_match_inv_A": 1.7763568394002505e-15,
+      "maximum_occupied_energy_difference_eV": 4.0104808363139455e-11
+    },
+    {
+      "k_index": 73,
+      "partner_index": 73,
+      "k": [
+        0.5,
+        0.0,
+        0.0
+      ],
+      "partner": [
+        0.5,
+        0.0,
+        0.0
+      ],
+      "reciprocal_shift": [
+        1,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4548,
+      "minimum_principal_cosine": 0.9999999999999959,
+      "relative_projection_residual": 3.086997113626456e-08,
+      "cartesian_momentum_match_inv_A": 0.0,
+      "maximum_occupied_energy_difference_eV": 0.0
+    },
+    {
+      "k_index": 74,
+      "partner_index": 84,
+      "k": [
+        0.5,
+        0.0833333333333333,
+        0.0
+      ],
+      "partner": [
+        0.5,
+        -0.0833333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        1,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4549,
+      "minimum_principal_cosine": 0.9999999999999957,
+      "relative_projection_residual": 3.701661004314984e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 4.027178590604308e-11
+    },
+    {
+      "k_index": 75,
+      "partner_index": 83,
+      "k": [
+        0.5,
+        0.1666666666666667,
+        0.0
+      ],
+      "partner": [
+        0.5,
+        -0.1666666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        1,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4547,
+      "minimum_principal_cosine": 0.9999999999999989,
+      "relative_projection_residual": 3.6430755607030425e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 2.4284574351440824e-11
+    },
+    {
+      "k_index": 76,
+      "partner_index": 82,
+      "k": [
+        0.5,
+        0.25,
+        0.0
+      ],
+      "partner": [
+        0.5,
+        -0.25,
+        0.0
+      ],
+      "reciprocal_shift": [
+        1,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4559,
+      "minimum_principal_cosine": 0.9999999999999972,
+      "relative_projection_residual": 3.57281198549603e-08,
+      "cartesian_momentum_match_inv_A": 0.0,
+      "maximum_occupied_energy_difference_eV": 4.531131025942159e-11
+    },
+    {
+      "k_index": 77,
+      "partner_index": 81,
+      "k": [
+        0.5,
+        0.3333333333333333,
+        0.0
+      ],
+      "partner": [
+        0.5,
+        -0.3333333333333334,
+        0.0
+      ],
+      "reciprocal_shift": [
+        1,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4547,
+      "minimum_principal_cosine": 0.9999999999999993,
+      "relative_projection_residual": 3.569575765291286e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 3.9683811792201595e-11
+    },
+    {
+      "k_index": 78,
+      "partner_index": 80,
+      "k": [
+        0.5,
+        0.4166666666666667,
+        0.0
+      ],
+      "partner": [
+        0.5,
+        -0.4166666666666666,
+        0.0
+      ],
+      "reciprocal_shift": [
+        1,
+        0,
+        0
+      ],
+      "plane_waves_per_spin": 4549,
+      "minimum_principal_cosine": 0.9999999999999969,
+      "relative_projection_residual": 3.659750216116183e-08,
+      "cartesian_momentum_match_inv_A": 8.881784197001252e-16,
+      "maximum_occupied_energy_difference_eV": 2.5627500122027413e-11
+    },
+    {
+      "k_index": 79,
+      "partner_index": 79,
+      "k": [
+        0.5,
+        0.5,
+        0.0
+      ],
+      "partner": [
+        0.5,
+        0.5,
+        0.0
+      ],
+      "reciprocal_shift": [
+        1,
+        1,
+        0
+      ],
+      "plane_waves_per_spin": 4548,
+      "minimum_principal_cosine": 0.9999999999999982,
+      "relative_projection_residual": 3.7425548376454405e-08,
+      "cartesian_momentum_match_inv_A": 0.0,
+      "maximum_occupied_energy_difference_eV": 0.0
+    }
+  ],
+  "associated_native_z2": {
+    "run": "z2-12x12-b48",
+    "same_wavecar_sha256": true,
+    "field_sha256": "613108015e9113ab7d7357661e247b25d803d33394e96daf6bb81e2c0849d3d8",
+    "field_status": "PASS",
+    "nu": 1,
+    "half_sums_recomputed_from_rows": {
+      "-1": 3,
+      "1": -3
+    },
+    "native_input_trs_independently_verified": "0",
+    "overlap_backend": "WAVECAR_PSEUDO_NO_PAW_AUGMENTATION"
+  },
+  "precision_note": "An initial complex64 QR pass is retained separately; final complex128 QR removes avoidable linear-algebra roundoff without changing the original complex64 coefficients."
+}

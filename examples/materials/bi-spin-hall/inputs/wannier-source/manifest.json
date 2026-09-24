@@ -1,0 +1,114 @@
+{
+  "schema": "vaspberry.bi16-wannier-reference",
+  "version": 1,
+  "complete": true,
+  "source_kind": "VASP-derived Bi bilayer numerical matrix data",
+  "vasp_producer": "VASP5.4.4 with audited spin-labelled projection compatibility correction and exact raw projection cache; optical and spin-current exporter disabled during this pure Wannier export",
+  "wannier_producer": "official Wannier90 3.1.0 serial; same unmodified numerical localization routines",
+  "operator_export": "Open-source postw903.1 export-only hook preserves exact HH_R and Hermitized AA_R; pair-dependent true-WS translations and degeneracies expanded without nonzero truncation",
+  "source_nbands": 48,
+  "num_wann": 16,
+  "occupied": 10,
+  "excluded_bands": [],
+  "spinors": true,
+  "localization_sequence": [
+    1000,
+    5000,
+    5000,
+    5000
+  ],
+  "restart": "wannierise after first stage, checkpoint from immediately previous stage",
+  "strict_spread_tolerance_A2": 1e-08,
+  "strict_spread_tolerance_met": false,
+  "source_scf_and_nscf_scope": "Fresh fixed geometry SCF, complete6x6 NSCF torus;12x12 direct eigenvalue validation recorded separately",
+  "energy_reference": "Unchanged VASP eigenvalue zero in eV",
+  "files": [
+    {
+      "file": "raw/wannier90.amn.gz",
+      "restored_name": "wannier90.amn",
+      "bytes": 470231,
+      "sha256": "95267bb8823a514f44725fa6af3e63f0f196868a9e38d81b6f8fe4a5e28b13c6",
+      "uncompressed_bytes": 1437798,
+      "uncompressed_sha256": "de5728dafde61c463b3f7551aaa30d7c9b334bb83cc9e07517cf752b62a1b513"
+    },
+    {
+      "file": "raw/wannier90.mmn.gz",
+      "restored_name": "wannier90.mmn",
+      "bytes": 9009189,
+      "sha256": "0ea20cf64d3011eb129a231907e1b41f049c28eff70ff3e0f21207d1ee8ab590",
+      "uncompressed_bytes": 24559014,
+      "uncompressed_sha256": "a40603541943cb68aaa4e1f4d104ee6bbe1d1116e6b275bb091e952b631694fc"
+    },
+    {
+      "file": "raw/wannier90.eig.gz",
+      "restored_name": "wannier90.eig",
+      "bytes": 14723,
+      "sha256": "17cc8da07a8a6459fcda09d3242b31e066737f48edce8f815bac0baea2539063",
+      "uncompressed_bytes": 81216,
+      "uncompressed_sha256": "64f302a3cb3ab84d4f3ee3655ebc7d80e261caaf442eccaa0575314f36df7162"
+    },
+    {
+      "file": "operators/wannier90_HH_R.dat.gz",
+      "restored_name": "wannier90_HH_R.dat",
+      "bytes": 247122,
+      "sha256": "4c13e020f46baaca5219470432a29a2990c13f31988ae00017f3398ce752059a",
+      "uncompressed_bytes": 945658,
+      "uncompressed_sha256": "55e1685b812d7c12ab2b6c99b3d4ef5a92f49782b80e4d9f68af34e66bc6467b"
+    },
+    {
+      "file": "operators/wannier90_AA_R.dat.gz",
+      "restored_name": "wannier90_AA_R.dat",
+      "bytes": 602567,
+      "sha256": "7b221dbc74d21ded96ba33f05b84a48160de79b8e5d3fdc2651d4b122f8c2ed6",
+      "uncompressed_bytes": 1853447,
+      "uncompressed_sha256": "dbec65f1b4a10e769bc204699227a1572870b2d994799f52551dd94e36226b01"
+    }
+  ],
+  "plain_files": {
+    "wannier90.win": {
+      "bytes": 1994,
+      "sha256": "d27be2a3b8ca778d85441493d40906d096d65965e3c91193ca406e2020ab75c6"
+    },
+    "POSCAR": {
+      "bytes": 554,
+      "sha256": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405"
+    },
+    "validation.json": {
+      "bytes": 3380,
+      "sha256": "d1c436bfb9c11e48717f4ec6bc62f6b7a4b7a35b6ea94e41423c4d118cfa8964"
+    },
+    "README.md": {
+      "bytes": 5576,
+      "sha256": "74cfed77f4036aec6a9cfa7e8c7cc678ff0fc674c4766496348db4ad7174f8bc"
+    },
+    "restore.py": {
+      "bytes": 1954,
+      "sha256": "b0bc8bba3a5f3e56e17b5c6b2246d3c3c97ee7fb294beca82f4013adcfd3e6dd"
+    },
+    "reproduce_model.py": {
+      "bytes": 2810,
+      "sha256": "20e9d9c175d309a327d6094fd341b861e768a9eeb39ed76ffad5a33f30c09d1a"
+    },
+    "operator-export.win": {
+      "bytes": 2139,
+      "sha256": "355650a6f2c47886ab51cc09cf5bc3f53d56138ee24d444b61797bd078931730"
+    },
+    "apply_vasp_wannier_compat.py": {
+      "bytes": 6799,
+      "sha256": "a278138981e7ea6474f5f2650403498f6fe6daefb7958077088c3abf275e31ee"
+    },
+    "VASP_EXPORT.md": {
+      "bytes": 5242,
+      "sha256": "48beb5c8aa107b353babb8f941949104ddb770539379453d5d9da5a9f97ea219"
+    },
+    "INCAR.nscf-wannier": {
+      "bytes": 627,
+      "sha256": "949bff36a9b033d0abd12d89affeeca2303b003b92ab461b9694ac6737c33d3e"
+    },
+    "KPOINTS": {
+      "bytes": 62,
+      "sha256": "d6f8bf28ae692696838ff536ab16ea50e31e4b523982aeddb9ac4731dc33b1af"
+    }
+  },
+  "scope": "No POTCAR, WAVECAR, VASP source, private binary or checkpoint is bundled. Direct PAW SHC calculation is separate from this finite Wannier band/edge model."
+}

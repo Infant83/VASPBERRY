@@ -1,0 +1,29 @@
+{
+  "material": "Bi buckled bilayer",
+  "mesh": [
+    6,
+    6,
+    1
+  ],
+  "source_nbands": 48,
+  "occupied_bands": [
+    1,
+    10
+  ],
+  "origin": "Actual VASP 5.4.4 PAW spin and full-velocity export; fixed fresh SCF density",
+  "bytes": 6650960,
+  "sha256": "619cb2bab5356671c0d049ab51986f133b11633210ba5cde4e5c87f002413ab0",
+  "metadata_sha256": "8fc0796c1c1835cbee5ae014163b1ab378b5f31005b88cc6564b7f587153150c",
+  "parts": [
+    {
+      "name": "physical-matrices.npz.part000",
+      "bytes": 6291456,
+      "sha256": "cd7a6a77aa6efa22a1c39a00b7e615d1de50798ff0442d938b60e40feb83d171"
+    },
+    {
+      "name": "physical-matrices.npz.part001",
+      "bytes": 359504,
+      "sha256": "0b9ccaa1677f6a43643e9103dfc11c808f9e84d090aaad2ee758edcbf543d3b7"
+    }
+  ]
+}

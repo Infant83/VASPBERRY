@@ -1,0 +1,30 @@
+[
+  {
+    "path": "edge-w20/edge.csv.gz",
+    "original_bytes": 5234865,
+    "compressed_bytes": 1840411,
+    "original_sha256": "b4e57adbaa8de78f42fa31e4a233af6c661876c7c1887c1f6dbe37f8f15308c6",
+    "compressed_sha256": "5fa133c0291223f40695630889a8e6df867e1f7896f9b5af2016a4455c7342a1"
+  },
+  {
+    "path": "edge-w20/edge.dat.gz",
+    "original_bytes": 5234865,
+    "compressed_bytes": 1840473,
+    "original_sha256": "611a7fe501e87e2cf0428897703dd8289bb79097ece96fb9743da3747935915e",
+    "compressed_sha256": "a7b27d3972a2a3b73e20db14d0282c0ace69c75d074c83b2936bc2c55bb5a453"
+  },
+  {
+    "path": "edge-w40/edge.csv.gz",
+    "original_bytes": 10586949,
+    "compressed_bytes": 3718959,
+    "original_sha256": "6edf0e7ef6fa7904b79deb79671e8b65ff148f99bc0f9a82ad46e300270aa872",
+    "compressed_sha256": "e72f8d19bcbf229e9b2defd0061b96f201037bd9be85349467055acfe155c5f5"
+  },
+  {
+    "path": "edge-w40/edge.dat.gz",
+    "original_bytes": 10586949,
+    "compressed_bytes": 3719135,
+    "original_sha256": "96537fa5e4548be68cd81b6c1e548f9d1b701715bd40c5a6fa413f5df55cb711",
+    "compressed_sha256": "1240e53bfd625a8d60a8abd6a25cd57aebd99c2ccceb3eb589db468fb7478c18"
+  }
+]

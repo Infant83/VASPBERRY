@@ -15,6 +15,8 @@ see individual READMEs for supported wrapper overrides.
 | Z₂ | A gapped nonmagnetic TR-symmetric spinor calculation; even, unshifted Gamma-centered full Nx×Ny×1 mesh with ISYM=-1 |
 | Kubo curvature along a path | WAVECAR for the desired points; choose bands using your EIGENVAL and inspect near-degeneracies |
 | Charge Hall | A full integration mesh, a valid occupied subspace or valid point curvature, an energy reference and a sufficient band window |
+| Physical spin Hall | A full uniform 2D mesh, gapped occupied group at T=0, and full complex PAW spin/velocity matrices in the same eigenstate basis |
+| Ideal edge spectrum | A validated VASP-derived Wannier Hamiltonian, a periodic direction, an open direction and a converged strip width |
 | Optical response | Initial/final bands and photon-energy range appropriate to your system; check transition strength before forming a ratio |
 | Wavefunction | Matching WAVECAR/POSCAR/EIGENVAL, actual Gamma-point index, band and real-space grid |
 
@@ -82,3 +84,29 @@ curvature against direct calculations, then converge the BZ integral. This
 backend currently requires T=0 and all chemical potentials inside a sampled
 global gap; use the documented μ/T workflows for their supported operators
 when studying metallic occupations.
+
+## Physical spin Hall and quantum spin Hall topology
+
+The [Bi spin Hall example](materials/bi-spin-hall/) starts from a fresh SCF
+density, matching PAW inputs and the [serial VASP producer](../tools/vasp544_spin_bridge/).
+For another material, regenerate the density and operators with its own
+structure, potentials and converged electronic settings. Run `spin-export`
+on each completed producer calculation, or `spin-merge` for same-density
+chunks covering the full mesh, then use the general `spin-hall` command.
+See [the spin Hall guide](../docs/SPIN_HALL.md) for the supported VASP revision,
+matrix contract and units.
+
+The current response is the conventional intrinsic spin current of a gapped
+2D occupied group at T=0. Raw spin expectations multiplying charge Berry
+curvature do not replace this operator calculation. Converge both the k mesh
+and the finite source-band product; distinguish increased VASP `NBANDS` from
+a retained-band cutoff on one set of matrices, and keep complete nearly
+degenerate groups. Metallic occupations, finite-temperature spin response
+and layer-current operators require a different supported implementation.
+
+Calculate Z₂ separately for a time-reversal-symmetric occupied bundle.
+A nontrivial Z₂ result does not require an integer conventional spin Hall
+conductivity with SOC. `wannier-edge` gives the spectrum of an ideal strip
+of the validated Hamiltonian; it does not include edge relaxation or a
+finite-device conductance. The historical Bi_Z2 fixture remains a separate
+topology tutorial, with different source provenance.

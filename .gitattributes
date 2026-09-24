@@ -47,3 +47,11 @@ examples/features/kubo-hall/reference/**/*.csv whitespace=trailing-space,space-b
 examples/features/kubo-hall/reference/**/*.dat -whitespace
 examples/features/kubo-hall/reference/**/*.svg -whitespace
 examples/materials/mnbi2te4-qah/reference/figures/*.svg -whitespace
+
+# Keep actual Bi numerical tables and native wavefunction-topology outputs exact.
+examples/materials/bi-spin-hall/inputs/POSCAR -whitespace
+examples/materials/bi-spin-hall/inputs/wannier-source/POSCAR -whitespace
+examples/materials/bi-spin-hall/reference/**/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/materials/bi-spin-hall/reference/**/*.dat -whitespace
+examples/materials/bi-spin-hall/reference/**/*.log -whitespace
+examples/materials/bi-spin-hall/reference/figures/*.svg -whitespace

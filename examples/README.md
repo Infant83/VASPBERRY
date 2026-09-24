@@ -32,20 +32,30 @@ explains how to prepare the VASP mesh, run VASPBERRY and draw this map.
 | [Circular optical transitions](features/circular-dichroism/) | MoS₂, K–Γ–K′ path | Opposite polarization selectivity at K and K′ |
 | [Real-space wavefunction](features/wavefunction/) | MoS₂, Γ point | Spinor-state density in the atomic unit cell |
 | [Magnetic Chern insulator](materials/mnbi2te4-qah/) | MnBi₂Te₄, three septuple layers | Nonzero occupied Chern number, band structure and Hall-integration checks |
+| [PAW spin Hall and ideal edges](materials/bi-spin-hall/) | Bi, fresh SCF density, full SOC meshes and a VASP-derived Wannier model | Physical spin/velocity matrices, insulating T=0 spin response, bulk bands and ideal-strip spectra |
 
 Full-zone integrals require a complete periodic mesh. The supplied MoS₂
 band-path WAVECAR serves the Kubo, optical and wavefunction examples. The
 MoS₂ full-mesh WAVECAR is generated once using the supplied VASP preparation
 and public charge density; its size is about 149 MB. The map/path figures
 use a matching 49-point, 26-band VASP path generated with the same setup.
-The full Bi WAVECAR is
-available for direct recalculation.
+The historical Bi_Z2 WAVECAR is available for direct recalculation of its
+topology and gap charge-Hall examples.
 
 The MnBi₂Te₄ material guide supplies the actual fixed SCF charge density,
 structure and NSCF inputs for a 21-atom magnetic film. It combines the Fukui
 and PAW optical diagnostics, VASPBERRY full-connection Wannier bands/Hall,
 and an independent postw90 reference. Its VASP
 and Wannier preparation steps are separate from the eight-feature batch command.
+
+The [Bi spin Hall material guide](materials/bi-spin-hall/) uses a fresh,
+supplied SCF density and matching PAW spin and full-velocity operators. Its
+licensed VASP producer runs serially; independent fixed-charge k chunks can
+be assembled before integration. The response currently requires an insulating
+occupied group at T=0. The Wannier strip illustrates an ideal edge of the
+validated model. This preparation is separate from the historical Bi_Z2
+fixture and the eight-feature batch command; see the [spin Hall guide](../docs/SPIN_HALL.md)
+for the operator conventions, commands and convergence requirements.
 
 ## Getting started
 
@@ -89,6 +99,8 @@ mkdir -p results/mos2-kubo-mpi
 )
 ```
 
+The PAW spin/velocity VASP producer also requires a serial complex build;
+MPI support in native VASPBERRY does not apply to that producer.
 Python plotting and transport helpers run serially. See the
 [build guide](../docs/BUILD.md) for compiler-specific instructions.
 

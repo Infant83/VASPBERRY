@@ -1,0 +1,92 @@
+{
+  "schema": "vaspberry.wannier-edge",
+  "version": 1,
+  "complete": true,
+  "producer": "VASPBERRY real-space finite strip and NumPy eigh",
+  "source_metadata": {
+    "schema": "vaspberry.wannier-operators",
+    "version": 1,
+    "complete": true,
+    "source_format": "wannier90_effective_HH_R_AA_R",
+    "num_wann": 16,
+    "nrpts": 127,
+    "units": {
+      "hamiltonian": "eV",
+      "position": "Angstrom",
+      "lattice": "Angstrom"
+    },
+    "fourier_phase": "exp(+2*pi*i*q_fractional.dot(R_integer))",
+    "real_space_degeneracy": "already_absorbed",
+    "position_components": [
+      "x",
+      "y",
+      "z"
+    ],
+    "spinor_components": 2,
+    "spin_multiplicity": 1,
+    "energy_reference": "Unchanged VASP eigenvalue zero; fresh Bi SCF and6x6 NSCF48 bands; no excluded bands; fixed16000-iteration16-orbital model; strict1e-8 spread tolerance not met; direct DFT fit audited separately",
+    "source_operator": {
+      "kind": "Hamiltonian_and_position_connection",
+      "scope": "represented finite Wannier subspace",
+      "physical_accuracy": "not established by format validation; retain producer provenance"
+    },
+    "source_sha256": {
+      "HH_R": "55e1685b812d7c12ab2b6c99b3d4ef5a92f49782b80e4d9f68af34e66bc6467b",
+      "AA_R": "dbec65f1b4a10e769bc204699227a1572870b2d994799f52551dd94e36226b01"
+    },
+    "source_files": {
+      "HH_R": "wannier90_HH_R.dat",
+      "AA_R": "wannier90_AA_R.dat"
+    },
+    "source_rows": {
+      "HH_R": 18912,
+      "AA_R": 18912
+    },
+    "sparse_semantics": "omitted entries are zero; duplicate entries summed without a magnitude cutoff",
+    "lattice_association": "Caller-supplied direct lattice rows; operator files do not encode the lattice.",
+    "hermiticity_tolerance": {
+      "absolute_eV_or_Angstrom": 1e-08,
+      "relative": 1e-10
+    },
+    "hermiticity_residual": {
+      "hamiltonian_eV": 5.030698080332741e-16,
+      "position_A": 5.134781488891349e-16
+    },
+    "lattice_source": {
+      "format": "VASP POSCAR",
+      "filename": "POSCAR",
+      "sha256": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405"
+    },
+    "data_npz_sha256": "b69e227641d15dc6e184553ee839d42486aa96fe2e19c338eed7abbb0574b820"
+  },
+  "source_cache_sha256": {
+    "operators.npz": "b69e227641d15dc6e184553ee839d42486aa96fe2e19c338eed7abbb0574b820",
+    "operators.json": "cdd464709f3135a99b7e01244e17c59e81c1913bed79fdf682d0ab3fa23b9d83"
+  },
+  "periodic_axis": 0,
+  "open_axis": 1,
+  "excluded_fractional_coordinate": 0.0,
+  "width_cells": 20,
+  "edge_cells": 2,
+  "point_count": 201,
+  "strip_band_count": 320,
+  "units": {
+    "energy": "eV",
+    "q_parallel": "fractional reciprocal coordinate",
+    "edge_weight": "dimensionless probability"
+  },
+  "interpretation": "Ideal cut of the supplied finite Wannier model; no edge reconstruction, self-consistency or additional boundary potential.",
+  "degeneracy_scope": "Individual eigenvector edge weights may rotate within a degeneracy; sum over the degenerate group or use a spectral function.",
+  "estimated_memory_MiB": 17.09716796875,
+  "memory_limit_mib": 2048.0,
+  "memory_limit_scope": "preflight estimate, not an OS memory cap",
+  "elapsed_seconds": 19.683467081049457,
+  "time_limit_seconds": 3600.0,
+  "time_limit_scope": "checked between k-point eigensolves",
+  "implementation_sha256": "a26bc3b1037c8068c3ce7d9cb842d72ff4dfce4e5147a923f33d86c5d4855e56",
+  "output_sha256": {
+    "csv": "b4e57adbaa8de78f42fa31e4a233af6c661876c7c1887c1f6dbe37f8f15308c6",
+    "dat": "611a7fe501e87e2cf0428897703dd8289bb79097ece96fb9743da3747935915e",
+    "npz": "931c348cfceab8ac74ff6869ea8ba5b8af1671f7d8b12d48b1a9feae7edb8094"
+  }
+}

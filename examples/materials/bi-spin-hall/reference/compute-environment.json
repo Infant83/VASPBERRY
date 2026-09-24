@@ -1,0 +1,32 @@
+{
+  "hardware": "10 physical-core Intel CPU workstation; 64 GiB RAM",
+  "scientific_threads_per_process": 1,
+  "maximum_simultaneous_vasp_processes": 6,
+  "measured_cases": [
+    {
+      "case": "bi-scf-12x12-symmetry",
+      "status": "FINISHED",
+      "wall_seconds": 446.9012674919795,
+      "peak_rss_bytes": 878161920,
+      "converged": true,
+      "normal_footer": true
+    },
+    {
+      "case": "bi-6x6-b48-chunk00",
+      "status": "FINISHED",
+      "wall_seconds": 1408.4544464182109,
+      "peak_rss_bytes": 1266069504,
+      "converged": true,
+      "normal_footer": true
+    },
+    {
+      "case": "bi-6x6-b48-chunk01",
+      "status": "FINISHED",
+      "wall_seconds": 1432.635257818969,
+      "peak_rss_bytes": 1244672000,
+      "converged": true,
+      "normal_footer": true
+    }
+  ],
+  "scope": "Observed timings and sampled process RSS; hardware and source settings affect cost."
+}

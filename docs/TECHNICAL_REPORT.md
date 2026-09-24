@@ -8,7 +8,7 @@ VASPBERRY evaluates geometric and response properties from VASP electronic
 states. This report illustrates the discrete-wavefunction and Kubo approaches
 with monolayer MoS₂, a Bi bilayer and a three-septuple-layer MnBi₂Te₄ film.
 The examples cover reciprocal-space Berry
-curvature, Chern and Z₂ indices, intrinsic charge Hall response, circular
+curvature, Chern and Z₂ indices, intrinsic charge and spin Hall response, circular
 optical transitions and real-space spinor densities. Berry-curvature maps use
 Cartesian coordinates, band paths use distances along named high-symmetry
 directions, and the Z₂ n-field is shown in reduced coordinates to display its
@@ -138,6 +138,73 @@ Bands and local curvature are checked against direct VASP data. The separate
 `postw90` calculation in [Wannier90](https://doi.org/10.1088/1361-648X/ab51ff)
 provides an independent check of VASPBERRY's evaluation of the same finite model.
 
+### 1.4 PAW spin matrices and conventional spin Hall response
+
+The conventional spin current is $J_i^a=\{s_a,v_i\}/2$, with
+$s_a=\hbar\sigma_a/2$. In SOC systems its matrix elements require the
+full complex spin matrix, including off-diagonal band elements. Multiplying
+charge Berry curvature by a spin expectation value is generally insufficient.
+This current definition and its first-principles evaluation are discussed by
+[Qiao et al.](https://doi.org/10.1103/PhysRevB.98.214402) and
+[Ryoo, Park and Souza](https://doi.org/10.1103/PhysRevB.99.235113).
+
+The two WAVECAR spinor components directly give the pseudo matrix
+$\widetilde\Sigma^a_{nm}=\sum_{\mathbf Gss'}
+c^*_{n\mathbf Gs}(\sigma_a)_{ss'}c_{m\mathbf Gs'}$.
+The physical PAW matrix additionally requires the on-site correction
+
+$$
+\Sigma^a_{nm}=\widetilde\Sigma^a_{nm}
++\sum_{Aijss'}p^{A*}_{ni,s}\Delta Q^A_{ij}(\sigma_a)_{ss'}p^A_{mj,s'},
+\quad
+\Delta Q^A_{ij}=\langle\phi^A_i|\phi^A_j\rangle
+-\langle\widetilde\phi^A_i|\widetilde\phi^A_j\rangle.
+$$
+
+Here $p$ denotes the same-run PAW projector overlap. This expression is
+$T^\dagger\sigma_aT$ for the supported spin-independent PAW transformation.
+The overlap correction is evaluated alongside it: the physical states must
+be orthonormal even when their raw pseudo coefficients are not. The code
+preserves the raw norms and rejects inconsistent corrections; it does not
+independently rescale the pseudo bands.
+
+For transport, $D_i=\hbar v_i$ includes PAW and nonlocal/SOC velocity terms.
+The producer retains the velocity before the optical energy-denominator
+division, including diagonal and exactly degenerate blocks. These blocks
+cannot be recovered from an optical connection that has already discarded
+them. Within the supplied source-band space $P$, VASPBERRY forms
+$K_i^a=\{P\Sigma^aP,PD_iP\}/2$. This finite-band product omits the
+$P\Sigma^aQD_iP$ and $PD_iQ\Sigma^aP$ terms, where $Q=1-P$.
+Increasing the source-band window therefore tests both current-product
+closure and the intermediate-state sum.
+
+For the complete occupied group $\mathcal V$, the implementation evaluates
+
+$$
+\Omega^a_{ij}=-2\,\mathrm{Im}
+\sum_{n\in\mathcal V,m\notin\mathcal V}
+\frac{K^a_{i,nm}D_{j,mn}}{(E_m-E_n)^2},\qquad
+\frac{\sigma^a_{ij}}{(\hbar/e)(e^2/h)}
+=\frac{A_{\rm BZ}}{4\pi}\sum_{\mathbf k}w_{\mathbf k}\Omega^a_{ij}(\mathbf k).
+$$
+
+Internal equal-occupation terms cancel before division. The formula uses
+$e>0$, physical electron charge $-e$, Pauli matrices without an embedded
+$\hbar/2$, and $D$ in eV Å. The curvature-like tensor is in Å². In a conserved
+$\sigma_z=+1$ sector, this normalized spin coefficient is minus one half of
+the charge coefficient in Section 1.2. No additional spin degeneracy or
+integer rounding is applied. The present command supports a fixed insulating
+2D bundle at zero temperature. Its operator, gauge, units, sampled gap and
+band coverage are recorded with the numerical output.
+
+Z₂ topology and conventional spin Hall response are separate tests. A
+nontrivial time-reversal invariant insulator need not have an exactly
+quantized bulk spin Hall coefficient when spin is not conserved. An ideal
+Wannier strip can additionally show boundary states connecting the bulk
+valence and conduction manifolds; it does not include edge reconstruction
+or compute a finite-device conductance. The [spin Hall guide](SPIN_HALL.md)
+gives the operator contract and reproduction commands.
+
 ## 2. Materials and numerical settings
 
 | Dataset | Wavefunctions and sampling | Quantities shown |
@@ -147,7 +214,8 @@ provides an independent check of VASPBERRY's evaluation of the same finite model
 | Monolayer MoS₂, local valleys | SOC; two 9×9 patches; 26 bands; 400 eV | Isolated band-18 curvature near K and K′ |
 | Monolayer MoS₂, transport | SOC; 12×12 to 36×36 meshes; stored and retained band windows varied separately; 400 eV | Chemical-potential and temperature dependence of regional Hall response |
 | Monolayer MoS₂, supplied path | SOC; 48 K–Γ–K′ points; 32 bands; 400 eV | Optical spectra and Γ-point state density |
-| Buckled Bi bilayer | SOC; full 12×12 mesh; 18 bands; occupied bands 1–10 | Fukui–Hatsugai n-field and Z₂ invariant |
+| Buckled Bi bilayer | Two atoms; PBE+SOC; 400 eV; fresh 12×12 SCF density; full 6×6 and 12×12 meshes; occupied bands 1–10 | Z₂ n-field, PAW spin Hall response, source-band and mesh checks |
+| Bi Wannier representation | 16 s/p spinor orbitals; 6×6 VASP training mesh; independent 12×12 comparison; strips of 20 and 40 cells | Bulk dispersion and ideal-edge connectivity |
 | MnBi₂Te₄, three septuple layers | SOC+U; 21 atoms; full 6×6 VASP mesh; 192 bands; occupied bands 1–123; 270 eV | Magnetic Chern invariant, bands and Hall-integration checks |
 
 The [input guide](../examples/INPUTS.md) links the structures and VASP files.
@@ -294,9 +362,16 @@ optical matrix elements.
 
 [Optical calculation guide](../examples/features/circular-dichroism/)
 
-### 3.4 Bi: Fukui–Hatsugai Z₂ invariant and n-field map
+### 3.4 Bi: quantum spin Hall topology and spin response
 
-For the Bi bilayer, VASPBERRY evaluates the
+The two-atom buckled Bi bilayer provides a compact real-material example of
+quantum spin Hall topology, as proposed by
+[Murakami](https://doi.org/10.1103/PhysRevLett.97.236805). We use the fixed Bi
+geometry and a fresh nonmagnetic PBE+SOC calculation, with a 400 eV cutoff
+and electronic tolerance of $10^{-8}$ eV. The same SCF density supplies the
+wavefunctions, PAW matrices and Wannier model below.
+
+VASPBERRY evaluates the
 [Fukui–Hatsugai lattice n-field](https://doi.org/10.1143/JPSJ.76.053702)
 from the occupied SOC bands 1–10 on a full Γ-centered 12×12 mesh.
 With the time-reversal-compatible gauge used in this construction, the
@@ -306,7 +381,7 @@ $$
 \nu=\left[\sum_{p\in B_{1/2}} n(p)\right]\bmod 2.
 $$
 
-![Bi Fukui-Hatsugai integer n-field and Z2 invariant](../examples/features/z2/reference/figure.png)
+![Bi Fukui-Hatsugai integer n-field and Z2 invariant](../examples/materials/bi-spin-hall/reference/z2/figure.png)
 
 **Figure 6.** Fukui–Hatsugai integer field $n(\mathbf k)$ calculated from the
 Bi VASP spinor wavefunctions. Red, white and blue denote +1, 0 and −1,
@@ -318,21 +393,121 @@ the upper and lower half zones. The occupied-band calculation gives **Z₂ = 1**
 The upper and lower half-zone sums are **−3 and +3**, respectively. Both are odd,
 so their parities agree at **$\nu=1$**, identifying the nontrivial
 time-reversal-symmetric insulating phase for this calculation.
-The sampled minimum direct and global gaps are **0.592 eV** and **0.510 eV**.
+The sampled minimum direct and global gaps are **0.535 eV** and **0.497 eV**.
 
 The local n-field depends on the gauge and logarithm branch; its half-zone
 parity is the invariant. The reduced-coordinate map shows the original mesh
-half-zones used for these sums. The separate occupied **C = 0** and zero charge-Hall
+half-zones used for these sums. The [separate occupied **C = 0** calculation](../examples/materials/bi-spin-hall/reference/fukui/README.md) and zero charge-Hall
 response are consistent with this nontrivial Z₂ result.
 
-[Z₂ calculation and plotting guide](../examples/features/z2/) ·
-[Numerical n-field data](../examples/features/z2/reference/Z2_FIELD.csv)
+The native topology calculation uses WAVECAR pseudo-wavefunction overlaps.
+An independent check of the original occupied subspaces, before the native
+TR reconstruction, gives a maximum time-reversal residual of
+$4.57\times10^{-8}$. The physical spin and velocity matrices used for transport
+add the PAW terms described in Section 1.4. The older Bi fixture remains a
+separate historical reference.
+
+[Actual Bi preparation and commands](../examples/materials/bi-spin-hall/) ·
+[Numerical n-field](../examples/materials/bi-spin-hall/reference/z2/Z2_FIELD.csv)
+
+#### 3.4.1 Bulk dispersion and an ideal edge
+
+![Bi bulk dispersion and ideal-edge spectrum](../examples/materials/bi-spin-hall/reference/figures/bi-bulk-edge.png)
+
+**Figure 7.** (a) VASPBERRY bands from the VASP-derived 16-orbital Wannier
+Hamiltonian along Γ–M–K–Γ. Circles show direct VASP energies on the independent
+12×12 mesh; all ten occupied bands are retained in the model. (b) Spectral
+weight in the first two cells of a 40-cell strip, periodic along the first
+lattice vector and open along the second. All eigenstates are summed before
+applying a 10 meV Gaussian display broadening. Energy zero is the midpoint
+of the sampled VASP bulk gap. The edge branches connect the valence and
+conduction manifolds across that gap.
+
+The model reproduces the training states within the frozen window to
+$4.0\times10^{-12}$ eV. On the separate 12×12 mesh, its gap differs from VASP
+by 1.725 meV; the maximum error in bands 9–12 is 30.67 meV. Thus the original
+VASP markers provide a check beyond the interpolation mesh. The maximum
+model $E(\mathbf k)-E(-\mathbf k)$ residual is $7.13\times10^{-8}$ eV.
+No time-reversal averaging was applied. The fixed localization run used
+16,000 iterations; its last spread change, approximately
+$1.6\times10^{-8}$ Å², did not meet the requested $10^{-8}$ Å² tolerance.
+The finite model and its measured spectral errors are therefore provided
+explicitly, without claiming a fully converged Wannier localization.
+
+The separation of the central Kramers doublets at Γ falls from 7.354 meV
+for a 20-cell strip to 0.03046 meV for 40 cells. Three crossings per edge
+occur over the positive half of the one-dimensional BZ at each of three
+test energies inside the bulk gap. Their odd parity and independently
+checked edge localization support the boundary interpretation. A dense
+121×121 evaluation of this finite model gives a sampled bulk gap of 0.447 eV;
+this is separate from the coarser direct-DFT gap and its interpolation error.
+
+The strip is a truncation of this bulk Hamiltonian. It establishes ideal
+boundary connectivity, without relaxed edge chemistry or self-consistent
+edge electrostatics. Together with the occupied Z₂ invariant and a bulk gap,
+it supports the quantum spin Hall interpretation. It is not a calculation
+of a contacted device's two-terminal conductance.
+
+#### 3.4.2 Conventional spin Hall conductivity and convergence
+
+![Bi PAW spin Berry curvature and response convergence](../examples/materials/bi-spin-hall/reference/figures/bi-spin-hall.png)
+
+**Figure 8.** (a) Occupied-bundle spin Berry curvature $\Omega^z_{xy}$ from
+PAW spin and full velocity matrices on the 12×12 VASP mesh, shown in the
+Cartesian first BZ. Periodic bilinear interpolation is used only for the
+color map. (b) Mesh refinement retaining 48 bands from 64-band VASP sources.
+(c) Retained-band studies from 48- and 80-band VASP sources at a fixed 6×6 mesh. The numerical integrals always use the
+original k points and weights.
+
+For 48 source bands, the 6×6 and 12×12 meshes give
+$\sigma^z_{xy}=1.3825549946$ and $0.6907212357$ in
+$(\hbar/e)(e^2/h)$, respectively. **These meshes do not establish a converged
+spin Hall conductivity.** The large change comes primarily from the narrow
+response near Γ: the local Γ value is essentially unchanged at
+245.903 Å², but its contribution to the mesh sum decreases from 1.286414 to
+0.321604 as the weight is reduced. The nearest sampled radius falls from
+0.276 to 0.138 Å⁻¹. Smoothing the plot cannot supply the missing integration
+resolution.
+
+The band study probes a different error. At fixed 6×6 sampling, retaining
+40, 44 and 48 bands from the 48-band source gives 1.386328, 1.384098 and
+1.382555. Increasing the actual VASP source to 64 bands while retaining the
+same first 48 changes the response by only $2.64\times10^{-6}$. The uppermost
+new empty states fail a Kramers-pair accuracy check. An 80-band VASP run
+resolves the first 64 states: retaining 48, 56 and 64 gives 1.382558,
+1.383047 and 1.381001, with a final change of 0.15%. Only the verified
+subspace is used; an electronic stopping criterion alone does not establish
+accuracy of every stored empty state.
+Neither band stability nor an integer Z₂ invariant establishes k convergence.
+
+The 12×12 charge response is $1.82\times10^{-7}\,e^2/h$, consistent with the
+vanishing anomalous charge Hall effect of this nonmagnetic system. With
+64 source bands and the accurate first 48 retained, that residual falls to
+$-2.29\times10^{-12}\,e^2/h$, without imposing time-reversal averaging. The finite
+spin response uses a different current vertex and is allowed by time reversal.
+Its noninteger value is not a failed Chern-number calculation. The finite-band
+current-product approximation, conventional-current definition, sampling and
+operator scope remain explicit in the output.
+
+The supplied actual 6×6 and 12×12 PAW matrix bundles reproduce the VASPBERRY
+integration without rerunning VASP. The fresh SCF density, VASP input
+preparation, original producer insertion routines and Wannier inputs document
+the earlier stages. Every response component was independently recomputed
+from the raw exported matrices; all 27 spin components agree to within
+$3.1\times10^{-14}$ in the stated sheet units. A separate finite-k check of
+the diagonal velocity gives a maximum error of $1.74\times10^{-4}$ eV Å.
+The latter is a producer validation on development test points, not a material
+convergence result.
+
+[Spin Hall and edge reproduction guide](../examples/materials/bi-spin-hall/) ·
+[Numerical conventions](SPIN_HALL.md) ·
+[Validation details](VALIDATION_1.3.0.md)
 
 ### 3.5 MoS₂: a real-space Γ state
 
 ![MoS2 Gamma state in Cartesian real space](../examples/features/wavefunction/reference/figure.png)
 
-**Figure 7.** Projected pseudo-wavefunction density of band 18 at Γ and its
+**Figure 9.** Projected pseudo-wavefunction density of band 18 at Γ and its
 plane average along z. The in-plane plot uses the Cartesian geometry of the
 oblique primitive cell. Both spinor components are retained.
 
@@ -354,7 +529,7 @@ relaxed films in that study.
 
 ![MnBi2Te4 bands and VASPBERRY Hall convergence](../examples/materials/mnbi2te4-qah/reference/figures/mnbi2te4-qah.png)
 
-**Figure 8.** (a) VASPBERRY-interpolated bands along Γ–M–K–Γ, with direct
+**Figure 10.** (a) VASPBERRY-interpolated bands along Γ–M–K–Γ, with direct
 VASP checks; the inset resolves the K–Γ–M gap near Γ. (b) VASPBERRY
 full-connection sheet Hall response at three chemical potentials inside the
 gap, at zero temperature; open markers show the independent `postw90`
@@ -445,3 +620,11 @@ numerical files for reproducibility.
 10. M. Lopez, D. Vanderbilt, T. Thonhauser and I. Souza, *Wannier-based
     calculation of the orbital magnetization in crystals*,
     [Phys. Rev. B **85**, 014435 (2012)](https://doi.org/10.1103/PhysRevB.85.014435).
+
+11. J. H. Ryoo, C.-H. Park and I. Souza, *Computation of intrinsic spin Hall
+    conductivities from first principles using maximally localized Wannier functions*,
+    [Phys. Rev. B **99**, 235113 (2019)](https://doi.org/10.1103/PhysRevB.99.235113).
+12. J. Qiao et al., *Calculation of intrinsic spin Hall conductivity by Wannier
+    interpolation*, [Phys. Rev. B **98**, 214402 (2018)](https://doi.org/10.1103/PhysRevB.98.214402).
+13. S. Murakami, *Quantum Spin Hall Effect and Enhanced Magnetic Response by
+    Spin-Orbit Coupling*, [Phys. Rev. Lett. **97**, 236805 (2006)](https://doi.org/10.1103/PhysRevLett.97.236805).

@@ -300,7 +300,8 @@ Here `xy` denotes the declared oriented plane. It is the literal Cartesian
 xy response only when the normal points along +z. No effective layer
 thickness is assumed. The command does not calculate 3D bulk conductivity,
 spin Hall conductivity, extrinsic scattering contributions, or finite-frequency
-optical conductivity.
+optical conductivity. The separate [spin Hall workflow](SPIN_HALL.md) uses
+its own spin-current operator, input contract and tensor output.
 
 The explicit multiplicity \(g_s\) is 1 for SOC spinors or one spin channel,
 and 2 only for a declared scalar spin-degenerate calculation. It counts

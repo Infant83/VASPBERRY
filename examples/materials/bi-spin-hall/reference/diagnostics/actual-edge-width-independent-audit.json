@@ -1,0 +1,342 @@
+{
+  "status": "PASS_IDEAL_STRIP_QSH_EVIDENCE",
+  "source_cache_sha256": {
+    "operators.npz": "b69e227641d15dc6e184553ee839d42486aa96fe2e19c338eed7abbb0574b820",
+    "operators.json": "cdd464709f3135a99b7e01244e17c59e81c1913bed79fdf682d0ab3fa23b9d83"
+  },
+  "source_bulk_band_path_sha256": "b19dddd25acb7c5f62ed53919eab6441015f388aacf00f5ec5bee4e91c8ea4df",
+  "dense_model_gap": {
+    "mesh": [
+      121,
+      121
+    ],
+    "vbm_eV": -1.3265832786217668,
+    "cbm_eV": -0.8800247083530307,
+    "gap_eV": 0.44655857026873613,
+    "sampled_only": true
+  },
+  "common_model_gap_with_path_eV": [
+    -1.3265832786217668,
+    -0.8800247083530307
+  ],
+  "width_cases": [
+    {
+      "width_cells": 20,
+      "occupied_states_per_cell": 10,
+      "strip_filling_rank": 200,
+      "strip_dimension": 320,
+      "source_sha256": {
+        "edge.npz": "931c348cfceab8ac74ff6869ea8ba5b8af1671f7d8b12d48b1a9feae7edb8094",
+        "edge.json": "e0920d62b9e328498e0dfd1ccf82108692cef45af1f770bf6862bc65dafad33e",
+        "run.json": "f7f946c136632c438fd95d9b22570536de369afa03d80bd438c72019eb08ff9b"
+      },
+      "minimum_direct_filling_gap_eV": 0.00735400263256869,
+      "minimum_direct_gap_q": 0.0,
+      "direct_gap_band_indices_1based": [
+        200,
+        201
+      ],
+      "gamma_doublet_center_separation_eV": 0.0073540451728633105,
+      "gamma_dirac_sector_mean_energy_eV": -1.0461195925019307,
+      "gamma_doublet_internal_max_splitting_eV": 4.809993536802892e-08,
+      "gamma_fourstate_projected_left_eigenvalues": [
+        6.109703713822673e-05,
+        6.109717251834086e-05,
+        0.5293853248522046,
+        0.529385378625297
+      ],
+      "gamma_fourstate_projected_right_eigenvalues": [
+        6.1096718996748e-05,
+        6.10968567801642e-05,
+        0.5293849942549966,
+        0.5293850479031906
+      ],
+      "fixed_filling_indirect_gap_eV": -0.17507717107928622,
+      "energy_TR_max_difference_eV": 9.881375406806114e-08,
+      "energy_periodicity_max_difference_eV": 1.0658141036401503e-14,
+      "crossing_test_energy_eV": -1.1,
+      "positive_half_zone_crossing_groups": 3,
+      "edge_channel_count_per_group": 1,
+      "edge_crossing_parity_per_boundary": 1,
+      "crossings": [
+        {
+          "q_from_sample_linear_interpolation": 0.013664640834655644,
+          "q_sample_used_for_projector": 0.015000000000000013,
+          "sample_spacing": 0.0050000000000000044,
+          "degenerate_pair_members": [
+            {
+              "q_estimate": 0.013664595200785527,
+              "band_1based": 199,
+              "left_weight": 0.5584912409291957,
+              "right_weight": 0.00019581606316824442
+            },
+            {
+              "q_estimate": 0.01366468646852576,
+              "band_1based": 200,
+              "left_weight": 0.00019580734947177296,
+              "right_weight": 0.5584908104880254
+            }
+          ],
+          "projected_left_weight_eigenvalues": [
+            0.00011636442827502044,
+            0.5615307651840233
+          ],
+          "projected_right_weight_eigenvalues": [
+            0.0001163681248379224,
+            0.5615301025464359
+          ],
+          "independent_energy_max_difference_eV": 1.0658141036401503e-14
+        },
+        {
+          "q_from_sample_linear_interpolation": 0.18761932130475978,
+          "q_sample_used_for_projector": 0.19000000000000006,
+          "sample_spacing": 0.0050000000000000044,
+          "degenerate_pair_members": [
+            {
+              "q_estimate": 0.1876192975170228,
+              "band_1based": 201,
+              "left_weight": 0.8423883353620618,
+              "right_weight": 4.638674380883975e-05
+            },
+            {
+              "q_estimate": 0.18761934509249678,
+              "band_1based": 202,
+              "left_weight": 4.6387027784363604e-05,
+              "right_weight": 0.842388299316672
+            }
+          ],
+          "projected_left_weight_eigenvalues": [
+            8.135342551244205e-07,
+            0.842371856986806
+          ],
+          "projected_right_weight_eigenvalues": [
+            8.135409086772903e-07,
+            0.8423718421904595
+          ],
+          "independent_energy_max_difference_eV": 7.105427357601002e-15
+        },
+        {
+          "q_from_sample_linear_interpolation": 0.44149401795417675,
+          "q_sample_used_for_projector": 0.44000000000000006,
+          "sample_spacing": 0.0050000000000000044,
+          "degenerate_pair_members": [
+            {
+              "q_estimate": 0.4414939857792903,
+              "band_1based": 202,
+              "left_weight": 0.9669386071529433,
+              "right_weight": 3.375130469882272e-08
+            },
+            {
+              "q_estimate": 0.4414940501290632,
+              "band_1based": 201,
+              "left_weight": 3.375167991701726e-08,
+              "right_weight": 0.9669386215184144
+            }
+          ],
+          "projected_left_weight_eigenvalues": [
+            2.473023898402611e-10,
+            0.96690633996905
+          ],
+          "projected_right_weight_eigenvalues": [
+            2.4731101850313737e-10,
+            0.9669063533378492
+          ],
+          "independent_energy_max_difference_eV": 8.881784197001252e-15
+        }
+      ]
+    },
+    {
+      "width_cells": 40,
+      "occupied_states_per_cell": 10,
+      "strip_filling_rank": 400,
+      "strip_dimension": 640,
+      "source_sha256": {
+        "edge.npz": "7b62528518428ad41b26b75c19895d43f948311e98cc66e2c6124623e9cbf5b4",
+        "edge.json": "9fe2133c50e97d9565254b1a63447c3f068ca0b7f511a0630685bea55d9939c6",
+        "run.json": "8e181e0c3ffa90eb02e73c826d8e69679997cb272ff34f32712ec20120f6fe95"
+      },
+      "minimum_direct_filling_gap_eV": 3.041763562783295e-05,
+      "minimum_direct_gap_q": 0.0,
+      "direct_gap_band_indices_1based": [
+        400,
+        401
+      ],
+      "gamma_doublet_center_separation_eV": 3.046053291844153e-05,
+      "gamma_dirac_sector_mean_energy_eV": -1.046262237304958,
+      "gamma_doublet_internal_max_splitting_eV": 4.2949647394152635e-08,
+      "gamma_fourstate_projected_left_eigenvalues": [
+        1.073970472626771e-09,
+        1.073979279137769e-09,
+        0.5279123980157228,
+        0.5279124553058244
+      ],
+      "gamma_fourstate_projected_right_eigenvalues": [
+        1.0739509288062843e-09,
+        1.0739599050386117e-09,
+        0.527912063493795,
+        0.5279121205308777
+      ],
+      "fixed_filling_indirect_gap_eV": -0.17859634103567257,
+      "energy_TR_max_difference_eV": 8.569321141571606e-08,
+      "energy_periodicity_max_difference_eV": 1.2434497875801753e-14,
+      "crossing_test_energy_eV": -1.1,
+      "positive_half_zone_crossing_groups": 3,
+      "edge_channel_count_per_group": 1,
+      "edge_crossing_parity_per_boundary": 1,
+      "crossings": [
+        {
+          "q_from_sample_linear_interpolation": 0.013673397859108838,
+          "q_sample_used_for_projector": 0.015000000000000013,
+          "sample_spacing": 0.0050000000000000044,
+          "degenerate_pair_members": [
+            {
+              "q_estimate": 0.013673352421767742,
+              "band_1based": 399,
+              "left_weight": 0.5591181349830021,
+              "right_weight": 1.0051891579024839e-08
+            },
+            {
+              "q_estimate": 0.013673443296449934,
+              "band_1based": 400,
+              "left_weight": 1.0051773214395878e-08,
+              "right_weight": 0.5591176838938996
+            }
+          ],
+          "projected_left_weight_eigenvalues": [
+            9.300542252902347e-13,
+            0.5619487270067877
+          ],
+          "projected_right_weight_eigenvalues": [
+            9.294772933364465e-13,
+            0.5619480564308683
+          ],
+          "independent_energy_max_difference_eV": 8.881784197001252e-15
+        },
+        {
+          "q_from_sample_linear_interpolation": 0.18761927551749358,
+          "q_sample_used_for_projector": 0.19000000000000006,
+          "sample_spacing": 0.0050000000000000044,
+          "degenerate_pair_members": [
+            {
+              "q_estimate": 0.1876192517322883,
+              "band_1based": 401,
+              "left_weight": 0.8424339551974964,
+              "right_weight": 9.847949025652143e-12
+            },
+            {
+              "q_estimate": 0.18761929930269886,
+              "band_1based": 402,
+              "left_weight": 9.84782547640588e-12,
+              "right_weight": 0.8424339193788979
+            }
+          ],
+          "projected_left_weight_eigenvalues": [
+            7.727903730724011e-14,
+            0.8423719720384752
+          ],
+          "projected_right_weight_eigenvalues": [
+            7.728087515148284e-14,
+            0.842371957235531
+          ],
+          "independent_energy_max_difference_eV": 7.105427357601002e-15
+        },
+        {
+          "q_from_sample_linear_interpolation": 0.4414940179483495,
+          "q_sample_used_for_projector": 0.44000000000000006,
+          "sample_spacing": 0.0050000000000000044,
+          "degenerate_pair_members": [
+            {
+              "q_estimate": 0.4414939857734646,
+              "band_1based": 402,
+              "left_weight": 0.9669386408443983,
+              "right_weight": 3.889356066407648e-20
+            },
+            {
+              "q_estimate": 0.4414940501232345,
+              "band_1based": 401,
+              "left_weight": 3.8892593577543953e-20,
+              "right_weight": 0.9669386552102741
+            }
+          ],
+          "projected_left_weight_eigenvalues": [
+            1.3800740664623004e-20,
+            0.9669063402158345
+          ],
+          "projected_right_weight_eigenvalues": [
+            1.3801407227146016e-20,
+            0.9669063535846156
+          ],
+          "independent_energy_max_difference_eV": 7.105427357601002e-15
+        }
+      ]
+    }
+  ],
+  "gamma_splitting_reduction_factor": 241.4286444874048,
+  "elapsed_seconds": 3.2864286380354315,
+  "interpretation": "Gamma inter-edge hybridization splitting decreases strongly with width. At a common bulk-gap energy, three crossing doublets in the positive half zone each carry one boundary channel per edge; odd parity supports QSH edge connectivity. The finite-strip filling-index indirect gap is negative, not the bulk insulating gap. Source model is used without TR averaging or boundary modifications.",
+  "limitations": "Sampled bulk-gap and edge crossing evidence for the specified ideal termination. No relaxed edge, spin texture, exact quantized spin conductivity or device conductance claim. Crossings are located approximately by existing0.005-spaced samples; projected boundary-weight spectra are checked at the nearest sampled q. Source Wannier disentanglement/localization and DFT fit remain separately documented.",
+  "no_source_modifications": true,
+  "production_helpers_imported": false,
+  "additional_sample_crossing_counts": [
+    {
+      "width_cells": 20,
+      "mu_eV": -1.2,
+      "crossing_doublets": 3,
+      "fractional_q": [
+        0.048096381122473074,
+        0.22254044185863128,
+        0.31832028111694904
+      ]
+    },
+    {
+      "width_cells": 20,
+      "mu_eV": -1.1,
+      "crossing_doublets": 3,
+      "fractional_q": [
+        0.013664640834655644,
+        0.18761932130475978,
+        0.44149401795417675
+      ]
+    },
+    {
+      "width_cells": 20,
+      "mu_eV": -0.95,
+      "crossing_doublets": 3,
+      "fractional_q": [
+        0.021259472538273302,
+        0.15045790166032663,
+        0.471574931278675
+      ]
+    },
+    {
+      "width_cells": 40,
+      "mu_eV": -1.2,
+      "crossing_doublets": 3,
+      "fractional_q": [
+        0.048096516466502086,
+        0.22254043077130303,
+        0.31832028131002876
+      ]
+    },
+    {
+      "width_cells": 40,
+      "mu_eV": -1.1,
+      "crossing_doublets": 3,
+      "fractional_q": [
+        0.013673397859108838,
+        0.18761927551749358,
+        0.4414940179483495
+      ]
+    },
+    {
+      "width_cells": 40,
+      "mu_eV": -0.95,
+      "crossing_doublets": 3,
+      "fractional_q": [
+        0.02132463942358065,
+        0.15045790077238028,
+        0.47157493110472337
+      ]
+    }
+  ]
+}

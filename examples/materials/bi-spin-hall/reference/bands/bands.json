@@ -1,0 +1,88 @@
+{
+  "schema": "vaspberry.wannier-bands",
+  "version": 1,
+  "complete": true,
+  "method": "VASPBERRY Hamiltonian Fourier sum and NumPy eigvalsh",
+  "source_metadata": {
+    "schema": "vaspberry.wannier-operators",
+    "version": 1,
+    "complete": true,
+    "source_format": "wannier90_effective_HH_R_AA_R",
+    "num_wann": 16,
+    "nrpts": 127,
+    "units": {
+      "hamiltonian": "eV",
+      "position": "Angstrom",
+      "lattice": "Angstrom"
+    },
+    "fourier_phase": "exp(+2*pi*i*q_fractional.dot(R_integer))",
+    "real_space_degeneracy": "already_absorbed",
+    "position_components": [
+      "x",
+      "y",
+      "z"
+    ],
+    "spinor_components": 2,
+    "spin_multiplicity": 1,
+    "energy_reference": "Unchanged VASP eigenvalue zero; fresh Bi SCF and6x6 NSCF48 bands; no excluded bands; fixed16000-iteration16-orbital model; strict1e-8 spread tolerance not met; direct DFT fit audited separately",
+    "source_operator": {
+      "kind": "Hamiltonian_and_position_connection",
+      "scope": "represented finite Wannier subspace",
+      "physical_accuracy": "not established by format validation; retain producer provenance"
+    },
+    "source_sha256": {
+      "HH_R": "55e1685b812d7c12ab2b6c99b3d4ef5a92f49782b80e4d9f68af34e66bc6467b",
+      "AA_R": "dbec65f1b4a10e769bc204699227a1572870b2d994799f52551dd94e36226b01"
+    },
+    "source_files": {
+      "HH_R": "wannier90_HH_R.dat",
+      "AA_R": "wannier90_AA_R.dat"
+    },
+    "source_rows": {
+      "HH_R": 18912,
+      "AA_R": 18912
+    },
+    "sparse_semantics": "omitted entries are zero; duplicate entries summed without a magnitude cutoff",
+    "lattice_association": "Caller-supplied direct lattice rows; operator files do not encode the lattice.",
+    "hermiticity_tolerance": {
+      "absolute_eV_or_Angstrom": 1e-08,
+      "relative": 1e-10
+    },
+    "hermiticity_residual": {
+      "hamiltonian_eV": 5.030698080332741e-16,
+      "position_A": 5.134781488891349e-16
+    },
+    "lattice_source": {
+      "format": "VASP POSCAR",
+      "filename": "POSCAR",
+      "sha256": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405"
+    },
+    "data_npz_sha256": "b69e227641d15dc6e184553ee839d42486aa96fe2e19c338eed7abbb0574b820"
+  },
+  "source_cache_sha256": {
+    "operators.npz": "b69e227641d15dc6e184553ee839d42486aa96fe2e19c338eed7abbb0574b820",
+    "operators.json": "cdd464709f3135a99b7e01244e17c59e81c1913bed79fdf682d0ab3fa23b9d83"
+  },
+  "units": {
+    "energy": "eV",
+    "distance": "Angstrom^-1"
+  },
+  "labels": [
+    "Gamma",
+    "M",
+    "K",
+    "Gamma"
+  ],
+  "output_formats": [
+    "csv",
+    "npz"
+  ],
+  "point_count": 301,
+  "band_count": 16,
+  "elapsed_seconds": 0.04893031483516097,
+  "implementation_sha256": "62f2ae14d3730cb37d0b62da7d3e054a22ebaed0e6dda2ada1377d14e094c777",
+  "output_sha256": {
+    "csv": "54852a542a9d49db873a0197bdf502578f8e7579ee6fd7c388f0bc8ba483d1fd",
+    "npz": "b19dddd25acb7c5f62ed53919eab6441015f388aacf00f5ec5bee4e91c8ea4df"
+  }
+}

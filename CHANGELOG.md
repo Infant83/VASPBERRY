@@ -6,6 +6,14 @@ All notable changes to VASPBERRY are recorded here.
 
 ### Added
 
+- Conventional insulating 2D `spin-hall`, full complex `spin-matrix`, and
+  audited PAW `spin-export` commands. Spin and full physical velocity share
+  one VASP eigenstate basis, including diagonal/degenerate velocity blocks.
+  Spin-current finite-band closure, sheet units and PAW augmentation are
+  explicit; k sampling and source bands require separate convergence.
+- `wannier-edge` for ideal finite-strip bands and boundary probabilities,
+  with memory/time estimates, no-overwrite output and failure records.
+
 - VASPBERRY-owned `wannier-import`, `wannier-bands` and `wannier-hall` commands
   for complete real-space Hamiltonian/position inputs. The NumPy kernel retains
   full J0/J1/J2, uses only cross-gap denominators and handles internal occupied
@@ -111,9 +119,9 @@ All notable changes to VASPBERRY are recorded here.
 - Validation of array shapes, units and numerical properties is distinct
   from material-specific k-mesh, intermediate-band and basis convergence.
   Integer Chern numbers are not enforced by rounding finite-mesh integrals.
-- The new Hall command computes a two-dimensional intrinsic **charge** sheet
-  response. It does not implement spin Hall conductivity or a three-dimensional
-  bulk conductivity conversion.
+- The charge Hall commands compute a two-dimensional intrinsic **charge**
+  sheet response. The separate `spin-hall` command adds conventional spin
+  sheet response for insulating T=0 bundles; no 3D bulk conversion is inferred.
 - `VERSION` identifies an unreleased source candidate. No v1.3.0 Git tag,
   GitHub Release, new DOI or published binary is created by this change.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Composable matrix -> physical curvature -> intrinsic 2D charge Hall tools.
+"""Composable VASP operators -> curvature -> two-dimensional response functions.
 
 Use explicit band windows, spin multiplicity, sampling and source normalization.
 No material-specific energy reference, electron count or valley is assumed.
@@ -23,6 +23,10 @@ from kubo_hall_workflow import COMMANDS as PAIR_COMMANDS, add_commands as add_pa
 from waveder_hall import add_command as add_waveder_command, command as waveder_hall_command
 from wannier_workflow import COMMANDS as WANNIER_COMMANDS, add_commands as add_wannier_commands
 from wannier_bands import add_command as add_wannier_bands, command as wannier_bands_command
+from wannier_edge import add_command as add_wannier_edge, command as wannier_edge_command
+from spin_hall_workflow import COMMANDS as SPIN_COMMANDS, add_commands as add_spin_commands
+from vasp_spin_export import add_arguments as add_spin_export_arguments, command as spin_export_command
+from spin_assembly import add_command as add_spin_merge, command as spin_merge_command
 
 __version__ = '1.3.0'
 
@@ -238,6 +242,10 @@ def parser():
     add_waveder_command(sub)
     add_wannier_commands(sub)
     add_wannier_bands(sub)
+    add_wannier_edge(sub)
+    add_spin_commands(sub)
+    add_spin_merge(sub)
+    add_spin_export_arguments(sub.add_parser('spin-export',help='validate instrumented VASP PAW spin/full-velocity output and create portable matrices'))
     return p
 
 
@@ -245,7 +253,7 @@ def main(argv=None):
     p=parser(); args=p.parse_args(argv)
     try:
         require(not args.output_dir.exists(),'output directory exists; choose a new directory')
-        meta={**PAIR_COMMANDS,**WANNIER_COMMANDS,'wannier-bands':wannier_bands_command,'waveder-hall':waveder_hall_command,'matrix':matrix_command,'import-legacy':import_legacy,'hall':hall_command,'demo':demo}[args.command](args)
+        meta={**PAIR_COMMANDS,**WANNIER_COMMANDS,**SPIN_COMMANDS,'spin-merge':spin_merge_command,'spin-export':spin_export_command,'wannier-bands':wannier_bands_command,'wannier-edge':wannier_edge_command,'waveder-hall':waveder_hall_command,'matrix':matrix_command,'import-legacy':import_legacy,'hall':hall_command,'demo':demo}[args.command](args)
     except (ValueError, OSError, KeyError, TypeError) as exc:
         p.error(str(exc))
     print(json.dumps({'output':str(args.output_dir),'schema':meta['schema'],'version':meta['version']}))

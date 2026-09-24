@@ -3,6 +3,10 @@
 Initial checks on 2026-09-19; scientific examples and transport checks updated through 2026-09-24. This is a local source validation, not a hosted release
 or a completed material-convergence study.
 
+The latest local spin/PAW/edge update passed **431 tests with no skips**,
+including the compiled MPI checks. Earlier counts below describe their
+respective historical source snapshots.
+
 ## Reproducible public checks
 
 ```bash
@@ -369,3 +373,95 @@ monotonic with refinement radius. After accounting for the physical-constant
 convention, the maximum scalar difference from postw90 is 6.73e−9 e²/h, within
 the producer's printed precision. The complete five-condition queue took about
 12.3 minutes; observed peak RSS remained below 2.37 GB per calculation.
+
+## PAW spin, full velocity and conventional spin Hall update
+
+The full local suite passed **431 tests with no skips** in 100.227 s
+(102.068 s including process startup) on 24 September 2026. Source hashes
+were unchanged across the run. The 59 added checks cover complex Pauli
+operators and PAW metric bounds, conserved-spin/QSH Kubo oracles, physical
+units, exact internal degeneracies, phase/unitary covariance, ideal finite
+strips, the public producer, fixed-charge chunk assembly and CLI contracts.
+All CSV/DAT/NPZ tensor components and failure/no-overwrite paths are exercised.
+Synthetic Hamiltonians are numerical tests, separate from material examples.
+
+The actual archived Bi WAVECAR was independently read at the binary-record
+level and compared with direct Pauli action: maximum difference 1.12e−15.
+Its raw pseudo overlap differs from identity by up to 0.631365. The code
+therefore preserves that overlap instead of silently normalizing it.
+For the actual three-point producer pilot, PAW augmentation reduces the
+complete in-memory metric error to 1.68e−14; reconstruction from saved
+complex64 WAVECAR coefficients differs by 3.29e−8, consistent with storage
+precision. Full velocity Hermiticity is within 2.50e−13 eV Å.
+
+A separate raw-stream parser and occupation-difference sum agree with all
+local pilot spin-curvature components within 1.82e−12 Å². Finite-k energy
+slopes give an independent sign/scale check of the diagonal velocity, with
+maximum difference 1.74e−4 eV Å. Comparisons to optical matrix elements are
+identified separately as consistency checks within the same derivation.
+The development pilot uses an archived density and is not the fresh-SCF
+material reference.
+
+The public opt-in instrumenter was applied to a separate original VASP source
+copy, rebuilt and run through the public wrapper and converter. Energies,
+pseudo spin, PAW correction, restored commutator, dipole correction and full
+velocity are bitwise identical to the independently instrumented prototype
+for the same actual three-point input. A failed initial run caused by the
+process stack limit was retained; the wrapper now establishes the tested
+stack limit and records unsuccessful launches, incomplete zero-exit runs
+and timeouts as failures. It also checks source files for mutation.
+
+Chunk assembly checks the common fixed density, potential, structure and
+physical settings, the complete uniform k union and every retained WAVECAR
+record after writing. It rejects incomplete/duplicate grids and coefficient
+records that exceed their declared stride. All source eigenvectors are
+preserved; the assembled header's first-chunk Fermi field is not interpreted
+as a full-mesh chemical potential.
+
+For the fresh-SCF Bi 6×6/48-band calculation, all 27 integrated spin tensor
+components agree with a separately written band-outer-product sum within
+1.50e−14, and local curvature within 3.79e−12 Å². This checks the calculation
+implementation; mesh, source-band and source-eigenstate convergence are
+reported separately in the material example. Physical layer currents,
+metallic spin occupations and finite-temperature spin Hall remain outside
+the present implementation.
+
+## Fresh Bi topology, spin response and edge reproduction
+
+The same fresh-SCF 12×12 Bi WAVECAR gives occupied **Z₂ = 1**, half-zone
+n-field sums −3/+3, sampled direct gap 0.535028 eV and global gap 0.497271 eV.
+The independent raw-pseudo occupied-subspace time-reversal residual is
+4.574e−8 over all 144 points, with explicit spin and reciprocal-basis mapping.
+This is distinct from the native reconstructed-gauge self-consistency check.
+
+The public PAW matrix archives restore exactly. Re-running `spin-hall` on
+the restored 12×12 input produces byte-identical CSV, DAT and NPZ scientific
+outputs. Independent raw-matrix contractions agree for the 48/64/80-band
+sources and tested retained windows to better than 3.1e−14 in integrated
+spin units. The actual 80-band source stabilizes its first 64 eigenstates;
+the 56→64 retained-band response change at fixed 6×6 is 0.1482%. This is
+a source-space check, not k convergence: the 6×6→12×12 response still
+changes strongly. Both controls are shown in the material guide.
+
+The 16-orbital Bi model was independently regenerated through the supplied
+localization helper and the open-source effective-operator export. Both HH/AA
+files match the reference byte for byte. A guarded compatibility instrumenter
+reproduces the exact VASP Wannier-interface source used for the raw overlaps;
+unsupported inputs and repeated application are rejected. No licensed VASP
+source implementation or potential is distributed. The fixed localization
+sequence misses its strict spread threshold, so measured training/held-out
+band errors and localization sensitivity are retained explicitly.
+
+Actual 20/40-cell edge spectra pass an independent Hamiltonian/edge-projector
+check. The Γ doublet separation falls from 7.354 to 0.03046 meV; each boundary
+has three crossings across the positive half-BZ at three tested energies
+inside the common bulk gap. Degenerate-subspace localization is checked
+using edge-projector eigenvalues. This validates ideal boundary connectivity,
+not relaxed edge chemistry or contacted-device transport.
+
+The [Bi tutorial](../examples/materials/bi-spin-hall/) includes the fresh
+SCF density, physical operators, Wannier source, original numerical results
+and reproducible plotting. Its preparation helper splits a 12×12 mesh into
+four disjoint 36-point chunks with the same physical inputs. Their ordered
+union is byte-identical to the complete KPOINTS list. Invalid chunk choices,
+SCF partitioning and overwrites are rejected before creating a run directory.

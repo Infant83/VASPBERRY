@@ -5,6 +5,66 @@ Version 1.3.0 introduces `vaspberry.band-curvature` schema version **1** and
 contracts and are independent of the software version. These formats do not
 replace the existing Fukui plaquette or `VASPBERRY_Z2_FIELD` formats.
 
+## Spin operators and insulating spin Hall tensors
+
+All schemas below are version 1. Arrays use float64 or complex128; integer
+band indices are int64 and one-based. Spinor multiplicity is one.
+
+`spin-export` validates the opt-in VASP producer and writes
+`physical-matrices.npz/json` (`vaspberry.spin-velocity`). Its arrays are:
+
+| Array | Shape / units |
+|---|---|
+| `energies_eV` | K×N eigenvalues, unchanged source zero |
+| `kpoints_fractional`, `weights` | K×3 coordinates and K normalized weights |
+| `lattice_A`, `band_indices` | 3×3 direct row vectors in Å; all N source band IDs |
+| `spin_pauli` | K×3×N×N complex dimensionless Pauli matrices, Cartesian x,y,z |
+| `velocity_eVA` | K×3×N×N complex physical ħv matrices, eV Å |
+| `overlap` | K×N×N complete physical PAW overlap |
+
+The [n,m] convention is bra n, ket m. Source identity, Cartesian axes,
+PAW operator scope, no normalization, complete source-band coverage and
+availability of diagonal/degenerate velocity blocks are mandatory metadata.
+The archive checksum binds that metadata to its arrays. Source consistency
+and numerical validation do not establish band or mesh convergence.
+
+`spin-matrix` writes `spin.npz/json` (`vaspberry.spin-operators`). It preserves
+`spin_pauli`, `overlap`, `pseudo_spin_pauli`, `pseudo_overlap`, k points,
+eigenvalues, lattice and band indices. Scope is either `raw_pseudo` or
+`paw_augmented`; the latter requires a matching validated augmentation input.
+`augmentation.npz/json` (`vaspberry.spin-augmentation`) holds
+`delta_spin_pauli`, `delta_overlap` and the matching coordinates, energies,
+lattice and band indices. The raw pseudo overlap is never forced to identity.
+
+`spin-hall` writes `spin_hall.json` (`vaspberry.spin-hall`) and selected
+CSV/DAT/NPZ products:
+
+- `spin_hall.csv/dat`: 27 rows with `spin`, `current`, `electric_field`,
+  `sigma_hbar_over_e_e2_over_h`, `sigma_hbar_over_e_S`.
+- `spin_curvature.csv/dat`: each k point and all 27 Cartesian components,
+  including fractional coordinates, normalized weight and `omega_spin_A2`.
+- `spin_hall.npz`: K×3×3×3 `omega_spin_A2`, K×3×3 `omega_charge_A2`,
+  3×3×3 integrated spin tensors, 3×3 `charge_sigma_e2_over_h`, coordinates,
+  weights, lattice and scalar `mu_eV`.
+- `run.json`: completion, elapsed time and processed points. A failed
+  integration retains a `.partial` directory instead of a complete output.
+
+Tensor order is **spin, current, electric field**. The spin sheet units are
+(ħ/e)(e²/h) or (ħ/e)S; these are two representations of the same coefficient.
+They are not e²/h charge conductivity. Metadata records both source and
+retained band counts, the finite-band current-product approximation, occupied
+count, sampled gaps, chemical potential, mesh and plane normal. In-plane
+current/field contractions give sheet transport; no vacuum thickness is used.
+See [formulas and sign conventions](SPIN_HALL.md).
+
+`wannier-edge` writes `edge.json` (`vaspberry.wannier-edge`) and selected
+CSV/DAT/NPZ. NPZ contains K parallel fractional coordinates, K×(width·N)
+`energies_eV`, `left_edge_weight`, `right_edge_weight`, and the lattice.
+The weights are probabilities in the chosen boundary Wannier cells, not
+real-space spin densities. CSV/DAT has one row per k point and strip state.
+The metadata states the cut axes, width, edge-cell count and ideal-termination
+scope. Sum weights over a degenerate group or use an edge spectral function.
+
 ## Native Kubo pair export and reusable cache
 
 `-kubo 2 -kubo_pairs PAIRS.csv` writes
