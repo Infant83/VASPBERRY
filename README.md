@@ -15,20 +15,20 @@ VASP supplies the material's electronic structure. VASPBERRY postprocesses it;
 band plots provide context for the calculated topology and response.
 
 [Technical report](docs/TECHNICAL_REPORT.md) ([PDF](docs/TECHNICAL_REPORT.pdf)) ·
-[Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
+[Hands-on commands](docs/HANDS_ON.md) · [Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
 [Output formats](docs/OUTPUT_FORMAT.md)
 
-**Latest release: [1.3.0](https://github.com/Infant83/VASPBERRY/releases/tag/v1.3.0).**
-The commands below use current `master`, including the new readable Fortran
-options. The original short options remain supported. See the
-[unreleased changes](CHANGELOG.md#unreleased), [version policy](docs/RELEASING.md)
-and [1.3.0 migration notes](docs/MIGRATION.md).
+**Latest release: [1.4.0](https://github.com/Infant83/VASPBERRY/releases/tag/v1.4.0).**
+The commands below are available in the fixed `v1.4.0` source. The original
+short options remain supported. See the [release notes](docs/releases/v1.4.0.md),
+[changelog](CHANGELOG.md), [version policy](docs/RELEASING.md)
+and [migration notes](docs/MIGRATION.md).
 
 ## Download and compile
 
 ```bash
-git clone https://github.com/Infant83/VASPBERRY.git
-cd VASPBERRY
+git clone --branch v1.4.0 --single-branch https://github.com/Infant83/VASPBERRY.git VASPBERRY-1.4.0
+cd VASPBERRY-1.4.0
 make serial
 ./build/vaspberry --help
 ```
@@ -42,10 +42,10 @@ Python is needed for the supplied postprocessing and plotting tools:
 python3 -m pip install -r requirements-transport.txt
 ```
 
-For the fixed 1.3.0 release, clone its tag and follow that version's commands:
+For development work on the latest default branch:
 
 ```bash
-git clone --branch v1.3.0 --single-branch https://github.com/Infant83/VASPBERRY.git VASPBERRY-1.3.0
+git clone https://github.com/Infant83/VASPBERRY.git
 ```
 
 Update an existing `master` checkout with `git pull --ff-only`. Release tags
@@ -69,6 +69,16 @@ integral is not rounded to an integer; its k mesh and intermediate band
 window must be converged. Native Kubo uses canonical momentum of the stored
 pseudo-wavefunctions. Optional full-velocity comparisons assess the missing
 PAW/nonlocal/SOC terms; see [operator choices](docs/OPERATOR_ROUTES.md).
+
+For **layer, atom, orbital and spin character**, combine a matching SOC
+`PROCAR` with the WAVECAR and actual spin frame from `OUTCAR` using
+`tools/procar_character.py`. Named atom/orbital groups and a Cartesian spin
+axis define the projections. The same saved native pair data support
+chemical-potential/temperature scans of selected-band projected charge-Hall
+contributions. Follow the [projection tutorial](examples/features/procar-character/)
+for commands and an explicitly synthetic reproducibility fixture. These
+projections explain state character; conventional spin-current Hall uses the
+separate operator route described in the [spin guide](docs/SPIN_HALL.md).
 
 ## Usage
 
@@ -119,7 +129,7 @@ The native syntax groups a mesh as `NX,NY` and a band range as `FIRST:LAST`.
 Specialized legacy options can still be used; for example, `--task kubo` is
 `-kubo 2`, and `--bands 1:18` is `-ii 1 -if 18`. The optional
 `--task kubo-integral` (`-kubo 1`) additionally evaluates the mesh integral.
-Use `./build/vaspberry --help` for the full list. MPI uses the same arguments:
+Use `./build/vaspberry --help` or the [native command reference](docs/NATIVE_COMMANDS.md) for the full list. MPI uses the same arguments:
 
 ```bash
 mpiexec -n 4 ./build/vaspberry-mpi --task chern --wavecar WAVECAR \

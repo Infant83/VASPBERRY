@@ -5,6 +5,68 @@ Version 1.3.0 introduces `vaspberry.band-curvature` schema version **1** and
 contracts and are independent of the software version. These formats do not
 replace the existing Fukui plaquette or `VASPBERRY_Z2_FIELD` formats.
 
+## PROCAR character and charge-Hall attribution
+
+The [PROCAR workflow](../examples/features/procar-character/) uses
+`tools/procar_character.py` and writes version-1 schemas separate from the
+ordinary Hall-spectrum schema. Matching SOC `PROCAR`, `WAVECAR` and `OUTCAR`
+are required. The current parser accepts the four-block noncollinear
+`LORBIT=11` format. Atom IDs and band IDs are one-based; atom groups and
+optional orbital labels come from the user's group JSON.
+
+`project` writes `character.csv`, `character.npz` and `character.json`
+(`vaspberry.procar-character`). For K k points, N bands and G groups:
+
+| Array or column | Meaning |
+|---|---|
+| `kpoints_fractional`, `energies_eV`, `occupations` | K×3 coordinates and K×N source energies/occupations |
+| `weights`, `lattice_A`, `reciprocal_inv_A` | Source K weights and direct/reciprocal row vectors; Å and Å⁻¹ with 2π |
+| `raw_cartesian` | K×N×G×4 raw projected charge and Cartesian Pauli weights, ordered `charge,mx,my,mz` |
+| `characters` | K×N×G×4 values ordered `charge,pauli_axis,plus,minus` |
+| `all_ions_cartesian`, `printed_state_cartesian` | K×N×4 sum over the per-ion totals and the independently rounded printed state total, respectively |
+| CSV `k_id`, `band_id`, `group` | One row per source state and user group, with coordinates, energy and occupation |
+| CSV `charge`, `pauli_axis`, `plus`, `minus`, `mx`, `my`, `mz` | The same dimensionless raw projector weights in readable form |
+
+The chosen Cartesian unit axis is `axis_cartesian`. The actual
+SAXIS-to-Cartesian transformation is read from OUTCAR and retained as
+`spin_to_cartesian`. For group charge q and axis-projected Pauli weight m,
+`plus=(q+m)/2`, `minus=(q-m)/2`, and projected spin in units of ħ is m/2.
+No weight is clipped or normalized to unity. PAW atom/orbital projections
+can be incomplete, and user groups may overlap; they are not automatically
+a partition of the full wavefunction. The metadata records group definitions,
+input hashes, matching checks and an explicit same-run association.
+`projection_diagnostics.csv` records `k_id`, `band_id`, `all_ions_charge`,
+`charge_residual=1-all_ions_charge`, Cartesian `mx,my,mz` and
+`printed_state_charge`. The residual is bookkeeping relative to unit weight,
+not a separately calculated interstitial projector.
+
+`hall` consumes that cache and matching Kubo pairs, then writes:
+
+| File | Contract |
+|---|---|
+| `character_hall.csv`, `.npz` | Identical long-form columns `mu_eV`, `mu_minus_reference_eV`, `temperature_K`, `region`, `group`, `component`, `attribution_e2_over_h`, `delta_attribution_e2_over_h` |
+| `character_hall.json` | `vaspberry.character-hall`: selected bands, full source virtual-band window, minimum isolation gap, operator, axis, groups, regions, reference μ, formula and input/output checksums |
+| `selected_curvature.npz` | K×B×3 `omega_A2` for the B selected bands, K×B `min_gap_eV` and `energies_eV`, k/band IDs and fractional coordinates |
+
+The response is the charge-Hall integral weighted by each selected band's
+raw character. Δ attribution applies `f(mu,T)-f(mu_reference,T)` before
+summation. The `pauli_axis` channel has charge-attribution units e²/h; it
+is not a conventional spin Hall coefficient. Selected-band outputs omit
+all other bands, even if those bands are fully occupied. Every selected
+band must be isolated from all other source states at each sampled k;
+unresolved degeneracies are rejected, not coalesced for this decomposition.
+Use ordinary `pair-hall` for the full occupation-weighted charge response.
+Three reserved diagnostic groups have only a `charge` component:
+`$unweighted`, `$all_projected`, and `$unprojected_residual`. The latter two
+sum to the unweighted selected-band baseline. This closure does not make
+arbitrary overlapping user groups a partition, and no unprojected spin is
+inferred from charge residuals.
+
+The `plot` command reads these saved products and writes `character.*` and
+`character_hall.*` in PNG, PDF and SVG, plus `plots.json`. It does not run
+VASP or native Fortran. The CSVs and NPZs are also ordinary numerical inputs
+for an independent plotting program; keep their JSON metadata beside them.
+
 ## Spin operators and insulating spin Hall tensors
 
 All schemas below are version 1. Arrays use float64 or complex128; integer
@@ -369,6 +431,72 @@ occupation of the highest included band over the requested μ/T range.
 it does not add omitted occupied bands. A successful window check still does
 not prove that the source calculation includes enough unoccupied states for
 curvature convergence.
+
+## Read and plot with other tools
+
+The output tables are the numerical result. The supplied plotters are
+optional readers: no VASPBERRY executable, VASP installation or Wannier
+model is needed to plot a completed table. Keep its JSON sidecar with the
+table so that the operator approximation, units, reference energy, band
+window and region definitions remain available for interpretation.
+
+CSV opens directly in spreadsheet applications, Origin, R or Python. DAT
+has a tab-separated column header prefixed by `# `; strip that prefix when
+using a reader that expects an uncommented header. NPZ contains the same
+named columns and uses no Python object arrays. For example, run this from
+the repository root after installing `requirements-transport.txt`:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
+
+source = Path('examples/features/kubo-hall/reference/cases/24x24-source60-cap40')
+with np.load(source / 'conductivity.npz', allow_pickle=False) as archive:
+    d = {name: archive[name] for name in archive.files}
+
+fig, ax = plt.subplots(layout='constrained')
+for region in ['K', 'Kprime', 'valley']:
+    selected = ((d['region'] == region) & (d['temperature_K'] == 300)
+                & (d['band_id'] == 0))
+    order = np.argsort(d['mu_minus_reference_eV'][selected])
+    ax.plot(d['mu_minus_reference_eV'][selected][order],
+            d['delta_sigma_e2_over_h'][selected][order], label=region)
+ax.set(xlabel='μ − μref (eV)', ylabel='Δσ (e²/h)')
+ax.legend()
+out = Path('results/custom-hall-plot')
+out.mkdir(parents=True, exist_ok=True)
+fig.savefig(out / 'regional-hall.svg')
+plt.close(fig)
+PY
+```
+
+This selects already calculated 300 K rows. The same arrays support absolute
+σ versus μ, several temperatures, a μ/T map, or response versus carrier
+count. For the last plot, join `delta_electrons_per_cell` from **`region=total`
+and `band_id=0`** to the desired response rows at the same μ and temperature.
+A difference region's carrier column is a signed regional contrast, not the
+total number of doped carriers. Counts are electrons per cell, not cm⁻²;
+conversion to sheet density requires the physical in-plane cell area.
+
+The equivalent plain CSV can be read without VASPBERRY or NumPy:
+
+```python
+import csv
+with open('results/mos2-hall/hall/conductivity.csv') as handle:
+    rows = list(csv.DictReader(handle))
+curve = sorted((float(r['mu_eV']), float(r['sigma_e2_over_h']))
+               for r in rows if r['region'] == 'total'
+               and int(r['band_id']) == 0 and float(r['temperature_K']) == 300)
+```
+
+For native `PAIRS.csv` or bundle CSV, skip `#` comment lines before passing
+rows to a CSV reader. Retain and inspect those comments separately: they
+identify the operator and require a final `result_status=PASS`. Pair
+numerators are not curvature or conductivity until occupations and energy
+denominators have been applied. `import-pairs` and `pair-hall` perform those
+validated numerical stages before plotting.
 
 ## PAW circular transition strengths
 

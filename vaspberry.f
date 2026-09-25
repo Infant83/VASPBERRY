@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.3.0 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.4.0 (f77) for VASP
 ! Written by Hyun-Jung Kim
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -136,7 +136,7 @@
       mpi_comm_earth = 0
 #endif
 
-      ver_tag="# VASPBERRY (Ver 1.3.0), by Hyun-Jung Kim."//
+      ver_tag="# VASPBERRY (Ver 1.4.0), by Hyun-Jung Kim."//
      &        " 2026. Sep. 19."
       pi=4.*atan(1.)
       berrymax=0d0
@@ -219,7 +219,10 @@
        wklist(:,ik)=wk(:)
        nplist(ik)=nint(xnplane)
        do n=1,nband; ne=ne+nint(occ(n)); enddo
-       if(ik .gt. 1 .and. ne_temp0 .ne. ne .and. ine .eq. 0) then
+! Pair numerators use all source bands and no source occupations.
+! Metallic/smeared occupations may differ between k points.
+       if(ik.gt.1.and.ne_temp0.ne.ne.and.ine.eq.0.and.
+     &    len_trim(kubo_pairs).eq.0)then
          write(0,*) '*** error - inconsistent occupations',
      &              ne,ne_temp0,ik
          call vaspberry_fail
@@ -304,7 +307,11 @@
        call vaspberry_fail
       endif
       if(myrank == 0)then
-       write(6,'(A,I6)')   "# NELECT     : ",ne*ispin
+       if(len_trim(kubo_pairs).gt.0)then
+        write(6,'(A)')"# Source occupations: not used for pair export"
+       else
+        write(6,'(A,I6)')  "# NELECT     : ",ne*ispin
+       endif
        if (ispinor .eq. 2)then
         write(6,'(A,I6,A)')"# ISPIN      : ",ispin," (LSORBIT =.TRUE.)"
        else
@@ -1619,7 +1626,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.3.0'
+      write(94,'(A)')'# vaspberry_version=1.4.0'
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
@@ -1819,7 +1826,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.3.0'
+      write(94,'(A)')'# vaspberry_version=1.4.0'
       if(fieldok)then
        write(94,'(A)')'# result_status=PASS'
       else
@@ -3979,7 +3986,7 @@
       implicit none
       integer iunit
       write(iunit,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_V2'
-      write(iunit,'(A)')'# vaspberry_version=1.3.0'
+      write(iunit,'(A)')'# vaspberry_version=1.4.0'
       write(iunit,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
       write(iunit,'(A)')'# operator='//
      & 'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
@@ -4181,7 +4188,7 @@
       endif
       if(isp.eq.1)then
        write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1'
-       write(96,'(A)')'# vaspberry_version=1.3.0'
+       write(96,'(A)')'# vaspberry_version=1.4.0'
        write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
        write(96,'(A)')'# operator='//
      &  'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
@@ -4395,7 +4402,7 @@
        endif
        if(isp.eq.1)then
         write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_PAIRS_V1'
-        write(96,'(A)')'# vaspberry_version=1.3.0'
+        write(96,'(A)')'# vaspberry_version=1.4.0'
         write(96,'(A)')'# result_kind=UNORDERED_INTERBAND_NUMERATORS'
         write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
         write(96,'(A)')'# operator='//
@@ -4519,8 +4526,9 @@
       integer ni,nj,ne,nk,nband,np,npmax,kperiod,ispin,irecl
       character*256 filename,foname,fonameo
       data c/0.262465831d0/ ! constant c = 2m/hbar**2 [1/eV Ang^2]
-      data hbar/6.58211928E-16/ !h/2pi [eV * s]
-      data xm/0.510998910E+6/ ! electron mass (eV/c^2)
+      data hbar/6.582119569d-16/ !h/2pi [eV * s]
+      data xm/0.510998950d+6/ ! electron rest energy (eV)
+      data speed_of_light/2.99792458d8/ ! m/s; mass=xm/c^2
       data anginv/1.0E+10/     ! inverse angstrom (1/Ang)
       pi=4.*atan(1.)
       do isp=1,ispin
@@ -4565,11 +4573,11 @@
           endif
           ! -i*hbar/m <psi|d/dx|psi>
           vel_x=vel_x+     
-     &    anginv*hbar/xm*(conjg(coeffiu(iplane))*xkgx*coeffju(iplane)+
+     &    anginv*hbar*speed_of_light**2/xm*(conjg(coeffiu(iplane))*xkgx*coeffju(iplane)+
      &                    conjg(coeffid(iplane))*xkgx*coeffjd(iplane))
           ! -i*hbar/m <psi|d/dy|psi> 
           vel_y=vel_y+     
-     &    anginv*hbar/xm*(conjg(coeffiu(iplane))*xkgy*coeffju(iplane)+
+     &    anginv*hbar*speed_of_light**2/xm*(conjg(coeffiu(iplane))*xkgy*coeffju(iplane)+
      &                    conjg(coeffid(iplane))*xkgy*coeffjd(iplane))
           else if (ispinor .eq. 1) then
            coeffiu(iplane)=coeffi(iplane)
@@ -4579,58 +4587,30 @@
              coeffju(iplane)=coeffj(iplane)
            endif
            vel_x=vel_x+
-     &     anginv*hbar/xm*conjg(coeffiu(iplane))*xkgx*coeffju(iplane)
+     &     anginv*hbar*speed_of_light**2/xm*conjg(coeffiu(iplane))*xkgx*coeffju(iplane)
            vel_y=vel_y+
-     &     anginv*hbar/xm*conjg(coeffiu(iplane))*xkgy*coeffju(iplane)
+     &     anginv*hbar*speed_of_light**2/xm*conjg(coeffiu(iplane))*xkgy*coeffju(iplane)
          endif ! ispinor
         enddo  ! iplane
         vel_expt(1,ik,isp)=real(vel_x,8)
         vel_expt(2,ik,isp)=real(vel_y,8)
-        write(6,'(A,I4,5F11.6)')"# IK, K(reci), VEL_EXPT(x,y) : ",
+        write(6,'(A,I4,3F11.6,2(1X,ES25.17E3))')"# IK, K(reci), VEL_EXPT(x,y) : ",
      &                         ik,wk,(vel_expt(i,ik,isp),i=1,2)
        enddo  !ik
 
-       if (ik .eq. 1)then
-        vel_x_expt_max(4)=vel_expt(1,ik,isp)
-        vel_x_expt_max(1)=wklist(1,ik)
-        vel_x_expt_max(2)=wklist(2,ik)
-        vel_x_expt_max(3)=wklist(3,ik)
-        vel_x_expt_min(4)=vel_expt(1,ik,isp)
-        vel_x_expt_min(1)=wklist(1,ik)
-        vel_x_expt_min(2)=wklist(2,ik)
-        vel_x_expt_min(3)=wklist(3,ik)
-        else if(ik.ge.2.and.vel_expt(1,ik,isp).ge.vel_x_expt_max(4))then
-         vel_x_expt_max(4)=vel_expt(1,ik,isp)
-         vel_x_expt_max(1)=wklist(1,ik)
-         vel_x_expt_max(2)=wklist(2,ik)
-         vel_x_expt_max(3)=wklist(3,ik)
-        else if(ik.ge.2.and.vel_expt(1,ik,isp).le.vel_x_expt_min(4))then
-         vel_x_expt_min(4)=vel_expt(1,ik,isp)
-         vel_x_expt_min(1)=wklist(1,ik)
-         vel_x_expt_min(2)=wklist(2,ik)
-         vel_x_expt_min(3)=wklist(3,ik)
-       endif
-
-       if (ik .eq. 1)then
-        vel_y_expt_max(4)=vel_expt(2,ik,isp)
-        vel_y_expt_max(1)=wklist(1,ik)
-        vel_y_expt_max(2)=wklist(2,ik)
-        vel_y_expt_max(3)=wklist(3,ik)
-        vel_y_expt_min(4)=vel_expt(2,ik,isp)
-        vel_y_expt_min(1)=wklist(1,ik)
-        vel_y_expt_min(2)=wklist(2,ik)
-        vel_y_expt_min(3)=wklist(3,ik)
-        else if(ik.ge.2.and.vel_expt(2,ik,isp).ge.vel_y_expt_max(4))then
-         vel_y_expt_max(4)=vel_expt(2,ik,isp)
-         vel_y_expt_max(1)=wklist(1,ik)
-         vel_y_expt_max(2)=wklist(2,ik)
-         vel_y_expt_max(3)=wklist(3,ik)
-        else if(ik.ge.2.and.vel_expt(2,ik,isp).le.vel_y_expt_min(4))then
-         vel_y_expt_min(4)=vel_expt(2,ik,isp)
-         vel_y_expt_min(1)=wklist(1,ik)
-         vel_y_expt_min(2)=wklist(2,ik)
-         vel_y_expt_min(3)=wklist(3,ik)
-       endif
+! Extrema over valid source k points; ik is nk+1 after the loop above.
+       imax=maxloc(vel_expt(1,:,isp),dim=1)
+       imin=minloc(vel_expt(1,:,isp),dim=1)
+       vel_x_expt_max(1:3)=wklist(:,imax)
+       vel_x_expt_max(4)=vel_expt(1,imax,isp)
+       vel_x_expt_min(1:3)=wklist(:,imin)
+       vel_x_expt_min(4)=vel_expt(1,imin,isp)
+       imax=maxloc(vel_expt(2,:,isp),dim=1)
+       imin=minloc(vel_expt(2,:,isp),dim=1)
+       vel_y_expt_max(1:3)=wklist(:,imax)
+       vel_y_expt_max(4)=vel_expt(2,imax,isp)
+       vel_y_expt_min(1:3)=wklist(:,imin)
+       vel_y_expt_min(4)=vel_expt(2,imin,isp)
         do ik=1,nk
          do j=1,3
           recivec(j,ik)=wklist(1,ik)*b1(j)+
@@ -4728,21 +4708,28 @@
         write(61,'(A,3F13.6)') "# RECIVEC B3       : ",(b3(i),i=1,3)
         write(61,*)" "
 
-        write(61,'(A,I4)')"# VEOLOCITY EXPECTATION VALUE of BAND:",ni
-        write(61,'(A)')"# <v(n,k)>= 1/hbar dE(k)/dk =
-     & 1/m_e<psi(n,k)|p|psi(n,k)>, p=-i*hbar*d/dx,m_e=elect_rest_mass"
-        write(61,'(A,4F16.6)')"# MAXVAL of VEL_EXPT <v_x> 
-     &(in reci)= ",(vel_x_expt_max(i),i=1,4)
-        write(61,'(A,4F16.6)')"# MINVAL of VEL_EXPT <v_x> 
-     &(in reci)= ",(vel_x_expt_min(i),i=1,4)
-        write(61,'(A,4F16.6)')"# MAXVAL of VEL_EXPT <v_y> 
-     &(in reci)= ",(vel_y_expt_max(i),i=1,4)
-        write(61,'(A,4F16.6)')"# MINVAL of VEL_EXPT <v_y> 
-     &(in reci)= ",(vel_y_expt_min(i),i=1,4)
+        write(61,'(A,I4)')"# VELOCITY EXPECTATION VALUE of BAND:",ni
+        write(61,'(A)')"# <p_x,y>/m_e; p=-i*hbar*grad"
+        write(61,'(A)')"# operator="//
+     &       "WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY"
+        write(61,'(A)')"# velocity_units=m/s"
+        write(61,'(A)')"# PAW/nonlocal/SOC velocity terms not included"
+        write(61,'(A,3F16.6,1X,ES25.17E3)')
+     &   "# MAXVAL of VEL_EXPT <v_x> (in reci)= ",
+     &   (vel_x_expt_max(i),i=1,4)
+        write(61,'(A,3F16.6,1X,ES25.17E3)')
+     &   "# MINVAL of VEL_EXPT <v_x> (in reci)= ",
+     &   (vel_x_expt_min(i),i=1,4)
+        write(61,'(A,3F16.6,1X,ES25.17E3)')
+     &   "# MAXVAL of VEL_EXPT <v_y> (in reci)= ",
+     &   (vel_y_expt_max(i),i=1,4)
+        write(61,'(A,3F16.6,1X,ES25.17E3)')
+     &   "# MINVAL of VEL_EXPT <v_y> (in reci)= ",
+     &   (vel_y_expt_min(i),i=1,4)
         write(61,'(A)')"# (cart) kx     ky     kz(A^-1)
      &    vel_expt(vx(n,k), vy(n,k))(m/s)  (recip)kx      ky      kz"
         do ik=1,kext
-         write(61,'(3F11.6,A,2F10.6,A,3F11.6)')(xrecivec(i,ik),i=1,3),
+         write(61,'(3F11.6,A,2(1X,ES25.17E3),A,3F11.6)')(xrecivec(i,ik),i=1,3),
      &        "   ",(xvel_expt(i,ik,isp),i=1,2),"       ",
      &        (xrecilat(i,ik),i=1,3)
         enddo
@@ -6008,7 +5995,8 @@
       write(6,*)"                 No integer expectation on a path."
       write(6,*)"  kubo-integral  legacy integration diagnostic (-kubo 1)"
       write(6,*)"  kubo-pairs     all source-band pairs; --pairs-csv needed"
-      write(6,*)"                 Omit --bands; no occupations or gaps."
+      write(6,*)"                 Omit --bands; no occupation weighting."
+      write(6,*)"                 Source occupations may vary with k."
       write(6,*)"  optical        selected-transition selectivity (-cd 1)"
       write(6,*)"  spectrum       broadened transition spectrum (-cd 2)"
       write(6,*)"                 Not a calibrated absolute optical rate."
@@ -6034,6 +6022,14 @@
       write(6,*)"  --theta DEG --phi DEG    -theta DEG -phi DEG"
       write(6,*)"  --help                  print this help and stop"
       write(6,*)"  All legacy flags remain accepted (details below)."
+      write(6,*)" "
+      write(6,*)"*Outputs and reusable results:"
+      write(6,*)"  CSV options name exact files; parent dirs must exist."
+      write(6,*)"  Kubo CSV exports refuse existing files."
+      write(6,*)"  Legacy DAT files may be replaced: use a fresh cwd."
+      write(6,*)"  --output is a legacy label, not an output directory."
+      write(6,*)"  Pairs -> import-pairs -> pair-hall -> plot_hall.py."
+      write(6,*)"  Reference and output names: docs/NATIVE_COMMANDS.md."
       write(6,*)" "
       write(6,*)"*LIMITATION : -This program is ONLY for 2D system."
       write(6,*)"            : -It tries to find the VBM for first KPT,"
@@ -6086,7 +6082,7 @@
       write(6,*)"                  :  Default : BERRYCURV.dat          "
       write(6,*)" -kp np           : Print Berry curvature distribution"
       write(6,*)"                  : with extended BZ with 'np x np'-BZ"
-      write(6,*)"                  :  Default : 1              "
+      write(6,*)"                  :  Default : 2              "
       write(6,*)" -skp 1(or 0)     : Specify whether special K-points "
       write(6,*)"                  : will be printed in the SKP.dat "
       write(6,*)"                  : You may specify the points by hand"

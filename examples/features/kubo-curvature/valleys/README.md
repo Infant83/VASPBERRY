@@ -40,8 +40,15 @@ python3 examples/features/kubo-curvature/valleys/run.py \
 The native command used by the runner is:
 
 ```bash
-vaspberry -f WAVECAR -s 2 -kubo 2 -ii 17 -if 18 \
-  -kubo_csv KUBO.csv -o BERRYCURV
+repo_dir="$PWD"
+mkdir -p results/mos2-valleys-native
+(
+  cd results/mos2-valleys-native
+  "$repo_dir/build/vaspberry" \
+    --wavecar "$repo_dir/results/mos2-valleys-vasp/WAVECAR" \
+    --spinor 2 --task kubo --bands 17:18 \
+    --curvature-csv KUBO.csv --output BERRYCURV > vaspberry.log
+)
 ```
 
 It exports bands 17 and 18 with intermediate bands 1–26; the map shows

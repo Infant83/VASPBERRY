@@ -6,7 +6,7 @@
 source. Clone it with `git clone https://github.com/Infant83/VASPBERRY.git`.
 Update a clean checkout with `git pull --ff-only`.
 
-A release tag, such as `v1.3.0`, stays fixed. Use the tag when reproducing a
+A release tag, such as `v1.4.0`, stays fixed. Use the tag when reproducing a
 published calculation, and record the version plus `git rev-parse HEAD` in
 the calculation record. `git describe --tags --always --dirty` also identifies
 changes after a release. A development branch is not the default download.
@@ -49,3 +49,11 @@ that points elsewhere and never edits an existing published release.
 
 Future releases need their own target and validation review. The 1.3.0
 workflow must not be used to label changed scientific code as already tested.
+
+The `publish-v1.4.0.yml` workflow validates versioned metadata and waits for
+both the full CI and actual Bi serial/MPI workflow on its own exact commit.
+It requires successful jobs, checks that master has not advanced and that
+the previous tag remains unchanged, and refuses to move a conflicting tag
+or edit an existing release. Its publication artifact and release body record
+the source commit and successful checks. Follow publication with a fresh
+version-pinned checkout and the public hands-on/example commands.

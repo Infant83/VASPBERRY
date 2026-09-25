@@ -157,8 +157,10 @@ The current repository build provides the following `--task` selectors:
 For example, `build/vaspberry --task kubo` selects the native pointwise
 calculation; supply the WAVECAR and band options listed in the
 [usage guide](../README.md#usage) and [worked examples](../examples/README.md).
-The task aliases refer to the current repository version; the immutable
-v1.3.0 release uses the retained legacy flags.
+The task aliases are included in the fixed v1.4.0 release; the earlier
+v1.3.0 release uses the retained legacy flags. The
+[hands-on guide](HANDS_ON.md) and [report-to-example map](../examples/REPORT_REPRODUCTION.md)
+give the input files, commands and expected outputs for each example.
 
 These stages require no Wannier localization. Python prepares inputs,
 normalizes outputs and performs the stated post-processing. Optional
@@ -166,6 +168,48 @@ standard-WAVEDER, supplied physical-matrix and Wannier interfaces use
 additional Python numerical backends with input requirements described in
 [Appendix A](#appendix-a-optional-physical-operator-extensions) and
 [Appendix B](#appendix-b-optional-wannier-supporting-validation).
+
+### 1.4 Layer, orbital and spin character from PROCAR
+
+The `procar_character.py` postprocessor connects a matching SOC PROCAR to
+the same final WAVECAR states and uses the actual spin-frame rotation printed
+in OUTCAR. User-defined atom groups describe layers or sublayers; optional
+orbital groups refine the character. For the validated noncollinear projection
+convention, write the raw charge and Pauli projections of group L as
+$`q_L(n\mathbf{k})`$ and $`\mathbf{m}_L(n\mathbf{k})`$. Along a specified
+Cartesian unit spin axis $`\hat{\mathbf{a}}`$, the joint projected weights are
+
+```math
+p_{L,\pm}(n\mathbf{k})=
+\frac{q_L(n\mathbf{k})\pm\hat{\mathbf{a}}\cdot\mathbf{m}_L(n\mathbf{k})}{2}.
+```
+
+For isolated selected bands, the saved native pair data give point curvature
+with the same canonical-momentum convention as Section 1.2. Multiplying by
+these weights defines a projected charge-Hall attribution:
+
+```math
+\widetilde{\sigma}_{xy}^{L,\pm}(\mu,T)=
+-\frac{e^2}{\hbar}\sum_{n\in\mathcal{B}}\int_{\rm BZ}
+\frac{d^2k}{(2\pi)^2}\,
+f(E_{n\mathbf{k}};\mu,T)\,p_{L,\pm}(n\mathbf{k})\,\Omega_{n,z}(\mathbf{k}).
+```
+
+Here $`\mathcal{B}`$ is the explicitly selected band window. Its unweighted
+selected-band response is saved alongside the attribution; it is not the full occupied-state
+Hall response unless that window represents all relevant states. Raw projection
+coverage and residuals remain visible rather than being forced to unity.
+Selected states with unresolved degeneracies are rejected because individual
+band weights and curvature can depend on the chosen basis there.
+
+This analysis supports layer/spin-colored band and curvature plots and
+comparisons of doping-induced projected contributions. Conventional spin Hall
+uses a spin-current operator and is treated separately in Appendix A.2;
+diagonal PROCAR character alone does not supply that operator. The
+[public projection tutorial](../examples/features/procar-character/) gives
+`project`, `hall` and `plot` commands with a small analytic fixture. That fixture
+tests software conventions and reproducibility; it is not a new VASP material
+calculation or a material-convergence benchmark.
 
 ## 2. Materials and numerical settings
 
@@ -508,6 +552,12 @@ curvature, optical selection and state densities. For charge Kubo transport,
 export the native interband pairs and use the Python occupation/integration
 step to scan chemical potential and temperature without repeating the
 matrix-element calculation. These main workflows do not require Wannier90.
+For layer, orbital and spin attribution, add the matching PROCAR and OUTCAR,
+define atom groups and a spin axis, and follow the
+[projection tutorial](../examples/features/procar-character/). Each strained,
+field-biased or magnetically distinct calculation needs its own matching
+wavefunctions and projections; changing occupations alone does not recalculate
+the electronic structure under those perturbations.
 Optional standard optical or full transition-matrix inputs allow additional
 operator terms to be assessed on matching electronic states. The
 [operator guide](OPERATOR_ROUTES.md) links the input requirements and
@@ -516,7 +566,8 @@ separate instructions for each route.
 For quantitative conclusions, converge the VASP electronic structure,
 k mesh and relevant band window. The examples show how the methods are used;
 the [supplementary analytic references](REFERENCE_MATERIALS.md) check formulas
-and conventions, while [validation details](VALIDATION_1.3.0.md) document the
+and conventions, while [version 1.4.0 validation](VALIDATION_1.4.0.md) and the
+[earlier validation record](VALIDATION_1.3.0.md) document the
 numerical implementation. Detailed execution records remain alongside the
 numerical files for reproducibility.
 

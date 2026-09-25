@@ -61,6 +61,12 @@ jobs:
           fukui-chern kubo-curvature hall-valley z2 circular-dichroism wavefunction
           --bi-wavecar results/inputs/bi/WAVECAR
           --output-dir results/feature-examples
+      - name: Reproduce the analytic PROCAR character and projected Hall example
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python examples/features/procar-character/run_example.py
+          --output-dir results/feature-examples/procar-character
       - name: Retain example results and failure logs
         if: always()
         uses: actions/upload-artifact@v4

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare the actual two-atom Bi SCF or full-mesh PAW spin Hall calculation."""
+"""Prepare the actual two-atom Bi SCF, ordinary WAVECAR or PAW spin calculation."""
 from __future__ import annotations
 
 import argparse
@@ -71,13 +71,14 @@ def check_charge_geometry(path):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--stage',choices=['scf','spin'],default='spin')
+    p.add_argument('--stage',choices=['scf','wavecar','spin'],default='spin',
+                   help='wavecar uses ordinary VASP for native Z2/Chern; spin adds optional physical-matrix exports')
     p.add_argument('--potcar',type=Path,required=True,help='Licensed PAW-PBE Bi 08Apr2002 potential; see PSEUDOPOTENTIAL.md')
     p.add_argument('--charge',type=Path,help='Own completed matching SCF CHGCAR; default restore the supplied fresh SCF density')
     p.add_argument('--mesh',nargs=2,type=int,default=[12,12],metavar=('NX','NY'))
     p.add_argument('--chunks',type=int,default=1,help='Number of contiguous fixed-charge k-point partitions; default 1')
     p.add_argument('--chunk-index',type=int,default=0,help='Zero-based partition index; default 0')
-    p.add_argument('--nbands',type=int,help='Default 32 for SCF, 48 for spin export; occupied count is10')
+    p.add_argument('--nbands',type=int,help='Default 32 for SCF, 48 for WAVECAR/spin export; occupied count is 10')
     p.add_argument('--output-dir',type=Path,required=True)
     a = p.parse_args()
     nb = a.nbands if a.nbands is not None else 32 if a.stage == 'scf' else 48
@@ -86,7 +87,7 @@ def main():
     if not 1 <= a.chunks <= nx*ny:p.error('--chunks must be between 1 and NX*NY')
     if not 0 <= a.chunk_index < a.chunks:p.error('--chunk-index must satisfy 0 <= index < chunks')
     if a.stage == 'scf' and a.chunks != 1:p.error('SCF density generation cannot be partitioned; use --chunks 1')
-    if a.stage == 'scf' and a.charge is not None:p.error('--charge is used only for the fixed-charge spin stage')
+    if a.stage == 'scf' and a.charge is not None:p.error('--charge is used only for fixed-charge wavecar/spin stages')
     indices = np.array_split(np.arange(nx*ny),a.chunks)[a.chunk_index]
     meta = json.loads((HERE/'inputs/provenance.json').read_text())
     if not a.potcar.is_file() or sha(a.potcar) != meta['potcar_sha256']:
@@ -99,6 +100,11 @@ def main():
     template = HERE/'inputs'/('scf/INCAR' if a.stage == 'scf' else 'INCAR.nscf')
     incar,count = re.subn(r'(?m)^NBANDS\s*=.*$',f'NBANDS = {nb}',template.read_text())
     if count != 1:raise ValueError('Reference INCAR must contain one NBANDS setting')
+    if a.stage == 'wavecar':
+        # The electronic Hamiltonian and fixed charge are unchanged. Ordinary
+        # VASP only needs WAVECAR; physical operators and optics are optional.
+        incar = re.sub(r'(?m)^(?:LOPTICS|LPEAD|LNABLA|LBERRY_EXPORT|LSPIN_EXPORT)\s*=.*\n?', '', incar)
+        incar = re.sub(r'(?m)^SYSTEM\s*=.*$', 'SYSTEM = Bi full-mesh SOC wavefunctions', incar)
     a.output_dir.mkdir(parents=True)
     (a.output_dir/'INCAR').write_text(incar)
     shutil.copyfile(HERE/'inputs/POSCAR',a.output_dir/'POSCAR')
@@ -107,23 +113,26 @@ def main():
         kpoints=f'Bi Gamma-centered SCF mesh\n0\nGamma\n{nx} {ny} 1\n0 0 0\n'
     else:
         # The ordered union of all partitions is the original complete mesh.
-        title='Bi full Gamma-centered SOC spin mesh' if a.chunks == 1 else f'Bi Gamma-centered SOC spin mesh: chunk {a.chunk_index+1}/{a.chunks}'
+        kind='spin' if a.stage == 'spin' else 'wavefunction'
+        title=f'Bi full Gamma-centered SOC {kind} mesh' if a.chunks == 1 else f'Bi Gamma-centered SOC {kind} mesh: chunk {a.chunk_index+1}/{a.chunks}'
         kpoints=f'{title}\n{len(indices)}\nReciprocal\n'
         kpoints+=''.join(f'{(n//ny)/nx:.16f} {(n%ny)/ny:.16f} 0.0 1.0\n' for n in indices)
     (a.output_dir/'KPOINTS').write_text(kpoints)
-    if a.stage == 'spin':
+    if a.stage != 'scf':
         if a.charge is None:restore_charge(a.output_dir/'CHGCAR',meta)
         else:shutil.copyfile(a.charge,a.output_dir/'CHGCAR')
-    names=['INCAR','KPOINTS','POSCAR','POTCAR']+(['CHGCAR'] if a.stage == 'spin' else [])
+    names=['INCAR','KPOINTS','POSCAR','POTCAR']+(['CHGCAR'] if a.stage != 'scf' else [])
     result=dict(status='PREPARED',stage=a.stage,mesh=[nx,ny,1],nbands=nb,occupied=10,
         fixed_geometry=True,spinor_components=2,
         chunk_count=a.chunks,chunk_index=a.chunk_index,npoints=len(indices),full_mesh_point_count=nx*ny,
-        point_count_scope='explicit KPOINTS rows' if a.stage == 'spin' else 'requested full mesh before VASP symmetry reduction',
+        point_count_scope='explicit KPOINTS rows' if a.stage != 'scf' else 'requested full mesh before VASP symmetry reduction',
         mesh_partition=dict(ordering='qx outer, qy inner',index_base=0,
             index_start=int(indices[0]),index_stop_exclusive=int(indices[-1])+1,
             rule='numpy.array_split of the ordered full mesh; earlier partitions receive any remainder',
             union='all chunk indices 0 through chunk_count-1 cover the full mesh once',
-            weights='equal KPOINTS weights; spin-merge restores 1/(NX*NY) on the complete mesh' if a.stage == 'spin' else 'VASP determines symmetry weights'),
+            weights=('equal KPOINTS weights; spin-merge restores 1/(NX*NY) on the complete mesh'
+                     if a.stage == 'spin' else 'equal KPOINTS weights; normalize on the complete mesh'
+                     if a.stage == 'wavecar' else 'VASP determines symmetry weights')),
         charge_source=('atomic initialization' if a.stage == 'scf' else 'supplied fresh SCF' if a.charge is None else 'user supplied; source compatibility must be checked'),
         input_sha256={n:sha(a.output_dir/n) for n in names},preparation_sha256=sha(Path(__file__)))
     (a.output_dir/'input_manifest.json').write_text(json.dumps(result,indent=2)+'\n')

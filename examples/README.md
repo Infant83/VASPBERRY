@@ -13,6 +13,10 @@ supported; the guides use descriptive task and option names.
 The core guides follow the same sequence: **VASP input → native command →
 output file → postprocessing and figure**. The [technical report](../docs/TECHNICAL_REPORT.md)
 explains the methods and material results ([PDF](../docs/TECHNICAL_REPORT.pdf)).
+The [report reproduction table](REPORT_REPRODUCTION.md) maps every report
+figure to its calculation, numerical files and input-regeneration requirements.
+Start with the [hands-on commands](../docs/HANDS_ON.md); use the compact
+[native command reference](../docs/NATIVE_COMMANDS.md) when changing task options.
 
 ## Choose a calculation
 

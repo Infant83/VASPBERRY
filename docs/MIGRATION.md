@@ -1,8 +1,40 @@
-# Migrating to the 1.3.0 source
+# Migrating to the 1.4.0 source
 
-Version 1.3.0 is available as a versioned source release. Preserve the exact producer
+Version 1.4.0 is available as a versioned source release. Preserve the exact producer
 version/commit and original files when migrating a calculation. The existing
 Fukui and Z2 command-line interfaces remain available.
+
+## Version 1.4.0 commands, projections and velocity fixes
+
+Use the [native reference](NATIVE_COMMANDS.md) and [hands-on tutorial](HANDS_ON.md)
+for the readable commands included in the fixed 1.4.0 tag; record the exact
+source commit. Original short flags remain supported. The serial executable
+is `build/vaspberry`; `build/vaspberry-gfortran` remains a compatibility name.
+
+The [PROCAR character tutorial](../examples/features/procar-character/) uses
+matching wavefunctions, explicit groups and the actual spin frame. Its
+projected-Hall command consumes already normalized native pair data. It does
+not apply the historical factor-of-two correction. Existing private scripts
+that divide legacy curvature by two must not be applied unchanged to these
+outputs. Historical reference files keep their original producer metadata.
+
+`--task kubo-pairs` now permits k-dependent stored occupations, including
+metallic/smeared WAVECAR inputs. It exports all source-band pair numerators,
+which contain no occupations. The later `pair-hall` command evaluates them at
+the requested chemical potential and temperature. There is no need to force
+an artificial `-ne` value just to export pairs. Existing checks in fixed-subspace
+modes remain in place; this is not permission to treat a metal as an insulator.
+
+Native `--task velocity` / `-vel 1` had an incorrect unit conversion from the
+electron rest energy and could print all values as zero at its fixed decimal
+precision. Its extrema code also used a k index after the loop, outside the
+allocated range. The corrected routine reports the bare canonical-momentum
+expectation in **m/s**, uses valid extrema indices, and prints scientific notation.
+Regenerate old `VEL_EXPT*.dat` from WAVECAR; do not infer physical zero velocity
+from those old rounded values. It remains a pseudo-wavefunction momentum
+diagnostic, not the full PAW/nonlocal/SOC/U group velocity. Separate Kubo
+curvature/pair kernels are unchanged by the velocity correction, and no new
+factor should be applied to their outputs.
 
 ## Legacy Kubo factor of two
 

@@ -41,22 +41,25 @@ material sanity check, not a nonzero valley-Hall demonstration.
 
 The main workflow has three explicit stages: native Fortran export, numerical
 postprocessing, and plotting. No Wannier model or custom VASP producer is
-needed. For the actual MoS₂ 12×12 reference WAVECAR, run from the repository
-root with a fresh result directory:
+needed. First generate the 24×24, 60-band MoS₂ WAVECAR with the
+[material tutorial](../examples/features/kubo-hall/#1-prepare-and-run-vasp).
+Run from the repository root with a fresh result directory:
 
 ```bash
 mkdir -p results/mos2-hall/native
-build/vaspberry --task kubo-pairs --wavecar WAVECAR --spinor 2 \
+build/vaspberry --task kubo-pairs \
+  --wavecar results/mos2-24-b60-vasp/WAVECAR --spinor 2 \
   --pairs-csv results/mos2-hall/native/PAIRS.csv
 
 python3 tools/vaspberry_kubo.py import-pairs \
-  --csv results/mos2-hall/native/PAIRS.csv --wavecar WAVECAR \
-  --spinor-components 2 --spin-multiplicity 1 --mesh 12 12 \
+  --csv results/mos2-hall/native/PAIRS.csv \
+  --wavecar results/mos2-24-b60-vasp/WAVECAR \
+  --spinor-components 2 --spin-multiplicity 1 --mesh 24 24 \
   --energy-reference 'unchanged VASP eigenvalue zero' \
   --output-dir results/mos2-hall/pairs
 
 python3 tools/vaspberry_kubo.py pair-hall \
-  --pairs-dir results/mos2-hall/pairs \
+  --pairs-dir results/mos2-hall/pairs --pair-band-max 40 \
   --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 121 \
   --mu-reference -0.43809870 --temperatures 0 300 \
   --degeneracy-policy coalesce --degeneracy-threshold-eV 1e-7 \
@@ -87,10 +90,29 @@ valid. JSON records units, operator, occupations, regions and diagnostics.
 CSV and DAT are readable tables; NPZ stores typed arrays. The plotter reads
 any of the three numerical formats without a conversion step.
 
+The numerical tools do not encode MoS₂, its occupied count, its valley
+coordinates or its energy zero. Those choices belong to the input data and
+the example commands. Keep the same cache when changing the following:
+
+| Question | Change only these `pair-hall` inputs |
+|---|---|
+| Response versus chemical potential or temperature | `--mu-min`, `--mu-max`, `--mu-num`, `--mu-reference`, `--temperatures` |
+| Different valleys, pockets or sampled patches | `--regions`; optionally `--difference NAME:LEFT:RIGHT` |
+| Intermediate-state cutoff on the same eigenstates | `--pair-band-max`, keeping complete occupied and degenerate groups |
+| Smaller temporary memory use | `--mu-chunk`; this does not change the physical model |
+
+Changing the Hamiltonian, structure, density, k mesh or available source
+bands requires new VASP states and a new export. Changing the plot style,
+axis range or selected curves requires only the completed conductivity
+table. It cannot produce an uncalculated temperature or region; rescan the
+pair cache for those. See the [independent plotting recipe](OUTPUT_FORMAT.md#read-and-plot-with-other-tools)
+for reading numerical results without importing any VASPBERRY modules.
+
 For MPI, replace the native command with:
 
 ```bash
-mpiexec -n 4 build/vaspberry-mpi --task kubo-pairs --wavecar WAVECAR \
+mpiexec -n 4 build/vaspberry-mpi --task kubo-pairs \
+  --wavecar results/mos2-24-b60-vasp/WAVECAR \
   --spinor 2 --pairs-csv results/mos2-hall/native/PAIRS.csv
 ```
 
@@ -112,6 +134,30 @@ Check the highest empty eigenstates themselves: convergence of the occupied
 total energy alone does not guarantee their accuracy. For nonmagnetic MoS₂,
 the equality of energies at k and −k provides a useful additional check.
 
+### Layer, orbital and spin character from PROCAR
+
+The [PROCAR example](../examples/features/procar-character/) adds atom/layer,
+orbital and chosen-axis spin attribution to the same native pair workflow.
+It uses the matching SOC `PROCAR`, `WAVECAR` and `OUTCAR`, user-defined atom
+groups and `tools/procar_character.py project`, `hall` and `plot`.
+The public analytic fixture makes the complete command sequence runnable
+without VASP; it is a software check, not a material benchmark.
+
+For selected isolated bands, the character tool weights canonical charge
+curvature with the measured state projections and scans occupations. Keep
+the unweighted selected-band response beside those channels. A selection
+containing only conduction bands describes that contribution, not the total
+filled-valence plus conduction response. Arbitrary overlapping atom/orbital
+groups do not form a partition. Read the normalization and spin-axis metadata
+when comparing their weights.
+
+This is a practical analysis of which states contribute to a charge response.
+It does not construct a spin-, layer- or orbital-current operator. SOC spin
+projections also do not create independent up/down eigenvalue channels.
+Exactly degenerate states cannot generally be assigned a unique individual
+projection-weighted curvature; use the documented isolation checks rather
+than interpreting an arbitrary eigensolver basis as a physical decomposition.
+
 ## WAVECAR to charge Hall in one command
 
 The optional `wavecar-hall` wrapper executes and records the same native export,
@@ -120,8 +166,9 @@ work; the separate commands above expose each stage directly:
 
 ```bash
 python3 tools/vaspberry_kubo.py wavecar-hall \
-  --wavecar WAVECAR --binary build/vaspberry \
-  --spinor-components 2 --spin-multiplicity 1 --mesh 12 12 \
+  --wavecar results/mos2-24-b60-vasp/WAVECAR --binary build/vaspberry \
+  --spinor-components 2 --spin-multiplicity 1 --mesh 24 24 \
+  --pair-band-max 40 \
   --energy-reference 'unchanged VASP eigenvalue zero' \
   --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 121 \
   --mu-reference -0.43809870 --temperatures 0 300 \

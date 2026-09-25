@@ -4,8 +4,16 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-25
+
 ### Added
 
+- General SOC PROCAR character postprocessing with named atom/layer/orbital
+  groups, an explicit spin axis and the actual OUTCAR spin-frame rotation.
+  Matching native pair caches support selected-band projected charge-Hall
+  scans and reusable numerical outputs and plots. An analytic public fixture
+  gives step-by-step commands; conventional spin-current Hall is a separate
+  observable.
 - Readable native Fortran task and input aliases, including `--task chern`,
   `z2`, `kubo` and `kubo-pairs`, with argument validation. Existing short
   options and numerical methods remain available.
@@ -16,6 +24,14 @@ All notable changes to VASPBERRY are recorded here.
 
 ### Fixed
 
+- Export Kubo pairs from metallic or smeared states without requiring a fixed
+  rounded occupation count across k points. Pair numerators do not use source
+  occupations; fixed-subspace checks in other native modes are retained.
+- Correct native canonical-momentum velocity output to m/s, fix extrema
+  indexing after the k loop, and use scientific notation. Older velocity
+  files may contain rounded zeros or invalid extrema and must be regenerated;
+  this correction does not change the separate Kubo kernels.
+
 - Reject incompatible occupied-bundle and spinor metadata before plotting
   native Z₂ fields. Numerical topology routines are unchanged.
 - Populate Fukui MPI output-header curvature extrema and their k points from
@@ -24,6 +40,13 @@ All notable changes to VASPBERRY are recorded here.
   grids with fewer than five z points. The reconstruction formula is unchanged.
 
 ### Documentation
+
+- Add a native command/output reference and a hands-on calculation → saved
+  data → independent plotting tutorial, with explicit reusable Kubo scans.
+- Prepare ordinary Bi WAVECAR inputs without the optional PAW spin producer;
+  clarify which report examples need VASP regeneration versus saved results.
+- Document generic postprocessing and PROCAR attribution, with explicit
+  spin/layer/orbital-current scope and optional-producer limits for DFT+U.
 
 - Pair direct-WAVECAR MoS₂ Z₂ = 0 and Bi Z₂ = 1 results in the technical
   report and feature examples, with native n-field data and reproduction commands.
@@ -382,6 +405,12 @@ All notable changes to VASPBERRY are recorded here.
   does not turn a rejected point into a validated conductivity.
 
 ### Z2 interface and result status
+
+Historical interface: the following Wilson-loop command belongs to this
+earlier 1.1.0 release. `tools/wavecar_z2.py` is retired from the current
+source. For version1.4.0 use native `--task z2` and the
+[current Fukui–Hatsugai guide](docs/Z2_FUKUI_HATSUGAI.md); the old command and
+output names below are retained as release history.
 
 Run the guarded class-AII calculation on a uniform full reciprocal mesh with,
 for example:

@@ -32,6 +32,29 @@ conductivity. Charge Hall and spin Hall have distinct current operators.
 Weighting charge Berry curvature by a band's spin expectation is generally
 insufficient in SOC systems.
 
+The current audited full-matrix VASP producer excludes Hubbard U,
+hybrid/meta-GGA functionals and MPI; see its [supported build and Hamiltonian
+contract](../tools/vasp544_spin_bridge/README.md). A successful ordinary
+WAVECAR calculation for a DFT+U material therefore does not establish that
+this physical spin-current route supports that material. Keep the original
+Hamiltonian when comparing operators; removing U merely to use this producer
+would calculate a different system.
+
+PROCAR layer, atom, orbital or spin projections describe state character.
+Multiplying charge curvature by such weights produces a character-weighted
+charge attribution, not a conventional spin, layer or orbital Hall current.
+Use the [PROCAR character workflow](../examples/features/procar-character/)
+for that attribution: `tools/procar_character.py project` reads matching SOC
+PROCAR/WAVECAR/OUTCAR and user-defined atom/orbital groups; `hall` combines
+the saved character with native Kubo pairs for selected isolated bands;
+`plot` reads the finished numerical outputs. A chosen spin axis identifies
+spin projections within a mixed SOC state, not independent up/down SOC
+eigenvalue channels. No physical layer-current or orbital-current operator
+is implemented by this attribution.
+For charge transport resolved by user-defined reciprocal-space pockets,
+use the [general region interface](OUTPUT_FORMAT.md#user-defined-reciprocal-space-regions)
+instead; it does not require a spin matrix or Wannier model.
+
 ## Spin from WAVECAR and PAW
 
 For two-component coefficients $`c_{n\mathbf Gs}`$, the raw matrix is

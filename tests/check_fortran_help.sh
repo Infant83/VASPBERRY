@@ -22,6 +22,10 @@ for required in \
   "-kubo_bundle 1" \
   "-kubo_pairs PATH" \
   "No gap division or occupations." \
+  "Source occupations may vary with k." \
+  "CSV options name exact files; parent dirs must exist." \
+  "Legacy DAT files may be replaced: use a fresh cwd." \
+  "Reference and output names: docs/NATIVE_COMMANDS.md." \
   "External gaps must exceed 1e-5 eV." \
   "Writes bundle CSV only; default 0." \
   "Fukui-Hatsugai n-field Z2 index" \

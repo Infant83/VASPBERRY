@@ -192,15 +192,21 @@ recipes, and numerical comparisons remain explicitly manual checks.
 
 VASPBERRY reads `WAVECAR` with unformatted direct access. The writer and reader
 must therefore agree on the meaning of `RECL`. GNU Fortran uses byte file
-storage units for this build. Intel builds must keep `-assume byterecl`; without
-it, the same integer record length may be interpreted in four-byte units.
+storage units for this build. The supplied Intel targets also use
+`-assume byterecl` for this byte-RECL input contract; without it, the same
+integer record length may be interpreted in four-byte units.
 The source explicitly opens both header and data views with
 `FORM='UNFORMATTED'` and `ACTION='READ'`.
 
 A record-length mismatch can leave the first header partly plausible while
 making `NKPOINT`, `NBANDS`, `ENCUT`, or lattice data invalid. The sound fix is
-to rebuild the reader with the writer's byte convention and regenerate the
-`WAVECAR`, not to tune scientific thresholds around corrupt input.
+to match the reader to the writer's record convention or regenerate the
+`WAVECAR` with the byte convention used by the supplied builds. Historical
+four-byte-word-RECL files need a matching validated Intel build or a regenerated
+byte-RECL input; the native GNU executable does not autodetect that convention.
+The Python WAVECAR reader identifies both layouts, which does not change the
+native executable's file contract. Do not tune scientific thresholds around
+corrupt input.
 
 The source calls `ZGESVD` and `ZGETRF` with default 32-bit Fortran integers.
 Use the LP64 BLAS/LAPACK interface. Do not add GNU

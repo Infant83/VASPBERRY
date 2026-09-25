@@ -1,12 +1,16 @@
-"""Compile the actual native parser: aliases must preserve legacy dispatch.
+"""Native aliases and full-executable output contracts.
 
-The material WAVECAR equivalence run is recorded separately in runs/; these
-small tests require only gfortran and exercise rejection before any file I/O.
+Parser tests reject malformed commands before file I/O. Independent tiny
+WAVECAR fixtures check occupation-free pairs and SI velocity expectations;
+actual material equivalence runs are recorded separately in runs/.
 """
 import re
 import os
 import time
 import shutil
+import struct
+import cmath
+import math
 import subprocess
 import tempfile
 import unittest
@@ -159,6 +163,118 @@ class NativeCliTests(unittest.TestCase):
     def test_standalone_help_is_success(self):
         self.assertIn("HELP", self.run_parser(["--help"]).stdout)
         self.assertIn("HELP", self.run_parser(["-h"]).stdout)
+
+
+@unittest.skipUnless(shutil.which("gfortran"), "gfortran required for native execution")
+class NativeExecutionTests(unittest.TestCase):
+    """Run the complete executable on independent, tiny WAVECAR records.
+
+    Pair vertices do not use occupations, unlike automatic occupied-subspace
+    selection. These are format/dispatch fixtures, not material calculations.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.temp = tempfile.TemporaryDirectory(prefix="vaspberry-native-pair-occupations-")
+        cls.work = Path(cls.temp.name)
+        cls.binary = cls.work / "vaspberry"
+        built = subprocess.run([
+            "gfortran", "-cpp", "-O0", "-fcheck=all", "-ffixed-line-length-none",
+            "-fallow-argument-mismatch", str(ROOT / "vaspberry.f"),
+            "-llapack", "-lblas", "-o", str(cls.binary),
+        ], capture_output=True, text=True)
+        if built.returncode:
+            raise AssertionError(built.stdout + built.stderr)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.temp.cleanup()
+
+    def write_fixture(self, path, variable_occupations, spinor_components=2):
+        stride, nk, nb = 512, 2, 2
+        data = bytearray(stride * (2 + nk * (nb + 1)))
+        struct.pack_into("<3d", data, 0, stride, 1, 45200)
+        struct.pack_into("<12d", data, stride, nk, nb, 120.,
+                         1., 0., 0., 0., 1., 0., 0., 0., 1.)
+        for ik, point in enumerate([(0., 0., 0.), (.25, .25, 0.)]):
+            # Independently enumerate the scalar plane waves; double for SOC.
+            count = sum(sum((2 * math.pi * (point[j] + g[j])) ** 2 for j in range(3))
+                        / .262465831 < 120.
+                        for g in [(x, y, z) for x in range(-2, 3)
+                                  for y in range(-2, 3) for z in range(-2, 3)])
+            npw = spinor_components * count
+            record = 2 + ik * (nb + 1)
+            occ = .1 if ik == 1 and variable_occupations else 1.
+            struct.pack_into("<10d", data, record * stride,
+                             npw, *point, -1., 0., occ, 1., 0., 0.)
+            for band in range(nb):
+                # Two orthonormal Fourier states over the retained coefficients.
+                for ipw in range(npw):
+                    coeff = cmath.exp(2j * math.pi * band * ipw / npw) / math.sqrt(npw)
+                    struct.pack_into("<2f", data, (record + 1 + band) * stride + ipw * 8,
+                                     coeff.real, coeff.imag)
+        path.write_bytes(data)
+
+    def test_pairs_ignore_source_occupations_but_subspace_guard_remains(self):
+        outputs = []
+        for variable in (False, True):
+            case = self.work / ("variable" if variable else "uniform")
+            case.mkdir()
+            self.write_fixture(case / "WAVECAR", variable)
+            result = subprocess.run([
+                str(self.binary), "--task", "kubo-pairs", "--wavecar", "WAVECAR",
+                "--spinor", "2", "--pairs-csv", "PAIRS.csv",
+            ], cwd=case, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("Source occupations: not used for pair export", result.stdout)
+            outputs.append((case / "PAIRS.csv").read_bytes())
+            self.assertTrue(outputs[-1].endswith(b"# result_status=PASS\n"))
+        self.assertEqual(outputs[0], outputs[1])
+        # Pair independence must not loosen the occupied-subspace validation.
+        result = subprocess.run([
+            str(self.binary), "--task", "chern", "--mesh", "2,1", "--bands", "1",
+        ], cwd=self.work / "variable", capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("inconsistent occupations", result.stderr)
+
+    def test_velocity_matches_independent_si_plane_wave_expectation(self):
+        for spinor in (1, 2):
+            with self.subTest(spinor=spinor):
+                self.check_velocity(spinor)
+
+    def check_velocity(self, spinor):
+        case = self.work / f"velocity-{spinor}"
+        case.mkdir()
+        self.write_fixture(case / "WAVECAR", False, spinor_components=spinor)
+        result = subprocess.run([
+            str(self.binary), "--task", "velocity", "--bands", "1",
+            "--spinor", str(spinor), "--mesh", "2,1", "-kp", "1",
+        ], cwd=case, capture_output=True, text=True)
+        # Full executable is compiled with -fcheck=all: this also guards the
+        # historical extrema calculation reading ik=nk+1 after the k loop.
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        output = (case / "VEL_EXPT.dat").read_text()
+        rows = [list(map(float, line.split())) for line in output.splitlines()
+                if line.strip() and not line.startswith("#")]
+        self.assertEqual(len(rows), 2)
+        # At k=(1/4,1/4,0), the equally weighted G are 0,-x,-y. Thus
+        # <kx>=<ky>=-pi/6 A^-1. Use SI constants, independent of the
+        # production conversion through electron rest energy in eV.
+        hbar_si, mass_si = 1.054571817e-34, 9.1093837015e-31
+        amplitude = struct.unpack("<f", struct.pack("<f", 1 / math.sqrt(3 * spinor)))[0]
+        expected = hbar_si / mass_si * 1.e10 * (-math.pi / 6) * (3 * spinor * amplitude**2)
+        for row in rows:
+            target = expected if abs(row[5] - .25) < 1.e-6 else 0.
+            self.assertAlmostEqual(row[3], target, delta=5.e-2)
+            self.assertAlmostEqual(row[4], target, delta=5.e-2)
+        self.assertGreater(abs(expected), 1.e4)
+        for axis in ("x", "y"):
+            min_line = next(line for line in output.splitlines()
+                            if f"MINVAL of VEL_EXPT <v_{axis}>" in line)
+            max_line = next(line for line in output.splitlines()
+                            if f"MAXVAL of VEL_EXPT <v_{axis}>" in line)
+            self.assertAlmostEqual(float(min_line.split()[-1]), expected, delta=5.e-2)
+            self.assertAlmostEqual(float(max_line.split()[-1]), 0., delta=1.e-6)
 
 
 if __name__ == "__main__":

@@ -58,7 +58,7 @@ VASPBERRY's own dense Wannier calculation without rerunning the external
 response solver. The guide distinguishes this model input from the direct
 WAVECAR/WAVEDER routes and retains postw90 as an independent comparison.
 
-## Prepare the Bi PAW spin and velocity inputs
+## Prepare fresh Bi wavefunctions and optional PAW operators
 
 The [Bi spin Hall example](materials/bi-spin-hall/) starts from its own fresh
 SCF density and fixed two-atom geometry. `prepare_vasp.py` restores the split
@@ -66,7 +66,14 @@ compressed CHGCAR, checks its identity and prepares a full explicit mesh with
 your matching licensed Bi POTCAR. Its `--stage scf` option prepares regeneration
 of that density. These inputs are separate from the historical Bi_Z2 archive.
 
-Use the [audited producer recipe](../tools/vasp544_spin_bridge/) to build a
+For native Z₂ or Chern alone, select `--stage wavecar` and run ordinary
+noncollinear VASP. This prepares the same complete fixed-density mesh while
+omitting optional optical and spin/velocity exports. The
+[native Bi steps](materials/bi-spin-hall/#3-fukui-z₂-and-the-n-field) show
+preparation, VASP execution, the native Z₂ command and plotting separately.
+
+For physical PAW spin and full velocity, use `--stage spin` (the retained
+default) and the [audited producer recipe](../tools/vasp544_spin_bridge/) to build a
 serial complex noncollinear executable from the supported locally licensed
 VASP source. `spin-export` converts its completed same-run output into physical
 spin and velocity matrices; `spin-merge` assembles compatible fixed-charge

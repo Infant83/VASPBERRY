@@ -14,8 +14,10 @@ class Z2VersionCompatibilityTests(unittest.TestCase):
         original = GOLDEN.read_text()
         with tempfile.TemporaryDirectory() as work:
             path = Path(work) / "current.csv"
-            path.write_text(original.replace("# vaspberry_version=1.2.0", "# vaspberry_version=1.3.0"))
-            compare_z2_fields(load_z2_field(GOLDEN), load_z2_field(path), rtol=1e-11, atol=1e-12)
+            for version in ("1.3.0", "1.4.0"):
+                with self.subTest(version=version):
+                    path.write_text(original.replace("# vaspberry_version=1.2.0", f"# vaspberry_version={version}"))
+                    compare_z2_fields(load_z2_field(GOLDEN), load_z2_field(path), rtol=1e-11, atol=1e-12)
         self.assertEqual(GOLDEN.read_text(), original)
 
     def test_unreviewed_producer_version_is_rejected(self):

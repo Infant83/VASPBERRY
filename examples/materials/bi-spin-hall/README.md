@@ -172,22 +172,45 @@ run concurrently within available CPU and memory limits.
 
 ## 3. Fukui Z₂ and the n-field
 
-With the new full-mesh WAVECAR from the preceding step:
+The native invariant needs only an ordinary full-mesh WAVECAR. To generate
+it without the optional spin/velocity producer, restore the same fresh SCF
+density and prepare a complete 12×12 calculation with ordinary VASP:
+
+```bash
+python3 examples/materials/bi-spin-hall/prepare_vasp.py \
+  --stage wavecar --potcar /path/to/matching/Bi/POTCAR \
+  --mesh 12 12 --nbands 48 --output-dir results/bi/wavecar12
+
+( cd results/bi/wavecar12 && /path/to/vasp_ncl > vasp.stdout.log 2> vasp.stderr.log )
+```
+
+This stage keeps the reference structure, density, SOC Hamiltonian and
+electronic convergence controls, and omits optical and physical-matrix
+exports. Confirm VASP reached `EDIFF` and ended normally. A different VASP
+build or eigenvector gauge can change the local n-field tiles; the gap,
+half-zone agreement and Z₂ parity are the relevant reproduction checks.
+
+Then run the native executable and plot its completed field:
 
 ```bash
 make serial
 mkdir -p results/bi/z2
 (
   cd results/bi/z2
-  ../../../build/vaspberry-gfortran \
-    -f ../assembled12/WAVECAR -o NFIELD -z2 1 \
-    -kx 12 -ky 12 -s 2 -ii 1 -if 10
+  ../../../build/vaspberry --task z2 \
+    --wavecar ../wavecar12/WAVECAR --output NFIELD \
+    --mesh 12,12 --spinor 2 --bands 1:10 > vaspberry.log
 )
 python3 examples/features/z2/run.py \
   --plot-only results/bi/z2/Z2_FIELD.csv \
   --poscar examples/materials/bi-spin-hall/inputs/POSCAR \
   --figure results/bi/z2/figure.png
 ```
+
+If the optional PAW calculation from Section 2 is already complete, replace
+`../wavecar12/WAVECAR` with `../assembled12/WAVECAR` and reuse those same
+states. That is the source of the distributed fresh Bi reference field;
+the ordinary stage above does not require assembling physical operators.
 
 The fresh reference gives **Z₂ = 1**, with half-zone n-field sums **−3 and +3**
 (see also the [separate occupied-bundle Chern check](reference/fukui/README.md)).
