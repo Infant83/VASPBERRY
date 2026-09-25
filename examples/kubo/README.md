@@ -3,7 +3,7 @@
 For actual VASP input → VASPBERRY → reference results, start with the
 [user tutorials](../README.md). This directory retains the generic CSV plotter.
 
-The [Kubo transport guide](../../docs/KUBO_TRANSPORT.md#public-demonstration)
+The [Kubo transport guide](../../docs/KUBO_TRANSPORT.md#developer-analytic-check-separate-from-vasp-tutorials)
 also documents a developer QWZ analytic check: `demo` → `matrix` → `hall`.
 It needs no VASP input, licensed potential or material-specific setting. Run
 those commands from the repository root to create `results/qwz-hall/`.

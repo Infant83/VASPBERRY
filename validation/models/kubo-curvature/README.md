@@ -16,17 +16,22 @@ uses this folder's small [model_tools.py](model_tools.py) helper.
 
 The QWZ Hamiltonian is
 
-```text
-H = sin(kx) sigma_x + sin(ky) sigma_y + (m + cos(kx) + cos(ky)) sigma_z
-m = -1; lattice constant = 1 Angstrom; energy coefficient = 1 eV
+```math
+H(k_x,k_y)=\sin(k_x)\sigma_x+\sin(k_y)\sigma_y
++\left[m+\cos(k_x)+\cos(k_y)\right]\sigma_z,\qquad m=-1.
 ```
 
-With `A = +i<u|d u>` and ordered axes `(kx, ky)`, the analytic lower-band
+The lattice constant is 1 Angstrom and the energy coefficient is 1 eV.
+The coefficient vector is $`\mathbf d=(\sin k_x,\sin k_y,m+\cos k_x+\cos k_y)`$.
+
+With $`A=+i\langle u|\mathrm d u\rangle`$ and ordered axes $`(k_x,k_y)`$, the analytic lower-band
 curvature is
 
-```text
-Omega_lower = [cos(kx) + cos(ky) + m cos(kx) cos(ky)] / (2 |d|^3)
-Omega_upper = -Omega_lower
+```math
+\begin{aligned}
+\Omega_{\mathrm{lower}}&=\frac{\cos(k_x)+\cos(k_y)+m\cos(k_x)\cos(k_y)}{2|\mathbf d|^3},\\
+\Omega_{\mathrm{upper}}&=-\Omega_{\mathrm{lower}}.
+\end{aligned}
 ```
 
 `Omega` has units Angstrom². The continuum band Chern numbers are **+1, −1**;
