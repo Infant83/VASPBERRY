@@ -1,6 +1,6 @@
 # Migrating to the 1.3.0 source
 
-Version 1.3.0 is an unreleased source candidate. Preserve the exact producer
+Version 1.3.0 is available as a versioned source release. Preserve the exact producer
 version/commit and original files when migrating a calculation. The existing
 Fukui and Z2 command-line interfaces remain available.
 
@@ -109,6 +109,8 @@ data retain their original versions. The CFF schema version is independent
 of the software version.
 
 The 2018 DOI `10.5281/zenodo.1402593` identifies VASPBERRY V1.0. It is not a
-new DOI for this candidate. No 1.3.0 Git tag, hosted release or binary is
-published by the local source change. Cite the software version, exact commit
-and method references appropriate to the calculation.
+DOI for version 1.3.0. Use the immutable
+[`v1.3.0` release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.3.0)
+for version-pinned source, or `master` for current source. Build binaries locally.
+Cite the software version, exact commit and method references appropriate to
+the calculation; see the [version policy](RELEASING.md).

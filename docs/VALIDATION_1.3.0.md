@@ -1,7 +1,21 @@
-# Local validation of the 1.3.0 development candidate
+# Validation of VASPBERRY 1.3.0
 
-Initial checks on 2026-09-19; scientific examples and transport checks updated through 2026-09-25. This is a local source validation, not a hosted release
-or a completed material-convergence study.
+Initial checks on 2026-09-19; scientific examples and transport checks updated
+through 2026-09-25. The records distinguish local tests, hosted CI and material
+convergence. A software release does not establish converged material results.
+
+## Released source and hosted checks
+
+The scientific source merged in PR26 passed
+[main CI](https://github.com/Infant83/VASPBERRY/actions/runs/36099945120)
+and [actual Bi serial/MPI validation](https://github.com/Infant83/VASPBERRY/actions/runs/36099945091)
+on commit `9c92e45aca15ede6b6438304805f506ee5ddd49c`: all nine jobs succeeded.
+Hosted Python 3.10/3.12 each ran 453 tests with two MPI-dependent skips;
+separate GNU/OpenMPI jobs and the actual Bi two-rank calculation passed.
+The release preparation changes documentation, metadata, PDF links and
+release automation. Publication verifies that the scientific source and
+reference data remain identical to that tested commit, and requires CI on
+the release commit itself. See the [release notes](releases/v1.3.0.md).
 
 The latest local optical/full-velocity update passed **453 tests with no skips**,
 including the compiled MPI checks. Earlier counts below describe their

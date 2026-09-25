@@ -2,7 +2,7 @@
 
 All notable changes to VASPBERRY are recorded here.
 
-## [1.3.0] - Unreleased
+## [1.3.0] - 2026-09-25
 
 ### Added
 
@@ -144,8 +144,9 @@ All notable changes to VASPBERRY are recorded here.
 - The charge Hall commands compute a two-dimensional intrinsic **charge**
   sheet response. The separate `spin-hall` command adds conventional spin
   sheet response for insulating T=0 bundles; no 3D bulk conversion is inferred.
-- `VERSION` identifies an unreleased source candidate. No v1.3.0 Git tag,
-  GitHub Release, new DOI or published binary is created by this change.
+- Source release `v1.3.0` fixes this version's code, documentation and examples
+  under an immutable Git tag and GitHub Release. The default branch is `master`.
+  Build executables locally; no new DOI or prebuilt binary is assigned.
 
 ## [1.2.0] - 2026-09-04
 

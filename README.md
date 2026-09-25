@@ -1,24 +1,44 @@
 # VASPBERRY
-Berry curvature, Chern number, two-dimensional intrinsic charge Hall transport,
-and two-dimensional Z2 calculations. VASPBERRY reads VASP `WAVECAR`
-wavefunctions and exported interband matrices. It implements the discrete Brillouin-zone
+Berry curvature, Chern number, two-dimensional Z2 topology, intrinsic charge
+Hall transport, conventional insulating spin Hall response, and optical
+transition analysis. VASPBERRY reads VASP `WAVECAR` wavefunctions and exported
+matrices; VASP-derived Wannier operators also support interpolation and Hall
+integration. It implements the discrete Brillouin-zone
 method of [Fukui, Hatsugai, and Suzuki, J. Phys. Soc. Jpn. 74, 1674
 (2005)](https://doi.org/10.1143/JPSJ.74.1674), together with circular
 dichroism and real-space wavefunction output.
 
-**Version 1.3.0 — development version.**
+**Version 1.3.0 — [source release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.3.0).**
 
 [Technical report](docs/TECHNICAL_REPORT.md) ([PDF](docs/TECHNICAL_REPORT.pdf)) · [Examples](examples/README.md) · [Installation](docs/BUILD.md)
 See the [1.3.0 notes](docs/releases/v1.3.0.md) and
 [migration guide](docs/MIGRATION.md) for the legacy Kubo factor-of-two fix.
 
-# Download Git version
-The examples below are on the unreleased development branch:
+# Download
+
+Clone the current default branch, `master`, which includes the examples below:
 
 ```bash
-git clone --branch feature/general-kubo-1.3 https://github.com/Infant83/VASPBERRY.git
+git clone https://github.com/Infant83/VASPBERRY.git
 cd VASPBERRY
 ```
+
+For a calculation that must remain on version 1.3.0, use its release tag:
+
+```bash
+git clone --branch v1.3.0 --single-branch https://github.com/Infant83/VASPBERRY.git VASPBERRY-1.3.0
+cd VASPBERRY-1.3.0
+```
+
+The [release page](https://github.com/Infant83/VASPBERRY/releases/tag/v1.3.0)
+also provides source ZIP and tar archives. The Bi WAVECAR is stored with Git
+LFS; an archive may contain a pointer. Use the input-fetch command below or
+follow the [input guide](examples/INPUTS.md) to obtain the actual wavefunctions.
+Build executables locally with the commands below.
+
+To update an existing `master` checkout, run `git pull --ff-only`. A release
+tag stays fixed. Record `git describe --tags --always --dirty` with your
+calculation; see the [version policy](docs/RELEASING.md).
 
 # Compile
 

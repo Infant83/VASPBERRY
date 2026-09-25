@@ -9,11 +9,11 @@ retained `ifort`; Intel MPI and numerical validation remain manual.
 
 | Build | Source | Command | Validation status |
 |---|---|---|---|
-| GNU serial | `vaspberry.f` without `MPI_USE` | `make serial` | Local 1.3 candidate build/help and numerical regression tested; GNU CI jobs are configured for Ubuntu 22.04 and 24.04 |
+| GNU serial | `vaspberry.f` without `MPI_USE` | `make serial` | 1.3.0 local numerical regression and GNU 11/13 CI pass on Ubuntu 22.04/24.04 |
 | GNU + Open MPI | `vaspberry.f` | `make mpi` | CI builds it and exercises two-rank help, `MPI_DOUBLE_PRECISION` reduction, and result-status broadcast |
-| Intel `ifx` serial | `vaspberry.f` without `MPI_USE` | `make ifx` | Configured CI compile/help target with `ifx` 2025.0 and system LP64 BLAS/LAPACK; candidate CI/numerical test still required |
+| Intel `ifx` serial | `vaspberry.f` without `MPI_USE` | `make ifx` | 1.3.0 CI compile/help passes with `ifx` 2025.0 and system LP64 BLAS/LAPACK; numerical validation remains manual |
 | Intel `ifx` + Intel MPI | `vaspberry.f` | `make ifx-mpi` | Build recipe reviewed; manual test required on a oneAPI host |
-| Intel Classic `ifort` | `vaspberry.f`, optionally with `MPI_USE` | `make ifort` or `make ifort-mpi` | Local candidate serial build tested; configured CI serial target uses `ifort` 2021.10; Intel MPI remains manual |
+| Intel Classic `ifort` | `vaspberry.f`, optionally with `MPI_USE` | `make ifort` or `make ifort-mpi` | Local serial build and CI compile/help pass with `ifort` 2021.10; Intel numerical/MPI validation remains manual |
 
 Starting with 1.3.0, default serial and MPI builds share the current source,
 including the Kubo commands. To reproduce the historical reduced serial
@@ -23,8 +23,8 @@ implementation explicitly (it has no Kubo mode), use a separate build directory:
 make serial SERIAL_SOURCE=vaspberry_gfortran_serial.f BUILD_DIR=build-legacy
 ```
 
-The local candidate checks do not imply that a new remote CI run or a release
-has been published.
+The [1.3.0 release notes](releases/v1.3.0.md) link the validation runs and
+distinguish compiler smoke tests from actual numerical and MPI comparisons.
 
 Intel discontinued `ifort` in the oneAPI 2025 release and recommends `ifx` for
 continued support. Retaining an `ifort` recipe helps older clusters, but new
