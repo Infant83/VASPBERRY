@@ -81,22 +81,22 @@ The Cartesian beam direction is normalized to **b**. The projection of
 `--polarization-axis` onto its transverse plane defines **e₁**, and
 **e₂** = **b** × **e₁**. Thus:
 
-\[
+```math
 \boldsymbol\epsilon_\pm=(\mathbf e_1\pm i\mathbf e_2)/\sqrt2,
 \qquad
-\mathbf E(\mathbf r,t)=\operatorname{Re}
+\mathbf E(\mathbf r,t)=\mathrm{Re}
   [E_0\boldsymbol\epsilon_\pm e^{i(\mathbf q\cdot\mathbf r-\omega t)}].
-\]
+```
 
-With final-state bra \(f\), initial-state ket \(i\), and the stored length
-matrix \(C^a_{fi}\), a complete initial group \(I\) and final group \(F\) give
+With final-state bra $`f`$, initial-state ket $`i`$, and the stored length
+matrix $`C^a_{fi}`$, a complete initial group $`I`$ and final group $`F`$ give
 
-\[
+```math
 I_\pm(\mathbf k;I,F)=\sum_{i\in I,f\in F}
   \left|\sum_a\epsilon_{\pm,a}C^a_{fi}(\mathbf k)\right|^2,
 \qquad
 \eta=\frac{I_+-I_-}{I_++I_-}.
-\]
+```
 
 The polarization vector is **not conjugated** in this contraction. The common
 phase between the stored connection and dipole matrix cancels in the squared
@@ -133,7 +133,7 @@ cell-volume factor or k weight. Their absolute intensity is therefore not the
 native `-cd 2` intensity scale. Compare selection rules or explicitly convert
 the two normalizations before comparing numerical intensities.
 
-The default mask requires the total intensity to exceed \(10^{-10}\) of the
+The default mask requires the total intensity to exceed $`10^{-10}`$ of the
 largest total at the same k, using separate maxima for transition and spectral
 tables. Zero intensity is always invalid. Such rows have `eta_valid=false`
 and `eta=NaN`; do not plot them as η = 0. Adjust

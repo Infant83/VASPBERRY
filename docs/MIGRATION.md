@@ -9,9 +9,9 @@ Fukui and Z2 command-line interfaces remain available.
 The older Fortran Kubo path formed circular matrix elements `Px+iPy` and
 `Px-iPy` without the `1/sqrt(2)` normalization. Their squared difference is
 
-\[
-|P_x+iP_y|^2-|P_x-iP_y|^2=4\operatorname{Im}(P_xP_y^*).
-\]
+```math
+|P_x+iP_y|^2-|P_x-iP_y|^2=4\mathrm{Im}(P_xP_y^*).
+```
 
 Consequently, its negated numerator contained `-4 Im` instead of the standard
 `-2 Im` for `A=i<u|grad_k u>`. The corrected 1.3.0 Kubo path uses the standard

@@ -27,21 +27,21 @@ The Fukui–Hatsugai–Suzuki method evaluates the Berry phase around each cell
 of a periodic k mesh using overlaps between neighboring wavefunctions.
 For an isolated group of bands, the overlap is a matrix and its determinant
 gives a gauge-invariant loop phase. With the connection
-$\mathbf A=i\langle u|\nabla_\mathbf{k}u\rangle$ used here,
+$`\mathbf A=i\langle u|\nabla_\mathbf{k}u\rangle`$ used here,
 
-$$
+```math
 \Phi_p=-\arg\!\left(U_1(\mathbf k)
 U_2(\mathbf k+\Delta\mathbf k_1)
 U_1(\mathbf k+\Delta\mathbf k_2)^{-1}
 U_2(\mathbf k)^{-1}\right),\qquad
 \overline\Omega_p=\frac{\Phi_p}{\Delta S_k}.
-$$
+```
 
-The normalized link $U_j$ is the phase of the overlap determinant.
-$\Delta S_k=|\mathbf b_1\times\mathbf b_2|/(N_1N_2)$ is the area of a mesh
-cell, with reciprocal vectors containing $2\pi$. Thus $\Phi_p$ is a phase
-and $\overline\Omega_p$ is an area-averaged curvature in Å². The Chern number
-is $C=(2\pi)^{-1}\sum_p\Phi_p$. An isolated occupied group can include internal
+The normalized link $`U_j`$ is the phase of the overlap determinant.
+$`\Delta S_k=|\mathbf b_1\times\mathbf b_2|/(N_1N_2)`$ is the area of a mesh
+cell, with reciprocal vectors containing $`2\pi`$. Thus $`\Phi_p`$ is a phase
+and $`\overline\Omega_p`$ is an area-averaged curvature in Å². The Chern number
+is $`C=(2\pi)^{-1}\sum_p\Phi_p`$. An isolated occupied group can include internal
 degeneracies; its separation from excluded bands remains essential.
 The discrete construction and its band-group extension are described by
 [Fukui, Hatsugai and Suzuki](https://doi.org/10.1143/JPSJ.74.1674).
@@ -54,12 +54,12 @@ a physically appropriate isolated band group.
 ### 1.2 Kubo curvature and Hall conductivity
 
 For an isolated band and a Cartesian Hamiltonian derivative
-$D_\alpha=\partial H/\partial k_\alpha$,
+$`D_\alpha=\partial H/\partial k_\alpha`$,
 
-$$
+```math
 \Omega_{n,xy}(\mathbf k)=-2\,\mathrm{Im}
 \sum_{m\ne n}\frac{D_{x,nm}D_{y,mn}}{(E_n-E_m)^2}.
-$$
+```
 
 This form resolves curvature at each sampled k point. Sharp curvature near
 small gaps makes the k sampling and intermediate-band window particularly
@@ -77,13 +77,13 @@ matrices. These input routes and their distinct scopes are summarized in the
 [operator guide](OPERATOR_ROUTES.md). A more complete operator addresses an
 operator approximation; its k-mesh and band-window convergence must still be tested.
 
-For an isolated occupied bundle $\mathcal V$, the trace curvature is
+For an isolated occupied bundle $`\mathcal V`$, the trace curvature is
 
-$$
+```math
 \Omega^{\mathcal V}_{xy}=-2\,\mathrm{Im}
 \sum_{n\in\mathcal V}\sum_{m\notin\mathcal V}
 \frac{D_{x,nm}D_{y,mn}}{(E_n-E_m)^2}.
-$$
+```
 
 Internal occupied-pair terms cancel in the sum of band curvatures. Excluding
 them before division avoids singular individual-band terms at internal
@@ -93,23 +93,23 @@ given by [Wang et al., Eq. (11) and Sec. III D](https://doi.org/10.1103/PhysRevB
 
 For a two-dimensional system, the intrinsic charge sheet conductivity is
 
-$$
+```math
 \sigma_{xy}(\mu,T)=-\frac{e^2}{\hbar}
 \sum_n\int_\mathrm{BZ}\frac{d^2k}{(2\pi)^2}\,
  f(E_{n\mathbf k}-\mu,T)\Omega_{n,xy}(\mathbf k).
-$$
+```
 
 Within an insulating gap at zero temperature, this becomes
-$\sigma_{xy}=-(e^2/h)C_\mathrm{occ}$ in the stated convention. General
+$`\sigma_{xy}=-(e^2/h)C_\mathrm{occ}`$ in the stated convention. General
 background on Berry curvature and electronic transport is given in
 [Xiao, Chang and Niu](https://doi.org/10.1103/RevModPhys.82.1959).
 The [Bi Hall example](../examples/features/hall-valley/) evaluates the occupied-group flux directly;
 it does not assign independent curvatures to unresolved Kramers partners.
 
 For chemical potentials crossing band edges, the Kubo implementation uses
-unordered interband pairs. With $N^{xy}_{nm}=-2\,\mathrm{Im}(D_{x,nm}D_{y,mn})$,
+unordered interband pairs. With $`N^{xy}_{nm}=-2\,\mathrm{Im}(D_{x,nm}D_{y,mn})`$,
 the occupation-weighted integrand is
-$\sum_{n<m}(f_n-f_m)N^{xy}_{nm}/(E_n-E_m)^2$.
+$`\sum_{n\lt m}(f_n-f_m)N^{xy}_{nm}/(E_n-E_m)^2`$.
 Equal-occupation pairs cancel before division. Changes from a gap reference
 are evaluated with occupation differences before summation. This preserves
 small doping responses without subtracting large filled-band baselines.
@@ -122,13 +122,13 @@ one-half. Such a partition is not a separately conserved valley-current operator
 
 For an insulating occupied bundle, the supported standard VASP longitudinal
 optical calculation supplies matrix elements
-$C_{cv,\alpha}=\langle u_c|\partial_{k_\alpha}u_v\rangle$ in Å. Here $v$ and
-$c$ label occupied and empty states. Their contribution to the trace is
+$`C_{cv,\alpha}=\langle u_c|\partial_{k_\alpha}u_v\rangle`$ in Å. Here $`v`$ and
+$`c`$ label occupied and empty states. Their contribution to the trace is
 
-$$
+```math
 \Omega^{\rm occ}_{xy}=-2\,\mathrm{Im}
 \sum_{v,c} C_{cv,x}^{*} C_{cv,y}.
-$$
+```
 
 The energy denominator is already contained in these derivatives. The
 longitudinal PAW optical expression includes projector and augmentation terms,
@@ -142,17 +142,17 @@ convergence remain separate requirements.
 
 The same standard optical matrices provide circular transition spectra at
 each k point. For propagation along +z and
-$\boldsymbol\epsilon_\pm=(\hat x\pm i\hat y)/\sqrt2$,
+$`\boldsymbol\epsilon_\pm=(\hat x\pm i\hat y)/\sqrt2`$,
 
-$$
+```math
 I_\pm(\mathbf k,E_\gamma)=\sum_{v,c}
 \left|\frac{C_{cv,x}\pm i C_{cv,y}}{\sqrt2}\right|^2
 g_\sigma\!\left(E_\gamma-E_c+E_v\right),\qquad
 \eta=\frac{I_+-I_-}{I_++I_-}.
-$$
+```
 
-Here $g_\sigma$ is a normalized Gaussian. Complete initial and final band
-groups are summed before forming $\eta$, which is essential at degeneracies.
+Here $`g_\sigma`$ is a normalized Gaussian. Complete initial and final band
+groups are summed before forming $`\eta`$, which is essential at degeneracies.
 These k-resolved strengths are independent-particle quantities; they do not
 include excitons or emission kinetics. The ordinary WAVECAR calculation uses
 canonical momentum with its native photon-energy normalization. The
@@ -160,7 +160,7 @@ canonical momentum with its native photon-energy normalization. The
 
 For narrow curvature peaks, VASPBERRY also interpolates the Hamiltonian
 and position matrices of a VASP-derived Wannier model. Its own Fourier,
-diagonalization and occupied-trace routines evaluate $\Omega=J0+J1+J2$:
+diagonalization and occupied-trace routines evaluate $`\Omega=J0+J1+J2`$:
 the basis-connection curl, the mixed connection/Hamiltonian-derivative term,
 and the derivative-pair term. Only occupied-to-empty denominators occur;
 internal degeneracies are allowed. The formulation follows
@@ -172,8 +172,8 @@ provides an independent check of VASPBERRY's evaluation of the same finite model
 
 ### 1.4 PAW spin matrices and conventional spin Hall response
 
-The conventional spin current is $J_i^a=\{s_a,v_i\}/2$, with
-$s_a=\hbar\sigma_a/2$. In SOC systems its matrix elements require the
+The conventional spin current is $`J_i^a=\{s_a,v_i\}/2`$, with
+$`s_a=\hbar\sigma_a/2`$. In SOC systems its matrix elements require the
 full complex spin matrix, including off-diagonal band elements. Multiplying
 charge Berry curvature by a spin expectation value is generally insufficient.
 This current definition and its first-principles evaluation are discussed by
@@ -181,49 +181,48 @@ This current definition and its first-principles evaluation are discussed by
 [Ryoo, Park and Souza](https://doi.org/10.1103/PhysRevB.99.235113).
 
 The two WAVECAR spinor components directly give the pseudo matrix
-$\widetilde\Sigma^a_{nm}=\sum_{\mathbf Gss'}
-c^*_{n\mathbf Gs}(\sigma_a)_{ss'}c_{m\mathbf Gs'}$.
+$`\widetilde\Sigma^a_{nm}=\sum_{\mathbf Gss'} c^*_{n\mathbf Gs}(\sigma_a)_{ss'}c_{m\mathbf Gs'}`$.
 The physical PAW matrix additionally requires the on-site correction
 
-$$
+```math
 \Sigma^a_{nm}=\widetilde\Sigma^a_{nm}
 +\sum_{Aijss'}p^{A*}_{ni,s}\Delta Q^A_{ij}(\sigma_a)_{ss'}p^A_{mj,s'},
 \quad
 \Delta Q^A_{ij}=\langle\phi^A_i|\phi^A_j\rangle
 -\langle\widetilde\phi^A_i|\widetilde\phi^A_j\rangle.
-$$
+```
 
-Here $p$ denotes the same-run PAW projector overlap. This expression is
-$T^\dagger\sigma_aT$ for the supported spin-independent PAW transformation.
+Here $`p`$ denotes the same-run PAW projector overlap. This expression is
+$`T^\dagger\sigma_aT`$ for the supported spin-independent PAW transformation.
 The implementation checks the corresponding physical overlap and preserves
 the raw pseudo-state norms. For this optional route, the supplied producer
 recipe instruments a separately licensed VASP 5.4.4 source copy. The ordinary
 WAVECAR and standard `WAVEDER` charge workflows do not need that instrumentation.
 
-For transport, $D_i=\hbar v_i$ includes PAW and nonlocal/SOC velocity terms.
+For transport, $`D_i=\hbar v_i`$ includes PAW and nonlocal/SOC velocity terms.
 The producer retains the velocity before the optical energy-denominator
 division, including diagonal and exactly degenerate blocks. These blocks
 cannot be recovered from an optical connection that has already discarded
-them. Within the supplied source-band space $P$, VASPBERRY forms
-$K_i^a=\{P\Sigma^aP,PD_iP\}/2$. This finite-band product omits the
-$P\Sigma^aQD_iP$ and $PD_iQ\Sigma^aP$ terms, where $Q=1-P$.
+them. Within the supplied source-band space $`P`$, VASPBERRY forms
+$`K_i^a=\{P\Sigma^aP,PD_iP\}/2`$. This finite-band product omits the
+$`P\Sigma^aQD_iP`$ and $`PD_iQ\Sigma^aP`$ terms, where $`Q=1-P`$.
 Increasing the source-band window therefore tests both current-product
 closure and the intermediate-state sum.
 
-For the complete occupied group $\mathcal V$, the implementation evaluates
+For the complete occupied group $`\mathcal V`$, the implementation evaluates
 
-$$
+```math
 \Omega^a_{ij}=-2\,\mathrm{Im}
 \sum_{n\in\mathcal V,m\notin\mathcal V}
 \frac{K^a_{i,nm}D_{j,mn}}{(E_m-E_n)^2},\qquad
 \frac{\sigma^a_{ij}}{(\hbar/e)(e^2/h)}
 =\frac{A_{\rm BZ}}{4\pi}\sum_{\mathbf k}w_{\mathbf k}\Omega^a_{ij}(\mathbf k).
-$$
+```
 
 Internal equal-occupation terms cancel before division. The formula uses
-$e>0$, physical electron charge $-e$, Pauli matrices without an embedded
-$\hbar/2$, and $D$ in eV Å. The curvature-like tensor is in Å². In a conserved
-$\sigma_z=+1$ sector, this normalized spin coefficient is minus one half of
+$`e>0`$, physical electron charge $`-e`$, Pauli matrices without an embedded
+$`\hbar/2`$, and $`D`$ in eV Å. The curvature-like tensor is in Å². In a conserved
+$`\sigma_z=+1`$ sector, this normalized spin coefficient is minus one half of
 the charge coefficient in Section 1.2. No additional spin degeneracy or
 integer rounding is applied. The present command supports a fixed insulating
 2D bundle at zero temperature. Its operator, gauge, units, sampled gap and
@@ -355,16 +354,16 @@ with the chemical-potential interval shaded. (c) Regional Hall changes at
 (d) Mesh refinement at that fixed band window. Energies are relative to each
 source's valence-band maximum; the band path uses the same density and cutoff.
 
-The 61-point scan covers $E_v-0.20$ to $E_v+0.10$ eV at 0 and 300 K.
-We define $\Delta\sigma(\mu)=\sigma(\mu)-\sigma(\mu_{\rm ref})$ with a midgap
-reference, and the valley difference as $\Delta\sigma_K-\Delta\sigma_{K'}$.
-The total charge response remains below **$2.24\times10^{-9}\,e^2/h$**,
+The 61-point scan covers $`E_v-0.20`$ to $`E_v+0.10`$ eV at 0 and 300 K.
+We define $`\Delta\sigma(\mu)=\sigma(\mu)-\sigma(\mu_{\rm ref})`$ with a midgap
+reference, and the valley difference as $`\Delta\sigma_K-\Delta\sigma_{K'}`$.
+The total charge response remains below **$`2.24\times10^{-9}\,e^2/h`$**,
 consistent with time-reversal symmetry. Numerical tables also give absolute
 conductivities and carrier counts.
 
 Two numerical choices were varied separately at 300 K. The relative L2
 difference below is the norm of the curve change divided by the finer curve's
-norm, on a common $\mu-E_v$ grid.
+norm, on a common $`\mu-E_v`$ grid.
 
 | Test | Refinement | Relative L2 change |
 |---|---|---:|
@@ -391,20 +390,20 @@ retains the finite-mesh steps at 0 K.
 **Figure 5.** Charge response from the same final VASP eigenstates on a
 12×12 mesh, with 60 stored bands, at 300 K. (a) Regional changes for
 K and K′ using pairs within bands 1–40. (b) The K−K′ difference with
-retained cutoffs $M=40$ and 50. Blue curves use ordinary WAVECAR canonical
+retained cutoffs $`M=40`$ and 50. Blue curves use ordinary WAVECAR canonical
 momentum; red curves use the optional full PAW velocity matrices. Geometry,
 density, occupations, region definitions and eigenstates are identical.
 
-At $\mu-E_v=-0.20$ eV and $M=40$, the regional difference changes from
-**−0.22779 to −0.33363 $e^2/h$** when the full velocity replaces canonical
+At $`\mu-E_v=-0.20`$ eV and $`M=40`$, the regional difference changes from
+**−0.22779 to −0.33363 $`e^2/h`$** when the full velocity replaces canonical
 momentum. Both total charge responses remain below
-$1.1\times10^{-8}\,e^2/h$, without time-reversal averaging. The nonzero
+$`1.1\times10^{-8}\,e^2/h`$, without time-reversal averaging. The nonzero
 regional response therefore reveals an operator difference that the
 symmetry-enforced total cannot test.
 
-For the complete 300 K difference curve, increasing $M$ from 40 to 50
+For the complete 300 K difference curve, increasing $`M`$ from 40 to 50
 changes the canonical and PAW results by **1.445% and 0.465%**, respectively,
-using the same relative-L2 definition as above. At $M=50$, the two operators
+using the same relative-L2 definition as above. At $`M=50`$, the two operators
 differ by 29.44% relative to the PAW curve. These measurements describe one
 fixed mesh and band increment. They do not establish k convergence or a
 general advantage in convergence rate.
@@ -430,10 +429,10 @@ ratios limited by printed intensity precision are masked; overlapping
 curves retain their calculated values.
 
 The near-edge peaks lie at **1.67–1.68 eV**. Monolayer and 1H show
-$\eta\simeq-1/+1$ at K/K′; the 3R PAW peak gives **−0.99884/+0.99884**.
+$`\eta\simeq-1/+1`$ at K/K′; the 3R PAW peak gives **−0.99884/+0.99884**.
 For the inversion-symmetric 2H control, summing the complete occupied and
 empty groups cancels the selectivity: the PAW peak residual is below
-**$5\times10^{-7}$** at both valleys. This illustrates why the response of
+**$`5\times10^{-7}`$** at both valleys. This illustrates why the response of
 an unresolved degenerate group must include every partner.
 
 The stacking comparison extends one optical workflow to several VASP input
@@ -460,7 +459,7 @@ The two-atom buckled Bi bilayer provides a compact real-material example of
 quantum spin Hall topology, as proposed by
 [Murakami](https://doi.org/10.1103/PhysRevLett.97.236805). We use the fixed Bi
 geometry and a fresh nonmagnetic PBE+SOC calculation, with a 400 eV cutoff
-and electronic tolerance of $10^{-8}$ eV. The same SCF density supplies the
+and electronic tolerance of $`10^{-8}`$ eV. The same SCF density supplies the
 wavefunctions, PAW matrices and Wannier model below.
 
 VASPBERRY evaluates the
@@ -469,21 +468,21 @@ from the occupied SOC bands 1–10 on a full Γ-centered 12×12 mesh.
 With the time-reversal-compatible gauge used in this construction, the
 Z₂ invariant is the parity of the integer-field sum over a half Brillouin zone:
 
-$$
+```math
 \nu=\left[\sum_{p\in B_{1/2}} n(p)\right]\bmod 2.
-$$
+```
 
 ![Bi Fukui-Hatsugai integer n-field and Z2 invariant](../examples/materials/bi-spin-hall/reference/z2/figure.png)
 
-**Figure 7.** Fukui–Hatsugai integer field $n(\mathbf k)$ calculated from the
+**Figure 7.** Fukui–Hatsugai integer field $`n(\mathbf k)`$ calculated from the
 Bi VASP spinor wavefunctions. Red, white and blue denote +1, 0 and −1,
 respectively. The native plaquettes are displayed without interpolation in
-dimensionless reduced coordinates, $\mathbf k=q_1\mathbf b_1+q_2\mathbf b_2$,
-with opposite edges periodically identified. The line at $q_2=0$ separates
+dimensionless reduced coordinates, $`\mathbf k=q_1\mathbf b_1+q_2\mathbf b_2`$,
+with opposite edges periodically identified. The line at $`q_2=0`$ separates
 the upper and lower half zones. The occupied-band calculation gives **Z₂ = 1**.
 
 The upper and lower half-zone sums are **−3 and +3**, respectively. Both are odd,
-so their parities agree at **$\nu=1$**, identifying the nontrivial
+so their parities agree at **$`\nu=1`$**, identifying the nontrivial
 time-reversal-symmetric insulating phase for this calculation.
 The sampled minimum direct and global gaps are **0.535 eV** and **0.497 eV**.
 
@@ -495,7 +494,7 @@ response are consistent with this nontrivial Z₂ result.
 The native topology calculation uses WAVECAR pseudo-wavefunction overlaps.
 An independent check of the original occupied subspaces, before the native
 TR reconstruction, gives a maximum time-reversal residual of
-$4.57\times10^{-8}$. The physical spin and velocity matrices used for transport
+$`4.57\times10^{-8}`$. The physical spin and velocity matrices used for transport
 add the PAW terms described in Section 1.4. The older Bi fixture remains a
 separate historical reference.
 
@@ -534,7 +533,7 @@ retains the complete interpolation, symmetry and strip-width checks.
 
 ![Bi PAW spin Berry curvature and response convergence](../examples/materials/bi-spin-hall/reference/figures/bi-spin-hall.png)
 
-**Figure 9.** (a) Occupied-bundle spin Berry curvature $\Omega^z_{xy}$ from
+**Figure 9.** (a) Occupied-bundle spin Berry curvature $`\Omega^z_{xy}`$ from
 PAW spin and full velocity matrices on the 12×12 VASP mesh, shown in the
 Cartesian first BZ. Periodic bilinear interpolation is used only for the
 color map. (b) Mesh refinement retaining 48 bands from 64-band VASP sources.
@@ -542,8 +541,8 @@ color map. (b) Mesh refinement retaining 48 bands from 64-band VASP sources.
 original k points and weights.
 
 Retaining 48 states from 64-band VASP calculations, the 6×6, 12×12 and
-18×18 meshes give $\sigma^z_{xy}=1.382558$, $0.690723$ and $0.647020$ in
-$(\hbar/e)(e^2/h)$. The last change is 0.04370, or 6.75% of the 18×18 value.
+18×18 meshes give $`\sigma^z_{xy}=1.382558`$, $`0.690723`$ and $`0.647020`$ in
+$`(\hbar/e)(e^2/h)`$. The last change is 0.04370, or 6.75% of the 18×18 value.
 **These meshes do not establish a converged spin Hall conductivity.**
 The main difficulty is the narrow response near Γ: its local value stays
 near 245.9 Å², but its weighted contribution falls from 1.286413 to 0.321603
@@ -553,7 +552,7 @@ and 0.142934. The nearest sampled radius falls from 0.276 to 0.138 and
 The band study probes a different error. At fixed 6×6 sampling, retaining
 40, 44 and 48 bands from the 48-band source gives 1.386328, 1.384098 and
 1.382555. Increasing the actual VASP source to 64 bands while retaining the
-same first 48 changes the response by only $2.64\times10^{-6}$. The uppermost
+same first 48 changes the response by only $`2.64\times10^{-6}`$. The uppermost
 new empty states fail a Kramers-pair accuracy check. An 80-band VASP run
 resolves the first 64 states: retaining 48, 56 and 64 gives 1.382558,
 1.383047 and 1.381001, with a final change of 0.15%. Only the verified
@@ -561,11 +560,11 @@ subspace is used; an electronic stopping criterion alone does not establish
 accuracy of every stored empty state.
 Neither band stability nor an integer Z₂ invariant establishes k convergence.
 
-The 12×12 charge response is $1.82\times10^{-7}\,e^2/h$, consistent with the
+The 12×12 charge response is $`1.82\times10^{-7}\,e^2/h`$, consistent with the
 vanishing anomalous charge Hall effect of this nonmagnetic system. With
 64 source bands and the accurate first 48 retained, that residual falls to
-$-2.29\times10^{-12}\,e^2/h$; the 18×18 residual is
-$4.91\times10^{-9}\,e^2/h$, without time-reversal averaging. The finite
+$`-2.29\times10^{-12}\,e^2/h`$; the 18×18 residual is
+$`4.91\times10^{-9}\,e^2/h`$, without time-reversal averaging. The finite
 spin response uses a different current vertex and is allowed by time reversal.
 Its noninteger value is not a failed Chern-number calculation. The finite-band
 current-product approximation, conventional-current definition, sampling and
@@ -576,8 +575,8 @@ integration without rerunning VASP. The fresh SCF density, VASP input
 preparation, original producer insertion routines and Wannier inputs document
 the earlier stages. Every response component was independently recomputed
 from the raw exported matrices; all 27 spin components agree to within
-$3.1\times10^{-14}$ in the stated sheet units. A separate finite-k check of
-the diagonal velocity gives a maximum error of $1.74\times10^{-4}$ eV Å.
+$`3.1\times10^{-14}`$ in the stated sheet units. A separate finite-k check of
+the diagonal velocity gives a maximum error of $`1.74\times10^{-4}`$ eV Å.
 The latter is a producer validation on development test points, not a material
 convergence result.
 
@@ -605,8 +604,8 @@ conversion of complex amplitudes into a physical-coordinate density map.
 This example connects an occupied-band topological invariant to a Hall integral
 computed by VASPBERRY. The three-septuple-layer MnBi₂Te₄ film has 21 atoms
 with +z/−z/+z Mn magnetization. Its fixed, unrelaxed geometry retains bulk
-vertical spacings from Yan et al., with in-plane $a=4.336$ Å, PBE+SOC and
-Mn $U_{\rm eff}=5.34$ eV following Otrokov et al. It is distinct from the
+vertical spacings from Yan et al., with in-plane $`a=4.336`$ Å, PBE+SOC and
+Mn $`U_{\rm eff}=5.34`$ eV following Otrokov et al. It is distinct from the
 relaxed films in that study.
 
 ![MnBi2Te4 bands and VASPBERRY Hall convergence](../examples/materials/mnbi2te4-qah/reference/figures/mnbi2te4-qah.png)
@@ -616,15 +615,15 @@ VASP checks; the inset resolves the K–Γ–M gap near Γ. (b) VASPBERRY
 full-connection sheet Hall response at three chemical potentials inside the
 gap, at zero temperature; open markers show the independent `postw90`
 comparison. The dashed line is the topological expectation. (c) Deviation
-$|\sigma_{xy}/(e^2/h)-1|$ under integration refinement. Labels give the base
+$`|\sigma_{xy}/(e^2/h)-1|`$ under integration refinement. Labels give the base
 mesh, local subdivision and Γ-region radius in Å⁻¹. Both solvers use the
 same model and weights; their agreement is distinct from mesh convergence.
 
 The VASP gap is **17.10 meV**. Fukui links of the **complete occupied
 valence-band bundle, bands 1–123, give C = −1**, corresponding to
-$\sigma_{xy}=+e^2/h$ in our convention. A direct 6×6 PAW optical integral
-instead gives **163.109 $e^2/h$**: the Γ-point curvature reaches approximately
-$-1.52\times10^4$ Å², and this coarse mesh overweights the narrow peak.
+$`\sigma_{xy}=+e^2/h`$ in our convention. A direct 6×6 PAW optical integral
+instead gives **163.109 $`e^2/h`$**: the Γ-point curvature reaches approximately
+$`-1.52\times10^4`$ Å², and this coarse mesh overweights the narrow peak.
 An integer Fukui result does not establish convergence of the pointwise integral.
 
 For dense integration, VASPBERRY's `wannier-hall` evaluates all J0/J1/J2
@@ -638,10 +637,10 @@ retains the full-123 versus model-87 subspace difference. The maximum
 band-edge difference across all twelve validation locations is 18.14 meV.
 
 VASPBERRY's final 27,600-point result is
-**$\sigma_{xy}=1.000384978\,e^2/h$** at all three gap chemical potentials.
+**$`\sigma_{xy}=1.000384978\,e^2/h`$** at all three gap chemical potentials.
 It uses an 80×80 base mesh and 9×9 subdivisions in the 0.18 Å⁻¹ Γ region.
-The last refinement changes the result by **$2.07\times10^{-4}\,e^2/h$**,
-below the stated $10^{-3}\,e^2/h$ comparison criterion. The nonmonotonic
+The last refinement changes the result by **$`2.07\times10^{-4}\,e^2/h`$**,
+below the stated $`10^{-3}\,e^2/h`$ comparison criterion. The nonmonotonic
 region-expansion control is retained; no integer rounding is applied.
 Independent `postw90` totals and all three component decompositions agree
 within their original output precision. A separate 160×160 energy scan

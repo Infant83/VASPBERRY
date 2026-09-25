@@ -13,26 +13,26 @@ require additional energy information.
 
 For a two-dimensional system, the intrinsic Berry-curvature contribution is
 
-\[
+```math
 C_{\mathrm{occ}}(\mu,T)=
 \sum_n\int_{\mathrm{BZ}}\frac{d^2k}{2\pi}
 f(E_{n\mathbf{k}}-\mu,T)\,\Omega_{n,z}(\mathbf{k}),
-\]
+```
 
-\[
+```math
 \frac{\sigma_{xy}(\mu,T)}{e^2/h}=-C_{\mathrm{occ}}(\mu,T).
-\]
+```
 
 The postprocessor writes both quantities. This makes the electron Hall-sign
 convention explicit instead of hiding it in a plot.
 
-The reported unit is the 2D sheet value \(e^2/h\). Conversion to S/m or S/cm
+The reported unit is the 2D sheet value $`e^2/h`$. Conversion to S/m or S/cm
 requires a separately declared effective layer thickness.
 
 This is an oriented sheet response on the plane spanned by the ordered pair
-\((\mathbf b_1,\mathbf b_2)\). The symbol \(\sigma_{xy}\) is literal when those
-vectors span the Cartesian \(xy\) slab plane and
-\(\mathbf b_1\times\mathbf b_2\) points along \(+z\). For a nonstandard plane
+$`(\mathbf b_1,\mathbf b_2)`$. The symbol $`\sigma_{xy}`$ is literal when those
+vectors span the Cartesian $`xy`$ slab plane and
+$`\mathbf b_1\times\mathbf b_2`$ points along $`+z`$. For a nonstandard plane
 or a left-handed reciprocal basis, the reported component and sign must instead
 be interpreted relative to that declared orientation.
 
@@ -40,59 +40,59 @@ be interpreted relative to that declared orientation.
 
 For each uniform-mesh cell, VASPBERRY follows the loop
 
-\[
+```math
 \mathbf{k},\quad
 \mathbf{k}+\Delta\mathbf{k}_1,\quad
 \mathbf{k}+\Delta\mathbf{k}_1+\Delta\mathbf{k}_2,\quad
 \mathbf{k}+\Delta\mathbf{k}_2
-\]
+```
 
 and calculates the gauge-invariant plaquette flux
 
-\[
-\phi_{n,p}=-\operatorname{Im}\log
+```math
+\phi_{n,p}=-\mathrm{Im}\log
 \prod_{i=1}^{4}\langle u_{n\mathbf{k}_i}|u_{n\mathbf{k}_{i+1}}\rangle.
-\]
+```
 
 The legacy file prints
 
-\[
+```math
 \Omega_{n,p}=\phi_{n,p}/\Delta S_k,
 \qquad
 \Delta S_k=\frac{|\mathbf b_1\times\mathbf b_2|}{N_xN_y}.
-\]
+```
 
 Despite an old header that labels the curvature as `A^-2`, the physical unit
-of \(\Omega\) is \(\text{Angstrom}^2\); \(\Delta S_k\) is in
-\(\text{Angstrom}^{-2}\).
+of $`\Omega`$ is $`\text{Angstrom}^2`$; $`\Delta S_k`$ is in
+$`\text{Angstrom}^{-2}`$.
 
 **The fractional coordinates printed in `BERRYCURV.dat` are the plaquette
 centers**, not the lower-left vertices. The four energy vertices are therefore
 
-\[
+```math
 \mathbf q_p \pm \frac{\Delta\mathbf k_1}{2}
              \pm \frac{\Delta\mathbf k_2}{2}.
-\]
+```
 
 ## 3. Correct finite-mesh occupation weighting
 
 For a Fukui plaquette, the implemented quadrature is
 
-\[
+```math
 \bar f_{n,p}(\mu,T)=\frac14\sum_{i=1}^{4}
  f(E_{n\mathbf{k}_{p,i}}-\mu,T),
-\]
+```
 
-\[
+```math
 C_{\mathrm{occ}}(\mu,T)
 \simeq\sum_{n,p}\frac{\phi_{n,p}}{2\pi}\bar f_{n,p}(\mu,T).
-\]
+```
 
-The code intentionally does **not** use \(f(\bar E_p)\), because in general
+The code intentionally does **not** use $`f(\bar E_p)`$, because in general
 
-\[
+```math
 \frac14\sum_i f(E_i)\ne f\!\left(\frac14\sum_iE_i\right).
-\]
+```
 
 At zero temperature, a cell crossed by the Fermi surface can consequently have
 an occupation fraction of 0, 1/4, 1/2, 3/4, or 1. This is a convergent mesh
@@ -103,19 +103,19 @@ mesh-convergence study remain mandatory near sharp valley pockets.
 
 A single isolated CBM band gives the doping-induced active-band contribution,
 
-\[
+```math
 \Delta C_{\mathrm{CBM}}(\mu,T)=
 \sum_p\frac{\phi_{\mathrm{CBM},p}}{2\pi}\bar f_{\mathrm{CBM},p}.
-\]
+```
 
 It is not automatically the total Hall conductivity. For a chemical-potential
 window in which all valence bands remain fully occupied, their combined Fukui
 Chern number can be supplied as a constant baseline:
 
-\[
+```math
 C_{\mathrm{occ}}(\mu,T)=C_{\mathrm{core}}+
 \sum_{n\in\mathrm{active}}\Delta C_n(\mu,T).
-\]
+```
 
 Use `--core-chern` for this baseline. When the first active band is greater than
 1, the option is mandatory even when the established baseline is zero
@@ -175,9 +175,9 @@ Before integration, `tools/vaspberry_transport.py` checks:
 - periodic 3x3 legacy copies are grouped modulo reciprocal lattice vectors;
 - all copies have the same Berry curvature before being collapsed;
 - the unique grid agrees with header `NKPOINT` and `K-GRID`;
-- the mesh is a complete uniform \(N_x\times N_y\) product on one \(k_z\) plane;
+- the mesh is a complete uniform $`N_x\times N_y`$ product on one $`k_z`$ plane;
 - both mesh dimensions contain at least two points, and the curvature and
-  EIGENVAL \(k_z\) planes agree modulo a reciprocal vector;
+  EIGENVAL $`k_z`$ planes agree modulo a reciprocal vector;
 - EIGENVAL has the same full mesh and uniform weights summing to one;
 - all four EIGENVAL vertices exist for every printed Fukui center;
 - requested band numbers, total band counts, and labeled UP/DN channels agree
@@ -185,11 +185,11 @@ Before integration, `tools/vaspberry_transport.py` checks:
 - an `ISPIN=2` curvature file used with EIGENVAL retains an unambiguous `.UP` or
   `.DN` filename (or explicit `SPIN` header); a renamed unlabeled channel is
   rejected rather than inferred from global `--spin`;
-- header \(\Delta S_k\) agrees with
-  \(|\mathbf b_1\times\mathbf b_2|/(N_xN_y)\);
+- header $`\Delta S_k`$ agrees with
+  $`|\mathbf b_1\times\mathbf b_2|/(N_xN_y)`$;
 - the unique-grid full-occupation Chern sum agrees with the file header;
 - the full-occupation single-band Fukui sum is within 0.005 of its nearest
-  integer (the legacy rounded \(C\simeq-4.0\times10^{-8}\) example passes);
+  integer (the legacy rounded $`C\simeq-4.0\times10^{-8}`$ example passes);
 - the maximum plaquette flux stays below a safety fraction of the principal-log
   branch boundary; otherwise a denser mesh is required;
 - every requested active band passes the numerical isolation check.
@@ -219,7 +219,7 @@ exist. The targets must be mutually distinct and must not alias any `--input`
 or `--eigenval` path; a collision is rejected before any file is unlinked.
 
 The supplied external archive currently contains `WAVECAR` but no matching
-`EIGENVAL`. Therefore a real \(\sigma_{xy}(\mu,T)\) must use either energies
+`EIGENVAL`. Therefore a real $`\sigma_{xy}(\mu,T)`$ must use either energies
 exported directly from that WAVECAR or an EIGENVAL generated on the identical
 full mesh. A WAVECAR-only Berry-curvature map must not be presented as an
 energy-resolved conductivity result.
@@ -303,10 +303,10 @@ At zero temperature, the guarded cumulative-subspace scan assigns each of the
 four vertices to 1:18, 1:19, or 1:20 according to its band-19 and band-20
 energies, then applies the Sawahata-style average
 
-\[
+```math
 \bar\phi_p(\mu)=\frac{1}{4}\sum_{i=1}^4
 \phi_p^{(N_i(\mu))}.
-\]
+```
 
 This follows the local Berry-phase strategy tested against Wannier/Kubo results
 by Sawahata *et al.*, Phys. Rev. B **107**, 024404 (2023),
@@ -340,11 +340,11 @@ This command calculates the determinant-link Fukui flux `Phi_n` of every
 leading subspace 1:`n`, for `n=1,...,MAX_BAND`. At each plaquette vertex it
 counts all represented eigenvalues satisfying `E_n(k) <= mu` and evaluates
 
-\[
+```math
 \bar\phi_p(\mu)=\frac{1}{4}\sum_{i=1}^4
 \phi_p^{\left(1:N_{\rm occ}(\mathbf{k}_i,\mu)\right)},\qquad
 \frac{\sigma_{xy}(\mu)}{e^2/h}=-\frac{1}{2\pi}\sum_p\bar\phi_p(\mu).
-\]
+```
 
 This is a cumulative occupied-subspace calculation, not a sum of arbitrarily
 defined single-band curvatures. An exactly degenerate group enters together.
@@ -409,7 +409,7 @@ closest-lattice-vector search after Gauss reduction, so highly skew or
 non-reduced reciprocal bases are not limited to an unsafe fixed image stencil.
 Consequently, this line is the **shortest periodic-image K-to-K' cut**. In a
 hexagonal BZ it normally joins adjacent K and K' corners and is not the
-opposite-corner high-symmetry \(K-\Gamma-K'\) path. Use a separately declared
+opposite-corner high-symmetry $`K-\Gamma-K'`$ path. Use a separately declared
 multi-segment path when the latter is the intended observable.
 
 The transport command first treats the fully occupied 1:`N-1` valence manifold
@@ -454,7 +454,7 @@ With `--plot`, the direct tool writes:
   and neighbor-gap maps with K/K' marked. Every diverging curvature panel uses
   symmetric limits about zero so white always means zero;
 - `wavecar_fukui_line_K_Kp.png`: the shortest periodic-image K-to-K' energy and
-  curvature cut, not an implied \(K-\Gamma-K'\) high-symmetry path;
+  curvature cut, not an implied $`K-\Gamma-K'`$ high-symmetry path;
 - `wavecar_fukui_sigma_mu.png`: the T=0 net/K/K'/contrast scan. Rejected
   chemical potentials are drawn with dotted low-alpha curves and red markers.
 
@@ -514,7 +514,7 @@ Legacy `-kubo 2` line-mode output is accepted for visualization only. It is not
 accepted by the validated transport integrator because a one-dimensional path
 does not define a Brillouin-zone integral. In addition, the checked-in band-10
 example has a zero minimum direct gap and an approximately
-\(6.27\times10^4\ \text{Angstrom}^2\) spike at Gamma. This exposes the present
+$`6.27\times10^4\ \text{Angstrom}^2`$ spike at Gamma. This exposes the present
 machine-epsilon degeneracy handling and makes that example unsuitable as a
 quantitative transport reference.
 
@@ -544,11 +544,11 @@ rejection, K/K'/outside partition closure, core-Chern baselines, manifold/Kubo
 rejection, and the checked-in MoS2 9-copy-to-unique-grid Chern reconstruction.
 
 An independent Qi-Wu-Zhang two-band oracle additionally fixes the orientation
-and sign convention: for right-handed \(\mathbf b_1\times\mathbf b_2=+\hat z\)
-and VASPBERRY's \(-\operatorname{Im}\log\) plaquette phase, the occupied
-lower band at \(m=+1\) has \(C=-1\), and therefore
-\(\sigma_{xy}=+e^2/h\). An independent analytic point-curvature oracle verifies
-monotonic Riemann-sum convergence from \(8\times8\) through \(32\times32\)
+and sign convention: for right-handed $`\mathbf b_1\times\mathbf b_2=+\hat z`$
+and VASPBERRY's $`-\mathrm{Im}\log`$ plaquette phase, the occupied
+lower band at $`m=+1`$ has $`C=-1`$, and therefore
+$`\sigma_{xy}=+e^2/h`$. An independent analytic point-curvature oracle verifies
+monotonic Riemann-sum convergence from $`8\times8`$ through $`32\times32`$
 without weakening the nearest-integer gate applied to actual Fukui plaquette
 fluxes. Separate synthetic
 K/K' packets verify exact cancellation for degenerate, opposite-curvature
@@ -560,7 +560,7 @@ splitting places the chemical potential between the two minima.
 This is an intrinsic, rigid-band Berry-curvature calculation. It does not include
 disorder, side jump, skew scattering, phonons, carrier self-consistency, or
 intervalley relaxation. Electron/hole density should be calculated alongside
-\(\sigma_{xy}(\mu,T)\) before connecting a chemical-potential window to an
+$`\sigma_{xy}(\mu,T)`$ before connecting a chemical-potential window to an
 experiment. For scalar non-SOC calculations, whether a factor-two spin
 degeneracy is required must be determined from how the WAVECAR bands were stored;
 SOC and explicitly collinear spin channels must not be doubled automatically.

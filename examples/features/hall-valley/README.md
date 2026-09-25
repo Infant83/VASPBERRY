@@ -10,16 +10,16 @@ the same occupied subspace has a nontrivial [Z₂ invariant](../z2/).
 
 For a two-dimensional insulator,
 
-$$
+```math
 \sigma_{xy}=-\frac{e^2}{h}C,\qquad
 C=\frac{1}{2\pi}\int_{\mathrm{BZ}}\mathrm{Tr}\,\Omega_z(\mathbf{k})\,d^2k.
-$$
+```
 
 The Fukui method evaluates the occupied-subspace flux from determinants of
 neighboring wavefunction overlaps. Internal Kramers degeneracies are retained
 within the occupied subspace; a gap is required between occupied and empty
 states. This is appropriate for the supplied Bi data, whose individual
-Kramers partners have numerical splittings of order $10^{-7}$ eV.
+Kramers partners have numerical splittings of order $`10^{-7}`$ eV.
 The wavefunction overlaps use the stored PAW pseudo-wavefunctions.
 
 ## Input and calculation settings
@@ -89,21 +89,21 @@ both PNG and PDF figures. A Fortran executable is not needed for this route.
 
 **Figure.** Sheet charge-Hall conductivity as a function of chemical potential
 relative to the sampled valence-band maximum. The shaded gap extends from
-$E_{\mathrm{v}}$ to $E_{\mathrm{c}}$; gray regions indicate the neighboring
+$`E_{\mathrm{v}}`$ to $`E_{\mathrm{c}}`$; gray regions indicate the neighboring
 valence (VB) and conduction (CB) band ranges. The blue curve shows only the
 41 calculated chemical potentials. The gap is obtained from the supplied
 12 × 12 mesh.
 
 | Quantity | Result |
 |---|---:|
-| Sampled valence maximum $E_{\mathrm{v}}$ | −1.348963526 eV |
-| Sampled conduction minimum $E_{\mathrm{c}}$ | −0.838919163 eV |
-| Sampled indirect gap $E_{\mathrm{g}}$ | 0.510044362 eV |
+| Sampled valence maximum $`E_{\mathrm{v}}`$ | −1.348963526 eV |
+| Sampled conduction minimum $`E_{\mathrm{c}}`$ | −0.838919163 eV |
+| Sampled indirect gap $`E_{\mathrm{g}}`$ | 0.510044362 eV |
 | Minimum direct occupied–empty gap | 0.592448500 eV |
-| Chemical potentials relative to $E_{\mathrm{v}}$ | 0.048964–0.448964 eV |
+| Chemical potentials relative to $`E_{\mathrm{v}}`$ | 0.048964–0.448964 eV |
 | Occupied bands throughout the interval | 10 |
 | Total Chern integral | Approximately 0 |
-| Maximum $\lvert\sigma_{xy}\rvert$ in the calculation | $1.17\times10^{-16}\,e^2/h$ |
+| Maximum $`\lvert\sigma_{xy}\rvert`$ in the calculation | $`1.17\times10^{-16}\,e^2/h`$ |
 
 [PNG figure](reference/figure.png) · [PDF figure](reference/figure.pdf) ·
 [conductivity table](reference/summary.csv) ·
@@ -111,10 +111,10 @@ valence (VB) and conduction (CB) band ranges. The blue curve shows only the
 [occupied-subspace flux](reference/fukui_occupied.csv)
 
 The CSV chemical potentials retain the original VASP energy reference.
-Only the figure uses $\mu-E_{\mathrm{v}}$. The small nonzero numerical value is
+Only the figure uses $`\mu-E_{\mathrm{v}}`$. The small nonzero numerical value is
 retained in the tables; it represents numerical residual, not a finite
 anomalous Hall signal. The output is a two-dimensional sheet response in
-$e^2/h$, not a three-dimensional conductivity per unit length.
+$`e^2/h`$, not a three-dimensional conductivity per unit length.
 
 ## Interpretation and application to another system
 

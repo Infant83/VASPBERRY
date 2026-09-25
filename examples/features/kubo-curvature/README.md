@@ -15,13 +15,13 @@ curvature calculated directly at those path points.
 
 ## Method and inputs
 
-For an isolated bundle $\mathcal V$, VASPBERRY evaluates
+For an isolated bundle $`\mathcal V`$, VASPBERRY evaluates
 
-$$
+```math
 \Omega^{\mathcal V}_{xy}=-2\,\mathrm{Im}
 \sum_{n\in\mathcal V}\sum_{m\notin\mathcal V}
 \frac{D^x_{nm}D^y_{mn}}{(E_n-E_m)^2},\qquad D^a=\hbar v_a.
-$$
+```
 
 This is the sum of the individual-band curvatures wherever those bands are
 resolved. Internal pair contributions cancel, so excluding them before
@@ -29,7 +29,7 @@ calculating denominators gives a stable bundle result even at internal
 band degeneracies. The selected bundle must be separated from excluded
 states. See [Wang et al., Eq. (11) and Sec. III D](https://doi.org/10.1103/PhysRevB.74.195118).
 
-The native WAVECAR implementation uses canonical momentum, $v_a=p_a/m_e$,
+The native WAVECAR implementation uses canonical momentum, $`v_a=p_a/m_e`$,
 and exports curvature in Å². PAW augmentation and nonlocal/SOC velocity
 corrections are not included. The finite stored empty-band window must be
 converged for quantitative work.

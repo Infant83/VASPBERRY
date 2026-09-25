@@ -34,37 +34,36 @@ insufficient in SOC systems.
 
 ## Spin from WAVECAR and PAW
 
-For two-component coefficients $c_{n\mathbf Gs}$, the raw matrix is
+For two-component coefficients $`c_{n\mathbf Gs}`$, the raw matrix is
 
-$$
+```math
 \widetilde\Sigma^a_{nm}
 =\sum_{\mathbf Gss'}c^*_{n\mathbf Gs}(\sigma_a)_{ss'}c_{m\mathbf Gs'},
 \qquad s_a=\frac{\hbar}{2}\sigma_a.
-$$
+```
 
 Both spinor components and every off-diagonal band element are retained.
-The coefficient overlap $\widetilde O_{nm}=\sum_{\mathbf Gs}
-c^*_{n\mathbf Gs}c_{m\mathbf Gs}$ is also saved unchanged. WAVECAR contains
+The coefficient overlap $`\widetilde O_{nm}=\sum_{\mathbf Gs} c^*_{n\mathbf Gs}c_{m\mathbf Gs}`$ is also saved unchanged. WAVECAR contains
 smooth pseudo-wavefunctions; it does not by itself contain the PAW on-site
 augmentation. Independently normalizing its bands would change the operator
 and does not supply that augmentation.
 
 For the supported spin-independent PAW transformation, the physical matrix is
 
-$$
+```math
 \Sigma^a_{nm}=\widetilde\Sigma^a_{nm}
 +\sum_{Aijss'}p^{A*}_{ni,s}\,\Delta Q^A_{ij}
 (\sigma_a)_{ss'}p^A_{mj,s'},\qquad
 \Delta Q^A_{ij}=\langle\phi^A_i|\phi^A_j\rangle
 -\langle\widetilde\phi^A_i|\widetilde\phi^A_j\rangle.
-$$
+```
 
-Here $p^A_{ni,s}=\langle\widetilde p^A_i|\widetilde u_{ns}\rangle$.
-Replacing $\sigma_a$ by the spin identity gives the overlap correction.
-This is the matrix representation of $T^\dagger\sigma_aT$, using the
+Here $`p^A_{ni,s}=\langle\widetilde p^A_i|\widetilde u_{ns}\rangle`$.
+Replacing $`\sigma_a`$ by the spin identity gives the overlap correction.
+This is the matrix representation of $`T^\dagger\sigma_aT`$, using the
 same projectors, wavefunctions and partial waves as the VASP calculation.
 The importer checks the corrected overlap against the identity and the
-operator bounds $O\pm\Sigma^a\succeq0$. It does not repair failed matrices.
+operator bounds $`O\pm\Sigma^a\succeq0`$. It does not repair failed matrices.
 
 WAVECAR does not encode the spinor-axis convention. Obtain it from the
 matching SAXIS and OUTCAR. `spin-matrix --spin-basis` records that declaration;
@@ -86,14 +85,14 @@ source wavefunction, k points, band order, energies, lattice and spin basis.
 
 ## Velocity and the finite-band spin current
 
-Let $D_i=\hbar v_i$, measured in eV Å. The conventional spin current is
-$J_i^a=\{s_a,v_i\}/2$. Its numerical representation uses
-$K_i^a=\{\Sigma^a,D_i\}/2$ and accounts for $s_a=\hbar\sigma_a/2$
+Let $`D_i=\hbar v_i`$, measured in eV Å. The conventional spin current is
+$`J_i^a=\{s_a,v_i\}/2`$. Its numerical representation uses
+$`K_i^a=\{\Sigma^a,D_i\}/2`$ and accounts for $`s_a=\hbar\sigma_a/2`$
 in the final unit conversion.
 
 Forming this product needs the diagonal and exactly degenerate blocks of
 the full velocity, in addition to occupied–empty optical matrix elements.
-Reconstructing $D$ only by multiplying a stored interband connection by an
+Reconstructing $`D`$ only by multiplying a stored interband connection by an
 energy difference cannot recover blocks discarded at degeneracies. The
 audited producer retains the velocity before that division, including the
 PAW projector terms. Canonical plane-wave momentum alone is insufficient
@@ -106,14 +105,14 @@ division, so its diagonal and degenerate blocks remain present. The actual
 threshold and strict consistency residuals are recorded; historical 1e-10 eV
 optical streams remain readable. See the [producer instructions](../tools/vasp544_spin_bridge/README.md#optical-comparison-near-degeneracies).
 
-In a finite source-band space $P$, the implemented product is
+In a finite source-band space $`P`$, the implemented product is
 
-$$
+```math
 K^{a,P}_i=\frac12\{P\Sigma^aP,PD_iP\}.
-$$
+```
 
-It differs from $P\{\Sigma^a,D_i\}P/2$ by the omitted terms
-$[P\Sigma^aQD_iP+PD_iQ\Sigma^aP]/2$, where $Q=1-P$.
+It differs from $`P\{\Sigma^a,D_i\}P/2`$ by the omitted terms
+$`[P\Sigma^aQD_iP+PD_iQ\Sigma^aP]/2`$, where $`Q=1-P`$.
 Thus source-band convergence tests both the current-product closure and the
 intermediate-state sum. The multiplication is performed over all retained
 source bands **before** selecting occupied–empty transitions. The numerical
@@ -123,29 +122,29 @@ explicitly discussed by [Ryoo, Park and Souza](https://doi.org/10.1103/PhysRevB.
 
 ## Kubo formula, signs and units
 
-For the fixed occupied group $\mathcal V$,
+For the fixed occupied group $`\mathcal V`$,
 
-$$
+```math
 \Omega^{a}_{ij}(\mathbf k)=-2\,\mathrm{Im}
 \sum_{n\in\mathcal V,m\notin\mathcal V}
 \frac{K^a_{i,nm}D_{j,mn}}{(E_m-E_n)^2}.
-$$
+```
 
 Equal-occupation internal terms cancel before division. Internal Kramers
 degeneracies are allowed; a touching occupied–empty boundary is rejected.
-The spin curvature-like tensor has units Å². With $e>0$ and normalized
+The spin curvature-like tensor has units Å². With $`e>0`$ and normalized
 full-zone weights, the physical sheet coefficient is
 
-$$
+```math
 \frac{\sigma^a_{ij}}{(\hbar/e)(e^2/h)}
 =\frac{A_{\rm BZ}}{4\pi}\sum_{\mathbf k}w_{\mathbf k}\Omega^a_{ij}(\mathbf k).
-$$
+```
 
 For comparison, charge Hall uses
-$\sigma^{\rm charge}_{ij}/(e^2/h)=-A_{\rm BZ}\sum w\Omega^{\rm charge}_{ij}/(2\pi)$.
-In a conserved $\sigma_z=+1$ sector, the normalized spin coefficient is
+$`\sigma^{\rm charge}_{ij}/(e^2/h)=-A_{\rm BZ}\sum w\Omega^{\rm charge}_{ij}/(2\pi)`$.
+In a conserved $`\sigma_z=+1`$ sector, the normalized spin coefficient is
 therefore minus one half of the normalized charge coefficient. The factor
-comes from physical spin $\hbar/2$ and the electron charge $-e$; no additional
+comes from physical spin $`\hbar/2`$ and the electron charge $`-e`$; no additional
 spin multiplicity or post hoc integer rounding is applied. The opposite
 sectors can cancel in charge Hall while adding in spin Hall. This is the
 conventional current response, not a spin Chern number.

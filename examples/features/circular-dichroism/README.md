@@ -56,7 +56,9 @@ python3 examples/features/circular-dichroism/run.py --output-dir results/mos2-op
 
 The polarization selectivity is
 
-$$\eta=\frac{I_L-I_R}{I_L+I_R}.$$
+```math
+\eta=\frac{I_L-I_R}{I_L+I_R}.
+```
 
 The lowest K peak lies at about **1.67 eV**, with η = −1 in the program's
 channel convention. K′ has the opposite selectivity, η = +1. The chosen

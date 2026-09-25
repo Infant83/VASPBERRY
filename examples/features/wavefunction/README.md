@@ -53,8 +53,10 @@ format, these are amplitudes rather than charge densities.
 
 For the native output W(r) and cell volume V,
 
-$$\psi(\mathbf r)=W(\mathbf r)/V,\qquad
-\rho(\mathbf r)=|\psi_\uparrow|^2+|\psi_\downarrow|^2.$$
+```math
+\psi(\mathbf r)=W(\mathbf r)/V,\qquad
+\rho(\mathbf r)=|\psi_\uparrow|^2+|\psi_\downarrow|^2.
+```
 
 The integrated pseudo-density is **0.825814**, consistent with the norm of
 the stored plane-wave coefficients. It excludes the PAW augmentation and

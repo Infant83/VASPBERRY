@@ -14,32 +14,37 @@ each positive mesh direction, VASPBERRY forms the non-Abelian overlap matrix
 and its normalized determinant link,
 
 ```math
-U_mu(k) = det[Psi(k)^dagger Psi(k+mu)] /
-          |det[Psi(k)^dagger Psi(k+mu)]|.
+U_\mu(\mathbf k)=
+\frac{\det\!\left[\Psi(\mathbf k)^\dagger\Psi(\mathbf k+\Delta\mathbf k_\mu)\right]}
+{\left|\det\!\left[\Psi(\mathbf k)^\dagger\Psi(\mathbf k+\Delta\mathbf k_\mu)\right]\right|}.
 ```
+
+Here $`\Delta\mathbf k_\mu`$ is one positive mesh step in direction $`\mu`$.
 
 The four link arguments around a plaquette give a principal plaquette phase
 `phi_p` and an integer field
 
 ```math
-phi_p = wrap(sum_(links in boundary p) arg U_link),
+\phi_p=\mathrm{wrap}\!\left(\sum_{\ell\in\partial p}\arg U_\ell\right),
 ```
 
 ```math
-n_V(p) = [sum_(links in boundary p) arg U_link - phi_p] / (2 pi).
+n_{\mathrm V}(p)=\frac{\displaystyle\sum_{\ell\in\partial p}\arg U_\ell-\phi_p}{2\pi}.
 ```
 
 VASPBERRY constructs the time-reversal gauge required on the half Brillouin
 zone. In its plane-wave convention,
 
 ```math
-psi_k(r) = sum_G C_(G,k) exp[i(k+G).r],
+\psi_{\mathbf k}(\mathbf r)=\sum_{\mathbf G}C_{\mathbf G,\mathbf k}
+\exp\!\left[i(\mathbf k+\mathbf G)\cdot\mathbf r\right],
 ```
 
 the reciprocal-vector mapping used to represent the time-reversed state is
 
 ```math
-G_target = -G_source + round(-k_source-k_target).
+\mathbf G_{\mathrm{target}}=-\mathbf G_{\mathrm{source}}
++\mathrm{round}\!\left(-\mathbf k_{\mathrm{source}}-\mathbf k_{\mathrm{target}}\right).
 ```
 
 This last expression is a code-level consequence of the VASPBERRY plane-wave
@@ -52,7 +57,7 @@ equivalent `i sigma_y K` convention only by an overall phase and satisfies
 For either complementary half-zone,
 
 ```math
-nu = sum_(p in B_half) n_V(p) mod 2.
+\nu=\left[\sum_{p\in B_{1/2}}n_{\mathrm V}(p)\right]\bmod 2.
 ```
 
 Fukui and Hatsugai write `D_L=-sum n_12` (Ref. 1). With the plaquette

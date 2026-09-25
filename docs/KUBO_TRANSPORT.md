@@ -126,13 +126,13 @@ scales as the number of k points times the square of `NBANDS`.
 ### Occupations and degeneracies
 
 For an unordered pair, the exporter stores
-\(N^{ab}_{nm}=-2\operatorname{Im}(D^a_{nm}D^b_{mn})\). Integration uses
+$`N^{ab}_{nm}=-2\mathrm{Im}(D^a_{nm}D^b_{mn})`$. Integration uses
 
-\[
+```math
 \frac{\sigma_{xy}}{e^2/h}=-\frac{S_{\rm BZ}}{2\pi}g_s
-\sum_k w_k\sum_{n<m}(f_n-f_m)
+\sum_k w_k\sum_{n\lt m}(f_n-f_m)
 \frac{N^{xy}_{nm}}{(E_n-E_m)^2}.
-\]
+```
 
 Equal-occupation pairs cancel before division. Thus exact internal degeneracies
 of a filled band bundle need no individual-band curvature. A small denominator
@@ -180,14 +180,14 @@ order and performs no Chern integration. `-kubo 1` also prints the finite-mesh
 bundle integral using the existing mesh parameters; it requires the full
 uniform mesh with the correct `-kx` and `-ky` values.
 
-For a selected group \(I\), let \(D_{\alpha,nm}\) denote the matrix
-element of \(\partial_{k_\alpha}H\). Its eigenstate representation is
+For a selected group $`I`$, let $`D_{\alpha,nm}`$ denote the matrix
+element of $`\partial_{k_\alpha}H`$. Its eigenstate representation is
 
-\[
-\Omega_{I,xy}(k)=-2\operatorname{Im}
+```math
+\Omega_{I,xy}(k)=-2\mathrm{Im}
 \sum_{n\in I}\sum_{m\notin I}
 \frac{D_{x,nm}(k)D_{y,mn}(k)}{(E_n-E_m)^2}.
-\]
+```
 
 When individual bands are isolated, this equals their summed curvature.
 Internal pairs contribute opposite terms and cancel. The bundle routine
@@ -268,36 +268,36 @@ only the represented contribution; it does not supply a missing baseline.
 
 The connection convention is
 
-\[
+```math
 A_{n,\alpha}=i\langle u_n|\partial_{k_\alpha}u_n\rangle.
-\]
+```
 
 For an isolated band and a Hermitian physical vertex
-\(D_{\alpha,nm}=\langle u_n|\partial_{k_\alpha}H|u_m\rangle\),
+$`D_{\alpha,nm}=\langle u_n|\partial_{k_\alpha}H|u_m\rangle`$,
 
-\[
+```math
 \Omega_{n,\alpha\beta}(k)=
--2\operatorname{Im}\sum_{m\ne n}
+-2\mathrm{Im}\sum_{m\ne n}
 \frac{D_{\alpha,nm}(k)D_{\beta,mn}(k)}{(E_n-E_m)^2}.
-\]
+```
 
 Cartesian k is measured in Å⁻¹, D in eV·Å, energies in eV and curvature in
-Å². The three output components are \((\Omega_{yz},\Omega_{zx},\Omega_{xy})\),
+Å². The three output components are $`(\Omega_{yz},\Omega_{zx},\Omega_{xy})`$,
 equivalently the Cartesian curvature vector. Reciprocal vectors include
-\(2\pi\). If the supplied operator is velocity, convert with \(D=\hbar v\)
+$`2\pi`$. If the supplied operator is velocity, convert with $`D=\hbar v`$
 before writing the matrix contract. A bare momentum matrix requires the
 appropriate physical conversion and is not generally the full velocity of a
 nonlocal, PAW or SOC Hamiltonian.
 
-For the plane spanned by the ordered reciprocal vectors \(b_1,b_2\), define
-\(S_{\rm BZ}=|b_1\times b_2|\) and \(\hat n=(b_1\times b_2)/S_{\rm BZ}\).
-Normalized integration weights satisfy \(\sum_k w_k=1\). The sheet response is
+For the plane spanned by the ordered reciprocal vectors $`b_1,b_2`$, define
+$`S_{\rm BZ}=|b_1\times b_2|`$ and $`\hat n=(b_1\times b_2)/S_{\rm BZ}`$.
+Normalized integration weights satisfy $`\sum_k w_k=1`$. The sheet response is
 
-\[
+```math
 C_{\rm occ}(\mu,T)\simeq\frac{S_{\rm BZ}}{2\pi}
 g_s\sum_{kn}w_k f(E_{nk}-\mu,T)\,\Omega_n(k)\cdot\hat n,
 \qquad \frac{\sigma_{xy}}{e^2/h}=-C_{\rm occ}.
-\]
+```
 
 Here `xy` denotes the declared oriented plane. It is the literal Cartesian
 xy response only when the normal points along +z. No effective layer
@@ -306,7 +306,7 @@ spin Hall conductivity, extrinsic scattering contributions, or finite-frequency
 optical conductivity. The separate [spin Hall workflow](SPIN_HALL.md) uses
 its own spin-current operator, input contract and tensor output.
 
-The explicit multiplicity \(g_s\) is 1 for SOC spinors or one spin channel,
+The explicit multiplicity $`g_s`$ is 1 for SOC spinors or one spin channel,
 and 2 only for a declared scalar spin-degenerate calculation. It counts
 represented physical states; it is separate from the corrected circular-momentum
 normalization and must not be added to an already enumerated spinor spectrum.
@@ -364,7 +364,7 @@ postprocessor does not independently establish that physical claim.
 
 For PAW/nonorthogonal representations, overlap and basis-connection terms
 matter. Differentiating a generalized eigenproblem involves
-\(\partial H-E_n\partial S\); that expression alone is not automatically the
+$`\partial H-E_n\partial S`$; that expression alone is not automatically the
 Hermitian physical vertex expected here. Nonlocal potentials, SOC and Hubbard
 projectors can contribute to velocity. Validate the actual exporter against
 the declared Hamiltonian and basis.

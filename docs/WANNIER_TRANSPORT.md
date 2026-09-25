@@ -92,25 +92,25 @@ only after source integrity and all requested gap conditions pass.
 
 ## Formula and outputs
 
-With $A=i\langle u|\partial_k u\rangle$, let $o$ and $e$ denote occupied and
-empty eigenstates, $D_a^{oe}=\langle o|\partial_aH|e\rangle/(E_e-E_o)$, and
-$\bar A_a^{oe}=\langle o|A_a^{W}|e\rangle$. Let $U_o$ contain the occupied
+With $`A=i\langle u|\partial_k u\rangle`$, let $`o`$ and $`e`$ denote occupied and
+empty eigenstates, $`D_a^{oe}=\langle o|\partial_aH|e\rangle/(E_e-E_o)`$, and
+$`\bar A_a^{oe}=\langle o|A_a^{W}|e\rangle`$. Let $`U_o`$ contain the occupied
 Hamiltonian eigenvectors in the Wannier basis. The occupied trace is
 
-$$
+```math
 \begin{aligned}
 \Omega_{ab}&=J0+J1+J2,\\
 J0&=\mathrm{Re}\,\mathrm{Tr}[U_o^\dagger(\partial_a A_b^W-\partial_b A_a^W)U_o],\\
 J1&=2\mathrm{Re}\sum_{oe}(\bar A_a^{oe}D_b^{oe*}-D_a^{oe}\bar A_b^{oe*}),\\
 J2&=-2\mathrm{Im}\sum_{oe}D_a^{oe}D_b^{oe*}.
 \end{aligned}
-$$
+```
 
 Only occupied-to-empty denominators occur, so degeneracies internal to either
 subspace are allowed.
-The Fourier phase is $e^{2\pi i\mathbf q\cdot\mathbf R}$, while Cartesian
-derivatives use $iR_a$ with real-space vectors in Å. The sheet response is
-$\sigma/(e^2/h)=-A_{BZ}\sum_k w_k\Omega_{\rm normal}/(2\pi)$, including the
+The Fourier phase is $`e^{2\pi i\mathbf q\cdot\mathbf R}`$, while Cartesian
+derivatives use $`iR_a`$ with real-space vectors in Å. The sheet response is
+$`\sigma/(e^2/h)=-A_{BZ}\sum_k w_k\Omega_{\rm normal}/(2\pi)`$, including the
 explicit spin multiplicity. No integer rounding or extra half factor is used.
 
 - `hall/conductivity.csv`, `.dat`, `.npz`: common Hall table format.
