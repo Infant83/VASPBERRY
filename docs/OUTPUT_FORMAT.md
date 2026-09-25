@@ -370,6 +370,29 @@ it does not add omitted occupied bands. A successful window check still does
 not prove that the source calculation includes enough unoccupied states for
 curvature convergence.
 
+## PAW circular transition strengths
+
+`waveder-optics` writes `optical.json` with schema
+`vaspberry.circular-transition-strength`, version 1. Requested CSV, DAT and
+NPZ files contain the same long-form columns; CSV/DAT use `NaN` for invalid
+ratios, and NPZ has an explicit boolean `eta_valid` array.
+
+- `transitions.*`: k index, fractional coordinates, unapplied source k weight,
+  initial/final inclusive band bounds, `transition_eV` (group centroid
+  difference), `transition_min_eV`, `transition_max_eV`, `I_plus_A2`,
+  `I_minus_A2`, `eta`, `eta_valid`.
+- `spectra.*`: k index, fractional coordinates, unapplied source k weight,
+  `photon_eV`, `I_plus_A2_per_eV`, `I_minus_A2_per_eV`, `eta`, `eta_valid`.
+
+Both initial and final windows contain complete near-degenerate groups;
+their strengths are summed before forming the ratio. Spectra use normalized
+Gaussians of the declared standard deviation and group-centroid transition
+energies. No k weight, spin multiplicity, photon-energy or cell-volume factor
+is applied. These are point transition strengths, not absolute absorption or
+photoluminescence. Metadata specifies the algebraic circular-polarization
+convention, input operator, band grouping, finite-intensity mask and source
+validation. See the [PAW optical guide](PAW_OPTICS.md) for formulas and usage.
+
 ## User-defined reciprocal-space regions
 
 The JSON has one top-level `regions` list. Each region has a unique `name`

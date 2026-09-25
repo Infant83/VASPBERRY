@@ -22,8 +22,12 @@ Configure that copy for a **serial, complex `ncl` build**, using your site's
 compiler and BLAS/LAPACK setup, then build it:
 
 ```bash
-make -C /path/to/isolated-vasp544 ncl
+make -j1 -C /path/to/isolated-vasp544 ncl
 ```
+
+Use a serial build for the first instrumentation rebuild. The response module
+must be regenerated before its optical consumer; older VASP make dependencies
+can leave stale module files or compile them out of order under parallel make.
 
 The instrumenter records the supported revision and all modifications in
 `vaspberry-spin-producer.json`. Both output flags default to false, preserving
@@ -106,6 +110,27 @@ The converter compares separated pairs with the optical connection and checks
 the independently exported diagonal energy derivative. These are consistency
 checks within the producer. Finite-k energy slopes and independent response
 benchmarks provide additional physical validation.
+
+### Optical comparison near degeneracies
+
+With `LSPIN_EXPORT=.TRUE.`, the optical comparison uses the standard **0.002 eV**
+cluster threshold. The full velocity is captured before that optical division
+and retains its diagonal and all degenerate blocks. The cluster threshold
+therefore controls which optical elements can be used as a consistency check;
+it does not truncate the exported full velocity or change its eigenstates.
+
+This matters when numerical splittings are very small: reconstructing a
+derivative state with a tiny energy denominator can amplify contraction and
+orthogonality roundoff into other optical entries. The comparison still
+requires an absolute residual below `1e-7` eV Å on every covered separated
+element, along with the unchanged diagonal, commutator and Hermiticity tests.
+There is no tolerance relaxation or matrix repair.
+
+Legacy `LBERRY_EXPORT`-only optical exports retain their `1e-10` eV threshold.
+Both policies remain readable, and the stream header, build manifest and
+producer audit record the actual policy. Original Bi reference files keep
+their recorded legacy producer settings. When rebuilding the producer, check
+the full velocity against the previous build on the same fixed eigenstates.
 
 The spin Hall backend currently constructs the anticommutator from these
 **finite band matrices**. This is a projected-product approximation: excluded

@@ -1,11 +1,64 @@
 # Local validation of the 1.3.0 development candidate
 
-Initial checks on 2026-09-19; scientific examples and transport checks updated through 2026-09-24. This is a local source validation, not a hosted release
+Initial checks on 2026-09-19; scientific examples and transport checks updated through 2026-09-25. This is a local source validation, not a hosted release
 or a completed material-convergence study.
 
-The latest local spin/PAW/edge update passed **431 tests with no skips**,
+The latest local optical/full-velocity update passed **453 tests with no skips**,
 including the compiled MPI checks. Earlier counts below describe their
 respective historical source snapshots.
+
+## Optical and full-velocity update (2026-09-25)
+
+The final complete local suite ran 453 tests with no skips in 46.941 s. The
+separate `make check-gnu` serial and two-rank MPI build/help/runtime checks
+also passed. New checks cover standard WAVEDER polarization, complete
+degenerate-subspace strengths, coordinate rotations, source-file association,
+CSV/DAT/NPZ parity, and full-velocity charge pairs. An independent ordered-pair
+oracle agrees with the unordered-pair integration to 6.94×10⁻¹⁸ in sheet units,
+including an occupied doublet and finite-temperature occupations.
+
+An actual MoS₂ producer run exposed a conditioning problem in the optional
+optical consistency diagnostic. Dividing by numerical splittings below
+10⁻⁹ eV amplified roundoff during the subsequent PAW projection. The raw
+full velocity was Hermitian and passed its diagonal and commutator checks,
+but the reconstructed optical comparison failed its unchanged 10⁻⁷ eV Å
+acceptance threshold. That failed conversion was retained and excluded from
+the reference results.
+
+The instrumented full-velocity branch now applies a 2 meV degeneracy
+threshold to this optical diagnostic, while preserving the undivided full
+velocity and its degenerate blocks. The optical-only legacy branch retains
+its earlier threshold. Both values are explicitly recorded and validated.
+Frozen-state old/new MoS₂ pilots produced byte-identical final WAVECAR and
+full spin/velocity streams. Across 1,519,914 covered optical elements, the
+maximum consistency error fell from 8.22×10⁻⁵ to 4.40×10⁻¹² eV Å. No velocity
+averaging, Hermitian repair or relaxed acceptance criterion was used. This
+is a producer-conditioning check, separate from material convergence.
+
+The existing actual MnBi₂Te₄ standard-WAVEDER Hall calculation was rerun
+from its six original VASP chunks after the shared optical reader refactor.
+Its CSV, DAT and NPZ outputs are byte-identical to the preceding reference.
+This preserves the reported coarse-grid diagnostic; it does not turn that
+diagnostic into a converged Hall integral.
+
+All four new MoS₂ stacking examples completed actual ordinary-VASP SOC
+calculations. Independent checks contracted the raw optical matrices,
+validated complete degenerate groups and K/K′ helicity exchange, and checked
+CSV/DAT/NPZ parity. All 40 archived numerical files matched their original
+outputs. The largest time-reversal energy residual among bands visible in
+the report is 1.25×10⁻⁸ eV. The native optical text has four decimal places;
+the common figure mask propagates that rounding to an absolute selectivity
+uncertainty, without modifying raw channels or symmetrizing the 2H result.
+All 2,808 figure diagnostic rows passed independent checks. See the
+[public optical validation](../examples/materials/mos2-stacking-valley/reference/validation.json).
+
+The matched charge-Hall example uses identical VASP eigenstates, energies,
+k points and weights for both operators. An independent ordered-pair sum
+agrees with all four conductivity scans within 1.54×10⁻¹⁵ e²/h. Reintegrating
+the two public pair caches reproduces all 12 CSV/DAT/NPZ files byte for byte.
+The 40→50-band changes are separate from k-mesh convergence; neither the
+coarse matched mesh nor the optical paths establish converged material
+response. See the [reproduction guide](../examples/features/kubo-hall/operator-comparison/).
 
 ## Reproducible public checks
 

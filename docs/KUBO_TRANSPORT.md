@@ -15,6 +15,9 @@ analytic model demonstration. Python 3.10+ and the dependencies in
 Use `python tools/vaspberry_kubo.py --help` and each subcommand's `--help` for
 the available options. The [output specification](OUTPUT_FORMAT.md) describes
 the interchange files; [migration](MIGRATION.md) covers older normalization.
+The [operator input guide](OPERATOR_ROUTES.md) compares the ordinary WAVECAR
+workflow with optional standard optical and full-matrix routes, including
+which routes require VASP source instrumentation.
 
 ## Start from actual VASP output
 

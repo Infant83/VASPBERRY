@@ -93,7 +93,7 @@ def read_run_settings(incar_text, outcar_text):
         settings[name] = outcar_value(outcar_text, name, number)
     require(not any(settings[name] for name in ('LNABLA', 'LREAL', 'LHFCALC', 'METAGGA', 'LEPSILON', 'LVEL')),
             'unsupported PAW optical branch; require LNABLA/LREAL/LHFCALC/METAGGA/LEPSILON/LVEL false')
-    require(settings['ISYM'] == -1 and settings['NSW'] == 0, 'static NSW=0 and full-mesh ISYM=-1 required')
+    require(settings['ISYM'] == -1 and settings['NSW'] == 0, 'static NSW=0 and ISYM=-1 required')
     require(settings['DEG_THRESHOLD'] == PRODUCER_THRESHOLD_EV, 'standard producer DEG_THRESHOLD=0.002 eV required')
     require(settings['ISPIN'] in (1, 2) and settings['NKPTS'] > 0 and settings['NBANDS'] > 1
             and np.isfinite(settings['NELECT']) and settings['NELECT'] > 0, 'invalid OUTCAR dimensions/electron count')
@@ -165,9 +165,13 @@ def occupied_curvature(connection, occupied):
                      for a, b in ((1, 2), (2, 0), (0, 1))], axis=1)
 
 
-def read_validated_run(run_dir, mus, *, occupied, spin, spinor_components, spin_multiplicity,
-                       energy_reference, mu_reference):
-    """Read genuine per-run states and optical curvature without a mesh assumption."""
+def read_validated_optical_states(run_dir, *, spin, spinor_components, energy_reference):
+    """Shared same-run checks, without Hall filling, weight or mesh assumptions.
+
+    WAVEDER has no coordinates or energies. The directory association remains
+    an explicit user assertion even after the independently checkable fields
+    agree. Returned OUTCAR weights retain their printed precision.
+    """
     run = Path(run_dir)
     paths = {name: run/name for name in ('WAVEDER', 'WAVECAR', 'INCAR', 'OUTCAR')}
     require(all(p.is_file() for p in paths.values()), 'run directory requires WAVEDER, WAVECAR, INCAR and OUTCAR')
@@ -178,11 +182,10 @@ def read_validated_run(run_dir, mus, *, occupied, spin, spinor_components, spin_
     require(spinor_components == expected_spinors and (not settings['LSORBIT'] or expected_spinors == 2),
             'spinor declaration disagrees with OUTCAR')
     require(type(spin) is int and 1 <= spin <= settings['ISPIN'], 'selected spin channel outside OUTCAR')
-    require(type(occupied) is int and 0 < occupied < settings['NBANDS'], 'occupied leading bundle and stored empty bands required')
     require(isinstance(energy_reference, str) and bool(energy_reference.strip()), 'describe the unchanged VASP energy reference')
     ns, nk, nb = (settings[name] for name in ('ISPIN', 'NKPTS', 'NBANDS'))
     printed_q, printed_e, printed_occ, lattice, grid = outcar_arrays(text, nk, nb, ns)
-    require(np.allclose(grid[:, 3], 1/nk, atol=.00051, rtol=0), 'OUTCAR full-grid weights are not uniform')
+    require(np.all(grid[:, 3] >= 0), 'nonnegative OUTCAR k-point weights required')
     waves = []
     physical_spin_factor = 2 if ns == 1 and spinor_components == 1 else 1
     for channel in range(1, ns+1):
@@ -202,8 +205,24 @@ def read_validated_run(run_dir, mus, *, occupied, spin, spinor_components, spin_
     w = waves[spin-1]
     source = read_waveder(paths['WAVEDER'])
     require(source.C_A.shape[:4] == (ns, nk, 3, nb), 'WAVEDER/WAVECAR spin/k/band dimensions disagree')
-    require(source.C_A.shape[4] >= occupied, 'WAVEDER occupied-ket coverage is incomplete')
     require(source.source_sha256 == hashes['WAVEDER'], 'WAVEDER changed while reading')
+    require(all(sha256(p) == hashes[name] for name, p in paths.items()), 'source files changed during validation')
+    return SimpleNamespace(run=run, paths=paths, hashes=hashes, settings=settings,
+        waves=waves, wave=w, source=source, grid=grid, physical_spin_factor=physical_spin_factor)
+
+
+def read_validated_run(run_dir, mus, *, occupied, spin, spinor_components, spin_multiplicity,
+                       energy_reference, mu_reference):
+    """Read genuine per-run states and optical curvature without a mesh assumption."""
+    state = read_validated_optical_states(run_dir, spin=spin, spinor_components=spinor_components,
+                                         energy_reference=energy_reference)
+    run, paths, hashes, settings = state.run, state.paths, state.hashes, state.settings
+    w, waves, source = state.wave, state.waves, state.source
+    physical_spin_factor = state.physical_spin_factor
+    ns, nk, nb = (settings[name] for name in ('ISPIN', 'NKPTS', 'NBANDS'))
+    require(type(occupied) is int and 0 < occupied < nb, 'occupied leading bundle and stored empty bands required')
+    require(np.allclose(state.grid[:, 3], 1/nk, atol=.00051, rtol=0), 'OUTCAR full-grid weights are not uniform')
+    require(source.C_A.shape[4] >= occupied, 'WAVEDER occupied-ket coverage is incomplete')
     requested = np.asarray([*mus, mu_reference], dtype=float)
     require(np.isfinite(requested).all(), 'finite chemical potentials required')
     fillings = []; vbms = []; cbms = []

@@ -1,0 +1,129 @@
+{
+  "status": "PASS",
+  "scope": "Independent audit of actual VASP-based fixed-geometry capability examples. No k-grid, empty-band, structural, excitonic or material-convergence claim.",
+  "optical_source": "Standard unmodified VASP 5.4.4 LOPTICS, non-PEAD, LNABLA=false; occupied-to-empty PAW WAVEDER blocks.",
+  "channel_convention": "epsilon_plus/minus=(x +/- i*y)/sqrt(2), propagation +z, final-state bra and initial-state ket; eta=(I_plus-I_minus)/(I_plus+I_minus).",
+  "checks": "Independent raw-block contractions, exact CSV/DAT/NPZ parity, source/output association, complete common initial/final windows, K/Kprime helicity exchange, public archive preservation and figure diagnostics.",
+  "cases": [
+    {
+      "case": "monolayer",
+      "status": "PASS",
+      "metadata": "monolayer/paw-optical/optical.json",
+      "source_nbands": 60,
+      "path_points": 49,
+      "initial_bands": [
+        1,
+        18
+      ],
+      "final_bands": [
+        19,
+        20
+      ],
+      "source_and_output_hashes_verified": true,
+      "csv_dat_npz_exact_parity": true,
+      "public_numerical_files_byte_identical_to_actual_output": true,
+      "raw_WAVEDER_strength_maxabs_error_A2": 1.7763568394002505e-15,
+      "K_Kprime_spectral_helicity_swap_relative_L2": 4.563953779071847e-07,
+      "K_Kprime_valid_eta_antisymmetry_maxabs": 1.6653345369377348e-14,
+      "PAW_K_peak_photon_eV": 1.68,
+      "PAW_K_peak_eta": -0.99999999999996,
+      "native_K_Kprime_display_common_points": 26,
+      "native_K_Kprime_display_eta_antisymmetry_maxabs": 0.0
+    },
+    {
+      "case": "1h-bilayer",
+      "status": "PASS",
+      "metadata": "1h-bilayer/paw-optical/optical.json",
+      "source_nbands": 64,
+      "path_points": 49,
+      "initial_bands": [
+        1,
+        36
+      ],
+      "final_bands": [
+        37,
+        40
+      ],
+      "source_and_output_hashes_verified": true,
+      "csv_dat_npz_exact_parity": true,
+      "public_numerical_files_byte_identical_to_actual_output": true,
+      "raw_WAVEDER_strength_maxabs_error_A2": 7.105427357601002e-15,
+      "K_Kprime_spectral_helicity_swap_relative_L2": 4.768578237750859e-08,
+      "K_Kprime_valid_eta_antisymmetry_maxabs": 9.106284581950064e-08,
+      "PAW_K_peak_photon_eV": 1.68,
+      "PAW_K_peak_eta": -0.9999999993228107,
+      "native_K_Kprime_display_common_points": 31,
+      "native_K_Kprime_display_eta_antisymmetry_maxabs": 0.0
+    },
+    {
+      "case": "2h-bilayer",
+      "status": "PASS",
+      "metadata": "2h-bilayer/paw-optical/optical.json",
+      "source_nbands": 64,
+      "path_points": 49,
+      "initial_bands": [
+        1,
+        36
+      ],
+      "final_bands": [
+        37,
+        40
+      ],
+      "source_and_output_hashes_verified": true,
+      "csv_dat_npz_exact_parity": true,
+      "public_numerical_files_byte_identical_to_actual_output": true,
+      "raw_WAVEDER_strength_maxabs_error_A2": 1.7763568394002505e-15,
+      "K_Kprime_spectral_helicity_swap_relative_L2": 6.118300226339872e-07,
+      "K_Kprime_valid_eta_antisymmetry_maxabs": 5.540262328680953e-07,
+      "PAW_K_peak_photon_eV": 1.67,
+      "PAW_K_peak_eta": 4.2104082807404524e-07,
+      "native_K_Kprime_display_common_points": 34,
+      "native_K_Kprime_display_eta_antisymmetry_maxabs": 0.0
+    },
+    {
+      "case": "3r-bilayer",
+      "status": "PASS",
+      "metadata": "3r-bilayer/paw-optical/optical.json",
+      "source_nbands": 64,
+      "path_points": 49,
+      "initial_bands": [
+        1,
+        36
+      ],
+      "final_bands": [
+        37,
+        40
+      ],
+      "source_and_output_hashes_verified": true,
+      "csv_dat_npz_exact_parity": true,
+      "public_numerical_files_byte_identical_to_actual_output": true,
+      "raw_WAVEDER_strength_maxabs_error_A2": 7.105427357601002e-15,
+      "K_Kprime_spectral_helicity_swap_relative_L2": 7.36012094500471e-08,
+      "K_Kprime_valid_eta_antisymmetry_maxabs": 1.4419264671161613e-08,
+      "PAW_K_peak_photon_eV": 1.68,
+      "PAW_K_peak_eta": -0.9988384683656456,
+      "native_K_Kprime_display_common_points": 31,
+      "native_K_Kprime_display_eta_antisymmetry_maxabs": 0.0
+    }
+  ],
+  "inversion_symmetric_2H": {
+    "complete_selected_subspace": true,
+    "all_path_PAW_helicity_difference_to_total_relative_L2": 2.523882869376348e-06,
+    "all_path_valid_PAW_eta_maxabs": 0.00010868494049273899,
+    "no_forced_symmetrization_or_zeroing": true
+  },
+  "native_display_precision": {
+    "intensity_print_increment_au": 0.0001,
+    "per_channel_rounding_half_width_au": 5e-05,
+    "conservative_absolute_eta_uncertainty_bound": "1e-4/(I_plus+I_minus); infinite at zero total",
+    "maximum_displayed_absolute_eta_uncertainty": 0.005,
+    "also_requires_original_intensity_mask": true,
+    "raw_channels_and_eta_preserved": true,
+    "nonnegative_rounding_rectangle_extrema_verified": true,
+    "deterministic_additional_channel_pairs_checked": 3006,
+    "figure_diagnostic_rows_verified": 2808,
+    "diagnostics": "figures/native-eta-display.csv",
+    "metadata": "figures/plot.json"
+  },
+  "interpretation": "Native momentum spectra and PAW length-matrix spectra have different finite-broadening energy weights. Their eta overlay compares selection qualitatively; it is not a pure numerical PAW correction or photoluminescence polarization."
+}

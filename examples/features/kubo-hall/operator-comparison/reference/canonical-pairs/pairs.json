@@ -1,0 +1,102 @@
+{
+  "schema": "vaspberry.kubo-pairs",
+  "version": 1,
+  "complete": true,
+  "source_nbands": 60,
+  "normalization": "numerator=-2Im(D_a_nm*D_b_mn)",
+  "components": [
+    "yz",
+    "zx",
+    "xy"
+  ],
+  "units": {
+    "energy": "eV",
+    "numerator": "eV^2 Angstrom^2",
+    "lattice": "Angstrom",
+    "reciprocal": "1/Angstrom"
+  },
+  "sampling": {
+    "kind": "uniform_full_2d",
+    "mesh": [
+      12,
+      12
+    ],
+    "plane_axes": [
+      0,
+      1
+    ]
+  },
+  "spin_multiplicity": 1,
+  "spin_channel_1based": 1,
+  "source_nspin": 1,
+  "spinor_components": 2,
+  "energy_reference": "unchanged VASP eigenvalue zero",
+  "source_operator": {
+    "kind": "canonical_momentum",
+    "accuracy_status": "approximation",
+    "missing_terms": [
+      "PAW augmentation and nonlocal/SOC velocity corrections"
+    ]
+  },
+  "native_metadata": {
+    "schema": "VASPBERRY_BARE_MOMENTUM_KUBO_PAIRS_V1",
+    "vaspberry_version": "1.3.0",
+    "result_kind": "UNORDERED_INTERBAND_NUMERATORS",
+    "normalization": "STANDARD_MINUS_TWO_IM",
+    "operator": "WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY",
+    "berry_connection": "A_i=i<u|d/dk_i u>",
+    "occupation_weighting": "NONE",
+    "denominator_weighting": "NONE",
+    "pair_order": "n_lt_m",
+    "gap_definition": "ABS_EN_MINUS_EM",
+    "numerator_units": "eV^2*Angstrom^2",
+    "components": "yz,zx,xy",
+    "reciprocal_convention": "2pi",
+    "index_base": "1",
+    "source_nbands": "60",
+    "source_nkpoints": "144",
+    "source_nspin": "1",
+    "spinor_components": "2",
+    "pairs_per_k": "1770",
+    "expected_rows": "254880",
+    "lattice_A_1": " 3.17163430321727269E+000, 0.00000000000000000E+000, 0.00000000000000000E+000",
+    "lattice_A_2": " 1.58581715160863634E+000, 2.74671587810031514E+000, 9.99999999999999979E-017",
+    "lattice_A_3": " 0.00000000000000000E+000, 0.00000000000000000E+000, 1.50000000000000000E+001",
+    "reciprocal_inv_A_1": " 1.98105609957981232E+000,-1.14376327237215492E+000, 0.00000000000000000E+000",
+    "reciprocal_inv_A_2": " 0.00000000000000000E+000, 2.28752654474430983E+000, 0.00000000000000000E+000",
+    "reciprocal_inv_A_3": " 0.00000000000000000E+000,-1.52501769649620646E-017, 4.18879032135009766E-001",
+    "result_status": "PASS"
+  },
+  "source_sha256": {
+    "reference/native/PAIRS.csv": "cf25a660c211469a14005329b6513d4d0b78bef272dd07ffcb850c952a97a5fe",
+    "reference/vasp/WAVECAR": "4d341bccc7a99b06e7b11bd9179cb9987b41f5e5003ec3f31d8da269d03728a1"
+  },
+  "provenance": {
+    "vaspberry_version": "1.3.0",
+    "command": {
+      "command": "import-pairs",
+      "csv": "reference/native/PAIRS.csv",
+      "wavecar": "reference/vasp/WAVECAR",
+      "spin": 1,
+      "spinor_components": 2,
+      "spin_multiplicity": 1,
+      "mesh": [
+        12,
+        12
+      ],
+      "plane_axes": [
+        0,
+        1
+      ],
+      "energy_reference": "unchanged VASP eigenvalue zero",
+      "output_dir": "reference/canonical-pairs"
+    },
+    "implementation_sha256": {
+      "kubo_hall_workflow.py": "f66d835be128bf7788a7e43f1cc9ad1781f46f69f6820b52972ac914d912c505",
+      "kubo_pairs.py": "1f9cee49e1eeac355cf054df2133be28c8f41886aa21aa101c64af18befd6014",
+      "berry_data.py": "fa45cb3fd93ab576e12009d17ca010716aaf89487ee29edda9905f37b8e6b435",
+      "vaspberry_transport.py": "cca22d550ed932d0ca77237ecaeb1fa0dbdbec5f8edc08467cb31bd8b1e192db"
+    }
+  },
+  "data_npz_sha256": "4778a17f1e3513d972ed587a286b0292fb2f34ad7e05a67063e0d1af34243efe"
+}

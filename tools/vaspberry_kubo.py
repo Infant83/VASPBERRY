@@ -21,12 +21,14 @@ from exported_matrix_kubo import (ARRAYS as MATRIX_ARRAYS, SCHEMA, UNITS, _band_
 from wavecar_fukui import Wavecar
 from kubo_hall_workflow import COMMANDS as PAIR_COMMANDS, add_commands as add_pair_commands
 from waveder_hall import add_command as add_waveder_command, command as waveder_hall_command
+from waveder_optics import add_command as add_optics_command, command as waveder_optics_command
 from wannier_workflow import COMMANDS as WANNIER_COMMANDS, add_commands as add_wannier_commands
 from wannier_bands import add_command as add_wannier_bands, command as wannier_bands_command
 from wannier_edge import add_command as add_wannier_edge, command as wannier_edge_command
 from spin_hall_workflow import COMMANDS as SPIN_COMMANDS, add_commands as add_spin_commands
 from vasp_spin_export import add_arguments as add_spin_export_arguments, command as spin_export_command
 from spin_assembly import add_command as add_spin_merge, command as spin_merge_command
+from velocity_pairs import add_command as add_velocity_pairs, command as velocity_pairs_command
 
 __version__ = '1.3.0'
 
@@ -240,6 +242,8 @@ def parser():
     d.add_argument('--output-dir',type=Path,required=True)
     add_pair_commands(sub)
     add_waveder_command(sub)
+    add_velocity_pairs(sub)
+    add_optics_command(sub)
     add_wannier_commands(sub)
     add_wannier_bands(sub)
     add_wannier_edge(sub)
@@ -253,7 +257,7 @@ def main(argv=None):
     p=parser(); args=p.parse_args(argv)
     try:
         require(not args.output_dir.exists(),'output directory exists; choose a new directory')
-        meta={**PAIR_COMMANDS,**WANNIER_COMMANDS,**SPIN_COMMANDS,'spin-merge':spin_merge_command,'spin-export':spin_export_command,'wannier-bands':wannier_bands_command,'wannier-edge':wannier_edge_command,'waveder-hall':waveder_hall_command,'matrix':matrix_command,'import-legacy':import_legacy,'hall':hall_command,'demo':demo}[args.command](args)
+        meta={**PAIR_COMMANDS,**WANNIER_COMMANDS,**SPIN_COMMANDS,'velocity-pairs':velocity_pairs_command,'spin-merge':spin_merge_command,'spin-export':spin_export_command,'wannier-bands':wannier_bands_command,'wannier-edge':wannier_edge_command,'waveder-hall':waveder_hall_command,'waveder-optics':waveder_optics_command,'matrix':matrix_command,'import-legacy':import_legacy,'hall':hall_command,'demo':demo}[args.command](args)
     except (ValueError, OSError, KeyError, TypeError) as exc:
         p.error(str(exc))
     print(json.dumps({'output':str(args.output_dir),'schema':meta['schema'],'version':meta['version']}))

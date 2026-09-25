@@ -1,0 +1,70 @@
+{
+  "status": "FINISHED",
+  "started_utc": "2026-09-25T00:59:27.380415+00:00",
+  "command": [
+    "<local-workspace>/runs/mos2-stacking-capabilities-20260925/operator-comparison/producer-build/bin/vasp_ncl"
+  ],
+  "binary_sha256": "12d54450abcc4b0f81c600ba0e3354ece70a5b4c0f08701c8c6ebc8564090e24",
+  "producer_manifest_sha256": "2615d80fcaff6dfce69c4b298043824072fdffd6583b519d5165ad2c99782209",
+  "wrapper_sha256": "d4c94968443c4cf5246860bc5ddab79e8955e221e1fe02d04dceb88f74ed5b72",
+  "stack_limit_bytes": 67104768,
+  "producer_manifest": {
+    "schema": "vaspberry.vasp544-spin-producer",
+    "version": 1,
+    "source_files": {
+      "elinear_response.F": {
+        "before_sha256": "93aa633c326e2b75c5de4eae5946c3aa799e945d315265fadedf0eea8d009434",
+        "after_sha256": "3c1fdd6851b5096255694df23a05985695745f7f0b3a01d01cbdbe4f34d157b9"
+      },
+      "linear_optics.F": {
+        "before_sha256": "1eac9ddc5ad014572f797675c6a25c50d01aa234d5b6035562783626e6302cd5",
+        "after_sha256": "c746eefb976edf82cbf7697153be5d0fb613542f4243553baa4771e24816a1b6"
+      }
+    },
+    "instrumenter_sha256": "6f897bc5a69ddd8cc99b309baa4f5b3a2d42494211e2e0f58bceeebbf1f55edf",
+    "template_sha256": {
+      "spin_routines.inc": "f1291cba3c8120dcbe18e2501f5eaad46f03e66521eebe36cf7498ec4db071f7",
+      "optical_routines.inc": "5b8e0d81301dab6e021e35c3179360f80878a2e0147370c0f1debad73d9b2c6b"
+    },
+    "supported_scope": "Serial complex VASP5.4.4 ncl; audited source hashes; PAW spin-independent overlap; Cartesian +z SAXIS.",
+    "optical_threshold_policy": {
+      "LBERRY_EXPORT_only_eV": 1e-10,
+      "LSPIN_EXPORT_eV": 0.002,
+      "scope": "Only optical derivative-state clustering; full predivision velocity and spin matrices are unchanged.",
+      "stream_header_records_actual_threshold": true
+    },
+    "new_files_are_original_instrumentation": true
+  },
+  "threads": 1,
+  "timeout_seconds": 3600.0,
+  "memory_limit_bytes": 6442450944,
+  "input_sha256": {
+    "INCAR": "55b332efa99c1502486f9c597572ffc10437824950b6d020157181e3de3dce73",
+    "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+    "KPOINTS": "823f81dfcc69cdeae53f87ffda2293ca07e37c8cd77fb2dc95271954a3a3850f",
+    "POTCAR": "b8f5bccb188e7a8b1082445abe307e62f27d3cd9f9f7b128325dacee3e9192a0",
+    "CHGCAR": "e6d9d95d4d5f7afef4d69a9f13f780553b737f78974355923cb3fd532dff311d",
+    "WAVECAR": "956a6ac064ef771f992335e1174427efee5f2f46605989d06e0de2c0755cf8c4"
+  },
+  "pid": 37093,
+  "elapsed_s": 683.2551298898179,
+  "sampled_peak_rss_bytes": 3088252928,
+  "returncode": 0,
+  "normal_footer": true,
+  "converged": true,
+  "completed_export": true,
+  "unchanged_inputs_and_binary": true,
+  "finished_utc": "2026-09-25T01:10:52.880998+00:00",
+  "wall_seconds": 684.3830312800128,
+  "output_sha256": {
+    "OUTCAR": "c91b642f76365a5a9f9492bc5812842f9f1a8e12fecb0cb1f55db1a1378e7740",
+    "OSZICAR": "093f7b61c4fd163afd45edc4a8db14216e809b4aab4df24a34b13a34ef84ebbe",
+    "EIGENVAL": "c3797e44c9bd324dc6a0bb879b67f0ef43f845f7be0bf45b1de2b206f7e27ecd",
+    "WAVECAR": "4d341bccc7a99b06e7b11bd9179cb9987b41f5e5003ec3f31d8da269d03728a1",
+    "SPIN_VELOCITY.bin": "6aa4ac43fafcd59eeeae45cac3a97c34367a230d1a9f5557df6befdc9b05d4d0",
+    "BERRY_CONNECTION.bin": "483a438b108f6dd66727305ea5ab07ff563889f36ab45586b569ef5be42349f2",
+    "WAVEDER": "7f0efd6431ab0a5b884df4d11fe8938d62bc9e4b8af8e09c330f140b325fba09",
+    "stdout.log": "f33a69cca0f6c652cc841a5b7edad34dd32d1959a26fd1aadcfc143e716804bb",
+    "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

@@ -1,6 +1,6 @@
 # VASP files for the examples
 
-The examples use monolayer MoS₂, a Bi bilayer and a magnetic MnBi₂Te₄ film. Choose a full k mesh for
+The examples use monolayer and bilayer MoS₂, a Bi bilayer and a magnetic MnBi₂Te₄ film. Choose a full k mesh for
 Brillouin-zone maps and topological integrals, or a band path for k-resolved
 spectra.
 
@@ -9,10 +9,12 @@ spectra.
 | MoS₂ band path | [WAVECAR, POSCAR and EIGENVAL](1H-MoS2/KPATH/2.band/) | SOC; 48 points along K–Γ–K′; 32 bands. Kubo curvature, optical spectra and Γ wavefunctions |
 | MoS₂ full-zone curvature | [VASP inputs](features/fukui-berry-curvature/inputs/) and [calculated output](features/fukui-berry-curvature/reference/) | 12×12 mesh; occupied bands 1–18. Fukui curvature map; see the [Fukui tutorial](features/fukui-berry-curvature/) for available inputs and reproduction |
 | MoS₂ Kubo transport | [VASP preparation and Hall commands](features/kubo-hall/) | Full periodic meshes, occupations at specified chemical potentials and temperatures; separate mesh and intermediate-band checks |
+| MoS₂ stacking and optical selection | [Four-system guide and actual inputs](materials/mos2-stacking-valley/) | Fresh SOC SCF and 49-point paths; ordinary WAVECAR and optional standard WAVEDER; fixed monolayer/1H/2H/3R geometries |
+| Matched MoS₂ charge operators | [VASP recipe and reusable pair references](features/kubo-hall/operator-comparison/) | Identical 12×12 VASP states for canonical momentum and optional full PAW velocity; separate 40/50-band integration cutoffs |
 | Historical Bi_Z2 full mesh | [WAVECAR](Bi_Z2/WAVECAR), [band energies](Bi_Z2/archive-2016-run/EIGENVAL) | SOC; 12×12 mesh; 18 bands. Occupied Chern number, Z₂ and insulating-gap charge-Hall response |
 | Historical Bi_Z2 preparation | [SCF and NSCF inputs](Bi_Z2/inputs/) | Templates for a new calculation; archived SCF provenance is incomplete |
 | Bi physical spin Hall and ideal edges | [Material guide](materials/bi-spin-hall/), [fresh SCF density and inputs](materials/bi-spin-hall/inputs/scf/), [PAW dataset guide](materials/bi-spin-hall/PSEUDOPOTENTIAL.md) | Fresh fixed-density SOC calculation; full PAW spin/velocity matrices for gapped T=0 transport, and a separately validated Wannier Hamiltonian for the ideal strip |
-| MnBi₂Te₄, three septuple layers | [Structure and VASP inputs](materials/mnbi2te4-qah/inputs/), [fixed SCF density](materials/mnbi2te4-qah/inputs/scf/), [full Hamiltonian/position operators](materials/mnbi2te4-qah/inputs/wannier/operators/) | 21 atoms; SOC+U; full 6×6 optical mesh; supplied actual VASP-derived operators for VASPBERRY bands and dense Hall |
+| MnBi₂Te₄, three septuple layers | [Structure and VASP inputs](materials/mnbi2te4-qah/inputs/), [fixed SCF density](materials/mnbi2te4-qah/inputs/scf/), [full Hamiltonian/position operators](materials/mnbi2te4-qah/inputs/wannier/operators/) | 21 atoms; SOC+U; full 6×6 optical mesh; actual VASP-derived operators for Wannier band interpolation and dense Hall integration |
 
 ## Download the historical Bi_Z2 wavefunctions
 

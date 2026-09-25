@@ -6,6 +6,20 @@ All notable changes to VASPBERRY are recorded here.
 
 ### Added
 
+- Actual ordinary-VASP MoS₂ monolayer and 1H/2H/3R bilayer examples, with
+  documented fixed structures, band energies, complete-group circular
+  strengths, optional standard PAW optics and reproducible comparison figures.
+- Matched MoS₂ charge-Hall calculations from the same VASP eigenstates using
+  canonical momentum and optional full PAW velocity. Public pair caches
+  reproduce the chemical-potential, temperature and band-cutoff comparisons.
+
+- Standard-VASP `waveder-optics` for PAW circular transition strengths and
+  k-resolved spectra, with complete initial/final degenerate groups, explicit
+  polarization conventions and selectable CSV/DAT/NPZ output.
+- `velocity-pairs` converts an audited full PAW velocity bundle to the same
+  occupation-pair format used by the ordinary WAVECAR charge-Hall workflow.
+  Operator provenance and all original eigenstates remain explicit.
+
 - Conventional insulating 2D `spin-hall`, full complex `spin-matrix`, and
   audited PAW `spin-export` commands. Spin and full physical velocity share
   one VASP eigenstate basis, including diagonal/degenerate velocity blocks.
@@ -20,8 +34,8 @@ All notable changes to VASPBERRY are recorded here.
   degeneracies. Fixed insulating T=0 sheet response supports uniform or locally
   refined full-zone quadrature, shared-memory batches, resource estimates,
   source-integrity checks and the common CSV/DAT/NPZ Hall output.
-- Reorganize the MnBi₂Te₄ example around VASPBERRY-computed bands and Hall
-  response from its actual VASP-derived operators, with postw90 retained as an
+- Reorganize the MnBi₂Te₄ example around VASP-derived Wannier bands and Hall
+  response evaluated from those operators, with postw90 retained as an
   independent comparison. Distinguish the 123-band VASP Fukui bundle from the
   87 occupied model states and retain the unconverged direct optical diagnostic.
 
@@ -75,6 +89,14 @@ All notable changes to VASPBERRY are recorded here.
   point curvature and Fukui plaquette flux.
 
 ### Fixed
+
+- Stabilize the optional full-velocity producer's optical consistency check
+  near numerical degeneracies. Apply the recorded 2 meV optical exclusion
+  only in that branch, preserve undivided velocity/spin matrices exactly,
+  and retain the strict comparison tolerance and legacy optical-only policy.
+- Clarify VASP electronic-structure provenance throughout the technical report
+  and band figure labels; present the Bi ideal edge as corroboration of its
+  bulk Z₂ index. Separate ordinary and optional operator preparation guides.
 
 - Match the wavefunction phase-array assignment to its active plane-wave count
   and initialize the POSCAR-header parsing loop in both Fortran sources. The

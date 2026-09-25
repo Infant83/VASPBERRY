@@ -1,0 +1,118 @@
+{
+  "scope": "Independent fixed idealized geometries illustrating VASPBERRY capabilities; not a reproduction of unpublished author inputs.",
+  "functional": "PBE",
+  "soc": true,
+  "encut_eV": 400.0,
+  "ediff_eV": 1e-07,
+  "relaxation": false,
+  "dispersion": "None; all nuclei and interlayer distances fixed. No interlayer binding or structural stability claim.",
+  "lattice_a_A": 3.1716343032172727,
+  "cell_c_A": 24.0,
+  "intralayer_Mo_S_height_A": 1.5968605550581199,
+  "potential_titles": [
+    "PAW_PBE Mo 08Apr2002",
+    "PAW_PBE S 06Sep2000"
+  ],
+  "potential_zval": [
+    6,
+    6
+  ],
+  "potcar_sha256": "b8f5bccb188e7a8b1082445abe307e62f27d3cd9f9f7b128325dacee3e9192a0",
+  "geometry_source": "Existing public MoS2 intralayer geometry; Nature s41586-026-11069-3 SI Table S2 for 1H/3R distance.",
+  "cases": {
+    "monolayer": {
+      "registry": "One public-example trigonal-prismatic layer, recentered in c=24 A cell",
+      "natoms": 3,
+      "nelect_expected": 18,
+      "occupied_spinor_bands_expected": 18,
+      "scf_nbands": 60,
+      "response_nbands": 60
+    },
+    "1h-bilayer": {
+      "registry": "Parallel zero-translation Mo-on-Mo/S-on-S; d=6.74 A experimental mean",
+      "natoms": 6,
+      "nelect_expected": 36,
+      "occupied_spinor_bands_expected": 36,
+      "scf_nbands": 96,
+      "response_nbands": 64
+    },
+    "2h-bilayer": {
+      "registry": "Antiparallel inversion-symmetric 2H; upper Mo over lower S; d=6.17 A comparison geometry",
+      "natoms": 6,
+      "nelect_expected": 36,
+      "occupied_spinor_bands_expected": 36,
+      "scf_nbands": 96,
+      "response_nbands": 64
+    },
+    "3r-bilayer": {
+      "registry": "Parallel translated by (1/3,1/3); d=6.17 A experimental 3R mean",
+      "natoms": 6,
+      "nelect_expected": 36,
+      "occupied_spinor_bands_expected": 36,
+      "scf_nbands": 96,
+      "response_nbands": 64,
+      "response_scf_stage": "scf-dipole",
+      "electrostatic_correction": "Standard VASP LDIPOL, IDIPOL=3, DIPOL=(0,0,0.5), warm self-consistent restart after preconvergence; same correction retained in fixed-charge stages."
+    }
+  },
+  "reference_paper": "https://doi.org/10.1038/s41586-026-11069-3",
+  "reference_resolution": {
+    "scf_mesh": [
+      6,
+      6,
+      1
+    ],
+    "path_points": 49,
+    "status": "capability demonstration; no material-convergence claim",
+    "optional_mesh_recipe": [
+      6,
+      6,
+      1
+    ],
+    "mesh_calculated_for_reference": false
+  },
+  "path": {
+    "labels": [
+      "Gamma",
+      "M",
+      "K",
+      "Gamma",
+      "Kprime"
+    ],
+    "node_indices_zero_based": [
+      0,
+      12,
+      24,
+      36,
+      48
+    ],
+    "vertices_fractional": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.5,
+        0.0
+      ],
+      [
+        0.3333333333333333,
+        0.6666666666666666,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        -0.3333333333333333,
+        -0.6666666666666666,
+        0.0
+      ]
+    ],
+    "points_per_segment": 13
+  }
+}

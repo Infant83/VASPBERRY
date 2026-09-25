@@ -33,7 +33,7 @@ model, rather than full convergence of the underlying material calculation.
 
 | File | Contents |
 |---|---|
-| [bands.npz](bands.npz), [bands.json](bands.json) | All 138 native band energies at 3,601 Γ–M–K–Γ points; path, lattice, units and producer metadata |
+| [bands.npz](bands.npz), [bands.json](bands.json) | VASP-derived Wannier energies for all 138 bands at 3,601 Γ–M–K–Γ points; path, lattice, units and producer metadata |
 | [convergence.csv](convergence.csv) | All five native controls and independently computed postw90 values |
 | [metadata.json](metadata.json) | Material, source, comparison and integration scope |
 | [Final Hall CSV](cases/n80-r9-R018/hall/conductivity.csv), [DAT](cases/n80-r9-R018/hall/conductivity.dat), [NPZ](cases/n80-r9-R018/hall/conductivity.npz) | Identical common Hall-response fields in e²/h and S |

@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "temperature_K": 300,
+  "source_nbands": 60,
+  "pair_band_max": [
+    40,
+    50
+  ],
+  "interpretation": "Two operators on the same mesh/eigenstates; no k-convergence comparison."
+}

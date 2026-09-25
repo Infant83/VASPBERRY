@@ -99,6 +99,13 @@ audited producer retains the velocity before that division, including the
 PAW projector terms. Canonical plane-wave momentum alone is insufficient
 for this physical-operator route.
 
+The current spin/full-velocity producer uses a 2 meV cluster threshold only
+for its optical consistency stream, avoiding numerical amplification from
+division by tiny splittings. The full velocity is exported before this
+division, so its diagonal and degenerate blocks remain present. The actual
+threshold and strict consistency residuals are recorded; historical 1e-10 eV
+optical streams remain readable. See the [producer instructions](../tools/vasp544_spin_bridge/README.md#optical-comparison-near-degeneracies).
+
 In a finite source-band space $P$, the implemented product is
 
 $$

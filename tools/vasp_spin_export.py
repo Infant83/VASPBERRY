@@ -191,6 +191,8 @@ def audit_producer(run_dir):
     require(digests == {n: sha256(case/n) for n in names}, 'producer files changed during validation')
     report = dict(status='PASS', nkpoints=nk, source_nbands=nb, source_sha256=digests,
                   producer_binary_sha256=run['binary_sha256'], pauli_metric_min_eigenvalue=bound,
+                  optical_producer_cluster_threshold_eV=optical.degeneracy_threshold_eV,
+                  optical_consistency_compared_elements=int(mask.sum()),
                   optical_check_scope='Internal consistency with the same optical derivation; not an independent physical benchmark.', **errors)
     return data, report
 
@@ -224,6 +226,7 @@ def convert_run(run_dir, output_dir):
                 'method_limitations': LIMITATIONS, 'source_sha256': report['source_sha256'],
                 'source_files': {n: n for n in report['source_sha256']}, 'producer_binary_sha256': report['producer_binary_sha256'],
                 'producer_audit_sha256': sha256(out/'producer-audit.json'), 'metric_maxabs_error': report['metric_maxabs_error'], 'metric_tolerance': 5e-5,
+                'optical_comparison_cluster_threshold_eV': report['optical_producer_cluster_threshold_eV'],
                 'source_energy_reference': 'Raw eigenvalue zero of matching WAVECAR; no shift applied.'}
     (out/'physical-matrices.json').write_text(json.dumps(metadata, indent=2, allow_nan=False)+'\n')
     np.savez_compressed(out/'augmentation.npz', delta_spin_pauli=data['delta'][:, 1:], delta_overlap=data['delta'][:, 0],

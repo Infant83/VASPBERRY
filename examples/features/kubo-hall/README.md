@@ -6,6 +6,11 @@ response while scanning the chemical potential. The calculation uses the
 same monolayer 1H-MoS₂ structure and fixed SCF density as the
 [Berry-curvature example](../fukui-berry-curvature/README.md).
 
+The ordinary WAVECAR workflow below requires no VASP source modification.
+The separate [matched operator comparison](operator-comparison/README.md)
+shows how optional full PAW velocity matrices change the response on the
+same electronic states, with additional producer instructions kept there.
+
 ![MoS2 regional Hall response and k-mesh study](reference/figures/mos2-hall.png)
 
 **Figure.** (a) Cartesian first Brillouin zone and periodic disks of radius

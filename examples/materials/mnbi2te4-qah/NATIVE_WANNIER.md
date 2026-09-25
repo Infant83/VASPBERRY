@@ -80,9 +80,11 @@ direct VASP Fukui calculation uses 123 occupied bands. Their difference is
 the separately checked deep bundle, original bands 1–36, with C = 0. The
 model's local curvature can still differ from the full 123-band trace.
 
-## 3. Calculate the bands with VASPBERRY
+## 3. Interpolate the VASP-derived band structure
 
-The following command evaluates all 138 bands along Γ–M–K–Γ. There are
+The following command evaluates all 138 bands of the VASP-derived Wannier
+Hamiltonian along Γ–M–K–Γ. VASP supplies the electronic structure;
+VASPBERRY evaluates its interpolation for the response calculation. There are
 1,201 points per segment; shared endpoints are counted once, giving 3,601
 points in the complete path:
 

@@ -1,0 +1,339 @@
+{
+  "status": "PASS",
+  "scope": "Actual fixed-state MoS2 operator comparison on a 12x12 mesh; pair cutoffs 40 and 50. Not joint material convergence.",
+  "source_nbands": 60,
+  "retained_pair_cutoffs": [
+    40,
+    50
+  ],
+  "matched_state": {
+    "identical_wavecar_for_both_operators": true,
+    "identical_cached_energies_coordinates_weights_lattice": true,
+    "source_sha256": {
+      "SPIN_VELOCITY.bin": "6aa4ac43fafcd59eeeae45cac3a97c34367a230d1a9f5557df6befdc9b05d4d0",
+      "BERRY_CONNECTION.bin": "483a438b108f6dd66727305ea5ab07ff563889f36ab45586b569ef5be42349f2",
+      "WAVECAR": "4d341bccc7a99b06e7b11bd9179cb9987b41f5e5003ec3f31d8da269d03728a1",
+      "OUTCAR": "c91b642f76365a5a9f9492bc5812842f9f1a8e12fecb0cb1f55db1a1378e7740",
+      "INCAR": "55b332efa99c1502486f9c597572ffc10437824950b6d020157181e3de3dce73",
+      "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+      "KPOINTS": "823f81dfcc69cdeae53f87ffda2293ca07e37c8cd77fb2dc95271954a3a3850f",
+      "run.json": "9f265cfcd5725647206dfa2e0185550e9d9a9264477c54853253ba26e1459ff2"
+    },
+    "all_source_files_unchanged": true
+  },
+  "paw_adapter": {
+    "raw_velocity_to_physical_bundle_maxabs_eVA": 0.0,
+    "raw_velocity_to_pair_numerator_maxabs_eV2_A2": 0.0,
+    "no_normalization_or_hermitian_repair": true
+  },
+  "canonical_import": {
+    "raw_csv_to_pair_numerator_maxabs_eV2_A2": 0.0,
+    "rows": 254880
+  },
+  "geometry": {
+    "bz_area_inv_A2": 4.531718162203351,
+    "independently_counted_regions": {
+      "K": 13,
+      "Kprime": 13,
+      "rest": 118,
+      "total": 144,
+      "valley": 26
+    },
+    "periodic_region_TR_swap": true,
+    "maximum_TR_kpoint_error": 9.992007221626409e-16
+  },
+  "TR_energy_maxabs_eV": {
+    "18": 2.1073824463258006e-08,
+    "40": 2.1739332289882896e-07,
+    "50": 5.095840105440175e-07,
+    "60": 0.000857715375516932
+  },
+  "formats": {
+    "canonical-cap40": {
+      "csv_dat_npz_exact_value_parity": true,
+      "rows": 610,
+      "output_hashes_valid": true
+    },
+    "canonical-cap50": {
+      "csv_dat_npz_exact_value_parity": true,
+      "rows": 610,
+      "output_hashes_valid": true
+    },
+    "paw-cap40": {
+      "csv_dat_npz_exact_value_parity": true,
+      "rows": 610,
+      "output_hashes_valid": true
+    },
+    "paw-cap50": {
+      "csv_dat_npz_exact_value_parity": true,
+      "rows": 610,
+      "output_hashes_valid": true
+    }
+  },
+  "dense_ordered_oracle": {
+    "canonical-cap40": {
+      "ordered_matrix_oracle_maxabs_sigma_error_e2_over_h": 2.027707854549272e-16,
+      "ordered_matrix_oracle_maxabs_delta_error_e2_over_h": 1.994259890378162e-16,
+      "checked_mu_indices": [
+        0,
+        30,
+        60
+      ],
+      "temperatures_K": [
+        0,
+        300
+      ],
+      "regions_checked": [
+        "K",
+        "Kprime",
+        "rest",
+        "total",
+        "valley"
+      ]
+    },
+    "canonical-cap50": {
+      "ordered_matrix_oracle_maxabs_sigma_error_e2_over_h": 2.6620751974888634e-16,
+      "ordered_matrix_oracle_maxabs_delta_error_e2_over_h": 1.942890293094024e-16,
+      "checked_mu_indices": [
+        0,
+        30,
+        60
+      ],
+      "temperatures_K": [
+        0,
+        300
+      ],
+      "regions_checked": [
+        "K",
+        "Kprime",
+        "rest",
+        "total",
+        "valley"
+      ]
+    },
+    "paw-cap40": {
+      "ordered_matrix_oracle_maxabs_sigma_error_e2_over_h": 1.1102230246251565e-15,
+      "ordered_matrix_oracle_maxabs_delta_error_e2_over_h": 2.636779683484747e-16,
+      "checked_mu_indices": [
+        0,
+        30,
+        60
+      ],
+      "temperatures_K": [
+        0,
+        300
+      ],
+      "regions_checked": [
+        "K",
+        "Kprime",
+        "rest",
+        "total",
+        "valley"
+      ]
+    },
+    "paw-cap50": {
+      "ordered_matrix_oracle_maxabs_sigma_error_e2_over_h": 1.5362133349025599e-15,
+      "ordered_matrix_oracle_maxabs_delta_error_e2_over_h": 2.7755575615628914e-16,
+      "checked_mu_indices": [
+        0,
+        30,
+        60
+      ],
+      "temperatures_K": [
+        0,
+        300
+      ],
+      "regions_checked": [
+        "K",
+        "Kprime",
+        "rest",
+        "total",
+        "valley"
+      ]
+    }
+  },
+  "response_sanity": {
+    "canonical-cap40": {
+      "cutoff_boundary_min_gap_eV": 0.08005629936675085,
+      "highest_retained_occupation": 1.2061501716117366e-158,
+      "total_Hall_maxabs_e2_over_h": 1.0239077965661322e-08,
+      "K_plus_Kprime_maxabs_e2_over_h": 4.613772003336791e-09,
+      "sampled_weighted_k_TR_Hall_maxabs_e2_over_h": 1.418315360990352e-09,
+      "total_equals_K_Kprime_rest_maxabs_e2_over_h": 4.3118923638025016e-16,
+      "valley_equals_K_minus_Kprime_maxabs_e2_over_h": 2.220446049250313e-16
+    },
+    "canonical-cap50": {
+      "cutoff_boundary_min_gap_eV": 0.00449186668706858,
+      "highest_retained_occupation": 2.726249449638276e-197,
+      "total_Hall_maxabs_e2_over_h": 1.0709576104404557e-08,
+      "K_plus_Kprime_maxabs_e2_over_h": 4.741732728685832e-09,
+      "sampled_weighted_k_TR_Hall_maxabs_e2_over_h": 1.3732477793793052e-09,
+      "total_equals_K_Kprime_rest_maxabs_e2_over_h": 5.704732166443792e-16,
+      "valley_equals_K_minus_Kprime_maxabs_e2_over_h": 2.220446049250313e-16
+    },
+    "paw-cap40": {
+      "cutoff_boundary_min_gap_eV": 0.08005629936675085,
+      "highest_retained_occupation": 1.2061501716117366e-158,
+      "total_Hall_maxabs_e2_over_h": 5.0853998609596855e-09,
+      "K_plus_Kprime_maxabs_e2_over_h": 5.06589042936767e-09,
+      "sampled_weighted_k_TR_Hall_maxabs_e2_over_h": 1.4175880296007914e-09,
+      "total_equals_K_Kprime_rest_maxabs_e2_over_h": 5.812585251603776e-16,
+      "valley_equals_K_minus_Kprime_maxabs_e2_over_h": 3.3306690738754696e-16
+    },
+    "paw-cap50": {
+      "cutoff_boundary_min_gap_eV": 0.00449186668706858,
+      "highest_retained_occupation": 2.726249449638276e-197,
+      "total_Hall_maxabs_e2_over_h": 5.118008351966078e-09,
+      "K_plus_Kprime_maxabs_e2_over_h": 5.102635758369445e-09,
+      "sampled_weighted_k_TR_Hall_maxabs_e2_over_h": 1.3839573272111938e-09,
+      "total_equals_K_Kprime_rest_maxabs_e2_over_h": 5.4985311069584265e-16,
+      "valley_equals_K_minus_Kprime_maxabs_e2_over_h": 3.3306690738754696e-16
+    }
+  },
+  "curve_relative_L2": [
+    {
+      "temperature_K": 0,
+      "region": "K",
+      "field": "sigma_e2_over_h",
+      "canonical_cap40_to_cap50_relative_L2": 0.017064140495752965,
+      "paw_cap40_to_cap50_relative_L2": 0.015281177930320675,
+      "canonical_vs_paw_cap40_relative_L2": 0.12701356656267995,
+      "canonical_vs_paw_cap50_relative_L2": 0.12516386327616374
+    },
+    {
+      "temperature_K": 0,
+      "region": "K",
+      "field": "delta_sigma_e2_over_h",
+      "canonical_cap40_to_cap50_relative_L2": 0.014605743250401359,
+      "paw_cap40_to_cap50_relative_L2": 0.004688334754898965,
+      "canonical_vs_paw_cap40_relative_L2": 0.3021621734765538,
+      "canonical_vs_paw_cap50_relative_L2": 0.295150478476042
+    },
+    {
+      "temperature_K": 0,
+      "region": "Kprime",
+      "field": "sigma_e2_over_h",
+      "canonical_cap40_to_cap50_relative_L2": 0.017064140609401507,
+      "paw_cap40_to_cap50_relative_L2": 0.015281177925609842,
+      "canonical_vs_paw_cap40_relative_L2": 0.12701356422347923,
+      "canonical_vs_paw_cap50_relative_L2": 0.12516386082130737
+    },
+    {
+      "temperature_K": 0,
+      "region": "Kprime",
+      "field": "delta_sigma_e2_over_h",
+      "canonical_cap40_to_cap50_relative_L2": 0.014605743381983453,
+      "paw_cap40_to_cap50_relative_L2": 0.004688334767951052,
+      "canonical_vs_paw_cap40_relative_L2": 0.30216217484269126,
+      "canonical_vs_paw_cap50_relative_L2": 0.2951504797814122
+    },
+    {
+      "temperature_K": 0,
+      "region": "valley",
+      "field": "sigma_e2_over_h",
+      "canonical_cap40_to_cap50_relative_L2": 0.0170641405525774,
+      "paw_cap40_to_cap50_relative_L2": 0.015281177927965085,
+      "canonical_vs_paw_cap40_relative_L2": 0.12701356539307965,
+      "canonical_vs_paw_cap50_relative_L2": 0.1251638620487353
+    },
+    {
+      "temperature_K": 0,
+      "region": "valley",
+      "field": "delta_sigma_e2_over_h",
+      "canonical_cap40_to_cap50_relative_L2": 0.014605743316192493,
+      "paw_cap40_to_cap50_relative_L2": 0.004688334761424952,
+      "canonical_vs_paw_cap40_relative_L2": 0.30216217415962254,
+      "canonical_vs_paw_cap50_relative_L2": 0.29515047912872705
+    },
+    {
+      "temperature_K": 300,
+      "region": "K",
+      "field": "sigma_e2_over_h",
+      "canonical_cap40_to_cap50_relative_L2": 0.017024731057924878,
+      "paw_cap40_to_cap50_relative_L2": 0.01545847130228403,
+      "canonical_vs_paw_cap40_relative_L2": 0.12227955970198684,
+      "canonical_vs_paw_cap50_relative_L2": 0.12065020829704767
+    },
+    {
+      "temperature_K": 300,
+      "region": "K",
+      "field": "delta_sigma_e2_over_h",
+      "canonical_cap40_to_cap50_relative_L2": 0.014446430847863645,
+      "paw_cap40_to_cap50_relative_L2": 0.004653488224291425,
+      "canonical_vs_paw_cap40_relative_L2": 0.30140021917282855,
+      "canonical_vs_paw_cap50_relative_L2": 0.29443775739949224
+    },
+    {
+      "temperature_K": 300,
+      "region": "Kprime",
+      "field": "sigma_e2_over_h",
+      "canonical_cap40_to_cap50_relative_L2": 0.017024731196240615,
+      "paw_cap40_to_cap50_relative_L2": 0.015458471274582561,
+      "canonical_vs_paw_cap40_relative_L2": 0.12227955786496078,
+      "canonical_vs_paw_cap50_relative_L2": 0.12065020632397684
+    },
+    {
+      "temperature_K": 300,
+      "region": "Kprime",
+      "field": "delta_sigma_e2_over_h",
+      "canonical_cap40_to_cap50_relative_L2": 0.014446430581060736,
+      "paw_cap40_to_cap50_relative_L2": 0.004653488116184219,
+      "canonical_vs_paw_cap40_relative_L2": 0.30140021807995737,
+      "canonical_vs_paw_cap50_relative_L2": 0.2944377564078018
+    },
+    {
+      "temperature_K": 300,
+      "region": "valley",
+      "field": "sigma_e2_over_h",
+      "canonical_cap40_to_cap50_relative_L2": 0.01702473112708274,
+      "paw_cap40_to_cap50_relative_L2": 0.015458471288433343,
+      "canonical_vs_paw_cap40_relative_L2": 0.1222795587834738,
+      "canonical_vs_paw_cap50_relative_L2": 0.12065020731051228
+    },
+    {
+      "temperature_K": 300,
+      "region": "valley",
+      "field": "delta_sigma_e2_over_h",
+      "canonical_cap40_to_cap50_relative_L2": 0.014446430714462269,
+      "paw_cap40_to_cap50_relative_L2": 0.00465348817023782,
+      "canonical_vs_paw_cap40_relative_L2": 0.30140021862639305,
+      "canonical_vs_paw_cap50_relative_L2": 0.294437756903647
+    }
+  ],
+  "relative_L2_definition": "norm(curve-comparison)/norm(reference); cap50 for cutoff comparison, PAW for operator comparison; same 61 mu points. Total-Hall relative errors omitted because the reference is numerically zero.",
+  "producer_validation": {
+    "status": "PASS",
+    "nkpoints": 144,
+    "source_nbands": 60,
+    "source_sha256": {
+      "SPIN_VELOCITY.bin": "6aa4ac43fafcd59eeeae45cac3a97c34367a230d1a9f5557df6befdc9b05d4d0",
+      "BERRY_CONNECTION.bin": "483a438b108f6dd66727305ea5ab07ff563889f36ab45586b569ef5be42349f2",
+      "WAVECAR": "4d341bccc7a99b06e7b11bd9179cb9987b41f5e5003ec3f31d8da269d03728a1",
+      "OUTCAR": "c91b642f76365a5a9f9492bc5812842f9f1a8e12fecb0cb1f55db1a1378e7740",
+      "INCAR": "55b332efa99c1502486f9c597572ffc10437824950b6d020157181e3de3dce73",
+      "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+      "KPOINTS": "823f81dfcc69cdeae53f87ffda2293ca07e37c8cd77fb2dc95271954a3a3850f",
+      "run.json": "9f265cfcd5725647206dfa2e0185550e9d9a9264477c54853253ba26e1459ff2"
+    },
+    "producer_binary_sha256": "12d54450abcc4b0f81c600ba0e3354ece70a5b4c0f08701c8c6ebc8564090e24",
+    "pauli_metric_min_eigenvalue": 3.991809691105592e-15,
+    "optical_producer_cluster_threshold_eV": 0.002,
+    "optical_consistency_compared_elements": 1519908,
+    "optical_check_scope": "Internal consistency with the same optical derivation; not an independent physical benchmark.",
+    "metric_maxabs_error": 3.111460987938529e-14,
+    "pseudo_vs_saved_wavecar_maxabs": 6.978318145556273e-08,
+    "spin_hermiticity_maxabs": 1.4210869961786875e-14,
+    "augmentation_hermiticity_maxabs": 3.0541162047287296e-15,
+    "velocity_hermiticity_eVA": 1.7080496585745532e-12,
+    "optical_consistency_eVA": 8.738607347679422e-12,
+    "diagonal_consistency_eVA": 5.696812281967223e-13,
+    "commutator_identity_eVA": 0.0
+  },
+  "interpretation": [
+    "Changing the operator changes matrix elements on exactly the same stored VASP eigenstates and density.",
+    "Caps 40 and 50 test virtual-state truncation only; 60 source states does not imply all 60 states are equally accurate.",
+    "12x12 is a demonstration mesh, not an independently established material convergence result.",
+    "Region difference is K minus Kprime with no factor 1/2; it is partition-dependent and not a conserved valley-current operator.",
+    "The original rejected producer and the frozen conditioning pilots are separate records and are not used as production data."
+  ]
+}

@@ -5,6 +5,9 @@ route for VASP-derived electronic structure. VASPBERRY performs the Fourier
 sums, diagonalization, Berry-curvature evaluation and Hall integration itself.
 Wannier90 prepares the localized electronic model; its `postw90` response is
 used only as an independent comparison in the material example.
+The band dispersion is the material's VASP-derived electronic structure;
+the interpolation supplies energies and states for the subsequent geometric
+and response calculations.
 
 The [MnBi₂Te₄ tutorial](../examples/materials/mnbi2te4-qah/NATIVE_WANNIER.md)
 provides actual VASP-derived operators and complete reproduction commands.

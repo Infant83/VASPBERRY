@@ -30,11 +30,13 @@ except ImportError:
 MAGIC = b'VBERRY_PAW_CONNECTION_V1'.ljust(32, b' ')
 FOOTER = b'VBERRY_CONNECTION_COMPLETE_V1'.ljust(32, b' ')
 ZERO_GAP_THRESHOLD_EV = 1e-10
+SUPPORTED_CLUSTER_THRESHOLDS_EV = (ZERO_GAP_THRESHOLD_EV, .002)
 # Native v1's current VASP 5.4.4 producer uses default-real 1E-10 (not
 # 1E-10_q) in EDDIAG_LR's strict denominator comparison. The audited build
-# promotes that float32 literal to q; its cluster threshold is 1E-10_q.
+# promotes that float32 literal to q. Cluster thresholds are independently
+# 1E-10_q for legacy optical-only mode or 0.002_q for spin/full-velocity mode.
 PRODUCER_DENOMINATOR_ZERO_THRESHOLD_EV = float(np.float32(1e-10))
-REVISION = 'vasp-optical-stream-adapter-v2'
+REVISION = 'vasp-optical-stream-adapter-v3'
 COVERAGE_RULE = ('Full native band-order adjacent gaps <= producer threshold form transitive '
                  'clusters independently per spin/k; off-diagonal entries require different '
                  'clusters, gap > producer threshold and gap >= promoted denominator cutoff; '
@@ -142,8 +144,8 @@ def read_connection(path) -> ConnectionData:
     threshold, fermi = struct.unpack_from('<2d', blob, 60)
     _finite('threshold/Fermi energy', np.array([threshold, fermi]))
     _require(threshold >= 0, 'negative producer degeneracy threshold')
-    _require(threshold == ZERO_GAP_THRESHOLD_EV,
-             'v1 producer degeneracy threshold must equal 1e-10 eV; other cluster-zeroing policies are unsupported')
+    _require(threshold in SUPPORTED_CLUSTER_THRESHOLDS_EV,
+             'v1 producer degeneracy threshold must equal 1e-10 or 0.002 eV; other cluster-zeroing policies are unsupported')
     offset = 76
 
     def take(dtype, shape):
@@ -313,7 +315,7 @@ def write_bundles(data: ConnectionData, output_dir, provenance, *, waveder=None)
     report = {'schema': 'vaspberry.optical-stream-conversion', 'version': 1,
               'source_connection_sha256': data.source_sha256, 'source_shape': list(data.C_A.shape),
               'producer_degeneracy_threshold_eV': data.degeneracy_threshold_eV,
-              'unavailable_offdiagonal_gap_threshold_eV': ZERO_GAP_THRESHOLD_EV,
+              'unavailable_offdiagonal_gap_threshold_eV': data.degeneracy_threshold_eV,
               'producer_denominator_zero_threshold_eV': PRODUCER_DENOMINATOR_ZERO_THRESHOLD_EV,
               'coverage_rule': COVERAGE_RULE,
               'C_A_hermiticity': hermiticity_stats(data.C_A),
@@ -348,7 +350,7 @@ def write_bundles(data: ConnectionData, output_dir, provenance, *, waveder=None)
                     'reciprocal_convention': '2pi', 'weights_convention': 'sum_one',
                     'diagonal_status': 'present', 'fermi_eV': data.fermi_eV,
                     'producer_degeneracy_threshold_eV': data.degeneracy_threshold_eV,
-                    'missing_offdiagonal_gap_threshold_eV': ZERO_GAP_THRESHOLD_EV,
+                    'missing_offdiagonal_gap_threshold_eV': data.degeneracy_threshold_eV,
                     'producer_denominator_zero_threshold_eV': PRODUCER_DENOMINATOR_ZERO_THRESHOLD_EV,
                     'coverage_rule': COVERAGE_RULE,
                     'operator': {'kind': 'derived_from_vasp_paw_optical_connection',

@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "returncode": 0,
+  "converged": true,
+  "normal_footer": true,
+  "wall_seconds": 1083.6493616900407,
+  "sampled_peak_rss_bytes": 924893184,
+  "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+  "input_sha256": {
+    "INCAR": "4f1c2c0503be3272433f8bfb30b536012c3fdaf1bc9d440678ae16f2aebfad6a",
+    "POSCAR": "9023d7b08ff7eed9593fabe09680980592c871d85cebbf3421a291a51e9d772c",
+    "POTCAR": "b8f5bccb188e7a8b1082445abe307e62f27d3cd9f9f7b128325dacee3e9192a0",
+    "KPOINTS": "c95afdccf206b24ea6c66f936f45dfd0e7c324b1f819b236330dcb2d190a29ea"
+  },
+  "output_sha256": {
+    "OUTCAR": "bbd0041619bb2f31a4a4fac65241b482567e38856ff404bce5ba881e39692681",
+    "OSZICAR": "ac56e17a526200e2df9df4b0f8b72433ce838a0b0d84e1915f81e4df22ad2674",
+    "EIGENVAL": "164246ad32b89fe79b16c202973a3cce16ee63fd4e29ce579f5c969aca6a32e1",
+    "CONTCAR": "23bc47d0efee6d322c8117d6af3ead03f0f96ee8d92b994b712dafdc5c551933",
+    "WAVECAR": "80ba1f49e6e2d5e36187c09315663946b643188ebb2908495d59d630762b55ac",
+    "CHGCAR": "45899b50268c65665e61d3bc89ab1f9bed2895a54c867ce6b0535a9aaf977457",
+    "stdout.log": "3391948806a7787019d0192f91795efc53ea91dc6772dff47d9e4eead5c21052",
+    "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vasprun.xml": "ba7d7690eeec9a0cd1bd6d36266276b6bce18fb540790ed667501f1e70cd88b7"
+  },
+  "nelect": 36.0,
+  "nkpts": 7.0,
+  "nbands": 96.0,
+  "full_OUTCAR_distributed": false,
+  "source_record_sha256": "db22f9a5e437590bb65fe080e9da11e131eae82883d4dc4f8dc15280e301aa24"
+}

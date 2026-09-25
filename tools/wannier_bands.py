@@ -71,7 +71,7 @@ def command(args):
 
 
 def add_command(sub):
-    p=sub.add_parser('wannier-bands',help='VASPBERRY dispersion along a fractional path from the same Wannier operators')
+    p=sub.add_parser('wannier-bands',help='interpolate a VASP-derived Wannier Hamiltonian along a fractional path')
     p.add_argument('--operators',type=Path,required=True)
     p.add_argument('--vertices',type=float,nargs='+',required=True)
     p.add_argument('--labels',nargs='*',default=[])

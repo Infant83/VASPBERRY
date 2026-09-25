@@ -1,0 +1,223 @@
+{
+  "schema": "vaspberry.circular-transition-strength",
+  "version": 1,
+  "complete": true,
+  "scope": "independent_particle_k_resolved_occupied_to_empty",
+  "units": {
+    "transition_strength": "Angstrom^2",
+    "spectral_density": "Angstrom^2/eV",
+    "energy": "eV"
+  },
+  "polarization": {
+    "beam_cartesian": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "e1_cartesian": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "e2_cartesian": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "epsilon_plus": "(e1+i*e2)/sqrt(2)",
+    "epsilon_minus": "(e1-i*e2)/sqrt(2)",
+    "field_convention": "Re[epsilon * exp(i*(q.r-omega*t))]; q parallel to beam",
+    "matrix_contraction": "abs(sum_a epsilon_a C_a[final_bra,initial_ket]))^2; epsilon is not conjugated",
+    "handedness_labels": "plus/minus defined algebraically; no observer-dependent left/right label"
+  },
+  "initial_bands_1based": [
+    1,
+    36
+  ],
+  "final_bands_1based": [
+    37,
+    40
+  ],
+  "occupied_count": 36,
+  "degeneracy": {
+    "threshold_eV": 0.002,
+    "source_top_band_retained_as_boundary_guard": true,
+    "grouping": "transitive adjacent gaps on all stored states; both selected boundaries must close groups",
+    "transition_energy": "difference of unweighted group mean energies; sum strengths before eta",
+    "maximum_group_energy_spread_eV": 0.0018613332130432703
+  },
+  "broadening": {
+    "kind": "normalized_Gaussian",
+    "sigma_eV": 0.05,
+    "normalization": "integral over the whole energy axis is one; finite output grid is not renormalized"
+  },
+  "eta_mask": {
+    "relative_intensity_floor": 0.001,
+    "rule": "I_plus+I_minus > floor * maximum total intensity at the same k; zero total always invalid",
+    "scales": "transitions and spectra use their own per-k maxima",
+    "invalid_eta": "NaN with eta_valid=false"
+  },
+  "weighting": {
+    "k_weight_applied": false,
+    "source_weights": "OUTCAR printed values, retained without normalization",
+    "spin_multiplicity_applied": 1,
+    "occupation_factors": "one occupied-to-empty channel, fixed integer filling"
+  },
+  "limitations": [
+    "Not absolute absorption, dielectric response or photoluminescence polarization.",
+    "No excitons, scattering, recombination, nonequilibrium populations or BZ integration.",
+    "Source NBANDS, selected final window, k sampling and Gaussian width require convergence.",
+    "Near-degenerate groups use centroid energies within the recorded threshold.",
+    "One explicit spin channel; a scalar spin-degenerate total would require a factor of two."
+  ],
+  "energy_reference": "unchanged VASP eigenvalue zero",
+  "source_operator": {
+    "kind": "vasp_longitudinal_paw_optical_occupied_empty",
+    "accuracy_status": "supported_operator_scope; convergence_not_established",
+    "matrix_axes": [
+      "k",
+      "cartesian",
+      "final_bra",
+      "initial_ket"
+    ],
+    "source_conversion": "standard lower occupied-to-empty WAVEDER C, in Angstrom; no second energy denominator"
+  },
+  "source_nbands": 64,
+  "source_nkpoints": 49,
+  "source_ndbands": 64,
+  "source_nspin": 1,
+  "spin_channel_1based": 1,
+  "spinor_components": 2,
+  "source_precision": "complex64 WAVEDER; complex128 accumulation",
+  "producer_settings": {
+    "version": "5.4.4",
+    "LOPTICS": true,
+    "LPEAD": false,
+    "LNABLA": false,
+    "LNONCOLLINEAR": true,
+    "LSORBIT": true,
+    "LREAL": false,
+    "LHFCALC": false,
+    "METAGGA": false,
+    "LEPSILON": false,
+    "LVEL": false,
+    "ISPIN": 1,
+    "ISYM": -1,
+    "NSW": 0,
+    "NKPTS": 49,
+    "NBANDS": 64,
+    "NELECT": 36.0,
+    "DEG_THRESHOLD": 0.002
+  },
+  "occupied_counts_by_spin": [
+    36
+  ],
+  "lattice_A": [
+    [
+      3.1716343032172727,
+      0.0,
+      0.0
+    ],
+    [
+      1.5858171516086363,
+      2.746715878100315,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      24.0
+    ]
+  ],
+  "reciprocal_inv_A": [
+    [
+      1.9810560444519056,
+      -1.143763240544043,
+      0.0
+    ],
+    [
+      0.0,
+      2.287526481088086,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.2617993877991494
+    ]
+  ],
+  "reciprocal_convention": "2pi",
+  "same_run_association": {
+    "status": "user_supplied_run_directory_consistency_checked",
+    "limitation": "The supplied run directory asserts a single unmodified standard VASP run. OUTCAR/WAVECAR consistency and WAVEDER dimensions are checked; WAVEDER has no energies, coordinates or producer hashes, so its same-run association cannot be independently authenticated from these files."
+  },
+  "source_sha256": {
+    "WAVEDER": "6c1f58b791c4b67d3ba57ba275187b2e13ba8a8f7221d869128fe530c07b1017",
+    "WAVECAR": "c5f55fbe8e6a66837d42f5084733dc32362004ee685d95f8941587cd2c1bed60",
+    "INCAR": "99eee5ef9f09199ed626728eba13176a0971693a22980c5c86972be4bc319817",
+    "OUTCAR": "411b2f75f500da3c9bf67a537dd92450544e3bea7f2e1a852e9d62b9aa76e919"
+  },
+  "run_directory": "<VASP-run>",
+  "provenance": {
+    "command": {
+      "command": "waveder-optics",
+      "run_dir": "<VASP-run>",
+      "occupied": 36,
+      "spin": 1,
+      "spinor_components": 2,
+      "energy_reference": "unchanged VASP eigenvalue zero",
+      "initial": [
+        1,
+        36
+      ],
+      "final": [
+        37,
+        40
+      ],
+      "beam_vector": [
+        0,
+        0,
+        1
+      ],
+      "polarization_axis": [
+        1,
+        0,
+        0
+      ],
+      "photon_min": 0.5,
+      "photon_max": 4.0,
+      "photon_num": 351,
+      "sigma_eV": 0.05,
+      "degeneracy_threshold_eV": 0.002,
+      "relative_intensity_floor": 0.001,
+      "formats": [
+        "csv",
+        "dat",
+        "npz"
+      ],
+      "output_dir": "<output>/paw-optical"
+    },
+    "implementation_sha256": {
+      "waveder_optics.py": "4abbc7313136010c1a45c42ac70c7c5544020c4be7ad8583197b525c339bbbf2",
+      "waveder_hall.py": "204aee07fd057c977f8aa795e1837145321c65d00352672d4abfe955ba450f52",
+      "vasp_optical_export.py": "056c32cc50313afb774809fb98fed741cbfe13a2de80777a001140112f0b2d08"
+    }
+  },
+  "output_formats": [
+    "csv",
+    "dat",
+    "npz"
+  ],
+  "output_sha256": {
+    "transitions.csv": "be1bd82ff40890a7bc1a54c80403374ab306f6b40e6db6e95993653a1ce42b78",
+    "transitions.dat": "03200d6d419108e2e742eb05c57605008c1d08e4ccd510124e78a936c8c67a43",
+    "transitions.npz": "cd60cbc49c56afb082b1ff1860f2810a3e2f4c323f837ccebed8e1a0e2b37451",
+    "spectra.csv": "42cc0436d59adab9985bef0c6c4b5696f2051b3d780c4c1b8438be2acf144a80",
+    "spectra.dat": "a9529491536783529b1f23222d731b06535c46c501184c4cffdb061aa6875b2a",
+    "spectra.npz": "7e4be162d332262e4ffb90f04f5dc40496c03a0afd8a9641ba3a7f439fc5eb50"
+  },
+  "distribution": {
+    "path_rewrite_only": true,
+    "original_metadata_sha256": "deb03d1b7a2b2e17a20e8963ae979de5e5ee67adc0d91e52ed6ac016ebf51812"
+  }
+}

@@ -63,8 +63,8 @@ def spectra(ref,out,meta):
            xticklabels=[r'$\Gamma$','M','K',r'$\Gamma$'],ylabel='Energy − midgap (eV)')
     for x in ticks[1:-1]:ax.axvline(x,color='.85',lw=.6,zorder=0)
     ax.axhline(0,color='.75',lw=.7,zorder=0)
-    ax.legend(handles=[Line2D([],[],color='#23699A',lw=1.2,label='Wannier Hamiltonian'),
-        Line2D([],[],marker='o',ms=4,ls='',mfc='none',mec='.2',label='VASP')],loc='lower left',fontsize=9.5,frameon=False)
+    ax.legend(handles=[Line2D([],[],color='#23699A',lw=1.2,label='VASP-derived Wannier'),
+        Line2D([],[],marker='o',ms=4,ls='',mfc='none',mec='.2',label='Direct VASP')],loc='lower left',fontsize=9.5,frameon=False)
     # Sum all states before coloring: invariant under degenerate-state rotations.
     eta=meta.get('edge_display_broadening_eV',.01)
     grid=np.linspace(-1.2,1.2,601)
@@ -79,7 +79,7 @@ def spectra(ref,out,meta):
     ae.axhline(0,color='white',lw=.6,ls='--',alpha=.6)
     ae.set(xlabel=r'$k_\parallel$ (Å$^{-1}$)',ylabel='Energy − midgap (eV)',xlim=(parallel[0],parallel[-1]),ylim=(grid[0],grid[-1]))
     c=fig.colorbar(image,ax=ae,pad=.02);c.set_label(r'Left-edge spectral weight (eV$^{-1}$)',fontsize=10)
-    ax.set_title('(a) Bulk bands',loc='left');ae.set_title(f'(b) Ideal edge, {edge_meta["width_cells"]} cells',loc='left')
+    ax.set_title('(a) Bi band structure',loc='left');ae.set_title(f'(b) Edge check of $Z_2=1$, {edge_meta["width_cells"]} cells',loc='left')
     save(fig,out,'bi-bulk-edge')
 
 

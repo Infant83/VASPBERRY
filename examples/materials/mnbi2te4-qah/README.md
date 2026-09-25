@@ -182,7 +182,7 @@ python examples/materials/mnbi2te4-qah/plot.py \
   --output-dir work/mbt3-reference-figures
 ```
 
-The figure combines VASPBERRY bands with actual VASP sample markers and a
+The figure combines VASP-derived Wannier bands with direct VASP sample markers and a
 gap enlargement, the three native Hall samples inside the gap, and unrounded
 integration convergence. Hollow markers show the independent postw90
 calculation. VASPBERRY integrates the sheet response directly from reciprocal
@@ -234,7 +234,7 @@ exported band/projection counts.
 
 ## Reference data
 
-- [VASPBERRY bands, Hall response and all five convergence runs](reference/vaspberry-wannier/README.md).
+- [VASP-derived Wannier bands, VASPBERRY Hall response and all five convergence runs](reference/vaspberry-wannier/README.md).
 - [Occupied-bundle Fukui map](reference/fukui/fukui_occupied.csv) and
   [link diagnostics](reference/fukui/diagnostics.json).
 - [Actual VASP band samples](reference/direct-dft/sample-bands.csv),

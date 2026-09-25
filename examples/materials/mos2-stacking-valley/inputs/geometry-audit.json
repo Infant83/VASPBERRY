@@ -1,0 +1,43 @@
+{
+  "status": "PASS",
+  "cases": {
+    "monolayer": {
+      "atom_count": 3,
+      "minimum_periodic_atom_distance_A": 2.429619658180137,
+      "inversion_centers_fractional": [],
+      "has_inversion": false,
+      "mo_layer_separation_A": null,
+      "vacuum_between_outer_sulfur_A": 20.80627888988376
+    },
+    "1h-bilayer": {
+      "atom_count": 6,
+      "minimum_periodic_atom_distance_A": 2.429619658180135,
+      "inversion_centers_fractional": [],
+      "has_inversion": false,
+      "mo_layer_separation_A": 6.739999999999997,
+      "vacuum_between_outer_sulfur_A": 14.066278889883764
+    },
+    "2h-bilayer": {
+      "atom_count": 6,
+      "minimum_periodic_atom_distance_A": 2.429619658180137,
+      "inversion_centers_fractional": [
+        [
+          0.16666666666666666,
+          0.16666666666666666,
+          0.5
+        ]
+      ],
+      "has_inversion": true,
+      "mo_layer_separation_A": 6.170000000000002,
+      "vacuum_between_outer_sulfur_A": 14.63627888988376
+    },
+    "3r-bilayer": {
+      "atom_count": 6,
+      "minimum_periodic_atom_distance_A": 2.429619658180137,
+      "inversion_centers_fractional": [],
+      "has_inversion": false,
+      "mo_layer_separation_A": 6.170000000000002,
+      "vacuum_between_outer_sulfur_A": 14.63627888988376
+    }
+  }
+}

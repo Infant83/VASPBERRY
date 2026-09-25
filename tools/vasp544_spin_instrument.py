@@ -73,7 +73,7 @@ def patched_sources(original):
     optic = original['linear_optics.F']
     optic = one(optic, r'(^  GDEFS,[^\n]*:: CDER_BETWEEN_STATES\([^\n]*$)', lambda m:m[1]+'''
   LOGICAL, SAVE :: LBERRY_EXPORT=.FALSE.
-  REAL(q), PARAMETER :: BERRY_DEG_THRESHOLD=1E-10_q
+  REAL(q), SAVE :: BERRY_DEG_THRESHOLD=1E-10_q
   GDEF, ALLOCATABLE, SAVE :: BERRY_CDER_DP(:,:,:,:,:)
 ''')
 
@@ -86,6 +86,7 @@ def patched_sources(original):
     CHARACTER(40) BERRY_CHAR
 ''')
         body = one(body, r'(^    EMAX=MAX_ENERGY_UNOCCUPIED[^\n]*$)', lambda m:'''    LBERRY_EXPORT=.FALSE.
+    BERRY_DEG_THRESHOLD=1E-10_q
     BERRY_IU=-1
     CALL RDATAB(.TRUE.,'INCAR',BERRY_IU,'LBERRY_EXPORT','=','#',';','L', &
          BERRY_IDUM,BERRY_RDUM,BERRY_CDUM,LBERRY_EXPORT,BERRY_CHAR,BERRY_N,1,BERRY_IERR)
@@ -103,6 +104,9 @@ def patched_sources(original):
     IF ((BERRY_IERR/=0.AND.BERRY_IERR/=3).OR.(BERRY_IERR==0.AND.BERRY_N<1)) STOP 'Invalid LSPIN_EXPORT'
     IF (LSPIN_EXPORT) THEN
       IF (.NOT.LBERRY_EXPORT) STOP 'LSPIN_EXPORT requires LBERRY_EXPORT'
+! Keep the optical comparison numerically conditioned. Full velocity is
+! captured before optical division; its diagonal/degenerate blocks are kept.
+      BERRY_DEG_THRESHOLD=0.002_q
       CALL BSP_INIT(W,LMDIM,CQIJ)
     ENDIF
 '''+m[1])
@@ -150,6 +154,9 @@ def instrument(directory):
               'source_files': records, 'instrumenter_sha256': sha(Path(__file__).read_bytes()),
               'template_sha256': {n:sha((TEMPLATES/n).read_bytes()) for n in ('spin_routines.inc', 'optical_routines.inc')},
               'supported_scope': 'Serial complex VASP5.4.4 ncl; audited source hashes; PAW spin-independent overlap; Cartesian +z SAXIS.',
+              'optical_threshold_policy': {'LBERRY_EXPORT_only_eV': 1e-10, 'LSPIN_EXPORT_eV': .002,
+                  'scope': 'Only optical derivative-state clustering; full predivision velocity and spin matrices are unchanged.',
+                  'stream_header_records_actual_threshold': True},
               'new_files_are_original_instrumentation': True}
     manifest.write_text(json.dumps(record, indent=2)+'\n')
     return record

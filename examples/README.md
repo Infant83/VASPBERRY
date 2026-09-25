@@ -1,6 +1,6 @@
 # Examples: Berry curvature and response functions
 
-These examples illustrate VASPBERRY calculations for monolayer MoS₂, a
+These examples illustrate VASPBERRY calculations for monolayer and bilayer MoS₂, a
 Bi bilayer and a three-septuple-layer MnBi₂Te₄ film. Each guide gives the VASP files, calculation parameters, commands,
 expected numerical results and figures. The [technical report](../docs/TECHNICAL_REPORT.md)
 introduces the methods and discusses the physical interpretation
@@ -13,7 +13,7 @@ introduces the methods and discusses the physical interpretation
 **Monolayer MoS₂.** Occupied-band Berry curvature from the Fukui method,
 shown in Cartesian reciprocal coordinates with the first Brillouin-zone
 boundary and the K–Γ–K′ path marked. The adjacent panels show the matching
-band structure and a curvature cut along that path. The K and K′ valleys carry opposite
+VASP band structure and a curvature cut along that path. The K and K′ valleys carry opposite
 curvature, while the full-zone Chern number vanishes. The figure comes from
 a new full-mesh VASP and VASPBERRY calculation. The [Fukui Berry-curvature tutorial](features/fukui-berry-curvature/)
 explains how to prepare the VASP mesh, run VASPBERRY and draw this map.
@@ -30,9 +30,10 @@ explains how to prepare the VASP mesh, run VASPBERRY and draw this map.
 | [Kubo Hall conductivity](features/kubo-hall/) | MoS₂, full meshes; chemical potential and temperature scans | Total and regional Hall curves, band reference and convergence studies |
 | [Charge Hall conductivity](features/hall-valley/) | Bi, full mesh, T = 0 | Zero charge-Hall response in the insulating gap |
 | [Circular optical transitions](features/circular-dichroism/) | MoS₂, K–Γ–K′ path | Opposite polarization selectivity at K and K′ |
+| [Stacking and valley optical selection](materials/mos2-stacking-valley/) | MoS₂ monolayer and 1H/2H/3R bilayers, Γ–M–K–Γ–K′ | VASP bands and complete-group circular strengths; ordinary WAVECAR and optional standard PAW optics |
 | [Real-space wavefunction](features/wavefunction/) | MoS₂, Γ point | Spinor-state density in the atomic unit cell |
 | [Magnetic Chern insulator](materials/mnbi2te4-qah/) | MnBi₂Te₄, three septuple layers | Nonzero occupied Chern number, band structure and Hall-integration checks |
-| [PAW spin Hall and ideal edges](materials/bi-spin-hall/) | Bi, fresh SCF density, full SOC meshes and a VASP-derived Wannier model | Physical spin/velocity matrices, insulating T=0 spin response, bulk bands and ideal-strip spectra |
+| [Quantum spin Hall topology and PAW spin response](materials/bi-spin-hall/) | Bi, fresh SCF density, full SOC meshes and a VASP-derived Wannier model | Z₂ n-field, corroborating edge connectivity, physical spin/velocity matrices and insulating T=0 spin response |
 
 Full-zone integrals require a complete periodic mesh. The supplied MoS₂
 band-path WAVECAR serves the Kubo, optical and wavefunction examples. The
@@ -44,16 +45,24 @@ topology and gap charge-Hall examples.
 
 The MnBi₂Te₄ material guide supplies the actual fixed SCF charge density,
 structure and NSCF inputs for a 21-atom magnetic film. It combines the Fukui
-and PAW optical diagnostics, VASPBERRY full-connection Wannier bands/Hall,
+and PAW optical diagnostics, VASP-derived Wannier bands and full-connection Hall response,
 and an independent postw90 reference. Its VASP
 and Wannier preparation steps are separate from the eight-feature batch command.
+
+The [MoS₂ stacking guide](materials/mos2-stacking-valley/) starts with four
+small, fixed structures and fresh ordinary VASP calculations. It supplies the
+actual inputs, band energies, optical results and plotting commands. The
+optional PAW optical comparison uses standard VASP output without source
+modification. The separate [matched Hall comparison](features/kubo-hall/operator-comparison/)
+uses full velocity matrices from the optional instrumented producer and also
+supplies reusable pair data for integration without VASP.
 
 The [Bi spin Hall material guide](materials/bi-spin-hall/) uses a fresh,
 supplied SCF density and matching PAW spin and full-velocity operators. Its
 licensed VASP producer runs serially; independent fixed-charge k chunks can
 be assembled before integration. The response currently requires an insulating
-occupied group at T=0. The Wannier strip illustrates an ideal edge of the
-validated model. This preparation is separate from the historical Bi_Z2
+occupied group at T=0. The Wannier strip checks edge connectivity consistent
+with the nontrivial bulk Z₂ invariant. This preparation is separate from the historical Bi_Z2
 fixture and the eight-feature batch command; see the [spin Hall guide](../docs/SPIN_HALL.md)
 for the operator conventions, commands and convergence requirements.
 

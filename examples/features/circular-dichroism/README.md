@@ -75,6 +75,16 @@ elements of pseudo-wavefunctions. These k-resolved spectra describe optical
 selection, rather than an absolute absorption coefficient. A path sum is
 not a Brillouin-zone absorption integral.
 
+## Optional PAW optical matrix route
+
+The ordinary WAVECAR workflow above remains the simplest entry point. If a
+standard VASP optical run is available, [`waveder-optics`](../../../docs/PAW_OPTICS.md)
+calculates PAW circular transition strengths and spectra with physical length
+units and complete initial/final degenerate groups. This optional route uses
+unmodified VASP and offers CSV, DAT and NPZ output. Its normalization differs
+from native `-cd 2`, so compare selection rules or match the conventions before
+comparing intensities. Neither route predicts photoluminescence polarization.
+
 ## Other materials
 
 Select the spinor setting, occupied/empty bands and photon-energy window from

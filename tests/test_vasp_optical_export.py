@@ -234,10 +234,34 @@ class OpticalExportTests(unittest.TestCase):
             write_connection(path, synthetic_arrays(), threshold=-1)
             with self.assertRaisesRegex(OpticalExportError, 'negative'):
                 read_connection(path)
-            for threshold in (0., .002):
+            for threshold in (0., .001, .0021):
                 write_connection(path, synthetic_arrays(), threshold=threshold)
                 with self.assertRaisesRegex(OpticalExportError, 'threshold must equal'):
                     read_connection(path)
+
+    def test_spin_mode_threshold_masks_complete_clusters_and_preserves_raw_values(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)/'connection.bin'
+            arrays = synthetic_arrays(ns=1, nk=1, nb=4)
+            arrays['energies_eV'][0, 0] = [0., .0015, .003, 1.]
+            write_connection(path, arrays, threshold=.002)
+            data = read_connection(path)
+            self.assertEqual(data.degeneracy_threshold_eV, .002)
+            # The outer pair spans 3meV but belongs to the same transitive group.
+            self.assertFalse(data.coverage[0, 0, :, 0, 2].any())
+            self.assertTrue(data.coverage[0, 0, :, 0, 3].all())
+            self.assertTrue(np.isnan(data.D_eVA[0, 0, :, 0, 2]).all())
+            np.testing.assert_array_equal(data.C_A, arrays['C_A'])
+            np.testing.assert_array_equal(np.diagonal(data.D_eVA, axis1=-2, axis2=-1), arrays['energy_der_eVA'])
+            out = Path(tmp)/'new'
+            report = write_bundles(data, out, {'run_id': 'threshold fixture'})
+            self.assertEqual(report['unavailable_offdiagonal_gap_threshold_eV'], .002)
+            saved = json.loads((out/'matrix-spin1.json').read_text())
+            self.assertEqual(saved['missing_offdiagonal_gap_threshold_eV'], .002)
+            # Legacy LBERRY-only producer remains readable with its original mask.
+            write_connection(path, arrays, threshold=1e-10)
+            legacy = read_connection(path)
+            self.assertTrue(legacy.coverage[0, 0, :, 0, 2].all())
 
     def test_native_waveder_layout_lower_only_and_complex64_rounding(self):
         with tempfile.TemporaryDirectory() as tmp:

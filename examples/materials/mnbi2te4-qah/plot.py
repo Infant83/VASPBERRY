@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plot native VASPBERRY bands/Hall response against DFT and independent postw90."""
+"""Plot VASP-derived bands and VASPBERRY Hall response with independent checks."""
 from __future__ import annotations
 import argparse
 import csv
@@ -100,9 +100,9 @@ def main():
            xticklabels=[r"$\Gamma$", "M", "K", r"$\Gamma$"], ylabel="Energy − midgap (eV)")
     for value in ticks[1:-1]: ax.axvline(value, color=".85", lw=.6, zorder=0)
     ax.axhline(0, color=".75", lw=.6, zorder=0)
-    ax.legend(handles=[Line2D([], [], color="#2864A0", lw=1, label="VASPBERRY"),
+    ax.legend(handles=[Line2D([], [], color="#2864A0", lw=1, label="VASP-derived Wannier"),
                        Line2D([], [], marker="o", color="none", markeredgecolor=".3",
-                              markerfacecolor="white", markersize=3.5, label="VASP")],
+                              markerfacecolor="white", markersize=3.5, label="Direct VASP")],
               frameon=True, facecolor="white", framealpha=.95, edgecolor="none",
               loc="lower left", fontsize=10.5, handlelength=1.4)
     inset.set(xlim=(-.023, .023), ylim=(-45, 50), xticks=[-.02, 0, .02], yticks=[-40, 0, 40])
@@ -157,7 +157,7 @@ def main():
     ac.grid(True, which="major", color=".9", lw=.6)
     ac.legend(frameon=False, fontsize=10, loc="upper left", handlelength=1.1,
               borderaxespad=.25, labelspacing=.25)
-    for panel, label in zip(axes, ["(a) Bands", "(b) Sheet Hall response", "(c) Sampling convergence"]):
+    for panel, label in zip(axes, ["(a) MnBi$_2$Te$_4$ bands", "(b) Sheet Hall response", "(c) Sampling convergence"]):
         panel.set_title(label, loc="left", pad=10)
     fig.tight_layout(w_pad=1.6)
     a.output_dir.mkdir(parents=True, exist_ok=True)

@@ -55,3 +55,15 @@ examples/materials/bi-spin-hall/reference/**/*.csv whitespace=trailing-space,spa
 examples/materials/bi-spin-hall/reference/**/*.dat -whitespace
 examples/materials/bi-spin-hall/reference/**/*.log -whitespace
 examples/materials/bi-spin-hall/reference/figures/*.svg -whitespace
+
+# Preserve actual stacking and matched-operator records without reformatting.
+examples/features/kubo-hall/operator-comparison/reference/**/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/features/kubo-hall/operator-comparison/reference/**/*.dat -whitespace
+examples/features/kubo-hall/operator-comparison/reference/**/*.svg -whitespace
+examples/features/kubo-hall/operator-comparison/reference/vasp/POSCAR -whitespace
+examples/materials/mos2-stacking-valley/reference/**/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/materials/mos2-stacking-valley/reference/**/*.dat -whitespace
+examples/materials/mos2-stacking-valley/reference/**/*.svg -whitespace
+examples/materials/mos2-stacking-valley/reference/**/EIGENVAL -whitespace
+examples/materials/mos2-stacking-valley/reference/**/OSZICAR -whitespace
+examples/materials/mos2-stacking-valley/reference/**/OUTCAR-excerpts.txt -whitespace

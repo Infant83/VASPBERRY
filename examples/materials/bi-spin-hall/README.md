@@ -6,8 +6,9 @@ VASP, including spin–orbit coupling. It connects three different calculations:
 1. The occupied-band Fukui–Hatsugai **Z₂ invariant** and integer n-field.
 2. The **conventional intrinsic spin Hall conductivity**, using PAW spin and
    full velocity matrices from the same VASP calculation.
-3. Bulk bands and an **ideal open-edge spectrum** from a Wannier Hamiltonian
-   fitted to these VASP states.
+3. A supporting **edge-state check of Z₂ = 1**, using an ideal strip of a
+   Wannier Hamiltonian fitted to these VASP states. The accompanying bulk
+   dispersion is the VASP-derived Wannier interpolation of Bi's band structure.
 
 These quantities answer different questions. Z₂ and edge connectivity diagnose
 the quantum spin Hall phase. With spin–orbit coupling, the conventional spin
@@ -198,7 +199,11 @@ gap must also be checked independently.
 
 ![Fresh Bi n-field](reference/z2/figure.png)
 
-## 4. Bulk bands and an ideal edge
+## 4. Confirm the bulk Z₂ result with an ideal edge
+
+The commands below interpolate the VASP-derived Bi band structure and use
+the same Hamiltonian for an ideal strip. The edge connectivity provides a
+boundary check of the occupied-band Z₂ calculation in Section 3.
 
 ```bash
 python3 tools/vaspberry_kubo.py wannier-bands \
@@ -220,6 +225,14 @@ sampled model gaps differ by **1.725 and 2.426 meV**, while the maximum errors
 in bands 9–12 are **30.67 and 33.23 meV**. The 18×18 comparison includes
 288 points outside the training grid. These are interpolation errors,
 not DFT convergence errors.
+The training states within the frozen window are reproduced to
+4.0×10⁻¹² eV. The maximum tested model E(k)−E(−k) residual is
+9.56×10⁻⁸ eV, without time-reversal averaging. The 16,000-iteration
+localization stopped with a last spread change of approximately
+1.6×10⁻⁸ Å², above the requested 10⁻⁸ Å² tolerance; a fully converged
+localization is not claimed. A dense 121×121 scan of the finite model gives
+a sampled bulk gap of 0.447 eV, separate from the coarser direct-VASP gap
+and its interpolation error.
 The [source guide](inputs/wannier-source/) reproduces the localization and
 effective operators from the actual VASP overlaps, and explains how to export
 new overlaps from the licensed VASP calculation. This full reproduction was
@@ -230,6 +243,8 @@ At Γ, the separation of the central Kramers doublets decreases from
 occur in the positive half of the one-dimensional BZ at each of three
 checked energies inside the bulk gap. The odd crossing count and edge
 localization are checked independently in the [diagnostics](reference/diagnostics/).
+Together with the bulk gap and Z₂ = 1, this odd connectivity is consistent
+with time-reversal-protected topological boundary modes.
 
 The strip is an ideal truncation of bulk hopping matrices. It describes edge
 connectivity, without edge relaxation, reconstruction or self-consistent edge

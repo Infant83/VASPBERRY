@@ -1,0 +1,49 @@
+{
+  "status": "PASS",
+  "case_order": [
+    "monolayer",
+    "1h-bilayer",
+    "2h-bilayer",
+    "3r-bilayer"
+  ],
+  "band_origin": "Direct VASP path eigenvalues from matching WAVECAR/EIGENVAL",
+  "display_photon_range_eV": [
+    1.3,
+    2.2
+  ],
+  "stored_photon_range_eV": [
+    0.5,
+    4.0
+  ],
+  "energy_zero": "Each case own sampled path VBM; not absolute alignment between slabs",
+  "helicity": "Native LEFT/RIGHT and PAW plus/minus share (x +/- i y) final-bra/initial-ket convention, +z beam",
+  "eta_display_mask": {
+    "relative_intensity_floor_per_k": 0.001,
+    "native_absolute_intensity_floor_au": 0.0001,
+    "native_intensity_print_resolution_au": 0.0001,
+    "native_eta_absolute_uncertainty_max": 0.005,
+    "native_eta_uncertainty_bound": "1e-4/(I_plus+I_minus); each nonnegative printed channel has rounding error <=5e-5",
+    "raw_data_policy": "Original intensities and ratios retained; no material-specific zeroing",
+    "diagnostics": "native-eta-display.csv"
+  },
+  "intensity_comparison": "Native photon/path weighting and PAW length-matrix strengths differ; only eta is overlaid",
+  "scope": "Independent-particle k-resolved transitions; not PL, absolute absorption or BZ integration",
+  "source_summary_sha256": {
+    "monolayer": "e0515e98ef72d0ac8c5ae58024d2f78bbe3b4a4d12745c9a62c54491149d01ef",
+    "1h-bilayer": "ef63542c8c7d59e6d3cacbb2027d2f96221a6f3fc1b1757c5313e64a5b988017",
+    "2h-bilayer": "5e0ef484719fe4632a5d411859743a8482c010494287b4105b47e9ef8dfe60a2",
+    "3r-bilayer": "a2d2461c0e1bee0965ed99835b06b08a69d26cb709bd695b6c34855fd73a8eb5"
+  },
+  "figure_sha256": {
+    "stacking-paw-spectra.svg": "906853bf5fe535d5187e4ff34e9933fb1f776fb496c7565cf1caef702635a232",
+    "stacking-paw-spectra.png": "b1dda563cf474cc20e22bb690f0cd45717351e8b4d93f34491b0692fe27264b4",
+    "stacking-paw-spectra.pdf": "d06f681819f0f5c85440fad7df8d59bc427c716ea9c9c32345b5af1f7265d9e2",
+    "stacking-bands-selectivity.svg": "7e8e220c1031f940ac3fb5e73479020783cbdbd2a14a97bff29d99fa78515ea2",
+    "stacking-native-spectra.svg": "00202d915013319e39377f64e039c7c0f99ecf167958a600b3d13608392335f9",
+    "stacking-native-spectra.pdf": "10037416db07d2fb1443f3c57754a7aa7f0ec186605f4e7bfe15bebbf7de37b1",
+    "stacking-native-spectra.png": "12ee0b20ccf770b8d787642e8557e79597372d1effb20815eddf2fa7f2181e9e",
+    "stacking-bands-selectivity.png": "2831483ea50022d0cbe2494dbede65380d809132a6ed8e7934e635230b010965",
+    "stacking-bands-selectivity.pdf": "9d858f183d85d455c7bd1abebe8c381892e470838d93e8d84dd733cf0b2694cc"
+  },
+  "display_diagnostics_sha256": "1dd3c6cdba8dd609f097899ed8b97755a60dc36948ae5c682d63f229dfd5fc73"
+}
