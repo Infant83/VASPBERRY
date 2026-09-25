@@ -20,7 +20,7 @@ explains the methods and material results ([PDF](../docs/TECHNICAL_REPORT.pdf)).
 |---|---|---|
 | [Fukui Berry curvature](features/fukui-berry-curvature/) | MoS₂, full 12×12 mesh | `BERRYCURV.dat`; opposite K/K′ curvature in a Cartesian BZ map |
 | [Occupied Chern number](features/fukui-chern/) | Bi, full 12×12 mesh | `BERRYCURV.dat`; C = 0 for bands 1–10 |
-| [Z₂ invariant](features/z2/) | Bi, full 12×12 SOC mesh | `Z2_FIELD.csv`; Z₂ = 1 and half-zone diagnostics |
+| [Z₂ invariant](features/z2/comparison/) | MoS₂ and Bi, full 12×12 SOC meshes | `Z2_FIELD.csv`; Z₂ = 0 and 1, with paired n-field maps and half-zone diagnostics |
 | [Kubo Berry curvature](features/kubo-curvature/) | MoS₂, full mesh and matching K–Γ–K′ path | Native Kubo CSV; occupied-bundle curvature and band panels |
 | [Single-band valley curvature](features/kubo-curvature/valleys/) | MoS₂, two 9×9 K/K′ patches | Native Kubo CSV; isolated band-18 maps and line cuts |
 | [Charge and regional Hall response](features/kubo-hall/) | MoS₂, complete meshes and sufficient empty bands | Native `PAIRS.csv`, then occupation-weighted integration and Hall tables |

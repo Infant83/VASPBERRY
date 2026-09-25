@@ -2,6 +2,10 @@
 
 The [Z₂ feature example](../examples/features/z2/) recalculates the invariant
 from the real Bi WAVECAR, with exact commands, native reference outputs and a figure.
+The [MoS₂/Bi comparison](../examples/features/z2/comparison/) pairs the trivial
+and nontrivial results, Z₂ = 0 and 1, using the same native method on occupied
+spinor bundles. Both have zero occupied Chern number; this alone does not
+determine their Z₂ class.
 
 VASPBERRY's `-z2 1` option evaluates the two-dimensional class-AII invariant
 directly from a VASP spinor `WAVECAR`. It implements the lattice n-field

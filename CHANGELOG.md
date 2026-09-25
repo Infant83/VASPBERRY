@@ -16,6 +16,8 @@ All notable changes to VASPBERRY are recorded here.
 
 ### Fixed
 
+- Reject incompatible occupied-bundle and spinor metadata before plotting
+  native Z₂ fields. Numerical topology routines are unchanged.
 - Populate Fukui MPI output-header curvature extrema and their k points from
   the gathered mesh, matching the printed numerical data.
 - Avoid a zero divisor in the wavefunction progress display for real-space
@@ -23,6 +25,8 @@ All notable changes to VASPBERRY are recorded here.
 
 ### Documentation
 
+- Pair direct-WAVECAR MoS₂ Z₂ = 0 and Bi Z₂ = 1 results in the technical
+  report and feature examples, with native n-field data and reproduction commands.
 - Lead README, examples and the technical report with direct VASP WAVECAR →
   Fortran calculation → saved results → postprocessing/plotting workflows.
   Separate optional PAW/spin operator extensions and Wannier supporting checks.

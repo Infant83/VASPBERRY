@@ -7,7 +7,7 @@ spectra.
 | Dataset | Files | Sampling and use |
 |---|---|---|
 | MoS₂ band path | [WAVECAR, POSCAR and EIGENVAL](1H-MoS2/KPATH/2.band/) | SOC; 48 points along K–Γ–K′; 32 bands. Kubo curvature, optical spectra and Γ wavefunctions |
-| MoS₂ full-zone curvature | [VASP inputs](features/fukui-berry-curvature/inputs/) and [calculated output](features/fukui-berry-curvature/reference/) | 12×12 mesh; occupied bands 1–18. Fukui curvature map; see the [Fukui tutorial](features/fukui-berry-curvature/) for available inputs and reproduction |
+| MoS₂ full-zone curvature and Z₂ | [VASP inputs](features/fukui-berry-curvature/inputs/) and [calculated output](features/fukui-berry-curvature/reference/) | 12×12 mesh; occupied bands 1–18. [Fukui curvature map](features/fukui-berry-curvature/) and [trivial Z₂ reference](features/z2/comparison/) from the same WAVECAR |
 | MoS₂ Kubo transport | [VASP preparation and Hall commands](features/kubo-hall/) | Full periodic meshes, occupations at specified chemical potentials and temperatures; separate mesh and intermediate-band checks |
 | MoS₂ stacking and optical selection | [Four-system guide and actual inputs](materials/mos2-stacking-valley/) | Fresh SOC SCF and 49-point paths; ordinary WAVECAR and optional standard WAVEDER; fixed monolayer/1H/2H/3R geometries |
 | Matched MoS₂ charge operators | [VASP recipe and reusable pair references](features/kubo-hall/operator-comparison/) | Identical 12×12 VASP states for canonical momentum and optional full PAW velocity; separate 40/50-band integration cutoffs |

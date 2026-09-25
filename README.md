@@ -57,7 +57,7 @@ inputs may need the [input-fetch procedure](examples/INPUTS.md).
 | Task | Native command | Actual VASP example and results |
 |---|---|---|
 | Fukui Berry flux and Chern number of an isolated band or bundle | `--task chern` | [MoS₂ BZ map](examples/features/fukui-berry-curvature/), [Bi occupied bundle](examples/features/fukui-chern/) |
-| 2D Fukui–Hatsugai Z₂ invariant and n-field | `--task z2` | [Bi topological insulator](examples/features/z2/) |
+| 2D Fukui–Hatsugai Z₂ invariant and n-field | `--task z2` | [MoS₂ (Z₂ = 0) and Bi (Z₂ = 1)](examples/features/z2/comparison/) |
 | Kubo Berry curvature on a BZ mesh or symmetry path | `--task kubo` | [MoS₂ occupied bundle and isolated-band maps, paths and bands](examples/features/kubo-curvature/) |
 | Intrinsic charge Hall response versus chemical potential and temperature | `--task kubo-pairs`, then occupation-weighted postprocessing | [MoS₂ Hall and valley-region curves](examples/features/kubo-hall/) |
 | Circular optical selectivity and transition spectra | `--task optical` / `--task spectrum` | [MoS₂ circular dichroism](examples/features/circular-dichroism/) |

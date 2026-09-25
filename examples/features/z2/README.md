@@ -1,5 +1,11 @@
 # Bi: Z₂ invariant and integer field
 
+The [MoS₂–Bi comparison](comparison/) now contrasts a native **Z₂ = 0**
+MoS₂ result with the fresh **Z₂ = 1** Bi result used in the technical report.
+It includes the [MoS₂ native command and VASP preparation](mos2/) and a
+plot-only helper for paired reduced-coordinate fields. The step-by-step
+Bi tutorial below retains its distinct historical input and references.
+
 Buckled honeycomb Bi has **Z₂ = 1** for the occupied SOC bands 1–10 in this
 12 × 12 example. VASPBERRY evaluates the Fukui–Hatsugai integer field and
 compares the parities of two complementary half Brillouin zones.

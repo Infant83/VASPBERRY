@@ -5,6 +5,11 @@ validation/models/**/reference/*.csv whitespace=trailing-space,space-before-tab,
 # Preserve native Fortran record padding and the exact archived output hashes.
 examples/features/**/reference/*.dat -whitespace
 examples/features/**/reference/*.log -whitespace
+# Preserve the native MoS2 mesh comparison and generated n-field figure.
+examples/features/z2/mos2/reference/**/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/features/z2/mos2/reference/**/*.dat -whitespace
+examples/features/z2/mos2/reference/**/*.log -whitespace
+examples/features/z2/comparison/reference/*.svg -whitespace
 # Keep native VASP records and the archived Fukui output byte-for-byte.
 examples/features/fukui-berry-curvature/inputs/POSCAR -whitespace
 examples/features/fukui-berry-curvature/reference/archive/*.dat -whitespace

@@ -27,6 +27,15 @@ def validate_rows(path):
     nx, ny, z2 = validate_result(field, metadata, path)
     if metadata['schema_version'] != '2':
         raise ValueError('this fixture requires schema version 2')
+    try:
+        first = int(metadata['band_min'])
+        last = int(metadata['band_max'])
+        rank = int(metadata['band_rank'])
+        spinor = int(metadata['spinor_components'])
+    except (KeyError, ValueError) as error:
+        raise ValueError('incomplete occupied spinor bundle metadata') from error
+    if first != 1 or rank != last-first+1 or rank <= 0 or rank % 2 != 0 or spinor != 2:
+        raise ValueError('Z2 field requires bands 1:NE with a positive even rank and two spinor components')
     with path.open() as f:
         raw = list(csv.DictReader(line for line in f if not line.startswith('#')))
     rows = {int(row['cell_id']): {key: float(value) for key, value in row.items()} for row in raw}

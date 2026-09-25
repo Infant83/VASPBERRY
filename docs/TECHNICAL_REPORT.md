@@ -394,59 +394,56 @@ provide complete VASP inputs, both channel spectra and reproduction commands;
 the original [monolayer optical tutorial](../examples/features/circular-dichroism/)
 remains the introductory example.
 
-### 3.4 Bi: native Fukui–Hatsugai Z₂ topology
+### 3.4 MoS₂ and Bi: contrasting native Z₂ invariants
 
-The two-atom buckled Bi bilayer provides a compact real-material example of
-quantum spin Hall topology, as proposed by
-[Murakami](https://doi.org/10.1103/PhysRevLett.97.236805). We use the fixed Bi
-geometry and a fresh nonmagnetic PBE+SOC calculation, with a 400 eV cutoff
-and electronic tolerance of $`10^{-8}`$ eV. The native calculation reads the resulting VASP spinor wavefunctions
-directly from WAVECAR.
-
-VASPBERRY evaluates the
-[Fukui–Hatsugai lattice n-field](https://doi.org/10.1143/JPSJ.76.053702)
-from the occupied SOC bands 1–10 on a full Γ-centered 12×12 mesh.
-With the time-reversal-compatible gauge used in this construction, the
-Z₂ invariant is the parity of the integer-field sum over a half Brillouin zone:
+Monolayer 1H-MoS₂ and buckled Bi illustrate trivial and quantum spin Hall
+insulators using the same native method. MoS₂ reuses the curvature example's
+12×12 WAVECAR; Bi uses the fresh PBE+SOC input described above. The Bi phase
+was proposed by [Murakami](https://doi.org/10.1103/PhysRevLett.97.236805).
+For each occupied spinor bundle, the
+[Fukui–Hatsugai construction](https://doi.org/10.1143/JPSJ.76.053702)
+uses a time-reversal-compatible gauge and the half-zone integer-field parity:
 
 ```math
 \nu=\left[\sum_{p\in B_{1/2}} n(p)\right]\bmod 2.
 ```
 
-![Bi Fukui-Hatsugai integer n-field and Z2 invariant](../examples/materials/bi-spin-hall/reference/z2/figure.png)
+![Native Fukui-Hatsugai integer fields: MoS2 Z2=0 and Bi Z2=1](../examples/features/z2/comparison/reference/figure.png)
 
-**Figure 7.** Fukui–Hatsugai integer field $`n(\mathbf k)`$ calculated from the
-Bi VASP spinor wavefunctions. Red, white and blue denote +1, 0 and −1,
-respectively. The native plaquettes are displayed without interpolation in
-dimensionless reduced coordinates, $`\mathbf k=q_1\mathbf b_1+q_2\mathbf b_2`$,
-with opposite edges periodically identified. The line at $`q_2=0`$ separates
-the upper and lower half zones. The occupied-band calculation gives **Z₂ = 1**.
+**Figure 7.** Native 12×12 n-fields for (a) monolayer 1H-MoS₂ and (b) buckled
+Bi. Red, white and blue denote +1, 0 and −1. Tiles are original plaquettes,
+without interpolation, in reduced coordinates $`\mathbf k=q_1\mathbf b_1+q_2\mathbf b_2`$.
+Opposite edges are periodic; $`q_2=0`$ separates the half zones. Annotations
+show each sum followed by its parity.
 
-The upper and lower half-zone sums are **−3 and +3**, respectively. Both are odd,
-so their parities agree at **$`\nu=1`$**, identifying the nontrivial
-time-reversal-symmetric insulating phase for this calculation.
-The sampled minimum direct and global gaps are **0.535 eV** and **0.497 eV**.
+| Material | Occupied bands | Upper / lower sums | Z₂ | Direct / global gap (eV) |
+|---|---|---|---:|---|
+| MoS₂ | 1–18 | 0 / 0 | **0** | 1.674 / 1.674 |
+| Bi | 1–10 | −3 / +3 | **1** | 0.535 / 0.497 |
 
-The local n-field depends on the gauge and logarithm branch; its half-zone
-parity is the invariant. The reduced-coordinate map shows the original mesh
-half-zones used for these sums. The [separate occupied **C = 0** calculation](../examples/materials/bi-spin-hall/reference/fukui/README.md) and zero charge-Hall
-response are consistent with this nontrivial Z₂ result.
+Both occupied bundles have **C = 0** (Section 3.1 and the
+[Bi check](../examples/materials/bi-spin-hall/reference/fukui/README.md)),
+yet their Z₂ values differ. Finite local Berry curvature and valley response
+are compatible with trivial MoS₂. The n-field pattern is gauge and branch
+dependent; its agreed half-zone parity is the invariant, not the local tile
+pattern or a Berry-curvature observable.
 
-The native topology calculation uses WAVECAR pseudo-wavefunction overlaps.
-An independent check of the original occupied subspaces, before the native
-TR reconstruction, gives a maximum time-reversal residual of
-$`4.57\times10^{-8}`$. The optional spin Hall calculation in Appendix A.3 uses
-physical spin and velocity matrices with the PAW terms described in
-Appendix A.2. The older Bi fixture remains a
-separate historical reference.
+MoS₂ retains Z₂ = 0 at 24×24 with 60 stored bands, versus 26 at 12×12;
+both select occupied bands 1–18. Serial and MPI field CSVs are byte-identical
+at each mesh. This checks invariant stability under both input changes,
+without isolating mesh convergence or establishing transport convergence.
 
-[Actual Bi preparation and commands](../examples/materials/bi-spin-hall/) ·
-[Numerical n-field](../examples/materials/bi-spin-hall/reference/z2/Z2_FIELD.csv)
+The native PASS checks use WAVECAR pseudo-wavefunction overlaps. Independent
+raw occupied-subspace time-reversal checks are retained with the references;
+native reconstruction alone does not establish physical symmetry. Optional
+Bi edge connectivity supports its bulk result (Appendix B.2). Conventional
+spin Hall response is a separate observable and need not be quantized when
+spin is not conserved (Appendix A.3).
 
-The native occupied-subspace calculation establishes the bulk Z₂ result
-shown here. Optional edge connectivity corroborates it in Appendix B.2;
-conventional spin Hall conductivity is a separate observable and need not
-be quantized when spin is not conserved (Appendix A.3).
+[Commands and paired figure](../examples/features/z2/comparison/) ·
+[MoS₂ native field](../examples/features/z2/mos2/reference/Z2_FIELD.csv) ·
+[Bi native field](../examples/materials/bi-spin-hall/reference/z2/Z2_FIELD.csv) ·
+[Fresh Bi preparation](../examples/materials/bi-spin-hall/)
 
 ### 3.5 MoS₂: a real-space Γ state
 

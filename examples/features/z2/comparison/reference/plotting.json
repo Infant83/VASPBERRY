@@ -1,0 +1,77 @@
+{
+  "schema": "vaspberry.z2-field-comparison-plot",
+  "version": 1,
+  "operation": "plot_existing_native_fields",
+  "sources": [
+    {
+      "label": "MoS₂",
+      "source_field": "examples/features/z2/mos2/reference/Z2_FIELD.csv",
+      "source_field_sha256": "219e13c3b3617e246b85209ee19ab3320e8426114fdc4e7bdc467167922e881a",
+      "poscar": "examples/features/fukui-berry-curvature/inputs/POSCAR",
+      "poscar_sha256": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+      "occupied_bands": [
+        1,
+        18
+      ],
+      "half_top_parity": 0,
+      "half_bottom_parity": 0,
+      "mesh_nx": 12,
+      "mesh_ny": 12,
+      "plaquettes": 144,
+      "z2": 0,
+      "half_top_sum": 0,
+      "half_bottom_sum": 0,
+      "total_chern": 3.025060897036411e-14,
+      "minimum_link_singular_value": 0.7139680798771314,
+      "max_nfield_integer_residual": 8.834874115176436e-18,
+      "max_flux_tr_odd_residual_rad": 2.7755575615628914e-14,
+      "max_abs_flux_rad": 0.38747572329980445
+    },
+    {
+      "label": "Bi",
+      "source_field": "examples/materials/bi-spin-hall/reference/z2/Z2_FIELD.csv",
+      "source_field_sha256": "613108015e9113ab7d7357661e247b25d803d33394e96daf6bb81e2c0849d3d8",
+      "poscar": "examples/materials/bi-spin-hall/inputs/POSCAR",
+      "poscar_sha256": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+      "occupied_bands": [
+        1,
+        10
+      ],
+      "half_top_parity": 1,
+      "half_bottom_parity": 1,
+      "mesh_nx": 12,
+      "mesh_ny": 12,
+      "plaquettes": 144,
+      "z2": 1,
+      "half_top_sum": -3,
+      "half_bottom_sum": 3,
+      "total_chern": 6.025384146550329e-15,
+      "minimum_link_singular_value": 0.7986806013643036,
+      "max_nfield_integer_residual": 0.0,
+      "max_flux_tr_odd_residual_rad": 2.220446049250313e-14,
+      "max_abs_flux_rad": 1.1987545345260031e-08
+    }
+  ],
+  "interpolation": "none",
+  "domain": [
+    [
+      -0.5,
+      0.5
+    ],
+    [
+      -0.5,
+      0.5
+    ]
+  ],
+  "half_zone_boundary": "q2=0",
+  "coordinate_definition": "k=q1*b1+q2*b2; dimensionless reduced coordinates",
+  "interpretation": "Gauge- and branch-dependent integer field; agreed half-zone parity is the invariant, not the local tile pattern.",
+  "numerical_computation": "No wavefunctions, links or invariants recomputed; native result diagnostics and parities checked from CSV rows.",
+  "plotter_sha256": "e909d5f08bd7f33c71b1dddbf100fd7b50509b9008171446942e9ebb0046429c",
+  "validator_sha256": "686591076be72e1c488db4d0ee83b9917ec2da400f62026dadb3edff8cc0309b",
+  "figures": {
+    "png": "bdf9fe7f404374c47d3b1de644b68c3ca1a014bf0a3309f5ec5e73f7a675fe6b",
+    "pdf": "3db7094a311b7cf5971cbd3a1e8aca09a0c9a1f23977ed8a49cd26896dd3a641",
+    "svg": "537fb7929f8482968608021e06b4c6f792e53448294ea32a95f057f6a27b4a3c"
+  }
+}

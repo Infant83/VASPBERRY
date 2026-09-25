@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "material": "1H-MoS2",
+  "occupied_bands": [
+    1,
+    18
+  ],
+  "input_origin": "Actual converged VASP SOC fixed-charge calculations from public 1H-MoS2 POSCAR and SCF CHGCAR with licensed local matching PAW datasets.",
+  "input_preparation": "../../../fukui-berry-curvature/inputs/README.md",
+  "mesh_checks": [
+    {
+      "mesh": [
+        12,
+        12
+      ],
+      "nkpoints": 144,
+      "nbands": 26,
+      "ispin": 1,
+      "rtag": 45200,
+      "encut_eV": 400.0,
+      "unique_grid_points": 144,
+      "maximum_mesh_fractional_residual": 7.105427357601002e-15,
+      "maximum_kz_mod_G_residual": 0.0,
+      "occupied_bands": [
+        1,
+        18
+      ],
+      "maximum_occupied_occupation_error": 1.9673151996357774e-13,
+      "maximum_empty_occupation": 0.0,
+      "sampled_min_direct_gap_eV": 1.6735503637308078,
+      "sampled_global_gap_eV": 1.6735503597349837,
+      "maximum_occupied_TR_energy_difference_eV": 5.762470323134039e-08,
+      "maximum_TRIM_occupied_Kramers_splitting_eV": 4.60241889044255e-09,
+      "TRIM_kpoint_indices_1based": [
+        1,
+        73,
+        7,
+        79
+      ],
+      "raw_projector_TR_validation": "Independent QR-orthonormalized occupied-subspace comparison; see raw_TR_checks. Energy agreement alone does not establish raw projector compatibility.",
+      "input_metadata_sha256": {
+        "INCAR": "6d6c4278a139db5b59bfcdd71ad557d9569957e336c9d67796a882141ba5fc3d",
+        "KPOINTS": "3f434de8810f111558a7853f927f0ca9c1ab5d1014a47c42ecfadfcb9d57262b",
+        "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+        "OUTCAR": "164558513a3c4d5d65292ee9f58c5902586cd23097be8d53272beb7c2ab76ff2",
+        "EIGENVAL": "5e40f6eaeae359c92950143161ca8d2f6721aa5c1d4bd6a1a01a7b6af18dc9e6"
+      },
+      "last_total_magnetization_line": "number of electron      18.0000011 magnetization       0.0000000      0.0000000     -0.0000000",
+      "vasp_normal_footer": true,
+      "input_contract_pass": true,
+      "wavecar_sha256": "e1955a6b3562870edd67030d7e64cb59b6956c53db7259b25a6adee400fc9e10",
+      "vasp_settings": {
+        "ICHARG": 11,
+        "ISPIN": 1,
+        "LSORBIT": true,
+        "ISYM": -1,
+        "MAGMOM": "all zero",
+        "mesh_centering": "Gamma, zero shift"
+      }
+    },
+    {
+      "mesh": [
+        24,
+        24
+      ],
+      "nkpoints": 576,
+      "nbands": 60,
+      "ispin": 1,
+      "rtag": 45200,
+      "encut_eV": 400.0,
+      "unique_grid_points": 576,
+      "maximum_mesh_fractional_residual": 1.6209256159527285e-14,
+      "maximum_kz_mod_G_residual": 0.0,
+      "occupied_bands": [
+        1,
+        18
+      ],
+      "maximum_occupied_occupation_error": 3.106848112111038e-12,
+      "maximum_empty_occupation": 0.0,
+      "sampled_min_direct_gap_eV": 1.6735503632016993,
+      "sampled_global_gap_eV": 1.6735503595063574,
+      "maximum_occupied_TR_energy_difference_eV": 2.4635723683275046e-08,
+      "maximum_TRIM_occupied_Kramers_splitting_eV": 4.541861997608976e-09,
+      "TRIM_kpoint_indices_1based": [
+        1,
+        289,
+        13,
+        301
+      ],
+      "raw_projector_TR_validation": "Independent QR-orthonormalized occupied-subspace comparison; see raw_TR_checks. Energy agreement alone does not establish raw projector compatibility.",
+      "input_metadata_sha256": {
+        "INCAR": "aa2c888c739874c88b9032ddf354284492c1db369c159742b98344429a925836",
+        "KPOINTS": "e38502bda421df67ad2839f5a9957cd54e838d6c1692c6f6e06652f8d0956dcb",
+        "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+        "OUTCAR": "3de282e55485c2f50087e64f58d4203bb2c4f685e4ed453fd7d0fe7b3d949075",
+        "EIGENVAL": "a20d9f4f11cc08f30b6c999aaae6fee99456735bbb9e887c5c7575cc28529960"
+      },
+      "last_total_magnetization_line": "number of electron      18.0000011 magnetization       0.0000000      0.0000000     -0.0000000",
+      "vasp_normal_footer": true,
+      "input_contract_pass": true,
+      "wavecar_sha256": "aa4570fee97b9d6f451e83b5d512f2a0554d27967d34bf664856a55897ff5405",
+      "vasp_settings": {
+        "ICHARG": 11,
+        "ISPIN": 1,
+        "LSORBIT": true,
+        "ISYM": -1,
+        "MAGMOM": "all zero",
+        "mesh_centering": "Gamma, zero shift"
+      }
+    }
+  ],
+  "raw_TR_checks": [
+    {
+      "status": "COMPLETED",
+      "wavecar_sha256_before": "e1955a6b3562870edd67030d7e64cb59b6956c53db7259b25a6adee400fc9e10",
+      "wavecar_sha256_after": "e1955a6b3562870edd67030d7e64cb59b6956c53db7259b25a6adee400fc9e10",
+      "mesh": [
+        12,
+        12
+      ],
+      "nkpoints": 144,
+      "nbands": 26,
+      "occupied_bands": [
+        1,
+        18
+      ],
+      "spinor_components": 2,
+      "independent_pairs_including_TRIM": 74,
+      "trims_1based": [
+        1,
+        7,
+        73,
+        79
+      ],
+      "occupation_max_abs_error_occupied": 1.9673151996357774e-13,
+      "occupation_max_abs_empty": 0.0,
+      "rounded_occupied_rank_unique": [
+        18.0
+      ],
+      "sampled_direct_gap_eV": 1.6735503637308078,
+      "sampled_global_gap_eV": 1.6735503597349837,
+      "occupied_TRIM_Kramers_max_splitting_eV": 4.60241889044255e-09,
+      "all_source_TRIM_Kramers_max_splitting_eV": 6.202346533035197e-05,
+      "all_source_energy_TR_max_abs_eV": 0.0008442364927185864,
+      "occupied_energy_TR_max_abs_eV": 5.762470323134039e-08,
+      "raw_occupied_projector_max_leakage": 8.127657848443029e-05,
+      "raw_occupied_projector_min_principal_overlap": 0.9999999966970585,
+      "raw_occupied_Gram_min_eigenvalue": 0.7541616311159551,
+      "raw_occupied_Gram_max_eigenvalue": 1.325039940784419,
+      "elapsed_seconds": 7.181750274030492,
+      "metric": "|| (I-Qa Qa^dagger) Qb ||_2, where Qa=qr(raw occupied states at -k), Qb=qr(Theta raw occupied states at k mapped to target G basis). This equals sin(largest principal angle); no assumption of identity raw pseudo-wavefunction Gram matrix.",
+      "scope": "Direct raw occupied pseudo-wavefunction subspace compatibility with spin-1/2 TR. Does not call native TR reconstruction, does not verify complete Hamiltonian or PAW augmentation, and is not a mesh-convergence certificate.",
+      "script_sha256": "3e995c96966ace33d8bf024560f9967ebc366a9160d7d4c4311b9d4d68a6b511",
+      "reader_sha256": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e",
+      "timestamp_utc": "2026-09-25T08:41:49.044692+00:00",
+      "all_G_mappings_bijective": true,
+      "audit_record_sha256": "41b8105b139d6943a58282b3fe2c9431ccb722efb5a2be2a80cb6fb08bea5276"
+    },
+    {
+      "status": "COMPLETED",
+      "wavecar_sha256_before": "aa4570fee97b9d6f451e83b5d512f2a0554d27967d34bf664856a55897ff5405",
+      "wavecar_sha256_after": "aa4570fee97b9d6f451e83b5d512f2a0554d27967d34bf664856a55897ff5405",
+      "mesh": [
+        24,
+        24
+      ],
+      "nkpoints": 576,
+      "nbands": 60,
+      "occupied_bands": [
+        1,
+        18
+      ],
+      "spinor_components": 2,
+      "independent_pairs_including_TRIM": 290,
+      "trims_1based": [
+        1,
+        13,
+        289,
+        301
+      ],
+      "occupation_max_abs_error_occupied": 3.106848112111038e-12,
+      "occupation_max_abs_empty": 0.0,
+      "rounded_occupied_rank_unique": [
+        18.0
+      ],
+      "sampled_direct_gap_eV": 1.6735503632016993,
+      "sampled_global_gap_eV": 1.6735503595063574,
+      "occupied_TRIM_Kramers_max_splitting_eV": 4.541861997608976e-09,
+      "all_source_TRIM_Kramers_max_splitting_eV": 0.026600465176446875,
+      "all_source_energy_TR_max_abs_eV": 0.3669151507311792,
+      "occupied_energy_TR_max_abs_eV": 2.4635723683275046e-08,
+      "raw_occupied_projector_max_leakage": 8.093511778166318e-08,
+      "raw_occupied_projector_min_principal_overlap": 0.9999999999999926,
+      "raw_occupied_Gram_min_eigenvalue": 0.7541613600523869,
+      "raw_occupied_Gram_max_eigenvalue": 1.325040722600388,
+      "elapsed_seconds": 30.706642464036122,
+      "metric": "|| (I-Qa Qa^dagger) Qb ||_2, where Qa=qr(raw occupied states at -k), Qb=qr(Theta raw occupied states at k mapped to target G basis). This equals sin(largest principal angle); no assumption of identity raw pseudo-wavefunction Gram matrix.",
+      "scope": "Direct raw occupied pseudo-wavefunction subspace compatibility with spin-1/2 TR. Does not call native TR reconstruction, does not verify complete Hamiltonian or PAW augmentation, and is not a mesh-convergence certificate.",
+      "script_sha256": "3e995c96966ace33d8bf024560f9967ebc366a9160d7d4c4311b9d4d68a6b511",
+      "reader_sha256": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e",
+      "timestamp_utc": "2026-09-25T08:44:28.901710+00:00",
+      "all_G_mappings_bijective": true,
+      "audit_record_sha256": "dcb6a22a37f6c88c266bf1829d5142584aaadb3cbdccf2d6ccfd4522786ba85f"
+    }
+  ]
+}
