@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "potcar_sha256": "b8f5bccb188e7a8b1082445abe307e62f27d3cd9f9f7b128325dacee3e9192a0",
+  "source": "Reference calculation and licensed PAW-PBE library",
+  "species_order": [
+    "Mo",
+    "S"
+  ]
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "parameter": "pair_band_max",
+    "source_nbands": 96,
+    "fixed_value": [
+      12,
+      12
+    ],
+    "coarse": 26,
+    "fine": 40,
+    "temperature_K": 300,
+    "max_abs_difference_e2h": 0.010205878199373436,
+    "relative_l2_difference": 0.042701595141989034,
+    "criterion_relative_l2": 0.01,
+    "below_one_percent": false
+  },
+  {
+    "parameter": "pair_band_max",
+    "source_nbands": 96,
+    "fixed_value": [
+      12,
+      12
+    ],
+    "coarse": 40,
+    "fine": 60,
+    "temperature_K": 300,
+    "max_abs_difference_e2h": 0.00854596042310965,
+    "relative_l2_difference": 0.03338789862018526,
+    "criterion_relative_l2": 0.01,
+    "below_one_percent": false
+  },
+  {
+    "parameter": "pair_band_max",
+    "source_nbands": 96,
+    "fixed_value": [
+      12,
+      12
+    ],
+    "coarse": 60,
+    "fine": 80,
+    "temperature_K": 300,
+    "max_abs_difference_e2h": 0.002863548064048871,
+    "relative_l2_difference": 0.01262648519910562,
+    "criterion_relative_l2": 0.01,
+    "below_one_percent": false
+  },
+  {
+    "parameter": "pair_band_max",
+    "source_nbands": 96,
+    "fixed_value": [
+      12,
+      12
+    ],
+    "coarse": 80,
+    "fine": 90,
+    "temperature_K": 300,
+    "max_abs_difference_e2h": 0.0005116100890463493,
+    "relative_l2_difference": 0.0020237816887597746,
+    "criterion_relative_l2": 0.01,
+    "below_one_percent": true
+  }
+]

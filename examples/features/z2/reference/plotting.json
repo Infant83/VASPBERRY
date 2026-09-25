@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-21",
+  "workflow_mode": "plot_existing_native_output",
+  "source_calculation_commit": "1a6959ee8300a20275fef52691d4c3a637bb9d3e",
+  "source_result_before_replot_sha256": "033d2447e1720683fe401e5c5e6320e4afc7ed40751703866079f1273cf256e2",
+  "source_numeric_files_sha256": {
+    "NFIELD.dat": "94272223e49926b3f3cc25ddc4892d7b4aaa70f2d06c3dae81f15e4a319bbc57",
+    "Z2_FIELD.csv": "62c969a74d3611d023c6966959e233bfcb788acde4f61c07d2e8c6dfad0c2999",
+    "band_edges.csv": "1fe1473cde6c4b71338365117683ef15edca31fbfa2419071c20e50bf6931892",
+    "summary.csv": "20b2b08f1090d395acff7c90558ac0601bbb61b255e96329f0e9346a4d6a263a",
+    "fortran.log": "a71d588479528f1f5596c8b82b453894a9b360bafeb124f1809dc32396f85b49",
+    "command.json": "46c0fca82ac97057a9a8d120f0104428551981946326f22f74dc334457ac945e"
+  },
+  "poscar": "examples/Bi_Z2/inputs/POSCAR",
+  "poscar_sha256": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+  "runner_sha256": "caef3f154d215d1de98fda420a824a0aa69fd20b87148132cfbdff76e9492b4c",
+  "plotter_sha256": "caef3f154d215d1de98fda420a824a0aa69fd20b87148132cfbdff76e9492b4c",
+  "rendering": {
+    "mesh": [
+      12,
+      12
+    ],
+    "rendering": "constant_native_plaquettes_in_reduced_coordinates",
+    "interpolation": "none",
+    "axes": "Dimensionless reduced q1, q2",
+    "coordinate_definition": "k = q1*b1 + q2*b2",
+    "domain": [
+      [
+        -0.5,
+        0.5
+      ],
+      [
+        -0.5,
+        0.5
+      ]
+    ],
+    "half_zone_boundary": "q2 = 0",
+    "half_top_sum": -3,
+    "half_bottom_sum": 3,
+    "quantity": "Fukui-Hatsugai integer n-field",
+    "source_field_sha256": "62c969a74d3611d023c6966959e233bfcb788acde4f61c07d2e8c6dfad0c2999",
+    "plotter_sha256": "caef3f154d215d1de98fda420a824a0aa69fd20b87148132cfbdff76e9492b4c",
+    "note": "Gauge-dependent integer plaquette field; not a local observable Berry curvature."
+  },
+  "figure_sha256": {
+    "figure.png": "a2623cbcab73e96f17209c3dbfbd44238084247136bc64c2e103f7cdac9166a0",
+    "figure.pdf": "069f13f9f74c3aeec1c7a386ee7ee9e1e8aa29ef770c59ce74112e3fba89b6e2"
+  }
+}

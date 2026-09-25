@@ -1,0 +1,45 @@
+{
+  "material": "Buckled Bi bilayer, two atoms",
+  "geometry_status": "Fixed historical Bi_Z2 geometry; no relaxation in this calculation.",
+  "occupied_bands": [
+    1,
+    10
+  ],
+  "spinor_components": 2,
+  "scf_mesh": [
+    12,
+    12,
+    1
+  ],
+  "scf_nbands": 32,
+  "ENCUT_eV": 400,
+  "EDIFF_eV": 1e-08,
+  "scf_status": "converged",
+  "potcar_sha256": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489",
+  "charge_sha256": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+  "compressed_charge_sha256": "0ff18dc50cfdc6e00ffd8a1b9901936607195bc6890c2b2d5b16aa2c4d4e6d63",
+  "input_sha256": {
+    "INCAR": "0082698f1447eeab84ead55f19fbfd54275b024e835741c7a6fcb51752a417aa",
+    "KPOINTS": "b64c6a0eaaabbf3fab7d8fe9da05f427f930ba703d2da9081a8998245a13fcfd",
+    "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405"
+  },
+  "source_vasp_version": "5.4.4",
+  "source_archive_note": "Fresh SCF; historical 2016 charge density was used only for separate development pilots.",
+  "charge_archive_parts": [
+    {
+      "file": "CHGCAR.gz.part000",
+      "bytes": 6291456,
+      "sha256": "72b0368f12ab04ce2f936eb0a70f016593879cb36602066fdcf4881db3bb3007"
+    },
+    {
+      "file": "CHGCAR.gz.part001",
+      "bytes": 6291456,
+      "sha256": "4e718a33a7877cfdbe76131f85f1de7cf8fa00f09ca65cd60728ed7f6b8c2f57"
+    },
+    {
+      "file": "CHGCAR.gz.part002",
+      "bytes": 4904146,
+      "sha256": "595a5e4ecd22ed204334ae5a2dd5de7bc09354163886469cf97299f9c220f96c"
+    }
+  ]
+}

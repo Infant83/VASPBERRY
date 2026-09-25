@@ -2,8 +2,8 @@
 
 ## Python library interface
 
-A Python port is a future development direction, not part of the current Z2
-update. The intended result is an importable package with a stable array-level
+A packaged Python port of the Z2 implementation is a future development
+direction. The intended result is an importable package with a stable array-level
 API, for example a `vaspberry.z2` module, while retaining the Fortran command
 line as the reference implementation during migration.
 
@@ -18,3 +18,8 @@ the numerical equivalence tests pass.
 No Python library compatibility or release date is promised by the present
 source tree. The existing Python scripts remain command-line post-processing
 tools until this separation and equivalence work is complete.
+
+Version 1.3.0 adds general Kubo/charge-Hall command-line tools and a versioned
+point-curvature file format. Their internal modules are not a separately
+packaged stable Python library, and they do not replace the Fortran Z2 kernel.
+See [Kubo transport](KUBO_TRANSPORT.md) and [output format](OUTPUT_FORMAT.md).

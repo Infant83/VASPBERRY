@@ -1,0 +1,156 @@
+{
+  "status": "DIAGNOSTIC_ONLY",
+  "same_q_order": true,
+  "stored_bands": [
+    48,
+    64
+  ],
+  "pair_group_assumption": "Expected adjacent doublets of the inversion- and time-reversal-symmetric nonmagnetic two-atom Bi geometry; full even groups are retained. Measured splitting diagnoses eigensolver accuracy, not physical spin splitting.",
+  "profiles": {
+    "source48": [
+      {
+        "retained_bands": 12,
+        "maximum_expected_pair_splitting_eV": 1.0320616228298718e-07,
+        "cutoff_nextband_min_gap_eV": 0.6468220524775999,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 16,
+        "maximum_expected_pair_splitting_eV": 1.7588738954188443e-07,
+        "cutoff_nextband_min_gap_eV": 0.5465001566302905,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 20,
+        "maximum_expected_pair_splitting_eV": 1.7588738954188443e-07,
+        "cutoff_nextband_min_gap_eV": 0.3116707966711676,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 24,
+        "maximum_expected_pair_splitting_eV": 9.843006765208884e-07,
+        "cutoff_nextband_min_gap_eV": 0.11676646473445018,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 28,
+        "maximum_expected_pair_splitting_eV": 2.283426846716452e-06,
+        "cutoff_nextband_min_gap_eV": 0.06781086878694964,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 32,
+        "maximum_expected_pair_splitting_eV": 3.319174815885617e-06,
+        "cutoff_nextband_min_gap_eV": 0.04553732462354532,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 40,
+        "maximum_expected_pair_splitting_eV": 3.319174815885617e-06,
+        "cutoff_nextband_min_gap_eV": 0.003693877966698622,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 48,
+        "maximum_expected_pair_splitting_eV": 0.00187409086331769,
+        "cutoff_nextband_min_gap_eV": null,
+        "complete_even_pair_count": true
+      }
+    ],
+    "source64": [
+      {
+        "retained_bands": 12,
+        "maximum_expected_pair_splitting_eV": 1.0318484799931582e-07,
+        "cutoff_nextband_min_gap_eV": 0.6468220524632357,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 16,
+        "maximum_expected_pair_splitting_eV": 1.7589855039190638e-07,
+        "cutoff_nextband_min_gap_eV": 0.5465001566572885,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 20,
+        "maximum_expected_pair_splitting_eV": 1.7589855039190638e-07,
+        "cutoff_nextband_min_gap_eV": 0.3116707966313168,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 24,
+        "maximum_expected_pair_splitting_eV": 9.843819750443572e-07,
+        "cutoff_nextband_min_gap_eV": 0.11676646469736518,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 28,
+        "maximum_expected_pair_splitting_eV": 2.2834724369147352e-06,
+        "cutoff_nextband_min_gap_eV": 0.06781086880385345,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 32,
+        "maximum_expected_pair_splitting_eV": 3.3192128050529845e-06,
+        "cutoff_nextband_min_gap_eV": 0.04553732462751903,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 40,
+        "maximum_expected_pair_splitting_eV": 3.3192128050529845e-06,
+        "cutoff_nextband_min_gap_eV": 0.0036938779790265386,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 48,
+        "maximum_expected_pair_splitting_eV": 3.3192128050529845e-06,
+        "cutoff_nextband_min_gap_eV": 0.0432069292946089,
+        "complete_even_pair_count": true
+      },
+      {
+        "retained_bands": 64,
+        "maximum_expected_pair_splitting_eV": 0.12403457127742001,
+        "cutoff_nextband_min_gap_eV": null,
+        "complete_even_pair_count": true
+      }
+    ]
+  },
+  "source_energy_changes": [
+    {
+      "retained_bands": 10,
+      "max_eigenvalue_shift_eV": 6.366729365936408e-11
+    },
+    {
+      "retained_bands": 12,
+      "max_eigenvalue_shift_eV": 6.366729365936408e-11
+    },
+    {
+      "retained_bands": 16,
+      "max_eigenvalue_shift_eV": 6.366729365936408e-11
+    },
+    {
+      "retained_bands": 20,
+      "max_eigenvalue_shift_eV": 6.366729365936408e-11
+    },
+    {
+      "retained_bands": 24,
+      "max_eigenvalue_shift_eV": 6.366729365936408e-11
+    },
+    {
+      "retained_bands": 28,
+      "max_eigenvalue_shift_eV": 6.366729365936408e-11
+    },
+    {
+      "retained_bands": 32,
+      "max_eigenvalue_shift_eV": 6.366729365936408e-11
+    },
+    {
+      "retained_bands": 40,
+      "max_eigenvalue_shift_eV": 7.462830353688332e-11
+    },
+    {
+      "retained_bands": 48,
+      "max_eigenvalue_shift_eV": 0.0019337418753462288
+    }
+  ],
+  "scope": "Same-mesh eigensolver and retained-cutoff diagnostics. No current convergence conclusion from high unoccupied pair splittings."
+}

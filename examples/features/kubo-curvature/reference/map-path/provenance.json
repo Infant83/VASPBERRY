@@ -1,0 +1,112 @@
+{
+  "status": "PASS",
+  "feature_id": "kubo-curvature-fullmesh",
+  "started_utc": "2026-09-21T13:33:19.353736+00:00",
+  "commands": [
+    {
+      "argv": [
+        "$REPO/build/vaspberry-gfortran",
+        "-f",
+        "$VASP_MESH/WAVECAR",
+        "-s",
+        "2",
+        "-kubo",
+        "2",
+        "-ii",
+        "17",
+        "-if",
+        "18",
+        "-kubo_csv",
+        "KUBO.csv",
+        "-o",
+        "BERRYCURV"
+      ],
+      "cwd": "$RUN/kubo-workflow/native-map",
+      "timeout_s": 180,
+      "exit_code": 0,
+      "elapsed_s": 0.8189532330725342,
+      "status": "PASS"
+    },
+    {
+      "argv": [
+        "$REPO/build/vaspberry-gfortran",
+        "-f",
+        "$VASP_PATH/WAVECAR",
+        "-s",
+        "2",
+        "-kubo",
+        "2",
+        "-ii",
+        "17",
+        "-if",
+        "18",
+        "-kubo_csv",
+        "KUBO.csv",
+        "-o",
+        "BERRYCURV"
+      ],
+      "cwd": "$RUN/kubo-workflow/native-path",
+      "timeout_s": 180,
+      "exit_code": 0,
+      "elapsed_s": 0.28846876602619886,
+      "status": "PASS"
+    }
+  ],
+  "inputs": {
+    "wavecar": {
+      "path": "$VASP_MESH/WAVECAR",
+      "bytes": 149002560,
+      "sha256": "e1955a6b3562870edd67030d7e64cb59b6956c53db7259b25a6adee400fc9e10"
+    },
+    "path_wavecar": {
+      "path": "$VASP_PATH/WAVECAR",
+      "bytes": 50646800,
+      "sha256": "4388ac495bf5e1b689c7272b71bb26c4635becbbe4f67fc0a8c185a0249b0a69"
+    }
+  },
+  "binary_sha256": "3a9c6a2150b6212dbd1a581dc87ba0249a4c7430097b51266d7e147f812174b7",
+  "version": "1.3.0",
+  "source_sha256": {
+    "examples/features/kubo-curvature/run_fullmesh.py": "494bbd4766933daf78f5e1ccab64c5558c8c874e8d88743b42e1eaabef84ab82",
+    "vaspberry.f": "dc6674ddde8bd4c3064015ffcaba89d9ea150124f111925c63c90ab44a223df3",
+    "tools/wavecar_fukui.py": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e",
+    "tools/plot_berry_panels.py": "8941e90118422ae7323d944fb19615a522cd6dbf872128d6a2983c8f20ea14f3",
+    "tools/plot_berry_curvature.py": "56cfaeb920befa1c38e3d20930eacf5f276abcfb4222efb3fa825aa47f91fc2b"
+  },
+  "finished_utc": "2026-09-21T13:33:22.824012+00:00",
+  "original_full_run_output_sha256": {
+    "POSCAR.lattice": "576c13b719fe647d7910712ad7fd47654608162e83ef96db90205f79427d6039",
+    "bands.csv": "e7082383919d9cbb79fac30f653ba3e42726d61fdc941305f0dad3b0d415454f",
+    "figure.pdf": "2f472d48b19e177c25c865c60a555d0760d4e4e362eaa7fa8747bf967fe72222",
+    "figure.png": "45c130c31f4bb9a51f498c8546666bac6d56cb3f1c7f7279fbc7202769270a80",
+    "native-map/BERRYCURV_KUBO.EIG-17.dat": "b54ec6877488351455d07297d79a83af31c6aad0adda1097741181ea079754d8",
+    "native-map/BERRYCURV_KUBO.EIG-18.dat": "aedce71180c51d28efd94a1078aa0a99bd433d41c0746713a8a288103d408636",
+    "native-map/BERRYCURV_KUBO.dat": "f791bd08fdd4dc6c409880547bded951dd2c28c9daad346aefe730fe489aa529",
+    "native-map/KUBO.csv": "07e2851a65b50c3c0c12d91e88ad5e4dbfe2dd86f054d4b362e3f087f3c00fda",
+    "native-map/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "native-map/stdout.log": "28cf54ae5186efa76956624b02b88c9e51ac267782043091dd52e6b2dfa83358",
+    "native-path/BERRYCURV_KUBO.EIG-17.dat": "7da3fd57c0ac7ba78001d60e81b0f37329ad830e5fea3679263781ffc589bdb4",
+    "native-path/BERRYCURV_KUBO.EIG-18.dat": "53d0d92ec40dbc92cd76f19a82d26b6d2595d6b5f5f40aca0f19d24cb8255629",
+    "native-path/BERRYCURV_KUBO.dat": "5ef7367026227c6b0fb3b65c661d3648ba5ec9d17d4bd372c842bae649e1afac",
+    "native-path/KUBO.csv": "f795ef13f96b1c5d2615f21251797b114387a06dbdd0b4f377c8dc3bca24fe05",
+    "native-path/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "native-path/stdout.log": "2ca22625be3ffa75766918348f1781d96f9646020b624ea5511f5afbfb40a2c4",
+    "path_curvature.csv": "226d3c06a684d472e7e86bbbfca5574ecf9d1455f5c51cf3deafea46b8b9ea50"
+  },
+  "distributed_payload_sha256": {
+    "bands.csv": "e7082383919d9cbb79fac30f653ba3e42726d61fdc941305f0dad3b0d415454f",
+    "KUBO_mesh.csv": "07e2851a65b50c3c0c12d91e88ad5e4dbfe2dd86f054d4b362e3f087f3c00fda",
+    "path_curvature.csv": "226d3c06a684d472e7e86bbbfca5574ecf9d1455f5c51cf3deafea46b8b9ea50",
+    "KUBO_path.csv": "f795ef13f96b1c5d2615f21251797b114387a06dbdd0b4f377c8dc3bca24fe05",
+    "figure.pdf": "2518141fda4e90aefc90d6e60387e63ea28b55f10ed42afe9d2acd06989d257b",
+    "figure.png": "45c130c31f4bb9a51f498c8546666bac6d56cb3f1c7f7279fbc7202769270a80"
+  },
+  "reference_packaging": {
+    "original_run_path_to_distributed_path": {
+      "native-map/KUBO.csv": "KUBO_mesh.csv",
+      "native-path/KUBO.csv": "KUBO_path.csv",
+      "bands.csv": "bands.csv"
+    },
+    "note": "Compact reference; original full-run files are listed separately. Figures redrawn with current plotter from the identical native data."
+  }
+}

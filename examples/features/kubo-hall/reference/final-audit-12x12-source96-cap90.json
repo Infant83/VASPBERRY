@@ -1,0 +1,79 @@
+{
+  "status": "PASS",
+  "case": "12x12-source96-cap90",
+  "formats": {
+    "csv": {
+      "status": "PASS",
+      "row_count": 610,
+      "all_fields_exactly_equal_to_csv": true
+    },
+    "dat": {
+      "status": "PASS",
+      "row_count": 610,
+      "all_fields_exactly_equal_to_csv": true
+    },
+    "npz": {
+      "status": "PASS",
+      "row_count": 610,
+      "all_fields_exactly_equal_to_csv": true
+    }
+  },
+  "thresholds_eV": [
+    1e-07,
+    1e-06
+  ],
+  "command": [
+    "INPUT/python",
+    "tools/vaspberry_kubo.py",
+    "pair-hall",
+    "--pairs-dir",
+    "OUTPUT/calculation/pairs",
+    "--mu-min",
+    "-1.4748738807166568",
+    "--mu-max",
+    "-1.1748738807166568",
+    "--mu-num",
+    "61",
+    "--mu-reference",
+    "-0.43809870099182807",
+    "--temperatures",
+    "0",
+    "300",
+    "--regions",
+    "examples/features/kubo-hall/regions.json",
+    "--difference",
+    "valley:K:Kprime",
+    "--degeneracy-policy",
+    "coalesce",
+    "--degeneracy-threshold-eV",
+    "1e-6",
+    "--pair-band-max",
+    "90",
+    "--formats",
+    "csv",
+    "dat",
+    "npz",
+    "--output-dir",
+    "INPUT/threshold-12x12-source96-cap90-1e-6"
+  ],
+  "returncode": 0,
+  "wall_seconds": 8.632004366954789,
+  "max_abs_sigma_change_e2h": 5.672268210688003e-12,
+  "max_abs_delta_sigma_change_e2h": 3.722923679001832e-14,
+  "degeneracy_threshold1": {
+    "policy": "coalesce",
+    "threshold_eV": 1e-07,
+    "coalesced_groups": 1096,
+    "max_energy_shift_eV": 4.9465501916756693e-08,
+    "max_occupation_shift": 4.5995505182361285e-09,
+    "interpretation": "Coalesce is an explicit numerical-degeneracy approximation; raw energies remain unchanged."
+  },
+  "degeneracy_threshold2": {
+    "policy": "coalesce",
+    "threshold_eV": 1e-06,
+    "coalesced_groups": 1428,
+    "max_energy_shift_eV": 4.927289922740385e-07,
+    "max_occupation_shift": 4.5995505182361285e-09,
+    "interpretation": "Coalesce is an explicit numerical-degeneracy approximation; raw energies remain unchanged."
+  }
+}

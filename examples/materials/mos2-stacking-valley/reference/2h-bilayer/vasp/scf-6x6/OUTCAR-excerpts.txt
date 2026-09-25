@@ -1,0 +1,24 @@
+Numerical source excerpts: parameter lines, convergence and completion footer.
+
+ vasp.5.4.4.18Apr17-6-g9f103f2a35 (build Sep 13 2026 16:50:19) complex          
+   k-points           NKPTS =      7   k-points in BZ     NKDIM =      7   number of bands    NBANDS=     96
+   LSORBIT =      T    spin-orbit coupling
+   NELECT =      36.0000    total number of electrons
+   LDIPOL =      F    correct potential (dipole corrections)
+   IDIPOL =      0    1-x, 2-y, 3-z, 4-all directions 
+------------------------ aborting loop because EDIFF is reached ----------------------------------------
+
+General timing and accounting informations for this job:
+ ========================================================
+  
+                  Total CPU time used (sec):     1080.222
+                            User time (sec):     1072.629
+                          System time (sec):        7.593
+                         Elapsed time (sec):     1082.725
+  
+                   Maximum memory used (kb):   924966912.
+                   Average memory used (kb):           0.
+  
+                          Minor page faults:       226861
+                          Major page faults:            2
+                 Voluntary context switches:          111

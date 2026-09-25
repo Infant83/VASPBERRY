@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_VERSION = "1.2.0"
+EXPECTED_VERSION = "1.3.0"
 ARCHIVED_V1_DOI = "10.5281/zenodo.1402593"
 
 
@@ -34,12 +34,15 @@ class VersionMetadataTests(unittest.TestCase):
     def test_current_citation_has_version_and_no_v1_doi(self):
         citation = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
         self.assertRegex(citation, rf"(?m)^version:\s*{re.escape(EXPECTED_VERSION)}\s*$")
-        self.assertRegex(citation, r"(?m)^date-released:\s*2026-09-04\s*$")
+        self.assertIn("unreleased", citation)
+        self.assertIn("exact commit", citation)
+        self.assertNotRegex(citation, r"(?m)^date-released:\s*")
         self.assertNotIn(ARCHIVED_V1_DOI, citation)
         self.assertNotRegex(citation, r"(?m)^doi:\s*")
 
     def test_changelog_records_scientific_release_boundaries(self):
         changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        self.assertIn("## [1.3.0] - Unreleased", changelog)
         self.assertIn("## [1.2.0] - 2026-09-04", changelog)
         self.assertIn("FUKUI_HATSUGAI_NFIELD_Z2", changelog)
         self.assertIn("## [1.1.1] - 2026-08-31", changelog)
@@ -189,6 +192,7 @@ class VersionMetadataTests(unittest.TestCase):
         for relative in (
             "tools/vaspberry_transport.py",
             "tools/wavecar_fukui.py",
+            "tools/vaspberry_kubo.py",
         ):
             with self.subTest(tool=relative):
                 completed = subprocess.run(

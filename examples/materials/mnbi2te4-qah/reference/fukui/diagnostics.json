@@ -1,0 +1,112 @@
+{
+  "wavecar": "WAVECAR",
+  "logical_recl": 139328,
+  "physical_record_bytes": 139328,
+  "legacy_four_byte_word_recl": false,
+  "ispin": 1,
+  "spin_channel": 1,
+  "spinor_components": 2,
+  "rtag": 45200,
+  "nkpoints": 36,
+  "nbands": 192,
+  "encut_ev": 270.0,
+  "grid": [
+    6,
+    6
+  ],
+  "grid_offset_fractional": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "plot_domain": null,
+  "lattice_angstrom": [
+    [
+      4.336,
+      0.0,
+      0.0
+    ],
+    [
+      -2.168,
+      3.755086150809,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      52.891132533333
+    ]
+  ],
+  "reciprocal_inv_angstrom": [
+    [
+      1.449074102209314,
+      0.8366233229863355,
+      -0.0
+    ],
+    [
+      0.0,
+      1.673246645972671,
+      0.0
+    ],
+    [
+      0.0,
+      -0.0,
+      0.11879468270451202
+    ]
+  ],
+  "nbmax": [
+    6,
+    6,
+    71
+  ],
+  "energy_diagnostics": {
+    "band": 124,
+    "energy_min_ev": 3.2705369926804835,
+    "energy_max_ev": 4.194018416909733,
+    "min_gap_below_ev": 0.0171013822199102,
+    "min_gap_below_k_index": 1,
+    "min_gap_above_ev": 0.009061178017744975,
+    "min_gap_above_k_index": 6
+  },
+  "maps": [
+    {
+      "label": "occupied",
+      "bands": [
+        1,
+        123
+      ],
+      "chern": -1.0,
+      "flux_min_rad": -2.0601794317893916,
+      "flux_max_rad": 0.026640671807927063,
+      "max_abs_flux_rad": 2.0601794317893916,
+      "min_link_singular_value": 0.30478052547095863,
+      "max_link_condition_number": 5.467228689566037,
+      "min_plane_wave_coverage": 0.9687823983412049,
+      "plane_wave_coverage_required": 0.9,
+      "plane_wave_coverage_pass": true
+    },
+    {
+      "label": "deep_s",
+      "bands": [
+        1,
+        36
+      ],
+      "chern": 1.1705776812271122e-16,
+      "flux_min_rad": -7.689909043606669e-05,
+      "flux_max_rad": 9.970304870798861e-05,
+      "max_abs_flux_rad": 9.970304870798861e-05,
+      "min_link_singular_value": 1.314057359100811,
+      "max_link_condition_number": 1.178625935380707,
+      "min_plane_wave_coverage": 0.9687823983412049,
+      "plane_wave_coverage_required": 0.9,
+      "plane_wave_coverage_pass": true
+    }
+  ],
+  "plane_wave_coverage_validated": true,
+  "conventions": {
+    "loop": "k -> k+dk1 -> k+dk1+dk2 -> k+dk2 -> k",
+    "flux": "-Arg(product of link determinants), principal branch",
+    "curvature": "flux / (|b1 x b2|/(nx*ny))",
+    "chern": "sum(flux)/(2*pi)"
+  }
+}

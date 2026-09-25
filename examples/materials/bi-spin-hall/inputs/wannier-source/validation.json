@@ -1,0 +1,101 @@
+{
+  "status": "PASS_FIXED_MODEL_OPERATOR_AND_BAND_VALIDATION",
+  "operator_cache": "cache6-16-sp-final",
+  "source_mesh": [
+    6,
+    6
+  ],
+  "source_bands": 48,
+  "model_orbitals": 16,
+  "occupied": 10,
+  "excluded_bands": [],
+  "localization_stages": [
+    {
+      "directory": "model6-16-sp-v31",
+      "iteration_cap": 1000,
+      "wall_seconds": 12.17498881695792,
+      "last_spread_change_A2": -1.635834e-07,
+      "final_total_spread_A2": 43.604323263,
+      "checkpoint_sha256": "d3e4b5f1c1d26f219b29abd0b7061646aa4a10e2ae308af0e253b637f697f326"
+    },
+    {
+      "directory": "model6-16-sp-v31-restart5000",
+      "iteration_cap": 5000,
+      "wall_seconds": 40.52601714991033,
+      "last_spread_change_A2": -4.895927e-08,
+      "final_total_spread_A2": 43.603656029,
+      "checkpoint_sha256": "73fc6753416647aa8e8fa9bd94ac227832cb82adae9fd662becffe3a4b6b7820"
+    },
+    {
+      "directory": "model6-16-sp-v31-restart10000",
+      "iteration_cap": 5000,
+      "wall_seconds": 34.34428687393665,
+      "last_spread_change_A2": -2.083277e-08,
+      "final_total_spread_A2": 43.603496933,
+      "checkpoint_sha256": "00a405056c2caaccc829d1fc2fdb745d7b021a1a7543a645f8b139bc5b39b64b"
+    },
+    {
+      "directory": "model6-16-sp-v31-restart15000",
+      "iteration_cap": 5000,
+      "wall_seconds": 34.356189338024706,
+      "last_spread_change_A2": -1.565722e-08,
+      "final_total_spread_A2": 43.603417411,
+      "checkpoint_sha256": "22bffc7281b62f50a8f19f125abcee0c64b6c7dcb308ecbdb53952dbb17c8f3d"
+    }
+  ],
+  "total_iterations": 16000,
+  "strict_spread_tolerance_A2": 1e-08,
+  "strict_spread_tolerance_met": false,
+  "no_time_reversal_repair": true,
+  "source_training_max_frozen_error_eV": 3.995026531811163e-12,
+  "heldout144_frontier_max_error_eV": 0.030672113737594375,
+  "heldout144_gap_DFT_eV": 0.4972714063015772,
+  "heldout144_gap_model_eV": 0.4989961802546581,
+  "heldout144_TR_eigenvalue_residual_eV": 7.127015155816707e-08,
+  "heldout144_pair_splitting_eV": 1.7434455257259174e-06,
+  "official_postw90_effective_operator_parity_max_eV": 4.999872516009418e-09,
+  "localization1000_to16000_max_change_by_band_eV": [
+    0.0016408096211488754,
+    0.0016409355645148338,
+    0.0011457688777376518,
+    0.0011456909395821668,
+    0.0008073054903827703,
+    0.0008069849126512985,
+    0.00045282635688614903,
+    0.00045429768724147834,
+    0.0009549836754079166,
+    0.0009543637110738246,
+    0.001403335331360278,
+    0.0014037318218141914,
+    0.001229862600930609,
+    0.0012300015255967134,
+    0.0013112615429111685,
+    0.001310823065804101
+  ],
+  "localization1000_to16000_frontier_max_change_eV": 0.0014037318218141914,
+  "conventional_path_vertices": [
+    [
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.5,
+      0.0,
+      0.0
+    ],
+    [
+      0.6666666666666666,
+      0.3333333333333333,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "conventional_path_note": "For the +60 degree real cell, M=(1/2,0) is adjacent to K=(2/3,1/3). The originally requested K=(1/3,2/3) is another valid corner but its straight connection to this M is not the adjacent BZ edge.",
+  "path13_frontier_max_error_eV": 0.02925801615288892,
+  "scope": "Validated fixed 6x6 finite model, not a converged all-space material prediction. Direct SHC remains the separate PAW source-band calculation; no SHC is inferred from this model."
+}

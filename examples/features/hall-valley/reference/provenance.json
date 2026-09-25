@@ -1,0 +1,89 @@
+{
+  "feature_id": "hall-valley",
+  "version": "1.3.0",
+  "source_commit": "1a6959ee8300a20275fef52691d4c3a637bb9d3e",
+  "python_version": "3.12.14",
+  "input": {
+    "name": "WAVECAR",
+    "sha256": "a8d81854f2efc561938e478dde1be29a17ccc95d5d37325c122b9d9e82fa0838",
+    "bytes": 200421600
+  },
+  "source_sha256": {
+    "examples/features/hall-valley/run.py": "86ba4027a80fb6156f6ef93ad9d69c612153232fb667119061914183d0eac8bd",
+    "examples/features/kubo-curvature/workflow.py": "2fb102f65b94bd9e97d4ad70ab22172f85cca6cbf4cfd2cfb39e63aed7986881",
+    "vaspberry.f": "dc6674ddde8bd4c3064015ffcaba89d9ea150124f111925c63c90ab44a223df3",
+    "tools/wavecar_fukui.py": "008e6ca816f3ee284bdbefa9f4f7a31bcc3e6aa25be0e97109e6a644cdeb153e",
+    "VERSION": "64d23f858ef51b0f996e4966d4e27c0371b437e2d2787890b1f7ad22d4ec5663"
+  },
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "tools/wavecar_fukui.py",
+        "<WAVECAR>",
+        "--nx",
+        "12",
+        "--ny",
+        "12",
+        "--spinor-components",
+        "2",
+        "--energy-band",
+        "11",
+        "--map",
+        "occupied=1:10",
+        "--transport-full-t0",
+        "10",
+        "--mu-min",
+        "-1.3",
+        "--mu-max",
+        "-0.9",
+        "--mu-num",
+        "41",
+        "--valley-k",
+        "0.6666666666666666,0.3333333333333333,0",
+        "--valley-kp",
+        "0.3333333333333333,0.6666666666666666,0",
+        "--output-dir",
+        "<output-dir>/calculation"
+      ],
+      "cwd": "<repository>",
+      "exit_code": 0,
+      "elapsed_s": 18.199397172080353,
+      "stdout": "01.stdout.log",
+      "stderr": "01.stderr.log"
+    }
+  ],
+  "status": "PASS",
+  "original_full_run_output_sha256": {
+    "01.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "01.stdout.log": "170a48c5d5658ebff1a2993b110747f4f3cf7594bdd839109031a5d4abb1d19f",
+    "calculation/diagnostics.json": "2c29d7f29afafe2babb5645e4eee647b36fe1111f00321c5da01a4294c89d2a7",
+    "calculation/fukui_occupied.csv": "7feccc2ef33ca6ea9b443d95696ebec5d5a5871eace9a2115dc8c09cc1fd0fb1",
+    "calculation/transport_full_t0.csv": "38e9b44008d04d5cf5aa5b7121e8fb8a54aba31728b528d5f4852410be2ffc85",
+    "calculation/transport_full_t0_diagnostics.json": "cc5ed01301d9fa374235172d62068488cc7e72b616b7fc028052516840023615",
+    "figure.pdf": "d69212fdd50a932372b7e9a4f38c0e036527035bedff5fd1dd58245451590788",
+    "figure.png": "90886351ba8d3370744e15b291c5ec66a8a543f4fba3cbb7d80e907ae2bd8b1e",
+    "summary.csv": "aa7729780487452fbaa9b782515019b5417b14a9dc5dc1e2892e5d9d9254c8cf"
+  },
+  "distributed_payload_sha256": {
+    "summary.csv": "aa7729780487452fbaa9b782515019b5417b14a9dc5dc1e2892e5d9d9254c8cf",
+    "figure.png": "90886351ba8d3370744e15b291c5ec66a8a543f4fba3cbb7d80e907ae2bd8b1e",
+    "figure.pdf": "d69212fdd50a932372b7e9a4f38c0e036527035bedff5fd1dd58245451590788",
+    "transport_full_t0.csv": "38e9b44008d04d5cf5aa5b7121e8fb8a54aba31728b528d5f4852410be2ffc85",
+    "transport_full_t0_diagnostics.json": "cc5ed01301d9fa374235172d62068488cc7e72b616b7fc028052516840023615",
+    "fukui_occupied.csv": "7feccc2ef33ca6ea9b443d95696ebec5d5a5871eace9a2115dc8c09cc1fd0fb1"
+  },
+  "reference_packaging": {
+    "path_scope": "result.json output_sha256 and provenance.json distributed_payload_sha256 both use reference-directory-relative paths to shipped files; original_full_run_output_sha256 uses original-run-relative paths to the complete calculation record, including files not shipped in this reference",
+    "original_run_path_to_distributed_path": {
+      "summary.csv": "summary.csv",
+      "figure.png": "figure.png",
+      "figure.pdf": "figure.pdf",
+      "calculation/transport_full_t0.csv": "transport_full_t0.csv",
+      "calculation/transport_full_t0_diagnostics.json": "transport_full_t0_diagnostics.json",
+      "calculation/fukui_occupied.csv": "fukui_occupied.csv"
+    },
+    "exporter": "examples/features/kubo-curvature/export_reference.py",
+    "exporter_sha256": "980592b69b21648297ba945c546dba8105afd308ae92f0b511718e3b3b85e696"
+  }
+}

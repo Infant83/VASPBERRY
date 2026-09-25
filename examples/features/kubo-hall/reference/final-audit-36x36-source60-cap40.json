@@ -1,0 +1,79 @@
+{
+  "status": "PASS",
+  "case": "36x36-source60-cap40",
+  "formats": {
+    "csv": {
+      "status": "PASS",
+      "row_count": 610,
+      "all_fields_exactly_equal_to_csv": true
+    },
+    "dat": {
+      "status": "PASS",
+      "row_count": 610,
+      "all_fields_exactly_equal_to_csv": true
+    },
+    "npz": {
+      "status": "PASS",
+      "row_count": 610,
+      "all_fields_exactly_equal_to_csv": true
+    }
+  },
+  "thresholds_eV": [
+    1e-07,
+    1e-06
+  ],
+  "command": [
+    "INPUT/python",
+    "tools/vaspberry_kubo.py",
+    "pair-hall",
+    "--pairs-dir",
+    "OUTPUT/calculation/pairs",
+    "--mu-min",
+    "-1.4748738807272115",
+    "--mu-max",
+    "-1.1748738807272114",
+    "--mu-num",
+    "61",
+    "--mu-reference",
+    "-0.4380987009938124",
+    "--temperatures",
+    "0",
+    "300",
+    "--regions",
+    "examples/features/kubo-hall/regions.json",
+    "--difference",
+    "valley:K:Kprime",
+    "--degeneracy-policy",
+    "coalesce",
+    "--degeneracy-threshold-eV",
+    "1e-6",
+    "--pair-band-max",
+    "40",
+    "--formats",
+    "csv",
+    "dat",
+    "npz",
+    "--output-dir",
+    "INPUT/threshold-36x36-source60-cap40-1e-6"
+  ],
+  "returncode": 0,
+  "wall_seconds": 2.662037685047835,
+  "max_abs_sigma_change_e2h": 6.978511518651587e-12,
+  "max_abs_delta_sigma_change_e2h": 2.115734430236044e-13,
+  "degeneracy_threshold1": {
+    "policy": "coalesce",
+    "threshold_eV": 1e-07,
+    "coalesced_groups": 2071,
+    "max_energy_shift_eV": 4.964126709694483e-08,
+    "max_occupation_shift": 1.05526467564232e-08,
+    "interpretation": "Coalesce is an explicit numerical-degeneracy approximation; raw energies remain unchanged."
+  },
+  "degeneracy_threshold2": {
+    "policy": "coalesce",
+    "threshold_eV": 1e-06,
+    "coalesced_groups": 2655,
+    "max_energy_shift_eV": 4.996484017638636e-07,
+    "max_occupation_shift": 1.05526467564232e-08,
+    "interpretation": "Coalesce is an explicit numerical-degeneracy approximation; raw energies remain unchanged."
+  }
+}

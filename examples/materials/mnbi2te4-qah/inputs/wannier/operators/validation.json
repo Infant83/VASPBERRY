@@ -1,0 +1,127 @@
+{
+  "local_and_weighted50": {
+    "local": {
+      "raw_case": "post3-local-ws-true",
+      "effective_case": "post3-compact-local-readerfix",
+      "post3-local-ws-true_seconds": 18.12042933399789,
+      "post3-compact-local-readerfix_seconds": 4.032638059929013,
+      "wannier90-bands.dat_max_absolute_difference": 0.0,
+      "wannier90-curv.dat_max_absolute_difference": 0.0,
+      "status": "PASS"
+    },
+    "weighted50": {
+      "raw_case": "post3-true-timing50",
+      "effective_case": "post3-compact-timing50-readerfix",
+      "post3-true-timing50_seconds": 40.62210440216586,
+      "post3-compact-timing50-readerfix_seconds": 8.063281895127147,
+      "wannier90-ahc-fermiscan.dat_max_absolute_difference": 0.0,
+      "J0_J1_J2_stdout_max_absolute_difference_S_cm": 0.0,
+      "status": "PASS"
+    }
+  },
+  "whole_quadrature": {
+    "status": "PASS",
+    "point_count": 3088,
+    "raw_reference_case": "post3-fixed40-r7-R012-true",
+    "effective_case": "post3-fixed40-r7-R012-compact",
+    "original_use_ws_distance": true,
+    "effective_use_ws_distance": false,
+    "reader_patch": "effective-reader-modern31.patch",
+    "all_partial_response_files_equal": true,
+    "all_J0_J1_J2_printed_components_equal": true,
+    "max_complete_integral_difference_S_cm": 0.0,
+    "raw_sigma_xy_S_per_cm": [
+      73.25983099999999,
+      73.25983099999999,
+      73.25983099999999
+    ],
+    "raw_sigma_xy_e2_over_h_current_SI": [
+      1.0001934839919,
+      1.0001934839919,
+      1.0001934839919
+    ],
+    "parts": [
+      {
+        "part": 0,
+        "point_count": 1544,
+        "kpoint_sha256": "3424dc0d0b2e10acc6ba3675602a48ff3dc84febb60cba29cd313322fec9654e",
+        "max_total_difference_S_cm": 0.0,
+        "max_J0_J1_J2_difference_S_cm": 0.0,
+        "raw_wall_seconds": 502.6490533261094,
+        "compact_wall_seconds": 348.78610280994326,
+        "compact_peak_rss_bytes": 420081664
+      },
+      {
+        "part": 1,
+        "point_count": 1544,
+        "kpoint_sha256": "ef4232127ec15add87f31d327e1b6493af95f33e8e8460857d3474e52c3536b9",
+        "max_total_difference_S_cm": 0.0,
+        "max_J0_J1_J2_difference_S_cm": 0.0,
+        "raw_wall_seconds": 503.29269027803093,
+        "compact_wall_seconds": 349.1008076041471,
+        "compact_peak_rss_bytes": 372649984
+      }
+    ],
+    "scope": "Same fixed qz=0 quadrature, weights, chemical potentials and full H+position operators. This validates representation parity, not independent material convergence."
+  },
+  "matrix_fourier": {
+    "status": "PASS",
+    "includes_nonzero_kz": true,
+    "records": [
+      {
+        "k_fractional": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max_absolute_errors": {
+          "H_eV": 5.329070518200751e-15,
+          "A_A": 1.0658141036472221e-14,
+          "dH_eVA": 2.8421709430404045e-14,
+          "curlA_A2": 2.221220992222979e-15
+        }
+      },
+      {
+        "k_fractional": [
+          0.0034504791662321,
+          0.0034504791662321,
+          0.0
+        ],
+        "max_absolute_errors": {
+          "H_eV": 3.552713689400368e-15,
+          "A_A": 5.329070518770514e-15,
+          "dH_eVA": 1.4217791915866692e-14,
+          "curlA_A2": 1.7798229048217483e-15
+        }
+      },
+      {
+        "k_fractional": [
+          0.3333333333333333,
+          0.3333333333333333,
+          0.0
+        ],
+        "max_absolute_errors": {
+          "H_eV": 5.329106544498756e-15,
+          "A_A": 1.065814105075127e-14,
+          "dH_eVA": 1.464821375527116e-14,
+          "curlA_A2": 2.6721317110159763e-15
+        }
+      },
+      {
+        "k_fractional": [
+          0.127,
+          0.293,
+          0.071
+        ],
+        "max_absolute_errors": {
+          "H_eV": 2.6645794241130747e-15,
+          "A_A": 8.88178419731403e-15,
+          "dH_eVA": 2.139016888732267e-14,
+          "curlA_A2": 2.6645352591003757e-15
+        }
+      }
+    ],
+    "scope": "Direct full H, position, Hamiltonian derivatives, and connection curl; no diagonalization or Berry truncation"
+  },
+  "restored_output_protected": true
+}

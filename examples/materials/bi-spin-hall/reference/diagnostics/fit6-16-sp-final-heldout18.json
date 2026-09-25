@@ -1,0 +1,148 @@
+{
+  "status": "MEASURED_ADDITIONAL_HELDOUT_NO_TOLERANCE_ASSUMED",
+  "source_mesh": [
+    18,
+    18
+  ],
+  "point_count": 324,
+  "source_bands": 64,
+  "model_orbitals": 16,
+  "occupied": 10,
+  "operator_npz_sha256": "b69e227641d15dc6e184553ee839d42486aa96fe2e19c338eed7abbb0574b820",
+  "operator_json_sha256": "cdd464709f3135a99b7e01244e17c59e81c1913bed79fdf682d0ab3fa23b9d83",
+  "source_wavecar_sha256": "2434fced97377a59521754c1b30f630e063d46f70d6514c8b008a006316a1e4f",
+  "groups": {
+    "occupied1to10": {
+      "max_abs_eV": 0.0227374198826249,
+      "rms_eV": 0.006658312317193751,
+      "mean_signed_eV": -0.0006095784159362371,
+      "absolute_percentiles_eV": {
+        "0": 2.2293278334473143e-13,
+        "50": 0.002006894790498537,
+        "90": 0.011957696076492042,
+        "95": 0.015009510416414296,
+        "99": 0.020448703168276544,
+        "100": 0.0227374198826249
+      },
+      "worst": {
+        "source_k_index_1based": 279,
+        "band_1based": 5,
+        "q": [
+          -0.1666666666666666,
+          0.4444444444444444,
+          0.0
+        ],
+        "dft_eV": -4.6888973007154275,
+        "model_eV": -4.711634720598052,
+        "signed_error_eV": -0.0227374198826249
+      }
+    },
+    "frontier9to12": {
+      "max_abs_eV": 0.03322719640623395,
+      "rms_eV": 0.009377551923272902,
+      "mean_signed_eV": -0.0011188340507120504,
+      "absolute_percentiles_eV": {
+        "0": 1.325606291402437e-13,
+        "50": 0.006399463340935219,
+        "90": 0.014644532382537045,
+        "95": 0.016381550551464327,
+        "99": 0.025598789309404853,
+        "100": 0.03322719640623395
+      },
+      "worst": {
+        "source_k_index_1based": 291,
+        "band_1based": 12,
+        "q": [
+          -0.1111111111111112,
+          0.1111111111111111,
+          0.0
+        ],
+        "dft_eV": -0.2062138625266185,
+        "model_eV": -0.17298666612038455,
+        "signed_error_eV": 0.03322719640623395
+      }
+    },
+    "all16": {
+      "max_abs_eV": 0.04395234475024279,
+      "rms_eV": 0.010583074225399032,
+      "mean_signed_eV": 0.0007280201031756394,
+      "absolute_percentiles_eV": {
+        "0": 6.439293542825908e-14,
+        "50": 0.004284746763946856,
+        "90": 0.017336815440723914,
+        "95": 0.02053503422409613,
+        "99": 0.04059072122535384,
+        "100": 0.04395234475024279
+      },
+      "worst": {
+        "source_k_index_1based": 290,
+        "band_1based": 14,
+        "q": [
+          -0.1111111111111112,
+          0.0555555555555556,
+          0.0
+        ],
+        "dft_eV": 0.7130450057908451,
+        "model_eV": 0.7569973505410879,
+        "signed_error_eV": 0.04395234475024279
+      }
+    }
+  },
+  "rms_by_band_eV": [
+    0.0014140635866432471,
+    0.001414060704518514,
+    0.0008940006332807414,
+    0.0008939731562689034,
+    0.009759289437095782,
+    0.009759364471504058,
+    0.008617449370808113,
+    0.008617448280575571,
+    0.007025942417293943,
+    0.0070256686450998656,
+    0.01124786063438542,
+    0.011247918237713615,
+    0.014845361656591434,
+    0.014845632220158169,
+    0.018095409138688377,
+    0.01809532281202458
+  ],
+  "max_abs_by_band_eV": [
+    0.0035810360295496224,
+    0.003581211818088903,
+    0.002840865791837288,
+    0.002840461602485078,
+    0.0227374198826249,
+    0.022736996059652625,
+    0.020461920796314814,
+    0.020462297094260506,
+    0.015013025800234114,
+    0.015012371957811244,
+    0.033226495584054744,
+    0.03322719640623395,
+    0.04395155668045936,
+    0.04395234475024279,
+    0.043336295397715,
+    0.04333579384166453
+  ],
+  "model_gap_eV": 0.45341675155771477,
+  "dft_gap_eV": 0.45099103176048705,
+  "model_minus_dft_gap_eV": 0.002425719797227721,
+  "model_vbm_eV": -1.3334414599107454,
+  "model_cbm_eV": -0.8800247083530306,
+  "dft_vbm_eV": -1.3310157400937588,
+  "dft_cbm_eV": -0.8800247083332717,
+  "model_minimum_direct_gap_eV": 0.5350283747428817,
+  "dft_minimum_direct_gap_eV": 0.5350283748098648,
+  "model_TR_energy_max_eV": 9.560202274272456e-08,
+  "DFT_TR_energy_max_eV": 6.287592668741127e-11,
+  "model_pair_splitting_max_eV": 1.5337059755538007e-06,
+  "DFT_pair_splitting_max_eV": 1.7591803125327488e-07,
+  "hamiltonian_hermiticity_max_eV": 4.308077332371152e-15,
+  "energy_shift_applied_eV": 0.0,
+  "model_repaired": false,
+  "existing12x12_reference_replaced": false,
+  "source_order": "Exactly WAVECAR k order and ascending stored band indices, with model eigenvalues sorted by Hermitian eigensolver",
+  "scope": "Additional held-out sampling study of the fixed6x6-trained16-orbital model. No new fit, strict-localization convergence, spin-Hall interpolation or fullyconverged material claim.",
+  "wall_seconds": 2.8770403689704835,
+  "arrays_sha256": "f356a3bbf31ff04f0eb1d448d519acea3154e49adb7c35cb652b8541495ab7ed"
+}

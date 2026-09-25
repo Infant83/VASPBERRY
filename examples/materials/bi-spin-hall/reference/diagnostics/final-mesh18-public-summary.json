@@ -1,0 +1,165 @@
+{
+  "schema": "vaspberry.public-package-integrity-summary",
+  "version": 1,
+  "status": "PASS",
+  "record_kind": "New portable summary of the final read-only material publication audit.",
+  "source_audit": {
+    "filename": "final-mesh18-public-audit.json",
+    "sha256": "1a24358cbaa4db4441c16d85ffe62b982da9fac1fe82bf3e1da9076e0970c7e6"
+  },
+  "core_commit": "c8b0b6b6c8ab3942967b9c75cc267aa8e8fb58db",
+  "checked_utc": "2026-09-24T15:19:46.672928+00:00",
+  "checks": {
+    "new18_hall_files": {
+      "count": 7,
+      "all_byte_identical_to_original_calculation": true,
+      "files": {
+        "run.json": {
+          "bytes": 114,
+          "sha256": "c6637de18c784fa192d79d27cb76c27c1c0c22f723331b6565a8b592e97d8e8c",
+          "byte_identical": true
+        },
+        "spin_curvature.csv": {
+          "bytes": 808051,
+          "sha256": "2b26187143b04d119f7800aaf6b8d5f3f0e6f5a13fdc6cab2bfde52920f3d517",
+          "byte_identical": true
+        },
+        "spin_curvature.dat": {
+          "bytes": 808051,
+          "sha256": "762fbb4f8c0505f7c704b3d541e420cf09ca173c99ff4d68b8750db9cf2ff72e",
+          "byte_identical": true
+        },
+        "spin_hall.csv": {
+          "bytes": 1483,
+          "sha256": "c4a162d8d2c84145e309e0460ea607ccaeba36032afbc354f88d337ae132f0eb",
+          "byte_identical": true
+        },
+        "spin_hall.dat": {
+          "bytes": 1483,
+          "sha256": "e7f546f1ea6d9942b622b7915df97b2a27f837269d6901e1380425c4ff5e3b8f",
+          "byte_identical": true
+        },
+        "spin_hall.json": {
+          "bytes": 16939,
+          "sha256": "377f96fe95d1d2180495bb2f9a4682519ec97ad5739ace427ee5d895dfb75e9e",
+          "byte_identical": true
+        },
+        "spin_hall.npz": {
+          "bytes": 85353,
+          "sha256": "89921cb49539b9cdd68b48c15997bb8147d47624b08e9b1a60a5b70585f032f7",
+          "byte_identical": true
+        }
+      }
+    },
+    "new_diagnostic_copies": {
+      "count": 7,
+      "all_byte_identical_to_original_records": true,
+      "files": {
+        "actual-18x18-b64-retained-independent-audit.json": {
+          "bytes": 15958,
+          "sha256": "3cb8619332a045197b3f88c4821778e60b1e5de70a0138cfab32f3b3879741f3",
+          "byte_identical": true
+        },
+        "fit6-16-sp-final-heldout18.json": {
+          "bytes": 4773,
+          "sha256": "07f370da16a5821a127e7f3e1f7c29a5c3b766862dc899aec5e20391bbbc94f9",
+          "byte_identical": true
+        },
+        "fit6-16-sp-final-heldout18.npz": {
+          "bytes": 95935,
+          "sha256": "f356a3bbf31ff04f0eb1d448d519acea3154e49adb7c35cb652b8541495ab7ed",
+          "byte_identical": true
+        },
+        "heldout18-offgrid-summary.json": {
+          "bytes": 1145,
+          "sha256": "bb00f45cca36d814819c8e7ad15b415a2f27d6ef27a8c4e5399e082c674a6e69",
+          "byte_identical": true
+        },
+        "mesh-refinement-summary.json": {
+          "bytes": 1562,
+          "sha256": "6db276fb66aa93015d93fe68b95b4073b4849c7bcb7d3a0cb6b7b1f0da290f1d",
+          "byte_identical": true
+        },
+        "mesh18-quality-public-summary.json": {
+          "bytes": 32506,
+          "sha256": "c2d1477e39881b52872882aebbb51c558f2af28cd10b380070fad360e54697bf",
+          "byte_identical": true
+        },
+        "public-package-reproduction.json": {
+          "bytes": 19581,
+          "sha256": "60d573abc7dfa708825a92e30382cea406e1df1b79a7181c07605b22a8e1beeb",
+          "byte_identical": true
+        }
+      }
+    },
+    "convergence_input_pack": {
+      "file_count": 59,
+      "all_byte_identical_to_original_prepared_pack": true,
+      "manifest_sha256": "1218a30d9b318c86e0c27a7538cae5dd6166a4565e1dd707efaf68caa513c9d3",
+      "execution_sha256": "c27bf840950fd997aafcbaa96283c9e1c9e96fe765da38bfb847e2d38efda015"
+    },
+    "prior_core_material": {
+      "unchanged_input_and_numerical_file_count": 175,
+      "includes": "Previously committed PAW matrix archives, Wannier operators, source inputs, Hall/band/edge/topology outputs and existing diagnostics. Updated documentation, summary metadata, convergence append and regenerated display files are excluded."
+    },
+    "tested_numerical_implementation": {
+      "prior_test_count": 431,
+      "prior_test_exit_code": 0,
+      "source_and_test_file_count": 63,
+      "all_test_snapshot_hashes_unchanged": true,
+      "tests_rerun_for_this_file_integrity_audit": false
+    },
+    "convergence_table": {
+      "total_rows": 14,
+      "all_values_equal_original_NPZ": true,
+      "prior_rows_unchanged": true,
+      "new_rows": 1,
+      "sha256": "75fe22a78d2906989a4f4d04fa8f97235e6121295b90f62da5377e9067ab71de",
+      "mesh_series": [
+        {
+          "study": "mesh",
+          "mesh": 6,
+          "source_nbands": 64,
+          "retained_bands": 48,
+          "sigma_zxy": 1.382557631912924,
+          "actual_original_value_exact": true
+        },
+        {
+          "study": "mesh",
+          "mesh": 12,
+          "source_nbands": 64,
+          "retained_bands": 48,
+          "sigma_zxy": 0.6907226657440981,
+          "actual_original_value_exact": true
+        },
+        {
+          "study": "mesh",
+          "mesh": 18,
+          "source_nbands": 64,
+          "retained_bands": 48,
+          "sigma_zxy": 0.6470204611530637,
+          "actual_original_value_exact": true
+        }
+      ]
+    },
+    "portable_text": {
+      "private_absolute_path_scan": "PASS",
+      "convergence_pack_licensed_payload_scan": "PASS"
+    }
+  },
+  "scientific_scope": {
+    "source_bands": 64,
+    "retained_bands": 48,
+    "spin_sheet_unit": "(hbar/e)*(e^2/h)",
+    "mesh12_to18_relative_change": 0.06754377522026458,
+    "mesh_convergence": "NOT_CONVERGED_IN_K_MESH",
+    "note": "Publication integrity and existing test-source identity do not establish numerical or physical convergence."
+  },
+  "display_only_changes": [
+    "Show the actual 6/12/18 mesh ticks",
+    "Place the Bi K marker at (2/3,1/3), consistently with the bulk path",
+    "Hide the upper and right tick marks"
+  ],
+  "figure_pdf_scope": "Regenerated display artifacts are outside the immutable numerical-file comparison; no new physics calculation was performed by this audit.",
+  "read_only": true
+}

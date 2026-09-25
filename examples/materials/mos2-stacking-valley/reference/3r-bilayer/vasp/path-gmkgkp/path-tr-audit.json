@@ -1,0 +1,126 @@
+{
+  "status": "PASS_SELECTED_OPTICAL_SUBSPACE",
+  "material": "3r-bilayer",
+  "selected_optical_bands_1based": [
+    1,
+    40
+  ],
+  "K_Kprime_selected_energy_max_residual_eV": 4.731459668505522e-11,
+  "Gamma_repeat_selected_energy_max_residual_eV": 8.880918223042045e-11,
+  "source_all_bands_K_Kprime_max_residual_eV": 1.4129359655612461e-06,
+  "source_all_band_scope": "Unselected high empty states may be less well conditioned despite total-energy EDIFF. The optical comparison only uses the validated selected group; this is not an all-band convergence claim.",
+  "native_optical_helicity_exchange_absolute_max_au": 0.0,
+  "native_peak_photon_eV": 1.67,
+  "native_K_eta_at_peak": -1.0,
+  "native_Kprime_eta_at_same_photon": 1.0,
+  "sampled_path_gap_eV": 1.2656305506616747,
+  "sampled_path_vbm_k": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "sampled_path_cbm_k": [
+    -0.1666666666666667,
+    -0.3333333333333333,
+    0.0
+  ],
+  "Ev_K_minus_Ev_Gamma_eV": -0.22528527890923375,
+  "Ec_Qsample_minus_Ec_K_eV": -0.11923846145103933,
+  "Qsample_k": [
+    0.1666666666666667,
+    0.3333333333333333,
+    0.0
+  ],
+  "K_direct_gap_eV": 1.6101542910435,
+  "gap_scope": "Specified finite symmetry path only, not a full-BZ or converged gap determination.",
+  "raw_data_symmetrized": false,
+  "visible_band_context_audit": {
+    "plot_energy_window_eV_relative_to_sampled_VBM": [
+      -1.2,
+      2.7
+    ],
+    "bands_1based": [
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52
+    ],
+    "maximum_band_1based": 52,
+    "distinct_available_TR_pairs_zero_based": [
+      [
+        0,
+        36
+      ],
+      [
+        24,
+        48
+      ],
+      [
+        25,
+        47
+      ],
+      [
+        26,
+        46
+      ],
+      [
+        27,
+        45
+      ],
+      [
+        28,
+        44
+      ],
+      [
+        29,
+        43
+      ],
+      [
+        30,
+        42
+      ],
+      [
+        31,
+        41
+      ],
+      [
+        32,
+        40
+      ],
+      [
+        33,
+        39
+      ],
+      [
+        34,
+        38
+      ],
+      [
+        35,
+        37
+      ]
+    ],
+    "all_available_TR_pair_energy_max_residual_eV": 3.8972859661701165e-10,
+    "K_Kprime_energy_max_residual_eV": 4.731459668505522e-11,
+    "Gamma_repeat_energy_max_residual_eV": 6.632761007097088e-11,
+    "scope": "All bands intersecting the public display window, tested over their full path segments; TR consistency is not a basis or geometry convergence claim."
+  }
+}

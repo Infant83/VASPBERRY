@@ -1,0 +1,281 @@
+{
+  "schema": "vaspberry.hall-spectrum",
+  "version": 1,
+  "complete": true,
+  "units": {
+    "sigma_e2_over_h": "e^2/h",
+    "sigma_S": "S",
+    "energy": "eV",
+    "temperature": "K"
+  },
+  "energy_reference": "unchanged VASP eigenvalue zero",
+  "mu_reference_eV": -0.43809870099182807,
+  "source_metadata": {
+    "schema": "vaspberry.kubo-pairs",
+    "version": 1,
+    "complete": true,
+    "source_nbands": 96,
+    "normalization": "numerator=-2Im(D_a_nm*D_b_mn)",
+    "components": [
+      "yz",
+      "zx",
+      "xy"
+    ],
+    "units": {
+      "energy": "eV",
+      "numerator": "eV^2 Angstrom^2",
+      "lattice": "Angstrom",
+      "reciprocal": "1/Angstrom"
+    },
+    "sampling": {
+      "kind": "uniform_full_2d",
+      "mesh": [
+        12,
+        12
+      ],
+      "plane_axes": [
+        0,
+        1
+      ]
+    },
+    "spin_multiplicity": 1,
+    "spin_channel_1based": 1,
+    "source_nspin": 1,
+    "spinor_components": 2,
+    "energy_reference": "unchanged VASP eigenvalue zero",
+    "source_operator": {
+      "kind": "canonical_momentum",
+      "accuracy_status": "approximation",
+      "missing_terms": [
+        "PAW augmentation and nonlocal/SOC velocity corrections"
+      ]
+    },
+    "native_metadata": {
+      "schema": "VASPBERRY_BARE_MOMENTUM_KUBO_PAIRS_V1",
+      "vaspberry_version": "1.3.0",
+      "result_kind": "UNORDERED_INTERBAND_NUMERATORS",
+      "normalization": "STANDARD_MINUS_TWO_IM",
+      "operator": "WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY",
+      "berry_connection": "A_i=i<u|d/dk_i u>",
+      "occupation_weighting": "NONE",
+      "denominator_weighting": "NONE",
+      "pair_order": "n_lt_m",
+      "gap_definition": "ABS_EN_MINUS_EM",
+      "numerator_units": "eV^2*Angstrom^2",
+      "components": "yz,zx,xy",
+      "reciprocal_convention": "2pi",
+      "index_base": "1",
+      "source_nbands": "96",
+      "source_nkpoints": "144",
+      "source_nspin": "1",
+      "spinor_components": "2",
+      "pairs_per_k": "4560",
+      "expected_rows": "656640",
+      "lattice_A_1": " 3.17163430321727269E+000, 0.00000000000000000E+000, 0.00000000000000000E+000",
+      "lattice_A_2": " 1.58581715160863634E+000, 2.74671587810031514E+000, 9.99999999999999979E-017",
+      "lattice_A_3": " 0.00000000000000000E+000, 0.00000000000000000E+000, 1.50000000000000000E+001",
+      "reciprocal_inv_A_1": " 1.98105609957981232E+000,-1.14376327237215492E+000, 0.00000000000000000E+000",
+      "reciprocal_inv_A_2": " 0.00000000000000000E+000, 2.28752654474430983E+000, 0.00000000000000000E+000",
+      "reciprocal_inv_A_3": " 0.00000000000000000E+000,-1.52501769649620646E-017, 4.18879032135009766E-001",
+      "result_status": "PASS"
+    },
+    "source_sha256": {
+      "OUTPUT/calculation/native/PAIRS.csv": "ef3c249a088e0cdfd2329945f2464a9e1164110edbc6809daf7c092a9abd33ae",
+      "INPUT/WAVECAR": "ba2e894d456df08917ceccdb13241f48d156712fba70d4ec9fe6a5d89f87e537"
+    },
+    "provenance": {
+      "vaspberry_version": "1.3.0",
+      "command": {
+        "command": "wavecar-hall",
+        "binary": "build-pairs/vaspberry-gfortran",
+        "mpi_procs": 1,
+        "mpi_launcher": "mpiexec",
+        "wavecar": "INPUT/WAVECAR",
+        "spin": 1,
+        "spinor_components": 2,
+        "spin_multiplicity": 1,
+        "mesh": [
+          12,
+          12
+        ],
+        "plane_axes": [
+          0,
+          1
+        ],
+        "energy_reference": "unchanged VASP eigenvalue zero",
+        "mu_min": -1.4748738807166568,
+        "mu_max": -1.1748738807166568,
+        "mu_num": 61,
+        "mu_reference": -0.43809870099182807,
+        "temperatures": [
+          0.0,
+          300.0
+        ],
+        "regions": "examples/features/kubo-hall/regions.json",
+        "difference": [
+          "valley:K:Kprime"
+        ],
+        "formats": [
+          "csv",
+          "dat",
+          "npz"
+        ],
+        "degeneracy_threshold_eV": 1e-07,
+        "degeneracy_policy": "coalesce",
+        "allow_partial_bands": false,
+        "mu_chunk": 32,
+        "pair_band_max": 90,
+        "output_dir": "OUTPUT/calculation"
+      },
+      "implementation_sha256": {
+        "kubo_hall_workflow.py": "f66d835be128bf7788a7e43f1cc9ad1781f46f69f6820b52972ac914d912c505",
+        "kubo_pairs.py": "1f9cee49e1eeac355cf054df2133be28c8f41886aa21aa101c64af18befd6014",
+        "berry_data.py": "fa45cb3fd93ab576e12009d17ca010716aaf89487ee29edda9905f37b8e6b435",
+        "vaspberry_transport.py": "cca22d550ed932d0ca77237ecaeb1fa0dbdbec5f8edc08467cb31bd8b1e192db"
+      },
+      "regions_sha256": "32f39a23d8a6096ee08e54ae2b064b03f9c5b60914bd1344c32462ca52b0a832"
+    }
+  },
+  "spin_multiplicity": 1,
+  "bz_area_inv_A2": 4.531718162203352,
+  "normal": [
+    -0.0,
+    0.0,
+    1.0
+  ],
+  "regions": {
+    "regions": [
+      {
+        "name": "K",
+        "center_fractional": [
+          0.3333333333333333,
+          0.6666666666666666,
+          0
+        ],
+        "radius_inv_A": 0.35
+      },
+      {
+        "name": "Kprime",
+        "center_fractional": [
+          -0.3333333333333333,
+          -0.6666666666666666,
+          0
+        ],
+        "radius_inv_A": 0.35
+      }
+    ]
+  },
+  "differences": [
+    [
+      "valley",
+      "K",
+      "Kprime"
+    ]
+  ],
+  "region_points": {
+    "total": 144,
+    "K": 13,
+    "Kprime": 13,
+    "rest": 118,
+    "valley": 26
+  },
+  "band_id_zero": "total represented subspace; no gauge-dependent individual-band decomposition",
+  "zero_T_equal_energy_occupation": 1.0,
+  "convergence_status": "not_established_by_format_validation",
+  "limitations": [
+    "Intrinsic clean-limit charge sheet response; no scattering or lifetime broadening.",
+    "Region differences depend on the supplied partition; not a conserved valley-current operator.",
+    "Fixed-band chemical-potential scan; no self-consistent doping or thermal magnetism.",
+    "Operator approximations are preserved in source_metadata."
+  ],
+  "method": "occupation_weighted_interband_pairs",
+  "scope": "truncated_pair_space",
+  "source_nbands": 96,
+  "pair_band_window": [
+    1,
+    90
+  ],
+  "minimum_pair_cutoff_gap_eV": 0.039235035633581106,
+  "raw_pair_cutoff_gap_eV": 0.039235035633581106,
+  "effective_pair_cutoff_gap_eV": 0.03923503668455908,
+  "occupation_window_max_band": 90,
+  "band_window_interpretation": "Both pair endpoints lie in the selected window; source eigenstates and provenance are retained. Converge the virtual-state sum separately from eigenstate accuracy.",
+  "highest_band_max_occupation": 0.0,
+  "formula": "sigma/(e^2/h)=-A_BZ/(2*pi)*g_s*sum_k w_k sum_n<m (f_n-f_m)*N_nm/(E_n-E_m)^2",
+  "delta_formula": "replace pair occupations by [f_n(mu)-f_n(ref)]-[f_m(mu)-f_m(ref)] before summation",
+  "degeneracy": {
+    "policy": "coalesce",
+    "threshold_eV": 1e-07,
+    "coalesced_groups": 1096,
+    "max_energy_shift_eV": 4.9465501916756693e-08,
+    "max_occupation_shift": 4.5995505182361285e-09,
+    "interpretation": "Coalesce is an explicit numerical-degeneracy approximation; raw energies remain unchanged."
+  },
+  "algorithm": {
+    "k_streamed": true,
+    "mu_chunk": 32,
+    "internal_equal_occupation_pairs": "cancelled before division"
+  },
+  "provenance": {
+    "vaspberry_version": "1.3.0",
+    "command": {
+      "command": "wavecar-hall",
+      "binary": "build-pairs/vaspberry-gfortran",
+      "mpi_procs": 1,
+      "mpi_launcher": "mpiexec",
+      "wavecar": "INPUT/WAVECAR",
+      "spin": 1,
+      "spinor_components": 2,
+      "spin_multiplicity": 1,
+      "mesh": [
+        12,
+        12
+      ],
+      "plane_axes": [
+        0,
+        1
+      ],
+      "energy_reference": "unchanged VASP eigenvalue zero",
+      "mu_min": -1.4748738807166568,
+      "mu_max": -1.1748738807166568,
+      "mu_num": 61,
+      "mu_reference": -0.43809870099182807,
+      "temperatures": [
+        0.0,
+        300.0
+      ],
+      "regions": "examples/features/kubo-hall/regions.json",
+      "difference": [
+        "valley:K:Kprime"
+      ],
+      "formats": [
+        "csv",
+        "dat",
+        "npz"
+      ],
+      "degeneracy_threshold_eV": 1e-07,
+      "degeneracy_policy": "coalesce",
+      "allow_partial_bands": false,
+      "mu_chunk": 32,
+      "pair_band_max": 90,
+      "output_dir": "OUTPUT/calculation"
+    },
+    "implementation_sha256": {
+      "kubo_hall_workflow.py": "f66d835be128bf7788a7e43f1cc9ad1781f46f69f6820b52972ac914d912c505",
+      "kubo_pairs.py": "1f9cee49e1eeac355cf054df2133be28c8f41886aa21aa101c64af18befd6014",
+      "berry_data.py": "fa45cb3fd93ab576e12009d17ca010716aaf89487ee29edda9905f37b8e6b435",
+      "vaspberry_transport.py": "cca22d550ed932d0ca77237ecaeb1fa0dbdbec5f8edc08467cb31bd8b1e192db"
+    },
+    "regions_sha256": "32f39a23d8a6096ee08e54ae2b064b03f9c5b60914bd1344c32462ca52b0a832"
+  },
+  "output_formats": [
+    "csv",
+    "dat",
+    "npz"
+  ],
+  "output_sha256": {
+    "conductivity.csv": "71cc715e0ccb1283080f74fb5b2f336942cd3af0261365002a812a5d00323911",
+    "conductivity.dat": "a493662657cd0dfd748e30732bf6b3fb0ebc8af0b4b9efed582f673c6410e32b",
+    "conductivity.npz": "c774cb4090afa5b38311346e214d214c8b1a75dcc191e1f30f5fc94a35bd0c0b"
+  }
+}

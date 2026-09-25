@@ -1,0 +1,61 @@
+{
+  "status": "PASS_RETAINED_IMPLEMENTATION_AND_MEASURED_CONTROLS",
+  "evidence": [
+    "actual-6x6-b80-retained-independent-audit.json",
+    "actual-12x12-b64-retained-independent-audit.json"
+  ],
+  "source80_cap56_to64": {
+    "absolute_sigma_zxy_change": -0.002046647668990431,
+    "relative_to_retained64": 0.0014820033993825667
+  },
+  "source6_cap48_64_to80": {
+    "absolute_sigma_zxy_change": -3.226043876480844e-10,
+    "relative_to_source80": 2.333388354140456e-10
+  },
+  "source12_cap48_48_to64": {
+    "absolute_sigma_zxy_change": 1.4300045543258477e-06,
+    "relative_to_source64": 2.0703020550011052e-06
+  },
+  "eigenstate_controls": [
+    {
+      "mesh": [
+        6,
+        6
+      ],
+      "source_before": 64,
+      "source_after": 80,
+      "retained_bands": 48,
+      "maximum_sorted_eigenvalue_change_eV": 6.427125498476016e-11,
+      "before_pair_splitting_max_eV": 3.3192128050529845e-06,
+      "after_pair_splitting_max_eV": 3.3192059021303066e-06
+    },
+    {
+      "mesh": [
+        6,
+        6
+      ],
+      "source_before": 64,
+      "source_after": 80,
+      "retained_bands": 64,
+      "maximum_sorted_eigenvalue_change_eV": 0.12474470639858559,
+      "before_pair_splitting_max_eV": 0.12403457127742001,
+      "after_pair_splitting_max_eV": 3.3192059021303066e-06
+    },
+    {
+      "mesh": [
+        12,
+        12
+      ],
+      "source_before": 48,
+      "source_after": 64,
+      "retained_bands": 48,
+      "maximum_sorted_eigenvalue_change_eV": 0.0024901509516546128,
+      "before_pair_splitting_max_eV": 0.002475237871989222,
+      "after_pair_splitting_max_eV": 3.3453083165824182e-06
+    }
+  ],
+  "cutoff_policy": "Retain whole even expected Kramers pairs. Minimum retained boundary gaps are reported explicitly and exceed measured retained-pair splittings. Full source64/80 upper states remain unconverged and are excluded from the validated retained calculations.",
+  "interpretation": "Small finite-band and same-cutoff source changes on these fixed meshes do not establish k convergence or joint DFT/current-product completeness. All27 tensors match independent raw-matrix contractions.",
+  "no_integer_rounding": true,
+  "no_full80_response_computed": true
+}

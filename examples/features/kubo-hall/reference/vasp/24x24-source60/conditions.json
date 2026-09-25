@@ -1,0 +1,82 @@
+{
+  "status": "PASS",
+  "mesh": [
+    24,
+    24
+  ],
+  "nbands": 60,
+  "source_wavecar_sha256": "aa4570fee97b9d6f451e83b5d512f2a0554d27967d34bf664856a55897ff5405",
+  "stages": [
+    {
+      "status": "FAILED",
+      "nbands": 40,
+      "wall_seconds": 752.5993820950389,
+      "sampled_peak_rss_bytes": 2348294144,
+      "converged": false,
+      "normal_footer": true,
+      "stop_reason": null,
+      "electronic_iterations": 4,
+      "input_incar": "SYSTEM = 1H-MoS2 public-CHGCAR SOC NSCF\nISTART = 0\nICHARG = 11\nPREC = Normal\nENCUT = 400\nEDIFF = 1E-6\nNELM = 200\nNBANDS = 40\nALGO = Normal\nLREAL = .FALSE.\nLASPH = .FALSE.\nISMEAR = 0\nSIGMA = 0.02\nISYM = -1\nLSORBIT = .TRUE.\nSAXIS = 0 0 1\nMAGMOM = 0 0 0 0 0 0 0 0 0\nGGA_COMPAT = .FALSE.\nLMAXMIX = 2\nNSW = 0\nIBRION = -1\nLWAVE = .TRUE.\nLCHARG = .FALSE.\nLVTOT = .FALSE.\n"
+    },
+    {
+      "status": "FAILED",
+      "nbands": 40,
+      "wall_seconds": 814.9857208710164,
+      "sampled_peak_rss_bytes": 2352955392,
+      "converged": false,
+      "normal_footer": true,
+      "stop_reason": null,
+      "restart_input_wavecar_sha256": "dcea45fe9965542eea564d5ed8b46410562abf45a7e962959488cd7d7d086512",
+      "electronic_iterations": 2,
+      "input_incar": "SYSTEM = 1H-MoS2 public-CHGCAR SOC NSCF\nISTART = 1\nICHARG = 11\nPREC = Normal\nENCUT = 400\nEDIFF = 1E-6\nNELM = 200\nNBANDS = 40\nALGO = Normal\nLREAL = .FALSE.\nLASPH = .FALSE.\nISMEAR = 0\nSIGMA = 0.02\nISYM = -1\nLSORBIT = .TRUE.\nSAXIS = 0 0 1\nMAGMOM = 0 0 0 0 0 0 0 0 0\nGGA_COMPAT = .FALSE.\nLMAXMIX = 2\nNSW = 0\nIBRION = -1\nLWAVE = .TRUE.\nLCHARG = .FALSE.\nLVTOT = .FALSE.\n"
+    },
+    {
+      "status": "PASS",
+      "nbands": 40,
+      "wall_seconds": 868.042952587828,
+      "sampled_peak_rss_bytes": 2354622464,
+      "converged": true,
+      "normal_footer": true,
+      "stop_reason": null,
+      "restart_input_wavecar_sha256": "7778480a775aebe9de4b017818ebde2b4231ca383bbc1c440cebb237017b6ab2",
+      "electronic_iterations": 2,
+      "input_incar": "SYSTEM = 1H-MoS2 public-CHGCAR SOC NSCF\nISTART = 1\nICHARG = 11\nPREC = Normal\nENCUT = 400\nEDIFF = 1E-6\nNELM = 200\nNBANDS = 40\nALGO = Normal\nLREAL = .FALSE.\nLASPH = .FALSE.\nISMEAR = 0\nSIGMA = 0.02\nISYM = -1\nLSORBIT = .TRUE.\nSAXIS = 0 0 1\nMAGMOM = 0 0 0 0 0 0 0 0 0\nGGA_COMPAT = .FALSE.\nLMAXMIX = 2\nNSW = 0\nIBRION = -1\nLWAVE = .TRUE.\nLCHARG = .FALSE.\nLVTOT = .FALSE.\n"
+    },
+    {
+      "status": "FAILED",
+      "nbands": 60,
+      "ediff_eV": 1e-08,
+      "nelmin": 8,
+      "wall_seconds": 1422.605021061143,
+      "sampled_peak_rss_bytes": 3241914368,
+      "converged": false,
+      "normal_footer": true,
+      "stop_reason": null,
+      "restart_input_wavecar_sha256": "2081f9491fef149dd628c0e82f8c74731d6ff7120589bfa1afbc0f477d3c76bb",
+      "electronic_iterations": 3,
+      "input_incar": "SYSTEM = 1H-MoS2 public-CHGCAR SOC NSCF\nISTART = 1\nICHARG = 11\nPREC = Normal\nENCUT = 400\nEDIFF = 1e-08\nNELM = 200\nNBANDS = 60\nALGO = Normal\nLREAL = .FALSE.\nLASPH = .FALSE.\nISMEAR = 0\nSIGMA = 0.02\nISYM = -1\nLSORBIT = .TRUE.\nSAXIS = 0 0 1\nMAGMOM = 0 0 0 0 0 0 0 0 0\nGGA_COMPAT = .FALSE.\nLMAXMIX = 2\nNSW = 0\nIBRION = -1\nLWAVE = .TRUE.\nLCHARG = .FALSE.\nLVTOT = .FALSE.\nNELMIN = 8\n"
+    },
+    {
+      "status": "PASS",
+      "nbands": 60,
+      "ediff_eV": 1e-08,
+      "nelmin": 4,
+      "wall_seconds": 2346.210773793049,
+      "sampled_peak_rss_bytes": 3205955584,
+      "converged": true,
+      "normal_footer": true,
+      "stop_reason": null,
+      "restart_input_wavecar_sha256": "0972d563d79843bc51739bfa9705f233fd139c17097b6acaca740352ec985dcc",
+      "electronic_iterations": 4,
+      "input_incar": "SYSTEM = 1H-MoS2 public-CHGCAR SOC NSCF\nISTART = 1\nICHARG = 11\nPREC = Normal\nENCUT = 400\nEDIFF = 1e-08\nNELM = 200\nNBANDS = 60\nALGO = Normal\nLREAL = .FALSE.\nLASPH = .FALSE.\nISMEAR = 0\nSIGMA = 0.02\nISYM = -1\nLSORBIT = .TRUE.\nSAXIS = 0 0 1\nMAGMOM = 0 0 0 0 0 0 0 0 0\nGGA_COMPAT = .FALSE.\nLMAXMIX = 2\nNSW = 0\nIBRION = -1\nLWAVE = .TRUE.\nLCHARG = .FALSE.\nLVTOT = .FALSE.\nNELMIN = 4\n"
+    }
+  ],
+  "raw_files_sha256": {
+    "INCAR": "aa2c888c739874c88b9032ddf354284492c1db369c159742b98344429a925836",
+    "OUTCAR.gz": "0c7fe6f20f30483128f5855fd3526f622113bc35e5aa24b824c987a945064a18",
+    "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+    "OSZICAR.gz": "7aeacafb89a0a975f511fbb2c165c2f00953ddfc4325ebc2bc0c6523a9ad1d11",
+    "KPOINTS": "e38502bda421df67ad2839f5a9957cd54e838d6c1692c6f6e06652f8d0956dcb",
+    "EIGENVAL.gz": "23bf0fb1596a1d60dd3ad029e9d5bf986a4dbc4e3a1d3d792fe668ef6d7379d2"
+  }
+}

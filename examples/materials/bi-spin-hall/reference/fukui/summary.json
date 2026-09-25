@@ -1,0 +1,41 @@
+{
+  "status": "PASS",
+  "command": [
+    "vaspberry-gfortran",
+    "-f",
+    "WAVECAR",
+    "-o",
+    "BERRYCURV",
+    "-kx",
+    "12",
+    "-ky",
+    "12",
+    "-s",
+    "2",
+    "-ii",
+    "1",
+    "-if",
+    "10"
+  ],
+  "input_sha256": "388af65deabea328595677d3693094a535ed1ffd72a98c5cf8c423d72a9c45f9",
+  "binary_sha256": "7ab6e61f9b2bc02a9ee6fd42c847f835c2af370c9522f2d20285d04e421720df",
+  "mode": "default ordinary Fukui occupied-bundle Chern; no -z2 argument, no TR reconstruction",
+  "occupied_bands": [
+    1,
+    10
+  ],
+  "mesh": [
+    12,
+    12
+  ],
+  "returncode": 0,
+  "reported_chern": 0.0,
+  "output_sha256": {
+    "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "BERRYCURV.dat": "86865c635291a2ead457f8cff63fb6c55b5e4bd166930170537df0d3c99de504",
+    "fortran.log": "d07bd206f32515b576b495600935ff5e3d47a20848bf34238fbddb869f384979"
+  },
+  "wall_seconds": 32.003282730001956,
+  "input": "same assembled12 WAVECAR as the separate Z2 calculation",
+  "scope": "Original full occupied pseudo-wavefunction bundle, ordinary Fukui mode. No Z2 time-reversal reconstruction."
+}

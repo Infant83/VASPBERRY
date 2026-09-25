@@ -1,0 +1,47 @@
+{
+  "lattice_A": [
+    [
+      4.336,
+      0.0,
+      0.0
+    ],
+    [
+      -2.168,
+      3.755086150809,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      52.891132533333
+    ]
+  ],
+  "reciprocal_Ainv": [
+    [
+      1.449074102209314,
+      0.8366233229863355,
+      -0.0
+    ],
+    [
+      0.0,
+      1.673246645972671,
+      0.0
+    ],
+    [
+      0.0,
+      -0.0,
+      0.11879468270451202
+    ]
+  ],
+  "occupied": 123,
+  "stored_bands": 192,
+  "energy_reference": "unchanged VASP eigenvalue energy zero",
+  "vbm_eV": 3.2534356104605733,
+  "cbm_eV": 3.2705369926804835,
+  "midgap_eV": 3.2619863015705284,
+  "sampled_gap_eV": 0.0171013822199102,
+  "operator": "standard VASP5.4.4 longitudinal PAW optical occupied-empty connection",
+  "scope": "Finite-band direct DFT samples and coarse6x6 quadrature; no interpolation or enforced symmetry",
+  "waveder_6x6_chern_unrounded": -163.10920595592842,
+  "waveder_6x6_sigma_e2_over_h": 163.10920595592842
+}

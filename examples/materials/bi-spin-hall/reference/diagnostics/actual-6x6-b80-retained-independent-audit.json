@@ -1,0 +1,308 @@
+{
+  "status": "PASS_RETAINED_RAW_OPERATOR_AND_INDEPENDENT_KUBO_REDUCTION",
+  "mesh": [
+    6,
+    6
+  ],
+  "point_count": 36,
+  "source_bands": 80,
+  "occupied": 10,
+  "global_gap_eV": 0.535028374779025,
+  "bz_area_inv_A2": 2.3666235435978784,
+  "matrix_sha256": "6fcd0ac4b369e47c7a6a0e5d5d5029ed6136c194dd0b7440f02920da9a5c1a0a",
+  "raw_to_cache_arrays": "exact",
+  "source_runs": {
+    "bi-6x6-b80-chunk00": {
+      "export_sha256": "8a147aae8adafe7c0b3be726b5b412efbe45ff2681c545b0365541b46e39aeb9",
+      "run_sha256": "f774f95581ba8c933896e4d868ca7559973f53600db75b23ed75834a713d649a",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632"
+    },
+    "bi-6x6-b80-chunk01": {
+      "export_sha256": "c08f5c77df61a24f97178f5afcf14c0a5bab0a8472dd16a4a4557a80184a68ce",
+      "run_sha256": "2b747d6923d14c6452f979f89100e4f9398f23903cabebc2c5d419e8cb6457f9",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632"
+    }
+  },
+  "common_hamiltonian_inputs": {
+    "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+    "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+    "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+  },
+  "caps": [
+    {
+      "retained_bands": 48,
+      "source_band_count": 80,
+      "sigma_zxy": 1.3825576315903116,
+      "full_spin_tensor": [
+        [
+          [
+            -0.64277755770483,
+            2.818068975913449e-06,
+            -1.5982330344241293e-07
+          ],
+          [
+            -1.1968678925263572e-06,
+            0.6427740757889645,
+            -0.008413979347311812
+          ],
+          [
+            6.682182669141367e-07,
+            0.38731449466098844,
+            -1.278658744156277e-07
+          ]
+        ],
+        [
+          [
+            -7.788776164591811e-07,
+            0.6427727201432561,
+            0.00842170282032805
+          ],
+          [
+            0.6427721181741697,
+            8.42382331803728e-07,
+            1.5983313144326168e-07
+          ],
+          [
+            -0.38731725599738503,
+            -6.682369704156512e-07,
+            4.949081215231989e-08
+          ]
+        ],
+        [
+          [
+            4.0313522707110036e-07,
+            1.3825576315903116,
+            -1.2782460356096578e-06
+          ],
+          [
+            -1.3825592382220717,
+            -4.0310100688139067e-07,
+            4.0130470022619213e-07
+          ],
+          [
+            -4.928471303283888e-07,
+            -4.5721223663937473e-07,
+            -2.4267683301497166e-13
+          ]
+        ]
+      ],
+      "full_charge_tensor": [
+        [
+          -1.963071826421366e-14,
+          1.1779952874949574e-11,
+          1.1051830795404164e-10
+        ],
+        [
+          -1.1750084840880605e-11,
+          -2.5959493158888653e-14,
+          6.571436297547605e-11
+        ],
+        [
+          -1.1051423273496945e-10,
+          -6.571302292332465e-11,
+          2.867733027017988e-15
+        ]
+      ],
+      "cli_comparison": {
+        "omega_spin_A2": 3.808509063674137e-12,
+        "omega_charge_A2": 2.8477839566072393e-12,
+        "sigma_hbar_over_e_e2_over_h": 2.220446049250313e-14,
+        "charge_sigma_e2_over_h": 2.5948397883868013e-14
+      },
+      "retained_pair_splitting_max_eV": 3.3192059021303066e-06,
+      "retained_cutoff_minimum_gap_eV": 0.043206929289477,
+      "complete_expected_doublets": true,
+      "cli_file_sha256": {
+        "spin_hall.csv": "48a5c8eff1070101c8c06f1a039317d3c6137563e3d465005c8e53510fac1daa",
+        "spin_hall.dat": "b9f8814bb908b5334733247dca7dc3c50dfe38136af7ba361450a965450484c9",
+        "spin_hall.json": "b9634e069663418701ad285aa5c0803b8dd1ec094b8132c53fa435ec7215c512",
+        "spin_hall.npz": "72d2019a6a43389024ef4e9e1f758473b9fb6fda5a0a7c5bc04c448a83cfcc3f"
+      }
+    },
+    {
+      "retained_bands": 56,
+      "source_band_count": 80,
+      "sigma_zxy": 1.3830473051864476,
+      "full_spin_tensor": [
+        [
+          [
+            -0.6434077740459395,
+            2.824606239976249e-06,
+            -1.6640652987510963e-07
+          ],
+          [
+            -1.175105675045859e-06,
+            0.6434041626327123,
+            -0.009104577293985382
+          ],
+          [
+            6.74254772811779e-07,
+            0.3882375019666459,
+            -1.2977214936323924e-07
+          ]
+        ],
+        [
+          [
+            -7.86973822293701e-07,
+            0.6434028144778206,
+            0.00911231808948055
+          ],
+          [
+            0.6434023699385218,
+            8.625650107067879e-07,
+            1.6636700997530661e-07
+          ],
+          [
+            -0.388240413424446,
+            -6.742079238172633e-07,
+            4.756894075255515e-08
+          ]
+        ],
+        [
+          [
+            4.109259448980728e-07,
+            1.3830473051864476,
+            -1.2565025960416836e-06
+          ],
+          [
+            -1.3830489234454502,
+            -4.1082545005301584e-07,
+            4.0004442519901085e-07
+          ],
+          [
+            -5.529009220038653e-07,
+            -4.824143686302059e-07,
+            1.0393638658750746e-11
+          ]
+        ]
+      ],
+      "full_charge_tensor": [
+        [
+          -1.9632124254659377e-14,
+          -3.0006676179920157e-13,
+          1.3628600053499195e-10
+        ],
+        [
+          3.299259472578996e-13,
+          -2.5938096242842405e-14,
+          7.167904516301667e-11
+        ],
+        [
+          -1.362819226569421e-10,
+          -7.167770256986272e-11,
+          2.8813306540019345e-15
+        ]
+      ],
+      "cli_comparison": {
+        "omega_spin_A2": 3.694822225952521e-12,
+        "omega_charge_A2": 2.847735546906681e-12,
+        "sigma_hbar_over_e_e2_over_h": 2.1316282072803006e-14,
+        "charge_sigma_e2_over_h": 2.5927058996424724e-14
+      },
+      "retained_pair_splitting_max_eV": 3.3192059021303066e-06,
+      "retained_cutoff_minimum_gap_eV": 0.011793550350500226,
+      "complete_expected_doublets": true,
+      "cli_file_sha256": {
+        "spin_hall.csv": "8bd65e64b3ee712f4bb4b9445b727d8eeccdbf10d01c6e0cd2f37fe875b67552",
+        "spin_hall.dat": "639b43d508ee383729463f268de752817b3da5a49eba24b7e3cb50a5e449ab7f",
+        "spin_hall.json": "d4318be9ab969b3f4ccdfd6978d461f3c07eea2481480e2bf927c8a435dfc988",
+        "spin_hall.npz": "a38c2867a8fe5340e1432d2f099ca9577d71db9c64446f654db325edd1213a8b"
+      }
+    },
+    {
+      "retained_bands": 64,
+      "source_band_count": 80,
+      "sigma_zxy": 1.3810006575174572,
+      "full_spin_tensor": [
+        [
+          [
+            -0.6430202550594202,
+            2.783038197516349e-06,
+            -1.6004455217250294e-07
+          ],
+          [
+            -1.1593744011718035e-06,
+            0.643016704934173,
+            -0.009891232498781386
+          ],
+          [
+            6.909511175668232e-07,
+            0.3876731996023309,
+            -1.3052977346555968e-07
+          ]
+        ],
+        [
+          [
+            -7.474313683474947e-07,
+            0.6430154053656411,
+            0.009898970291308984
+          ],
+          [
+            0.6430148101816439,
+            8.707027104591721e-07,
+            1.626243412207334e-07
+          ],
+          [
+            -0.3876761461051677,
+            -6.95375149174984e-07,
+            5.008584670199936e-08
+          ]
+        ],
+        [
+          [
+            3.976064433258176e-07,
+            1.3810006575174572,
+            -1.2495294665891159e-06
+          ],
+          [
+            -1.3810022806421003,
+            -4.011673529462525e-07,
+            3.9772324027076503e-07
+          ],
+          [
+            -5.595444281216972e-07,
+            -4.711640457475073e-07,
+            -2.0591473405738636e-09
+          ]
+        ]
+      ],
+      "full_charge_tensor": [
+        [
+          -1.9662045626226204e-14,
+          1.557868970137886e-10,
+          2.919145139983143e-09
+        ],
+        [
+          -1.5575698019317278e-10,
+          -2.5942466302592852e-14,
+          3.5492990079154334e-09
+        ],
+        [
+          -2.919141060743842e-09,
+          -3.5492976820202966e-09,
+          2.8643299200570107e-15
+        ]
+      ],
+      "cli_comparison": {
+        "omega_spin_A2": 3.637978807091713e-12,
+        "omega_charge_A2": 2.8477292535489465e-12,
+        "sigma_hbar_over_e_e2_over_h": 2.0872192862952943e-14,
+        "charge_sigma_e2_over_h": 2.5931439137355548e-14
+      },
+      "retained_pair_splitting_max_eV": 3.3192059021303066e-06,
+      "retained_cutoff_minimum_gap_eV": 0.01532307924579257,
+      "complete_expected_doublets": true,
+      "cli_file_sha256": {
+        "spin_hall.csv": "74126183e8c374b18ee6610623b9eeffd0c0491e50fe1f815aedacb8aaf9ae7d",
+        "spin_hall.dat": "89beabd7ee04f94d6e871d810e1e298bbb09349e05a6a157469e03a4a26a12ec",
+        "spin_hall.json": "2cab9c7b496e3bf8db4318a307a6a83e82d3247e3748cf2621da7bd4b4b213f3",
+        "spin_hall.npz": "357c0ef45c236d32ee74d9da6bdc22d1a754c5ca48d1344f2cdf5e1c7427757c"
+      }
+    }
+  ],
+  "source_high_band_pair_splitting_max_eV": 0.05878905182807159,
+  "scope": "Independent sum restricted to each explicitly retained even band space. Stored source count is preserved; highest source states are not used or declared converged. Exact matrix association is checked for all exported source states.",
+  "independent_oracle": "Explicit intermediate-band outer products and occupied-empty scalar contractions; no production numerical helper",
+  "no_integer_rounding": true,
+  "no_source_modifications": true
+}

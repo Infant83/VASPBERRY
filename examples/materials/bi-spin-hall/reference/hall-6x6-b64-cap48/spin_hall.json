@@ -1,0 +1,252 @@
+{
+  "schema": "vaspberry.spin-hall",
+  "version": 1,
+  "complete": true,
+  "method": "conventional_intrinsic_spin_Kubo_occupied_bundle",
+  "source_metadata": {
+    "schema": "vaspberry.spin-velocity",
+    "version": 1,
+    "complete": true,
+    "producer_status": "PASS",
+    "data_npz_sha256": "1e1dca3160420acb1934c5a7bf8028af419d7343af4849cf12f47dadf3166e1d",
+    "source_wavecar_sha256": "2fae72e0b3027065ffe3dcf2aef06558f67c71192730f6a4a39b2c13b62e3fee",
+    "source_nbands": 64,
+    "nbands": 64,
+    "nkpoints": 36,
+    "units": {
+      "spin": "dimensionless Pauli",
+      "overlap": "dimensionless",
+      "velocity": "eV angstrom = hbar*v",
+      "energies": "eV",
+      "lattice": "angstrom"
+    },
+    "spin_basis": "Cartesian axes; SAXIS=(0,0,1)",
+    "spin_basis_id": "cartesian",
+    "velocity_basis": "cartesian",
+    "matrix_axes": [
+      "k",
+      "cartesian",
+      "bra",
+      "ket"
+    ],
+    "gauge": "same_eigenvectors_as_source_wavecar",
+    "operator_accuracy": "paw_full_velocity",
+    "spin_operator_accuracy": "paw_augmented",
+    "physical_paw_validated": true,
+    "normalization_applied": false,
+    "spinor_components": 2,
+    "spin_multiplicity": 1,
+    "full_source_band_coverage": true,
+    "diagonal_available": true,
+    "degenerate_blocks_available": true,
+    "producer": "Audited fixed-charge VASP spin/velocity chunks assembled by VASPBERRY",
+    "operator_scope": "VASP 5.4.4 serial SOC spinors, spin-independent PAW metric, Cartesian +z SAXIS, semilocal functional without Hubbard U, no spin spiral, LREAL/LNABLA/LPEAD false; complete predivision commutator plus projector derivative and one-center dipole correction. No Hermitian repair.",
+    "spin_current_construction": "finite_band_projected_product",
+    "method_limitations": [
+      "Spin current uses the anticommutator of finite source-band projected spin and velocity; source-band closure must converge.",
+      "Finite plane-wave and PAW partial-wave basis; semilocal functional and spin-independent PAW metric only.",
+      "Exporter consistency checks do not establish k-mesh, DFT, or source-band convergence."
+    ],
+    "source_sha256": {
+      "WAVECAR": "2fae72e0b3027065ffe3dcf2aef06558f67c71192730f6a4a39b2c13b62e3fee",
+      "chunk000/SPIN_VELOCITY.bin": "4bea49776018355e921a87559107182a6d062df8802a64be6658f7512fa4ea81",
+      "chunk000/BERRY_CONNECTION.bin": "2fe97eba0beee940ec78fe0fce2d17e0772970123c442100712ccc6ad9afe962",
+      "chunk000/WAVECAR": "7df45537f471bdb30c8fdd720b24e88c2fc7f1b0c9dde8bb27f6f4169e1d1a44",
+      "chunk000/OUTCAR": "76448dd037dec17a100dd3e6988540df1d188f1756f92e8a6534332269c46e21",
+      "chunk000/INCAR": "2318f4001897ac6d3d8a70f178c399c583a3a4ca267c72aa50d99c1a9e4669bf",
+      "chunk000/POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+      "chunk000/KPOINTS": "318b7f9da0afe2f052cd165e7f7595351237eb08e35fb593ceb91ff9132e7f12",
+      "chunk000/run.json": "3302ab1a5b5af3c83dd2de8d1cb69a4e3cec92503f6b0140c6ada70e767ece52",
+      "chunk000/CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+      "chunk000/POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489",
+      "chunk001/SPIN_VELOCITY.bin": "8ad58f925fefa89d878dbd1f5ee2cdd742500a7b12ebd6eb2d834c5155bb2e1a",
+      "chunk001/BERRY_CONNECTION.bin": "469875b6f39238af30b891d3fb23eb72291f318cdc49976c424cee885e172ed5",
+      "chunk001/WAVECAR": "db1e235997f330596e584109fa1e64f078fad74013fdb3f37dd60d94fc11f06b",
+      "chunk001/OUTCAR": "69230f0b87296a02413ba491e5f38a63c4b1eac479160d012b63284952b3707e",
+      "chunk001/INCAR": "2318f4001897ac6d3d8a70f178c399c583a3a4ca267c72aa50d99c1a9e4669bf",
+      "chunk001/POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+      "chunk001/KPOINTS": "4b652062b76526d8fa38c1cd96b13a23398afebbee9d9a356982719af352fd41",
+      "chunk001/run.json": "04999b0924855f1a79fbeb008cebe81c85db6561f7ec68418a073c2e66103b3d",
+      "chunk001/CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+      "chunk001/POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+    },
+    "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632",
+    "source_energy_reference": "Unchanged same-density VASP eigenvalues. The first chunk Fermi header is retained and is not a full-mesh chemical potential; transport selects its own in-gap chemical potential.",
+    "assembly": {
+      "mesh": [
+        6,
+        6
+      ],
+      "source_chunk_names": [
+        "bi-6x6-b64-chunk00",
+        "bi-6x6-b64-chunk01"
+      ],
+      "source_chunk_point_counts": [
+        18,
+        18
+      ],
+      "per_k_records": "All source bytes independently checked after assembly; only global headers and record padding changed.",
+      "weights": "Full uniform mesh: each source point receives1/(NX*NY); no incomplete-grid renormalization.",
+      "occupied": 10,
+      "global_gap_eV": 0.535028374756481,
+      "global_midgap_eV": -1.1475388957646626,
+      "estimated_memory_MiB": 172.29024124145508,
+      "memory_limit_MiB": 2048.0
+    },
+    "implementation_sha256": "9da14ec198b78c79b08540f2b8c87441275bb34f0df4c09ce3377b34fdb80df3"
+  },
+  "input_validation": {
+    "source_sha256": {
+      "matrices": "1e1dca3160420acb1934c5a7bf8028af419d7343af4849cf12f47dadf3166e1d",
+      "metadata": "644ccecf1cf413cb667f917d8e88391c4a384dac47b0e1ecef98ca2d4a808781"
+    },
+    "estimated_memory_MiB": 63.0703125,
+    "overlap_identity_max_abs": 1.439431206632831e-14,
+    "hermiticity_max_abs": {
+      "spin_pauli": 1.3544976840816724e-14,
+      "velocity_eVA": 2.3410451503147606e-13,
+      "overlap": 8.814418300669696e-16
+    },
+    "minimum_overlap_plus_minus_spin_eigenvalue": 2.6336861663756916e-13
+  },
+  "source_band_count": 64,
+  "retained_band_count": 48,
+  "occupied": 10,
+  "gap_threshold_eV": 1e-08,
+  "retained_cutoff_minimum_gap_eV": 0.0432069292946089,
+  "spin_current_method": "finite_band_projected_product",
+  "spin_current_definition": "K={P sigma P,P(hbar*v)P}/2; physical J={s,v}/2",
+  "limitation": "The finite-band current omits P sigma Q D P and P D Q sigma P terms; source-band closure and intermediate-band convergence are required. SOC spin is generally not conserved, so spin Hall response is not required to be quantized.",
+  "spin_formula": "sigma/[(hbar/e)*(e^2/h)]=+A_BZ/(4*pi)*sum_k w_k Omega_spin; Omega_spin=-2 Im sum_occ,empty K_nm D_mn/(E_m-E_n)^2",
+  "charge_formula": "sigma_charge/(e^2/h)=-A_BZ/(2*pi)*sum_k w_k Omega_charge",
+  "tensor_axis_order": [
+    "spin",
+    "current",
+    "electric_field"
+  ],
+  "cartesian_components": [
+    "x",
+    "y",
+    "z"
+  ],
+  "units": {
+    "curvature": "angstrom^2",
+    "spin_sheet_conductivity": "(hbar/e)*(e^2/h)",
+    "charge_sheet_conductivity": "e^2/h"
+  },
+  "dimensionality": 2,
+  "spin_multiplicity": 1,
+  "temperature_K": 0.0,
+  "mu_eV": -1.1475388957646626,
+  "valence_max_eV": -1.4150530831429031,
+  "conduction_min_eV": -0.8800247083864221,
+  "global_gap_eV": 0.535028374756481,
+  "minimum_cross_gap_eV": 0.535028374756481,
+  "metallic_occupations_supported": false,
+  "integer_rounding_applied": false,
+  "sampling": {
+    "kind": "uniform_full_2d",
+    "mesh": [
+      6,
+      6
+    ],
+    "plane_axes": [
+      0,
+      1
+    ]
+  },
+  "bz_area_inv_A2": 2.366623543597878,
+  "plane_normal_cartesian": [
+    -0.0,
+    0.0,
+    1.0
+  ],
+  "tensor_scope": "Cartesian matrix response integrated over the declared 2D plane; in-plane current and electric-field contractions give sheet transport.",
+  "sigma_hbar_over_e_e2_over_h": [
+    [
+      [
+        -0.6427775579057341,
+        2.8179422188189667e-06,
+        -1.5988594372618873e-07
+      ],
+      [
+        -1.196783586119968e-06,
+        0.6427740758181834,
+        -0.008413979259269073
+      ],
+      [
+        6.678135452226688e-07,
+        0.38731449443693367,
+        -1.279061444917694e-07
+      ]
+    ],
+    [
+      [
+        -7.792159024300063e-07,
+        0.6427727197979776,
+        0.008421702750154693
+      ],
+      [
+        0.6427721183707523,
+        8.424124002034675e-07,
+        1.5980002208316902e-07
+      ],
+      [
+        -0.3873172562502244,
+        -6.685055322392741e-07,
+        4.9523702166319536e-08
+      ]
+    ],
+    [
+      [
+        4.032420907668728e-07,
+        1.382557631912924,
+        -1.278214631700462e-06
+      ],
+      [
+        -1.3825592384101875,
+        -4.0326513361280574e-07,
+        4.009681501410132e-07
+      ],
+      [
+        -4.927354926254609e-07,
+        -4.570642542159468e-07,
+        -4.450070178617021e-11
+      ]
+    ]
+  ],
+  "charge_sigma_e2_over_h": [
+    [
+      4.7154622360144513e-17,
+      -3.0800610422102026e-10,
+      -6.615447190898635e-11
+    ],
+    [
+      3.08006111390738e-10,
+      -2.0242669481803388e-17,
+      -2.1460605455650525e-10
+    ],
+    [
+      6.615446433142468e-11,
+      2.1460605293243158e-10,
+      4.796956870621716e-18
+    ]
+  ],
+  "memory_limit_MiB": 2048.0,
+  "memory_limit_scope": "preflight estimate, not an OS cap",
+  "time_limit_seconds": 3600.0,
+  "time_limit_scope": "checked between k chunks",
+  "k_chunk": 8,
+  "elapsed_seconds": 0.8591239689849317,
+  "implementation_sha256": {
+    "spin_hall.py": "6e64ac61a85ccc9245a9e761cf83bbc226e9a51dd3a856f4093569cf365b0026",
+    "spin_hall_workflow.py": "3ba811414a169d4d7bdf3599fd0027b9d97d868baed4bc8442b78b258b056244"
+  },
+  "output_sha256": {
+    "spin_curvature.csv": "7e4b23757313ade2e666fbab33da4463ea1ada006abf0cd65923e0479a99553f",
+    "spin_curvature.dat": "49bc23a35ca47fc3d521a1b2fa7f96e5fdf4f4b93739c756a9d7c3f14ed5948f",
+    "spin_hall.csv": "a3dc6da97e5061bce4fe5834ff0e82c5d19eadfae81a146409e1774afbdf542f",
+    "spin_hall.dat": "d936b32e8fe9b8183ef501ecb7c7bee8aa67abfa5f6dadedf53ee099bb106c8b",
+    "spin_hall.npz": "743245894b47fa6e2e87abec716648a61e0ec81aff8076a7759f1ce4238d41a8"
+  }
+}

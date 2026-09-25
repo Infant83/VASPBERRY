@@ -1,0 +1,596 @@
+{
+  "schema": "vaspberry.public-reproduction-summary",
+  "version": 1,
+  "status": "PASS",
+  "record_kind": "New portable summary of a separately preserved detailed exact-commit reproduction audit.",
+  "source_evidence": {
+    "filename": "audit.json",
+    "sha256": "566a05f02b09f48049a1d6df8390b28bf93e548d5ad7a5bb3cc6880aca5578df",
+    "relationship": "This summary is derived from the original audit; the original record is unchanged."
+  },
+  "core_commit": "c8b0b6b6c8ab3942967b9c75cc267aa8e8fb58db",
+  "core_tree": "eccc85a29b459da7acee89c58be68606f901d5b1",
+  "archive": {
+    "command_argv": [
+      "git",
+      "archive",
+      "--format=tar",
+      "c8b0b6b6c8ab3942967b9c75cc267aa8e8fb58db",
+      "tools",
+      "examples/materials/bi-spin-hall",
+      "requirements-transport.txt"
+    ],
+    "sha256": "03eb04c682985dc49e55aec71c151f4459147e975bf46624576d9c140c2b686e",
+    "bytes": 82995200,
+    "file_count": 217
+  },
+  "execution": {
+    "input_scope": "Only the archived public tools, Bi example and supplied derived matrix/operator inputs; no VASP executable, POTCAR, WAVECAR or previous calculation outputs used.",
+    "interpreter_display": "Commands use the portable python3 name; the executed Python and dependency versions are recorded below.",
+    "versions": {
+      "python": "3.12.14 (main, Aug 25 2026, 13:50:22) [Clang 22.1.3 ]",
+      "numpy": "2.3.5",
+      "matplotlib": "3.11.2"
+    },
+    "scientific_threads": 1,
+    "thread_environment": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1",
+      "BLIS_NUM_THREADS": "1"
+    },
+    "stages": [
+      {
+        "name": "restore12",
+        "command_argv": [
+          "python3",
+          "examples/materials/bi-spin-hall/restore_matrices.py",
+          "--mesh",
+          "12",
+          "--output-dir",
+          "results/bi/matrices12"
+        ],
+        "working_directory": "repository root",
+        "returncode": 0,
+        "wall_seconds": 0.49451704206876457,
+        "maximum_resident_set_size_bytes": 67006464,
+        "maximum_resident_set_size_MiB": 63.90234375,
+        "timeout_seconds": 900,
+        "timed_out": false
+      },
+      {
+        "name": "hall12",
+        "command_argv": [
+          "python3",
+          "tools/vaspberry_kubo.py",
+          "spin-hall",
+          "--matrices",
+          "results/bi/matrices12/physical-matrices.npz",
+          "--metadata",
+          "results/bi/matrices12/physical-matrices.json",
+          "--mesh",
+          "12",
+          "12",
+          "--occupied",
+          "10",
+          "--formats",
+          "csv",
+          "dat",
+          "npz",
+          "--output-dir",
+          "results/bi/hall12"
+        ],
+        "working_directory": "repository root",
+        "returncode": 0,
+        "wall_seconds": 31.633018283871934,
+        "maximum_resident_set_size_bytes": 289935360,
+        "maximum_resident_set_size_MiB": 276.50390625,
+        "timeout_seconds": 900,
+        "timed_out": false
+      },
+      {
+        "name": "bands",
+        "command_argv": [
+          "python3",
+          "tools/vaspberry_kubo.py",
+          "wannier-bands",
+          "--operators",
+          "examples/materials/bi-spin-hall/inputs/wannier-operators",
+          "--vertices",
+          "0",
+          "0",
+          "0",
+          ".5",
+          "0",
+          "0",
+          ".6666666666666666",
+          ".3333333333333333",
+          "0",
+          "0",
+          "0",
+          "0",
+          "--labels",
+          "Gamma",
+          "M",
+          "K",
+          "Gamma",
+          "--points-per-segment",
+          "101",
+          "--formats",
+          "csv",
+          "npz",
+          "--output-dir",
+          "results/bi/bands"
+        ],
+        "working_directory": "repository root",
+        "returncode": 0,
+        "wall_seconds": 1.8606698149815202,
+        "maximum_resident_set_size_bytes": 90976256,
+        "maximum_resident_set_size_MiB": 86.76171875,
+        "timeout_seconds": 900,
+        "timed_out": false
+      },
+      {
+        "name": "edge20",
+        "command_argv": [
+          "python3",
+          "tools/vaspberry_kubo.py",
+          "wannier-edge",
+          "--operators",
+          "examples/materials/bi-spin-hall/inputs/wannier-operators",
+          "--width",
+          "20",
+          "--edge-cells",
+          "2",
+          "--periodic-axis",
+          "0",
+          "--open-axis",
+          "1",
+          "--kpoints",
+          "201",
+          "--formats",
+          "csv",
+          "dat",
+          "npz",
+          "--output-dir",
+          "results/bi/edge20"
+        ],
+        "working_directory": "repository root",
+        "returncode": 0,
+        "wall_seconds": 21.288206955883652,
+        "maximum_resident_set_size_bytes": 280272896,
+        "maximum_resident_set_size_MiB": 267.2890625,
+        "timeout_seconds": 900,
+        "timed_out": false
+      }
+    ],
+    "edge_command_scope": "The README bulk-band and spin-Hall commands were used; the edge width was 20 cells to compare with the supplied 20-cell reference.",
+    "resource_scope": "Measured wall times and per-command macOS maximum resident set sizes; CPU load and machine affect timings."
+  },
+  "input_integrity": {
+    "restored_matrices": {
+      "npz_sha256": "d5e18ee6fc8bc6d6ccd2d22dc69dbc63563223597266661261d48780295eb85a",
+      "metadata_sha256": "3a34419ebdf197637d266176207440f6349b319d656def1bf2976169f753698c",
+      "manifest_matched": true
+    },
+    "wannier_operator_cache_sha256": {
+      "operators.npz": "b69e227641d15dc6e184553ee839d42486aa96fe2e19c338eed7abbb0574b820",
+      "operators.json": "cdd464709f3135a99b7e01244e17c59e81c1913bed79fdf682d0ab3fa23b9d83"
+    }
+  },
+  "comparisons": {
+    "hall12": {
+      "output_directory": "results/bi/hall12",
+      "reference_directory": "examples/materials/bi-spin-hall/reference/hall-12x12-b48",
+      "npz": {
+        "filename": "spin_hall.npz",
+        "byte_identical": true,
+        "output_sha256": "70e457998f0b70dbef7693f0ba219c567f9b0ed5b8a415c9e3a4fafe028c8fa3",
+        "reference_sha256": "70e457998f0b70dbef7693f0ba219c567f9b0ed5b8a415c9e3a4fafe028c8fa3"
+      },
+      "numeric_arrays": {
+        "kpoints_fractional": {
+          "shape": [
+            144,
+            3
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "weights": {
+          "shape": [
+            144
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "lattice_A": {
+          "shape": [
+            3,
+            3
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "omega_spin_A2": {
+          "shape": [
+            144,
+            3,
+            3,
+            3
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-09,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "omega_charge_A2": {
+          "shape": [
+            144,
+            3,
+            3
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-09,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "sigma_hbar_over_e_e2_over_h": {
+          "shape": [
+            3,
+            3,
+            3
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "sigma_hbar_over_e_S": {
+          "shape": [
+            3,
+            3,
+            3
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "charge_sigma_e2_over_h": {
+          "shape": [
+            3,
+            3
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "mu_eV": {
+          "shape": [],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        }
+      },
+      "readable_tables": {
+        "spin_curvature.csv": {
+          "reference_file": "examples/materials/bi-spin-hall/reference/hall-12x12-b48/spin_curvature.csv",
+          "rows": 3889,
+          "numeric_entries": 23328,
+          "max_abs_difference": 0.0,
+          "uncompressed_byte_identical": true,
+          "actual_sha256": "a57bd50bcb0c2d09fe7948f3bd94216fc9ee8a77c166c1e2e0e775e9afb3f877",
+          "reference_file_sha256": "a57bd50bcb0c2d09fe7948f3bd94216fc9ee8a77c166c1e2e0e775e9afb3f877"
+        },
+        "spin_curvature.dat": {
+          "reference_file": "examples/materials/bi-spin-hall/reference/hall-12x12-b48/spin_curvature.dat",
+          "rows": 3889,
+          "numeric_entries": 23328,
+          "max_abs_difference": 0.0,
+          "uncompressed_byte_identical": true,
+          "actual_sha256": "eaa157d571e4cd9b2fe11ffbca2b661631c69d897bbb997a12ebbb80f9286138",
+          "reference_file_sha256": "eaa157d571e4cd9b2fe11ffbca2b661631c69d897bbb997a12ebbb80f9286138"
+        },
+        "spin_hall.csv": {
+          "reference_file": "examples/materials/bi-spin-hall/reference/hall-12x12-b48/spin_hall.csv",
+          "rows": 28,
+          "numeric_entries": 54,
+          "max_abs_difference": 0.0,
+          "uncompressed_byte_identical": true,
+          "actual_sha256": "d4805e397c748efbfe573b8021489d00fdfc58f2f79d3b2f4957ae64401d7df6",
+          "reference_file_sha256": "d4805e397c748efbfe573b8021489d00fdfc58f2f79d3b2f4957ae64401d7df6"
+        },
+        "spin_hall.dat": {
+          "reference_file": "examples/materials/bi-spin-hall/reference/hall-12x12-b48/spin_hall.dat",
+          "rows": 28,
+          "numeric_entries": 54,
+          "max_abs_difference": 0.0,
+          "uncompressed_byte_identical": true,
+          "actual_sha256": "a180bb09ec2b3a1944857a0e1ac9c9356f42241cef41a142b460e52801baa111",
+          "reference_file_sha256": "a180bb09ec2b3a1944857a0e1ac9c9356f42241cef41a142b460e52801baa111"
+        }
+      },
+      "output_sha256_validated": {
+        "spin_curvature.csv": "a57bd50bcb0c2d09fe7948f3bd94216fc9ee8a77c166c1e2e0e775e9afb3f877",
+        "spin_curvature.dat": "eaa157d571e4cd9b2fe11ffbca2b661631c69d897bbb997a12ebbb80f9286138",
+        "spin_hall.csv": "d4805e397c748efbfe573b8021489d00fdfc58f2f79d3b2f4957ae64401d7df6",
+        "spin_hall.dat": "a180bb09ec2b3a1944857a0e1ac9c9356f42241cef41a142b460e52801baa111",
+        "spin_hall.npz": "70e457998f0b70dbef7693f0ba219c567f9b0ed5b8a415c9e3a4fafe028c8fa3"
+      },
+      "scientific_metadata_equal": true,
+      "metadata_difference_scope": "Only elapsed_seconds differs from the reference."
+    },
+    "bands": {
+      "output_directory": "results/bi/bands",
+      "reference_directory": "examples/materials/bi-spin-hall/reference/bands",
+      "npz": {
+        "filename": "bands.npz",
+        "byte_identical": true,
+        "output_sha256": "b19dddd25acb7c5f62ed53919eab6441015f388aacf00f5ec5bee4e91c8ea4df",
+        "reference_sha256": "b19dddd25acb7c5f62ed53919eab6441015f388aacf00f5ec5bee4e91c8ea4df"
+      },
+      "numeric_arrays": {
+        "kpoints_fractional": {
+          "shape": [
+            301,
+            3
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "distance_inv_A": {
+          "shape": [
+            301
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "energies_eV": {
+          "shape": [
+            301,
+            16
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "lattice_A": {
+          "shape": [
+            3,
+            3
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "vertices_fractional": {
+          "shape": [
+            4,
+            3
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "tick_distance_inv_A": {
+          "shape": [
+            4
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        }
+      },
+      "readable_tables": {
+        "bands.csv": {
+          "reference_file": "examples/materials/bi-spin-hall/reference/bands/bands.csv",
+          "rows": 4817,
+          "numeric_entries": 33712,
+          "max_abs_difference": 0.0,
+          "uncompressed_byte_identical": true,
+          "actual_sha256": "54852a542a9d49db873a0197bdf502578f8e7579ee6fd7c388f0bc8ba483d1fd",
+          "reference_file_sha256": "54852a542a9d49db873a0197bdf502578f8e7579ee6fd7c388f0bc8ba483d1fd"
+        }
+      },
+      "output_sha256_validated": {
+        "bands.csv": "54852a542a9d49db873a0197bdf502578f8e7579ee6fd7c388f0bc8ba483d1fd",
+        "bands.npz": "b19dddd25acb7c5f62ed53919eab6441015f388aacf00f5ec5bee4e91c8ea4df"
+      },
+      "scientific_metadata_equal": true,
+      "metadata_difference_scope": "Only elapsed_seconds differs from the reference."
+    },
+    "edge20": {
+      "output_directory": "results/bi/edge20",
+      "reference_directory": "examples/materials/bi-spin-hall/reference/edge-w20",
+      "npz": {
+        "filename": "edge.npz",
+        "byte_identical": true,
+        "output_sha256": "931c348cfceab8ac74ff6869ea8ba5b8af1671f7d8b12d48b1a9feae7edb8094",
+        "reference_sha256": "931c348cfceab8ac74ff6869ea8ba5b8af1671f7d8b12d48b1a9feae7edb8094"
+      },
+      "numeric_arrays": {
+        "energies_eV": {
+          "shape": [
+            201,
+            320
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "left_edge_weight": {
+          "shape": [
+            201,
+            320
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-07,
+          "rtol": 1e-12,
+          "passed": true,
+          "degenerate_group_max_abs_difference": 0.0,
+          "group_count": 32294,
+          "energy_group_tolerance_eV": 1e-06
+        },
+        "right_edge_weight": {
+          "shape": [
+            201,
+            320
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-07,
+          "rtol": 1e-12,
+          "passed": true,
+          "degenerate_group_max_abs_difference": 0.0,
+          "group_count": 32294,
+          "energy_group_tolerance_eV": 1e-06
+        },
+        "q_parallel": {
+          "shape": [
+            201
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        },
+        "lattice_A": {
+          "shape": [
+            3,
+            3
+          ],
+          "max_abs_difference": 0.0,
+          "exact_equal": true,
+          "atol": 1e-10,
+          "rtol": 1e-12,
+          "passed": true
+        }
+      },
+      "readable_tables": {
+        "edge.csv": {
+          "reference_file": "examples/materials/bi-spin-hall/reference/edge-w20/edge.csv.gz",
+          "rows": 64321,
+          "numeric_entries": 385920,
+          "max_abs_difference": 0.0,
+          "uncompressed_byte_identical": true,
+          "actual_sha256": "b4e57adbaa8de78f42fa31e4a233af6c661876c7c1887c1f6dbe37f8f15308c6",
+          "reference_file_sha256": "5fa133c0291223f40695630889a8e6df867e1f7896f9b5af2016a4455c7342a1"
+        },
+        "edge.dat": {
+          "reference_file": "examples/materials/bi-spin-hall/reference/edge-w20/edge.dat.gz",
+          "rows": 64321,
+          "numeric_entries": 385920,
+          "max_abs_difference": 0.0,
+          "uncompressed_byte_identical": true,
+          "actual_sha256": "611a7fe501e87e2cf0428897703dd8289bb79097ece96fb9743da3747935915e",
+          "reference_file_sha256": "a7b27d3972a2a3b73e20db14d0282c0ace69c75d074c83b2936bc2c55bb5a453"
+        }
+      },
+      "output_sha256_validated": {
+        "edge.csv": "b4e57adbaa8de78f42fa31e4a233af6c661876c7c1887c1f6dbe37f8f15308c6",
+        "edge.dat": "611a7fe501e87e2cf0428897703dd8289bb79097ece96fb9743da3747935915e",
+        "edge.npz": "931c348cfceab8ac74ff6869ea8ba5b8af1671f7d8b12d48b1a9feae7edb8094"
+      },
+      "scientific_metadata_equal": true,
+      "metadata_difference_scope": "Only elapsed_seconds differs from the reference."
+    }
+  },
+  "result_summary": {
+    "numeric_array_count": 20,
+    "maximum_absolute_numeric_array_difference": 0.0,
+    "all_numeric_arrays_exactly_equal": true,
+    "npz_file_count": 3,
+    "all_npz_files_byte_identical": true,
+    "readable_table_count": 7,
+    "all_uncompressed_csv_dat_byte_identical": true,
+    "degenerate_group_edge_weight_maximum_absolute_difference": 0,
+    "partial_outputs_present": false
+  },
+  "scientific_results": {
+    "spin_hall": {
+      "mesh": [
+        12,
+        12
+      ],
+      "point_count": 144,
+      "source_bands": 48,
+      "retained_bands": 48,
+      "occupied_bands": 10,
+      "temperature_K": 0.0,
+      "sigma_zxy": 0.690721235739549,
+      "spin_sheet_unit": "(hbar/e)*(e^2/h)",
+      "charge_sigma_xy": 1.815101504889868e-07,
+      "charge_sheet_unit": "e^2/h",
+      "chemical_potential_eV": -1.128660411491021,
+      "sampled_indirect_gap_eV": 0.4972714063015772,
+      "sampled_minimum_direct_gap_eV": 0.535028374770217,
+      "spin_current_method": "finite_band_projected_product",
+      "operator_scope": "PAW-augmented spin and full velocity matrices from the same actual VASP eigenstates."
+    },
+    "wannier_bands": {
+      "point_count": 301,
+      "orbital_count": 16,
+      "path_labels": [
+        "Gamma",
+        "M",
+        "K",
+        "Gamma"
+      ]
+    },
+    "ideal_edge": {
+      "width_cells": 20,
+      "edge_cells": 2,
+      "periodic_axis": 0,
+      "open_axis": 1,
+      "point_count": 201,
+      "strip_band_count": 320,
+      "interpretation": "Ideal cut of the supplied finite Wannier model; no edge reconstruction, self-consistency or additional boundary potential.",
+      "degeneracy_scope": "Individual eigenvector edge weights may rotate within a degeneracy; sum over the degenerate group or use a spectral function."
+    },
+    "scope": "Reproduces the published finite-grid example and supplied finite Wannier model. This does not establish k-grid convergence, all-space spin-current closure, a quantized conventional spin Hall conductivity, or realistic self-consistent edge properties."
+  },
+  "immutability": {
+    "archived_source_reference_files_unchanged": 217,
+    "original_detailed_audit_unchanged": true,
+    "public_repository_clean_after": true,
+    "public_repository_commit_after": "c8b0b6b6c8ab3942967b9c75cc267aa8e8fb58db"
+  }
+}

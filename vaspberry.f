@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.2.0 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.3.0 (f77) for VASP
 ! Written by Hyun-Jung Kim
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -50,7 +50,9 @@
 !               and GNU/OpenMPI portability checks
 !               : 2026. Sep. 04.
 
-! last update and bug fixes : 2026. Sep. 04.
+! version 1.3.0 standard Kubo normalization and optional band CSV
+!               : 2026. Sep. 19.
+! last update and bug fixes : 2026. Sep. 19.
 
 !#define MPI_USE
 !#undef  MPI_USE        
@@ -78,6 +80,7 @@
       real*8,    allocatable :: spectrum(:,:),xspectrum(:,:)
       real*8,    allocatable :: berrycurv_kubo(:),xberrycurv_kubo(:)
       real*8,    allocatable :: berrycurv_kubo_tot(:)
+      real*8,    allocatable :: kubo_bundle_gap(:)
       real*8,    allocatable :: e_range(:) 
       real*16,   allocatable :: ener(:)
       integer,   allocatable :: ig(:,:),nplist(:)
@@ -98,8 +101,10 @@
       complex*16 csum1,csum2
       complex*16  detS(4),detA,detLOOP
       integer k, n, nkx, nky,nini,nmax,ns,ne,icd,ivel
+      integer ikubo_bundle
       character*256 filename,foname,fonameo,fbz,ver_tag,vdirec
       character*256 klist_fname,sw_fname, atlist_fname, proj_fname
+      character*256 kubo_csv,kubo_pairs
       character*20,external :: int2str
       character*20 dummy
       data c/0.262465831d0/ ! constant c = 2m/hbar**2 [1/eV Ang^2]
@@ -130,8 +135,8 @@
       mpi_comm_earth = 0
 #endif
 
-      ver_tag="# VASPBERRY (Ver 1.2.0), by Hyun-Jung Kim."//
-     &        " 2026. Sep. 04."
+      ver_tag="# VASPBERRY (Ver 1.3.0), by Hyun-Jung Kim."//
+     &        " 2026. Sep. 19."
       pi=4.*atan(1.)
       berrymax=0d0
       berrymin=0d0
@@ -147,7 +152,7 @@
      &   ivel,ikubo,iz,ihf,nini,nmax,nn,kperiod,it,iskp,ine,ver_tag,
      &   iwf,ikwf,ng,rs,imag,init_e,fina_e,nediv,sigma,
      &   klist_fname,sw_fname,atlist_fname,flag_atom_project,
-     &   theta,phi)
+     &   theta,phi,kubo_csv,ikubo_bundle,kubo_pairs)
       if(iz .ne. 0 .and. iz .ne. 1)then
        write(0,*) '*** error - Z2 option must be 0 or 1'
        call vaspberry_fail
@@ -241,6 +246,10 @@
        endif
       endif
       if(ine .ne. 0) ne=ine ! manually specified ne ; useful for the semimetal
+      if(len_trim(kubo_pairs).gt.0)then
+       nini=1
+       nmax=nband
+      endif
       ! check whether multi or single band calculation is performed
       if((nini.eq.nmax))then
        nini=nmax
@@ -265,6 +274,15 @@
         endif
       endif ! check multi or single ?
       ns=nmax-nini+1
+      if(ikubo_bundle.eq.1)then
+       if(nini.lt.1.or.nmax.lt.nini.or.nmax.gt.nband)then
+        write(0,*) '*** error - Kubo bundle range outside 1:NBANDS'
+        call vaspberry_fail
+       endif
+! Validate every spin/k before any bundle output is created.
+       call check_kubo_bundle_gaps(ispin,nk,nband,nini,nmax)
+       allocate(kubo_bundle_gap(nk))
+      endif
       if(iz .eq. 1)then
        if(ne .lt. 2 .or. ne .ge. nband)then
         write(0,*) '*** error - Z2 n-field needs 2 <= NE < NBANDS'
@@ -1000,6 +1018,26 @@
           time_2=MPI_WTIME()
          endif
 #endif
+         if(len_trim(kubo_pairs).gt.0)then
+          call write_kubo_pairs_csv(kubo_pairs,isp,ispin,ispinor,
+     &         nk,nband,a1,a2,a3,b1,b2,b3,wklist,ecut,
+     &         nplist,nbmax,npmax,nprocs,myrank,mpi_comm_earth)
+         elseif(ikubo_bundle.eq.1)then
+          call kubo_bundle_curvature(berrycurv_kubo_tot,
+     &             kubo_bundle_gap,b1,b2,b3,wklist,isp,
+     &             nband,ecut,ispinor,nplist,nbmax,npmax,
+     &             nk,nini,nmax,nprocs,myrank,mpi_comm_earth)
+          if(myrank.eq.0)then
+           call write_kubo_bundle_csv(kubo_csv,isp,nk,nband,
+     &          nini,nmax,wklist,berrycurv_kubo_tot,kubo_bundle_gap)
+           if(ikubo.eq.1)then
+            chernnumber_total=sum(berrycurv_kubo_tot)*dSkxky/(2.*pi)
+            write(6,'(A,ES25.17E3)')
+     &       '# Kubo bundle curvature integral / 2pi = ',
+     &       chernnumber_total
+           endif
+          endif
+         else
          berrycurv_kubo_tot=0d0
          chernnumber_total=0d0
          do ie=nini, nmax
@@ -1021,6 +1059,10 @@
      &             nprocs,myrank,mpi_comm_earth)      
 
            if(myrank .eq. 0) then
+            if(len_trim(kubo_csv).gt.0)then
+             call write_kubo_band_csv(kubo_csv,isp,ie,nini,
+     &                    nk,nband,wklist,berrycurv_kubo)
+            endif
             chernnumber=0d0
             do ik=1,nk
              do j=1,3
@@ -1029,10 +1071,12 @@
      &                      wklist(3,ik)*b3(j)
               recilat(j,ik)=wklist(j,ik)
              enddo
+             if(ikubo.eq.1)then
              chernnumber      =chernnumber+
      &                                berrycurv_kubo(ik)*dSkxky/(2.*pi)
              chernnumber_total=chernnumber_total+
      &                                berrycurv_kubo(ik)*dSkxky/(2.*pi)
+             endif
              berrycurv_kubo_tot(ik) = berrycurv_kubo_tot(ik) +
      &                                berrycurv_kubo(ik)
             enddo
@@ -1070,6 +1114,7 @@
      &                    berrymax,berrymin,
      &                    iz2,icd,iz,ivel,ikubo,nprocs)
          endif
+         endif ! legacy band or bundle mode
 #ifdef MPI_USE
          if(myrank == 0)then
           time_3=MPI_WTIME()
@@ -1085,6 +1130,11 @@
       if(myrank==0)then
 #endif
       write(6,'(A)')"# DONE! "
+      if(len_trim(kubo_pairs).gt.0)then
+       write(6,'(A,A)')'# Pair numerator result: ',trim(kubo_pairs)
+      elseif(ikubo_bundle.eq.1)then
+       write(6,'(A,A)')'# Bundle result: ',trim(kubo_csv)
+      else
       do isp=1, ispin
        if(isp .eq. 1 .and. ispinor .eq. 1 .and. ispin .eq. 2) then
         write(6,'(A,A,A)')"#  Results are summarized in ",TRIM(foname),
@@ -1100,6 +1150,7 @@
      &                     TRIM(foname),".dat"
        endif
       enddo
+      endif ! bundle or legacy output summary
 #ifdef MPI_USE
       endif
 #endif
@@ -1162,7 +1213,9 @@
      &                        init_e,fina_e,nediv,nk,sigma,e_range,
      &                        nprocs,myrank,mpi_comm_earth)
       implicit real*8 (a-h,o-z)
+#ifdef MPI_USE
       include 'mpif.h'
+#endif
       real*8          init_e, fina_e
       integer*4       nk, nediv
       real*8          rvari(nk), rvari_de(nk)
@@ -1556,7 +1609,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.2.0'
+      write(94,'(A)')'# vaspberry_version=1.3.0'
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
@@ -1756,7 +1809,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.2.0'
+      write(94,'(A)')'# vaspberry_version=1.3.0'
       if(fieldok)then
        write(94,'(A)')'# result_status=PASS'
       else
@@ -1966,14 +2019,14 @@
        if(nini .eq. nmax) then
         if(iz == 1)then
          write(32,'(A,I4)')"# Fukui-Hatsugai Z2 BAND : ",nini
-        elseif(iz+ivel+icd .eq. 0)then
+        elseif(iz+ivel+icd .eq. 0.and.ikubo.ne.2)then
           write(32,'(A,I4)')"# Chern Number for the BAND : ",nmax
         endif
        else
         if(iz == 1)then
          write(32,'(A,I4,A,I4)')"# Fukui-Hatsugai Z2 BANDS: ",nini,
      &                         " - ",nmax
-        elseif(iz+ivel+icd .eq. 0)then
+        elseif(iz+ivel+icd .eq. 0.and.ikubo.ne.2)then
           write(32,'(A,I4,A,I4)')"# Chern Number for the BANDS : ",nini,
      &                         "    -  ",nmax
         endif
@@ -2014,26 +2067,22 @@
         write(32,'(A)')"# (cart) kx        ky        kz(A^-1)
      &   selectivity(n(k)),        (recip)kx        ky        kz"
 
-       elseif(ikubo .ge. 1)then !Berry curvature using Kubo formula
-        write(32,'(A)')"# Chern Number is sum of 
-     &Berry Curvature over 1BZ"
-        write(32,'(A,F16.4)')"# Chern Number =   ",rvari
-        write(32,'(A,I4)')"# Berry curvature using kubo for BAND 
-     & index n ", nini
-        write(32,'(A)')"# Omega_n=      |P(k,s,nm,+)|^2-|P(k,s,nm,-)|^2"
-        write(32,'(A)')"#         sum_n -------------------------------"
-        write(32,'(A)')"#        (n/=m) |energy(k,s,n)-energy(k,s,m)|^2"
-        write(32,'(A)')"#  The TRANSITION MATRIX ELEMENT P ="
-        write(32,'(A)')"#   P(k,s,nm,+ or -) = 1/sqrt(2)[p_x(k,nm,s) +
-     &(or -) i*p_y(k,nm,s)]"
-        write(32,'(A)')"#  THE INTERBAND TRANSITION MATRIX p_x,y ="
-        write(32,'(A)')"#   p_x,y(k,nm,s)=<psi(k,n,s)|-i*hbar*1/dx(y)|
-     &psi(k,m,s)>"
-!       write(32,'(A,4F16.6)')"# MAXVAL of SELECTIVITY at kx,ky,kz 
-!    &(in reci)= ",(rvari3(i),i=1,4)
-!       write(32,'(A,4F16.6)')"# MINVAL of SELECTIVITY at kx,ky,kz 
-!    &(in reci)= ",(rvari4(i),i=1,4)
-        write(32,'(A)')"# (cart) kx        ky        kz(A^-1)
+        elseif(ikubo .ge. 1)then !standard bare-momentum Kubo
+         call write_kubo_metadata(32)
+         if(ikubo.eq.1)then
+          write(32,'(A)')'# integration=UNIFORM_FULL_2D_BZ'
+          write(32,'(A)')'# Chern integral=sum(Omega*dk_area)/(2*pi)'
+          write(32,'(A,ES24.16E3)')'# Chern Number = ',rvari
+         else
+          write(32,'(A)')'# integration=NONE_K_PATH'
+          write(32,'(A)')'# Chern_number=NOT_APPLICABLE_K_PATH'
+         endif
+         write(32,'(A,I0,A,I0)')'# selected_bands=',nini,':',nmax
+         write(32,'(A,I0)')'# intermediate_bands=1:',nband
+         write(32,'(A)')'# Omega_n=-2*Im[Dx(n,m)*Dy(m,n)]/gap^2'
+         write(32,'(A)')'# summed over m/=n; D=(hbar/m_e)*p'
+         write(32,'(A)')'# Cartesian xy component; units angstrom^2'
+         write(32,'(A)')"# (cart) kx        ky        kz(A^-1)
      &   BERRYKUBO(A^2),          (recip)kx        ky        kz"
 
        else !BERRYCURVATURE
@@ -2464,7 +2513,7 @@
           do i1=1,nx
            ii=ii+1
            do iispinor=1,ispinor
-            wkgr(:)=(wk(1)+ig(1,1:ncnt))*((i1-1)/dble(nx)+rs(1)) +
+            wkgr(1:ncnt)=(wk(1)+ig(1,1:ncnt))*((i1-1)/dble(nx)+rs(1)) +
      &              (wk(2)+ig(2,1:ncnt))*((i2-1)/dble(ny)+rs(2)) +
      &              (wk(3)+ig(3,1:ncnt))*((i3-1)/dble(nz)+rs(3))
            
@@ -2550,6 +2599,7 @@
         n_atom=0
         idirect=0
 
+        ifinish=0
         do while (ifinish .ne. 1)
          read(ID+10,*) n_atom(1:itype)
          itot = sum(n_atom)
@@ -3205,7 +3255,9 @@
      &           nband,ecut,ispinor,nplist,nbmax,npmax,nk,nini,nmax,
      &           nprocs,myrank,mpi_comm_earth,theta,phi)
       implicit real*8 (a-h,o-z)
+#ifdef MPI_USE
       include 'mpif.h'
+#endif
       dimension nbmax(3),nplist(nk),wk(3),ener(nband)
       real*8    selectivity(nk),b1(3),b2(3),b3(3),wklist(3,nk)
       real*8    selectivity_w(nk)
@@ -3353,7 +3405,9 @@
      &           nband,ecut,ispinor,nplist,nbmax,npmax,nk,ival,icon,
      &           nprocs,myrank,mpi_comm_earth,theta,phi)
       implicit real*8 (a-h,o-z)
+#ifdef MPI_USE
       include 'mpif.h'
+#endif
       dimension nbmax(3),nplist(nk),wk(3),ener(nband)
       real*8    selectivity(nk),b1(3),b2(3),b3(3),wklist(3,nk)
       real*8    selectivity_w(nk)
@@ -3496,7 +3550,9 @@
      &           nband,ecut,ispinor,nplist,nbmax,npmax,nk,ival,icon,
      &           nprocs,myrank,mpi_comm_earth,theta,phi)
       implicit real*8 (a-h,o-z)
+#ifdef MPI_USE
       include 'mpif.h'
+#endif
       dimension nbmax(3),nplist(nk),wk(3),ener(nband)
       real*8    selectivity(nk),b1(3),b2(3),b3(3),wklist(3,nk)
       real*8    selectivity_w(nk)
@@ -3639,7 +3695,9 @@
      &           nband,ecut,ispinor,nplist,nbmax,npmax,nk,ival,icon,
      &           nprocs,myrank,mpi_comm_earth,theta,phi)
       implicit real*8 (a-h,o-z)
+#ifdef MPI_USE
       include 'mpif.h'
+#endif
       dimension nbmax(3),nplist(nk),wk(3),ener(nband)
       real*8    selectivity(nk),b1(3),b2(3),b3(3),wklist(3,nk)
       real*8    selectivity_w(nk)
@@ -3787,12 +3845,14 @@
      &           nk,nn,
      &           nprocs,myrank,mpi_comm_earth)
       implicit real*8 (a-h,o-z)
+#ifdef MPI_USE
       include 'mpif.h'
+#endif
       dimension nbmax(3),nplist(nk),wk(3),ener(nband)
       real*8    berrycurv_kubo(nk),b1(3),b2(3),b3(3),wklist(3,nk)
       real*8    berrycurv_kubo_(nk)
       real*8    metertoang 
-      complex*16 ctrans_mtrx_left,ctrans_mtrx_right
+      real*8, external :: kubo_interband_term
       complex*16 cinter_mtrx_x,cinter_mtrx_y
       complex*16 coeffn(npmax),coeffm(npmax)
       complex*8  coeff(npmax)
@@ -3874,15 +3934,11 @@
      &            conjg(coeffn(iplane))*xkgy*coeffm(iplane) ! P_y^{nm}=<u_{n,k}|p_y|u_{m,k}>
           endif
        enddo ! iplane loop end
-       !stop
-       ctrans_mtrx_left  = cinter_mtrx_x + (0.,1.)*cinter_mtrx_y
-       ctrans_mtrx_right = cinter_mtrx_x - (0.,1.)*cinter_mtrx_y
-       !write(6,*) ctrans_mtrx_left
-       !write(6,*) ener(nn)-ener(mm),1./(ener(nn)-ener(mm))**2
-       berrycurv_kubo(ik) = berrycurv_kubo(ik)  
-     &  -((abs(ctrans_mtrx_left))**2 - (abs(ctrans_mtrx_right))**2)
-     & /(ener(nn)-ener(mm))**2
-     & *berrycurv_unit
+! Standard A=i<u|grad_k u> curvature; reverse Py is its conjugate.
+! Pre-1.3 used unnormalized circular components and was twice this.
+       berrycurv_kubo(ik)=berrycurv_kubo(ik)+berrycurv_unit*
+     &    kubo_interband_term(cinter_mtrx_x,cinter_mtrx_y,
+     &                        ener(nn)-ener(mm))
         endif ! if mm is not equal to nn
        enddo ! band index mm loop end 
        write(6,'(A,I4,4F16.6)')"# IK, K(reci), 
@@ -3899,6 +3955,536 @@
 
       return
       end subroutine kubo_berry_curvature 
+
+
+! Standard nondegenerate interband contribution. Caller excludes zero gap.
+      real*8 function kubo_interband_term(px_nm,py_nm,gap)
+      implicit none
+      complex*16 px_nm,py_nm
+      real*8 gap
+      kubo_interband_term=-2d0*dimag(px_nm*conjg(py_nm))/gap**2
+      end function kubo_interband_term
+
+      subroutine write_kubo_metadata(iunit)
+      implicit none
+      integer iunit
+      write(iunit,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_V2'
+      write(iunit,'(A)')'# vaspberry_version=1.3.0'
+      write(iunit,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
+      write(iunit,'(A)')'# operator='//
+     & 'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
+      write(iunit,'(A)')'# berry_connection=A_i=i<u|d/dk_i u>'
+      write(iunit,'(A)')'# occupation_weighting=NONE'
+      write(iunit,'(A)')'# degeneracy_policy='//
+     & 'SKIP_ABS_GAP_LE_MACHINE_EPSILON_eV'
+      write(iunit,'(A)')'# migration='//
+     & 'PRE_1.3_KUBO_CURVATURE_AND_CHERN_DIVIDE_BY_2'
+      end subroutine write_kubo_metadata
+
+      subroutine write_kubo_band_csv(path,isp,nn,nfirst,
+     &                              nk,nband,wklist,omega)
+      implicit none
+      character*(*) path
+      integer isp,nn,nfirst,nk,nband,ik,m,ios
+      real*8 wklist(3,nk),omega(nk),ener(nband),gap
+      if(isp.eq.1.and.nn.eq.nfirst)then
+       open(96,file=trim(path),status='new',action='write',
+     &      iostat=ios)
+      else
+       open(96,file=trim(path),status='old',position='append',
+     &      action='write',iostat=ios)
+      endif
+      if(ios.ne.0)then
+       write(0,*) '*** error - cannot open new Kubo CSV: ',trim(path)
+       call vaspberry_fail
+      endif
+      if(isp.eq.1.and.nn.eq.nfirst)then
+       call write_kubo_metadata(96)
+       write(96,'(A)')'# index_base=1'
+       write(96,'(A,I0)')'# intermediate_bands=1:',nband
+       write(96,'(A)')'spin,k_index,band,kx_frac,ky_frac,kz_frac,'//
+     &             'energy_eV,omega_z_A2,min_gap_eV'
+      endif
+      do ik=1,nk
+       call ener_read(ener,isp,ik,nk,nband)
+       gap=huge(1d0)
+       do m=1,nband
+        if(m.ne.nn)gap=min(gap,abs(ener(nn)-ener(m)))
+       enddo
+       write(96,'(I0,2(",",I0),6(",",ES25.17E3))',iostat=ios)
+     &   isp,ik,nn,wklist(:,ik),ener(nn),omega(ik),gap
+       if(ios.ne.0)then
+        write(0,*) '*** error - cannot write Kubo CSV'
+        call vaspberry_fail
+       endif
+      enddo
+      close(96,iostat=ios)
+      if(ios.ne.0)then
+       write(0,*) '*** error - cannot close Kubo CSV'
+       call vaspberry_fail
+      endif
+      end subroutine write_kubo_band_csv
+
+! Trace curvature of a spectrally isolated selected subspace. Internal
+! selected-band pairs cancel analytically and are never divided by a gap.
+! The same bare-momentum approximation/normalization as the band route is
+! used; this does not add PAW or nonlocal velocity matrix elements.
+      subroutine kubo_bundle_gap(ener,nband,nfirst,nlast,gap)
+      use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+      implicit none
+      integer nband,nfirst,nlast,nn,mm
+      real*8 ener(nband),gap
+      gap=huge(1d0)
+      do nn=nfirst,nlast
+       do mm=1,nband
+        if(mm.ge.nfirst.and.mm.le.nlast)cycle
+        if(.not.ieee_is_finite(ener(nn)).or.
+     &     .not.ieee_is_finite(ener(mm)))then
+         gap=-1d0
+         return
+        endif
+        gap=min(gap,abs(ener(nn)-ener(mm)))
+       enddo
+      enddo
+      end subroutine kubo_bundle_gap
+
+      subroutine check_kubo_bundle_gaps(ispin,nk,nband,nfirst,nlast)
+      implicit none
+      integer ispin,nk,nband,nfirst,nlast,isp,ik
+      real*8 ener(nband),gap
+      do isp=1,ispin
+       do ik=1,nk
+        call ener_read(ener,isp,ik,nk,nband)
+        call kubo_bundle_gap(ener,nband,nfirst,nlast,gap)
+        if(gap.le.1d-5)then
+         write(0,*)'*** error - Kubo bundle is not isolated: ',
+     &    'spin,k,min_external_gap_eV = ',isp,ik,gap
+         write(0,*)'*** requires external gaps > 1e-5 eV'
+         call vaspberry_fail
+        endif
+       enddo
+      enddo
+      end subroutine check_kubo_bundle_gaps
+
+      subroutine kubo_bundle_curvature(omega,external_gap,
+     &           b1,b2,b3,wklist,isp,nband,ecut,ispinor,
+     &           nplist,nbmax,npmax,nk,nfirst,nlast,
+     &           nprocs,myrank,mpi_comm_earth)
+      implicit none
+#ifdef MPI_USE
+      include 'mpif.h'
+#endif
+      integer isp,nband,ispinor,npmax,nk,nfirst,nlast
+      integer nprocs,myrank,mpi_comm_earth,mpierr
+      integer nplist(nk),nbmax(3),ig(3,npmax)
+      integer ourjob(nprocs),ourjob_disp(0:nprocs-1)
+      integer ik,nn,mm,np,ncnt,iplane,i,irec
+      real*8 omega(nk),external_gap(nk),omega_reduce(nk)
+      real*8 gap_reduce(nk),wklist(3,nk),wk(3),ener(nband)
+      real*8 b1(3),b2(3),b3(3),ecut,gap,unit
+      real*8 xkgx(npmax),xkgy(npmax),hbar,c,em,metertoang
+      real*8, external :: kubo_interband_term
+      complex*8 coeff(npmax)
+      complex*16 coeffn(npmax),coeffm(npmax),px,py
+! Match the historical unit constants used by kubo_berry_curvature.
+      data hbar/6.582119569e-16/,c/2.99792458E+08/
+      data em/0.510998950E+6/,metertoang/1.E+10/
+      unit=hbar**4/em**2*metertoang**4*c**4
+      call mpi_job_distribution_chain(nk,ourjob,ourjob_disp,nprocs)
+      omega=0d0
+      external_gap=huge(1d0)
+      do ik=sum(ourjob(1:myrank))+1,sum(ourjob(1:myrank+1))
+       call ener_read(ener,isp,ik,nk,nband)
+       call kubo_bundle_gap(ener,nband,nfirst,nlast,gap)
+       external_gap(ik)=gap
+       if(gap.le.1d-5)then
+        write(0,*)'*** error - Kubo bundle is not isolated: ',
+     &   'spin,k,min_external_gap_eV = ',isp,ik,gap
+        write(0,*)'*** requires external gaps > 1e-5 eV'
+        call vaspberry_fail
+       endif
+! Selecting every retained state gives a zero finite-basis trace.
+       if(nfirst.eq.1.and.nlast.eq.nband)cycle
+       wk=wklist(:,ik)
+       np=nplist(ik)
+       call plindx(ig,ncnt,ispinor,wk,b1,b2,b3,nbmax,np,ecut,npmax)
+       do iplane=1,ncnt
+        xkgx(iplane)=(wk(1)+ig(1,iplane))*b1(1)+
+     &              (wk(2)+ig(2,iplane))*b2(1)+
+     &              (wk(3)+ig(3,iplane))*b3(1)
+        xkgy(iplane)=(wk(1)+ig(1,iplane))*b1(2)+
+     &              (wk(2)+ig(2,iplane))*b2(2)+
+     &              (wk(3)+ig(3,iplane))*b3(2)
+       enddo
+       irec=3+(ik-1)*(nband+1)+nk*(nband+1)*(isp-1)
+       do nn=nfirst,nlast
+        read(10,rec=irec+nn)(coeff(i),i=1,np)
+        coeffn(1:np)=coeff(1:np)
+        do mm=1,nband
+         if(mm.ge.nfirst.and.mm.le.nlast)cycle
+         read(10,rec=irec+mm)(coeff(i),i=1,np)
+         coeffm(1:np)=coeff(1:np)
+         px=(0d0,0d0)
+         py=(0d0,0d0)
+         do iplane=1,ncnt
+          px=px+conjg(coeffn(iplane))*xkgx(iplane)*coeffm(iplane)
+          py=py+conjg(coeffn(iplane))*xkgy(iplane)*coeffm(iplane)
+          if(ispinor.eq.2)then
+           px=px+conjg(coeffn(iplane+ncnt))*xkgx(iplane)*
+     &          coeffm(iplane+ncnt)
+           py=py+conjg(coeffn(iplane+ncnt))*xkgy(iplane)*
+     &          coeffm(iplane+ncnt)
+          endif
+         enddo
+         omega(ik)=omega(ik)+unit*kubo_interband_term(px,py,
+     &                                            ener(nn)-ener(mm))
+        enddo
+       enddo
+      enddo
+#ifdef MPI_USE
+      call MPI_ALLREDUCE(omega,omega_reduce,nk,MPI_DOUBLE_PRECISION,
+     &                   MPI_SUM,mpi_comm_earth,mpierr)
+      omega=omega_reduce
+      call MPI_ALLREDUCE(external_gap,gap_reduce,nk,
+     &                   MPI_DOUBLE_PRECISION,MPI_MIN,
+     &                   mpi_comm_earth,mpierr)
+      external_gap=gap_reduce
+#endif
+      end subroutine kubo_bundle_curvature
+
+      subroutine write_kubo_bundle_csv(path,isp,nk,nband,
+     &           nfirst,nlast,wklist,omega,external_gap)
+      implicit none
+      character*(*) path
+      integer isp,nk,nband,nfirst,nlast,ik,ios
+      real*8 wklist(3,nk),omega(nk),external_gap(nk)
+      if(isp.eq.1)then
+       open(96,file=trim(path),status='new',action='write',iostat=ios)
+      else
+       open(96,file=trim(path),status='old',position='append',
+     &      action='write',iostat=ios)
+      endif
+      if(ios.ne.0)then
+       write(0,*)'*** error - cannot open new Kubo bundle CSV: ',
+     &           trim(path)
+       call vaspberry_fail
+      endif
+      if(isp.eq.1)then
+       write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1'
+       write(96,'(A)')'# vaspberry_version=1.3.0'
+       write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
+       write(96,'(A)')'# operator='//
+     &  'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
+       write(96,'(A)')'# berry_connection=A_i=i<u|d/dk_i u>'
+       write(96,'(A)')'# occupation_weighting=NONE'
+       write(96,'(A)')'# result_kind=ISOLATED_BUNDLE_TRACE'
+       write(96,'(A)')'# result_status=PASS'
+       write(96,'(A)')'# curvature=TRACE_OF_SELECTED_BUNDLE'
+       write(96,'(A)')'# internal_transitions=EXCLUDED_ANALYTICALLY'
+       write(96,'(A)')'# degeneracy_policy='//
+     &  'ALLOW_INTERNAL_REJECT_EXTERNAL_GAP_LE_THRESHOLD'
+       write(96,'(A)')'# gap_threshold_eV=1e-5'
+       write(96,'(A)')'# index_base=1'
+       write(96,'(A,I0)')'# band_min=',nfirst
+       write(96,'(A,I0)')'# band_max=',nlast
+       write(96,'(A,I0)')'# band_rank=',nlast-nfirst+1
+       write(96,'(A,I0)')'# source_nbands=',nband
+       write(96,'(A)')'# intermediate_bands='//
+     &  'EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS'
+       if(nfirst.eq.1.and.nlast.eq.nband)then
+        write(96,'(A)')'# no_external_states=true'
+        write(96,'(A)')'# zero_trace_scope=TRUNCATED_WAVECAR_BASIS'
+       else
+        write(96,'(A)')'# no_external_states=false'
+       endif
+       write(96,'(A)')'spin,k_index,kx_frac,ky_frac,kz_frac,'//
+     &              'omega_z_A2,min_external_gap_eV'
+      endif
+      do ik=1,nk
+       if(nfirst.eq.1.and.nlast.eq.nband)then
+        write(96,'(I0,",",I0,4(",",ES25.17E3),A)',iostat=ios)
+     &   isp,ik,wklist(:,ik),omega(ik),',NA'
+       else
+        write(96,'(I0,",",I0,5(",",ES25.17E3))',iostat=ios)
+     &   isp,ik,wklist(:,ik),omega(ik),external_gap(ik)
+       endif
+       if(ios.ne.0)then
+        write(0,*)'*** error - cannot write Kubo bundle CSV'
+        call vaspberry_fail
+       endif
+      enddo
+      close(96,iostat=ios)
+      if(ios.ne.0)then
+       write(0,*)'*** error - cannot close Kubo bundle CSV'
+       call vaspberry_fail
+      endif
+      end subroutine write_kubo_bundle_csv
+
+! Undivided Cartesian Kubo numerators for all unordered source-band pairs.
+! Coefficients are cached per k only below cache_bytes; otherwise pair reads
+! keep storage proportional to npmax. No gap or occupation is used here.
+      subroutine kubo_pair_numerators(values,ener,nband,npairs,
+     &           b1,b2,b3,wk,isp,nk,ik,ecut,ispinor,np,nbmax,npmax,
+     &           cache_bytes)
+      use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+      implicit none
+      integer nband,npairs,isp,nk,ik,ispinor,np,npmax,nbmax(3)
+      integer ig(3,npmax),ncnt,i,n,m,ip,iplane,ios
+      integer*8 cache_bytes,irec
+      real*8 values(3,npairs),ener(nband),b1(3),b2(3),b3(3),wk(3)
+      real*8 ecut,kg(3,npmax),hbar,c,em,metertoang,unit
+      complex*8 coeff(npmax)
+      complex*8, allocatable :: cache(:,:)
+      complex*16 coeffn(npmax),coeffm(npmax),p(3),product
+      logical cached
+! Preserve the unit constants and reciprocal coordinates of existing Kubo.
+      data hbar/6.582119569e-16/,c/2.99792458E+08/
+      data em/0.510998950E+6/,metertoang/1.E+10/
+      unit=hbar**4/em**2*metertoang**4*c**4
+      if(np.lt.1.or.np.gt.npmax.or.
+     &   (ispinor.ne.1.and.ispinor.ne.2))then
+       write(0,*)'*** error - invalid Kubo pair wavefunction layout'
+       call vaspberry_fail
+      endif
+      call ener_read(ener,isp,ik,nk,nband)
+      if(.not.all(ieee_is_finite(ener)))then
+       write(0,*)'*** error - nonfinite Kubo pair energies'
+       call vaspberry_fail
+      endif
+      call plindx(ig,ncnt,ispinor,wk,b1,b2,b3,nbmax,np,ecut,npmax)
+      do iplane=1,ncnt
+       kg(:,iplane)=(wk(1)+ig(1,iplane))*b1+
+     &             (wk(2)+ig(2,iplane))*b2+
+     &             (wk(3)+ig(3,iplane))*b3
+      enddo
+      cached=.false.
+      if(int(npmax,8)*int(nband,8).le.cache_bytes/8_8)then
+       allocate(cache(npmax,nband),stat=ios)
+       cached=ios.eq.0
+      endif
+      irec=3_8+int(ik-1,8)*(nband+1_8)+
+     &     int(nk,8)*(nband+1_8)*int(isp-1,8)
+      if(cached)then
+       do n=1,nband
+        read(10,rec=irec+n,iostat=ios)(cache(i,n),i=1,np)
+        if(ios.ne.0)then
+         write(0,*)'*** error - cannot read Kubo pair coefficients'
+         call vaspberry_fail
+        endif
+       enddo
+       if(.not.all(ieee_is_finite(real(cache(1:np,:)))).or.
+     &    .not.all(ieee_is_finite(aimag(cache(1:np,:)))))then
+        write(0,*)'*** error - nonfinite Kubo pair coefficients'
+        call vaspberry_fail
+       endif
+      endif
+      ip=0
+      do n=1,nband-1
+       if(cached)then
+        coeffn(1:np)=cache(1:np,n)
+       else
+        read(10,rec=irec+n,iostat=ios)(coeff(i),i=1,np)
+        if(ios.ne.0)then
+         write(0,*)'*** error - cannot read Kubo pair coefficients'
+         call vaspberry_fail
+        endif
+        coeffn(1:np)=coeff(1:np)
+       endif
+       do m=n+1,nband
+        if(cached)then
+         coeffm(1:np)=cache(1:np,m)
+        else
+         read(10,rec=irec+m,iostat=ios)(coeff(i),i=1,np)
+         if(ios.ne.0)then
+          write(0,*)'*** error - cannot read Kubo pair coefficients'
+          call vaspberry_fail
+         endif
+         coeffm(1:np)=coeff(1:np)
+        endif
+        p=(0d0,0d0)
+        do iplane=1,ncnt
+         product=conjg(coeffn(iplane))*coeffm(iplane)
+         p=p+kg(:,iplane)*product
+         if(ispinor.eq.2)then
+          product=conjg(coeffn(iplane+ncnt))*coeffm(iplane+ncnt)
+          p=p+kg(:,iplane)*product
+         endif
+        enddo
+        ip=ip+1
+        values(1,ip)=-2d0*dimag(p(2)*conjg(p(3)))*unit
+        values(2,ip)=-2d0*dimag(p(3)*conjg(p(1)))*unit
+        values(3,ip)=-2d0*dimag(p(1)*conjg(p(2)))*unit
+       enddo
+      enddo
+      if(allocated(cache))deallocate(cache)
+      if(ip.ne.npairs.or..not.all(ieee_is_finite(values)))then
+       write(0,*)'*** error - invalid/nonfinite Kubo pair numerators'
+       call vaspberry_fail
+      endif
+      end subroutine kubo_pair_numerators
+
+      subroutine write_kubo_pairs_csv(path,isp,ispin,ispinor,
+     &           nk,nband,a1,a2,a3,b1,b2,b3,wklist,ecut,
+     &           nplist,nbmax,npmax,nprocs,myrank,mpi_comm_earth)
+      use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+      implicit none
+#ifdef MPI_USE
+      include 'mpif.h'
+#endif
+      character*(*) path
+      integer isp,ispin,ispinor,nk,nband,npmax,nprocs,myrank
+      integer mpi_comm_earth,mpierr,npairs,ios,first,ik,r,n,m,ip
+      integer nplist(nk),nbmax(3)
+      integer*8 npairs8,rows8
+      real*8 a1(3),a2(3),a3(3),b1(3),b2(3),b3(3),wklist(3,nk)
+      real*8 ecut,gap
+      real*8, allocatable :: values(:,:),ener(:),gathered(:,:,:)
+      real*8, allocatable :: energies(:,:)
+      if(nband.lt.2.or.nk.lt.1.or.nprocs.lt.1)then
+       write(0,*)'*** error - Kubo pairs need NBANDS >= 2 and k points'
+       call vaspberry_fail
+      endif
+      if(ispin.lt.1.or.ispin.gt.2.or.isp.lt.1.or.isp.gt.ispin)then
+       write(0,*)'*** error - invalid Kubo pair spin channel'
+       call vaspberry_fail
+      endif
+      npairs8=int(nband,8)*int(nband-1,8)/2_8
+      if(npairs8.gt.int(huge(1)/3,8).or.
+     &   npairs8.gt.huge(1_8)/int(nk,8)/int(ispin,8))then
+       write(0,*)'*** error - Kubo pair count exceeds integer limit'
+       call vaspberry_fail
+      endif
+      npairs=int(npairs8)
+      rows8=npairs8*int(nk,8)*int(ispin,8)
+      allocate(values(3,npairs),ener(nband),stat=ios)
+      if(ios.ne.0)then
+       write(0,*)'*** error - cannot allocate Kubo pair buffer'
+       call vaspberry_fail
+      endif
+      if(myrank.eq.0)then
+       allocate(gathered(3,npairs,nprocs),energies(nband,nprocs),
+     &          stat=ios)
+      else
+       allocate(gathered(1,1,1),energies(1,1),stat=ios)
+      endif
+      if(ios.ne.0)then
+       write(0,*)'*** error - cannot allocate Kubo pair gather buffer'
+       call vaspberry_fail
+      endif
+      if(myrank.eq.0)then
+       if(isp.eq.1)then
+        open(96,file=trim(path),status='new',action='write',iostat=ios)
+       else
+        open(96,file=trim(path),status='old',position='append',
+     &       action='write',iostat=ios)
+       endif
+       if(ios.ne.0)then
+        write(0,*)'*** error - cannot open new Kubo pairs CSV: ',
+     &            trim(path)
+        call vaspberry_fail
+       endif
+       if(isp.eq.1)then
+        write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_PAIRS_V1'
+        write(96,'(A)')'# vaspberry_version=1.3.0'
+        write(96,'(A)')'# result_kind=UNORDERED_INTERBAND_NUMERATORS'
+        write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
+        write(96,'(A)')'# operator='//
+     &   'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
+        write(96,'(A)')'# berry_connection=A_i=i<u|d/dk_i u>'
+        write(96,'(A)')'# occupation_weighting=NONE'
+        write(96,'(A)')'# denominator_weighting=NONE'
+        write(96,'(A)')'# pair_order=n_lt_m'
+        write(96,'(A)')'# gap_definition=ABS_EN_MINUS_EM'
+        write(96,'(A)')'# numerator_units=eV^2*Angstrom^2'
+        write(96,'(A)')'# components=yz,zx,xy'
+        write(96,'(A)')'# reciprocal_convention=2pi'
+        write(96,'(A)')'# index_base=1'
+        write(96,'(A,I0)')'# source_nbands=',nband
+        write(96,'(A,I0)')'# source_nkpoints=',nk
+        write(96,'(A,I0)')'# source_nspin=',ispin
+        write(96,'(A,I0)')'# spinor_components=',ispinor
+        write(96,'(A,I0)')'# pairs_per_k=',npairs
+        write(96,'(A,I0)')'# expected_rows=',rows8
+        write(96,'(A,ES25.17E3,2(",",ES25.17E3))')
+     &   '# lattice_A_1=',a1
+        write(96,'(A,ES25.17E3,2(",",ES25.17E3))')
+     &   '# lattice_A_2=',a2
+        write(96,'(A,ES25.17E3,2(",",ES25.17E3))')
+     &   '# lattice_A_3=',a3
+        write(96,'(A,ES25.17E3,2(",",ES25.17E3))')
+     &   '# reciprocal_inv_A_1=',b1
+        write(96,'(A,ES25.17E3,2(",",ES25.17E3))')
+     &   '# reciprocal_inv_A_2=',b2
+        write(96,'(A,ES25.17E3,2(",",ES25.17E3))')
+     &   '# reciprocal_inv_A_3=',b3
+        write(96,'(A)')'spin,k_index,n_band,m_band,kx_frac,'//
+     &   'ky_frac,kz_frac,energy_n_eV,energy_m_eV,'//
+     &   'numerator_yz_eV2_A2,numerator_zx_eV2_A2,'//
+     &   'numerator_xy_eV2_A2,gap_eV'
+       endif
+      endif
+! Each rank calculates a distinct k concurrently. Gather one k per rank,
+! then stream the batch in source order, without any Nk*NBANDS^2 buffer.
+      do first=1,nk,nprocs
+       ik=first+myrank
+       values=0d0
+       ener=0d0
+       if(ik.le.nk)then
+        call kubo_pair_numerators(values,ener,nband,npairs,
+     &       b1,b2,b3,wklist(:,ik),isp,nk,ik,ecut,ispinor,
+     &       nplist(ik),nbmax,npmax,67108864_8)
+       endif
+#ifdef MPI_USE
+       call MPI_GATHER(values,3*npairs,MPI_DOUBLE_PRECISION,
+     &                 gathered,3*npairs,MPI_DOUBLE_PRECISION,
+     &                 0,mpi_comm_earth,mpierr)
+       call MPI_GATHER(ener,nband,MPI_DOUBLE_PRECISION,
+     &                 energies,nband,MPI_DOUBLE_PRECISION,
+     &                 0,mpi_comm_earth,mpierr)
+#else
+       gathered(:,:,1)=values
+       energies(:,1)=ener
+#endif
+       if(myrank.eq.0)then
+        do r=1,min(nprocs,nk-first+1)
+         ik=first+r-1
+         ip=0
+         do n=1,nband-1
+          do m=n+1,nband
+           ip=ip+1
+           gap=abs(energies(n,r)-energies(m,r))
+           if(.not.ieee_is_finite(gap))then
+            write(0,*)'*** error - nonfinite Kubo pair energy gap'
+            call vaspberry_fail
+           endif
+           write(96,'(I0,3(",",I0),9(",",ES25.17E3))',
+     &           iostat=ios)isp,ik,n,m,wklist(:,ik),
+     &           energies(n,r),energies(m,r),gathered(:,ip,r),gap
+           if(ios.ne.0)then
+            write(0,*)'*** error - cannot write Kubo pairs CSV'
+            call vaspberry_fail
+           endif
+          enddo
+         enddo
+        enddo
+       endif
+      enddo
+      if(myrank.eq.0)then
+! A partial/failed export never carries a successful completion marker.
+       if(isp.eq.ispin)write(96,'(A)',iostat=ios)
+     &                 '# result_status=PASS'
+       if(ios.ne.0)then
+        write(0,*)'*** error - cannot finish Kubo pairs CSV'
+        call vaspberry_fail
+       endif
+       close(96,iostat=ios)
+       if(ios.ne.0)then
+        write(0,*)'*** error - cannot close Kubo pairs CSV'
+        call vaspberry_fail
+       endif
+      endif
+      deallocate(values,ener,gathered,energies)
+      end subroutine write_kubo_pairs_csv
 
 !!$*  subroutine for computing velocity expectation value for state psi(n,k)
       subroutine vel_expectation(a1,a2,a3,b1,b2,b3,
@@ -4657,13 +5243,8 @@
       integer*4    mynjob, nprocs
       integer*4    cpuid, mpierr
       integer*4    nresidue
-#ifdef MPI_USE
       integer*4    ourjob(nprocs)
       integer*4    ourjob_disp(0:nprocs-1)
-#else
-      integer*4    ourjob(1)
-      integer*4    ourjob_disp(0)
-#endif
 
       mynjob = floor ( real(njob)/real(nprocs) )
       nresidue = nint (real(njob) - real(mynjob) * real(nprocs))
@@ -4712,17 +5293,20 @@
      &    ivel,ikubo,iz,ihf,nini,nmax,nn,kperiod,it,iskp,ine,ver_tag,
      &    iwf,ikwf,ng,rs,imag,init_e,fina_e,nediv,sigma,
      &    klist_fname,sw_fname,atlist_fname,flag_atom_project,
-     &    theta,phi)
+     &    theta,phi,kubo_csv,ikubo_bundle,kubo_pairs)
       implicit real*8(a-h,o-z)
       character*256 filename,foname,fbz,ver_tag,vdirec
+      character*256 foname_base
       character*256 klist_fname, sw_fname, atlist_fname
+      character*256 kubo_csv,kubo_pairs
       real*8 x,y
       character*256 option,value
       integer iarg,narg,ia,nkx,nky,ispinor,iskp,ine,ng(3)
+      integer ikubo_bundle
       dimension rs(3)
       real*8    init_e, fina_e
       real*8    theta, phi
-      logical   flag_atom_project
+      logical   flag_atom_project,pair_band_selection
       nini=1;it=0;iskp=0;ine=0;icd=0;ixt=0;ivel=0;iz=0;ihf=0
       iwf=0;ikwf=1;ng=0;imag=0;rs=0.;ikubo=0;nn=0;nediv=1000
       init_e =  0.0d0;fina_e=10.0d0;sigma=0.01
@@ -4737,6 +5321,10 @@
       foname="BERRYCURV"
       fbz="BERRYCURV.tot.dat"
       flag_atom_project = .false.
+      kubo_csv=""
+      kubo_pairs=""
+      pair_band_selection=.false.
+      ikubo_bundle=0
       if(iarg.ne.2*nargs) then
          call help(ver_tag)
       endif
@@ -4754,10 +5342,13 @@
            else if(option == "-s") then
             read(value,*) ispinor
            else if(option == "-ii") then
+            pair_band_selection=.true.
             read(value,*) nini
            else if(option == "-if") then
+            pair_band_selection=.true.
             read(value,*) nmax
            else if(option == "-is") then
+            pair_band_selection=.true.
             read(value,*) nini
             nini=nini;nmax=nini
            else if(option == "-kp") then
@@ -4795,7 +5386,14 @@
             read(value,*) sigma
            else if(option == "-kubo") then
             read(value,*) ikubo
-           else if(option == "-nn") then ! band index nn
+           else if(option == "-kubo_csv") then
+            kubo_csv=trim(value)
+           else if(option == "-kubo_pairs") then
+            kubo_pairs=trim(value)
+           else if(option == "-kubo_bundle") then
+            read(value,*) ikubo_bundle
+           else if(option == "-nn") then
+            pair_band_selection=.true. ! band index nn
             read(value,*) nn
            else if(option == "-vel") then
             read(value,*) ivel
@@ -4819,15 +5417,60 @@
            call help(ver_tag)
           endif
       enddo
-      if(iz .eq. 1)then
-       if(TRIM(foname) .eq. 'BERRYCURV')foname="NFIELD"
-      else if(icd.gt.1 .and. TRIM(foname) .ne. 'BERRYCURV' )then
-       if(icd .eq.1) then
-         write(foname,'(A,A)')"CIRC_DICHROISM.",TRIM(foname)
-       elseif(icd.eq.2) then
-         write(foname,'(A,A)')"CIRC_DICHROISM_W.",TRIM(foname)
+      if(ikubo.lt.0.or.ikubo.gt.2)then
+       write(0,*) '*** error - Kubo option must be 0, 1 or 2'
+       call vaspberry_fail
+      endif
+      if(ikubo_bundle.lt.0.or.ikubo_bundle.gt.1)then
+       write(0,*) '*** error - -kubo_bundle must be 0 or 1'
+       call vaspberry_fail
+      endif
+      if(ikubo_bundle.eq.1.and.len_trim(kubo_csv).eq.0)then
+       write(0,*) '*** error - -kubo_bundle needs -kubo_csv PATH'
+       call vaspberry_fail
+      endif
+      if(len_trim(kubo_csv).gt.0)then
+       if(ikubo.eq.0.or.icd.ne.0.or.ivel.ne.0.or.iz.ne.0.or.
+     &    iwf.ne.0.or.ixt.ne.0.or.it.ne.0)then
+        write(0,*) '*** error - -kubo_csv requires Kubo-only mode'
+        call vaspberry_fail
        endif
-      else if (icd .gt. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
+       if(trim(kubo_csv).eq.trim(filename))then
+        write(0,*) '*** error - Kubo CSV cannot overwrite WAVECAR'
+        call vaspberry_fail
+       endif
+      endif
+      if(len_trim(kubo_pairs).gt.0)then
+       if(ikubo.ne.2.or.icd.ne.0.or.ivel.ne.0.or.iz.ne.0.or.
+     &    iwf.ne.0.or.ixt.ne.0.or.it.ne.0)then
+        write(0,*)'*** error - -kubo_pairs requires Kubo-only mode 2'
+        call vaspberry_fail
+       endif
+       if(ikubo_bundle.ne.0.or.len_trim(kubo_csv).gt.0)then
+        write(0,*)'*** error - -kubo_pairs is exclusive with ',
+     &            '-kubo_bundle and -kubo_csv'
+        call vaspberry_fail
+       endif
+       if(pair_band_selection)then
+        write(0,*)'*** error - -kubo_pairs exports all source bands; ',
+     &            'omit -ii/-if/-is/-nn'
+        call vaspberry_fail
+       endif
+       if(trim(kubo_pairs).eq.trim(filename))then
+        write(0,*)'*** error - Kubo pairs cannot overwrite WAVECAR'
+        call vaspberry_fail
+       endif
+      endif
+      foname_base=foname
+      if(iz .eq. 1)then
+       if(TRIM(foname_base) .eq. 'BERRYCURV')foname="NFIELD"
+      else if(icd.gt.1 .and. TRIM(foname_base) .ne. 'BERRYCURV' )then
+       if(icd .eq.1) then
+         write(foname,'(A,A)')"CIRC_DICHROISM.",TRIM(foname_base)
+       elseif(icd.eq.2) then
+         write(foname,'(A,A)')"CIRC_DICHROISM_W.",TRIM(foname_base)
+       endif
+      else if (icd .gt. 1 .and. TRIM(foname_base) .eq. 'BERRYCURV') then
         if(icd .eq.1) then
           foname="CIRC_DICHROISM"
         elseif(icd.eq.2) then
@@ -4835,13 +5478,13 @@
         elseif(icd.eq.3) then
           foname="OPT_TRANS_RATE_UNFOLD"
         endif
-      else if (icd+ivel .eq. 0 .and. TRIM(foname) .ne. 'BERRYCURV')then
-        write(foname,'(A,A)')"BERRYCURV.",TRIM(foname)
-      else if (ivel .eq. 1 .and. TRIM(foname) .ne. 'BERRYCURV') then
-        write(foname,'(A,A)')"VEL_EXPT.",TRIM(foname)
-      else if (ivel .eq. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
+      else if (icd+ivel .eq. 0 .and. TRIM(foname_base) .ne. 'BERRYCURV')then
+        write(foname,'(A,A)')"BERRYCURV.",TRIM(foname_base)
+      else if (ivel .eq. 1 .and. TRIM(foname_base) .ne. 'BERRYCURV') then
+        write(foname,'(A,A)')"VEL_EXPT.",TRIM(foname_base)
+      else if (ivel .eq. 1 .and. TRIM(foname_base) .eq. 'BERRYCURV') then
         foname="VEL_EXPT"
-      else if (ikubo .ge. 1 .and. TRIM(foname) .eq. 'BERRYCURV') then
+      else if (ikubo .ge. 1 .and. TRIM(foname_base) .eq. 'BERRYCURV') then
         foname="BERRYCURV_KUBO"
       endif
 
@@ -5295,10 +5938,41 @@
       write(6,*)"                  :  => from 19 to 22 th eigenstate"
       write(6,*)"                  :     will be calculated and the"
       write(6,*)"                  :     result will be printed out to"
-      write(6,*)"                  :     BERRYCURF_KUBO.EIG-NN.DAT and"
+      write(6,*)"                  :     BERRYCURV_KUBO.EIG-NN.DAT and"
       write(6,*)"                  :     total Berry curvature (19-22)"
-      write(6,*)"                  :     is in BERRYCURF_KUBO.DAT"
+      write(6,*)"                  :     is in BERRYCURV_KUBO.DAT"
       write(6,*)"                  :  Default : -kubo 0 (no calc.)"
+      write(6,*)"                  : Standard -2 Im normalization."
+      write(6,*)"                  : Bare momentum from pseudo WAVECAR;"
+      write(6,*)"                  : no PAW/nonlocal velocity terms."
+      write(6,*)"                  : Isolated bands and k/NBANDS"
+      write(6,*)"                  : convergence are required."
+      write(6,*)"                  : -kubo 2 has no Chern integral."
+      write(6,*)"                  : Pre-1.3 Kubo values divide by 2;"
+      write(6,*)"                  : never divide new outputs again."
+      write(6,*)" -kubo_pairs PATH : Export all unordered source-band"
+      write(6,*)"                  : pair numerators (yz,zx,xy), eV2 A2."
+      write(6,*)"                  : No gap division or occupations."
+      write(6,*)"                  : Requires -kubo 2; omit band ranges."
+      write(6,*)"                  : Separate from -kubo_csv/bundle."
+      write(6,*)"                  : PATH must be new; a final PASS"
+      write(6,*)"                  : marker means export completed."
+      write(6,*)" -kubo_bundle 1   : Trace curvature for bands -ii:-if."
+      write(6,*)"                  : Excludes internal transitions;"
+      write(6,*)"                  : internal degeneracies are allowed."
+      write(6,*)"                  : External gaps must exceed 1e-5 eV."
+      write(6,*)"                  : Requires -kubo 1/2 -kubo_csv PATH."
+      write(6,*)"                  : Writes bundle CSV only; default 0."
+      write(6,*)"                  : Empty external space gives zero"
+      write(6,*)"                  : in the truncated WAVECAR basis."
+      write(6,*)" -kubo_csv PATH   : Opt-in band/bundle CSV, full"
+      write(6,*)"                  : precision, omega_z_A2 normalized."
+      write(6,*)"                  : Band: spin,k,band,E,min_gap."
+      write(6,*)"                  : Bundle: spin,k,min_external_gap;"
+      write(6,*)"                  : band range and source NBANDS."
+      write(6,*)"                  : omega_z_A2 is in both schemas."
+      write(6,*)"                  : Used only with -kubo 1 or 2."
+      write(6,*)"                  : PATH must not already exist."
       write(6,*)" -ixt np -fbz f   : **For the special purpose"
       write(6,*)"                  : Read file 'f' and extend data to"
       write(6,*)"                  : np x np periodic field. Note that"

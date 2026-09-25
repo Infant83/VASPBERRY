@@ -1,0 +1,52 @@
+{
+  "mode": "full",
+  "status": "PASS",
+  "command": [
+    "vasp_ncl"
+  ],
+  "started_utc": "2026-09-20T13:17:44.971173+00:00",
+  "source_inputs": "Public repository MoS2 POSCAR and SCF CHGCAR, with licensed matching Mo/S PAW-PBE datasets.",
+  "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+  "timeout_seconds": 600,
+  "threads": 1,
+  "stack_bytes": 67104768,
+  "input_sha256": {
+    "INCAR": "6d6c4278a139db5b59bfcdd71ad557d9569957e336c9d67796a882141ba5fc3d",
+    "KPOINTS": "3f434de8810f111558a7853f927f0ca9c1ab5d1014a47c42ecfadfcb9d57262b",
+    "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+    "CHGCAR": "e6d9d95d4d5f7afef4d69a9f13f780553b737f78974355923cb3fd532dff311d",
+    "POTCAR": "b8f5bccb188e7a8b1082445abe307e62f27d3cd9f9f7b128325dacee3e9192a0"
+  },
+  "source_potential_sha256": {
+    "Mo": "e91eef5e768b52c866a1a7e0829a38a041f11142f3595800aaf3206086d6c164",
+    "S": "0fc7481fb0695f01bdc6462160264c5c84044ae9ec85a907d398b887a2bc3132"
+  },
+  "returncode": 0,
+  "wall_seconds": 144.4223648761399,
+  "converged": true,
+  "normal_footer": true,
+  "peak_rss_bytes": 602296320.0,
+  "finished_utc": "2026-09-20T13:20:09.461746+00:00",
+  "output_sha256": {
+    "WAVECAR": "e1955a6b3562870edd67030d7e64cb59b6956c53db7259b25a6adee400fc9e10",
+    "OUTCAR": "164558513a3c4d5d65292ee9f58c5902586cd23097be8d53272beb7c2ab76ff2",
+    "OSZICAR": "aa7c903348e6f589d4e6532cbc268d3d4661ccb68b8dbb73c4123ec7bdcbd492",
+    "EIGENVAL": "5e40f6eaeae359c92950143161ca8d2f6721aa5c1d4bd6a1a01a7b6af18dc9e6",
+    "vasprun.xml": "cab5434d924254b39d88dc297b7410d365121baaceb2220ea8e17ed1ef92ec0a"
+  },
+  "outputs_bytes": {
+    "WAVECAR": 149002560,
+    "OUTCAR": 253298,
+    "OSZICAR": 832,
+    "EIGENVAL": 132817,
+    "vasprun.xml": 238121
+  },
+  "command_note": "The local executable path is normalized; its binary checksum identifies the executed build.",
+  "input_manifest": "../../inputs/",
+  "output_hash_scope": "All files produced by VASP; only OUTCAR, EIGENVAL and OSZICAR are distributed here. WAVECAR is regenerable from the public inputs with licensed VASP.",
+  "distributed_outputs": [
+    "OUTCAR",
+    "EIGENVAL",
+    "OSZICAR"
+  ]
+}

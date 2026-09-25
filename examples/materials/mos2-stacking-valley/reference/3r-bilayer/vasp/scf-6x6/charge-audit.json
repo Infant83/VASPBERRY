@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "material": "3r-bilayer",
+  "fft_grid": [
+    48,
+    48,
+    320
+  ],
+  "integrated_fft_valence_electrons": 36.00000020175364,
+  "nelect_outcar": 36.0,
+  "final_total_magnetization": [
+    -0.0,
+    -0.0,
+    -0.0
+  ],
+  "z_mirror_relative_max_residual": 0.0010440661829851513,
+  "ionic_minus_fft_grid_z_moment_eA": 0.005617361491334536,
+  "diagnostic_scope": "PAW charge-grid first moment only; not a physical all-electron polarization implementation.",
+  "dipole_correction": "LDIPOL=F in original common pilot; polar 3R deserves separate electrostatic sensitivity check.",
+  "raw_data_symmetrized": false
+}

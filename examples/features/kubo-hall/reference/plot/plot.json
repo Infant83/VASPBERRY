@@ -1,0 +1,29 @@
+{
+  "source_sha256": "fa638b50803e70f7c17dc3aabaa6fd1fa5d300f26b1ccf60bf5308f63bf6d97d",
+  "command": {
+    "input": "OUTPUT/calculation/hall/conductivity.csv",
+    "output_dir": "OUTPUT/plot",
+    "formats": [
+      "png",
+      "pdf",
+      "svg"
+    ],
+    "regions": [
+      "K",
+      "Kprime",
+      "total",
+      "valley"
+    ],
+    "temperatures": [
+      300.0
+    ],
+    "quantity": "delta-sigma",
+    "energy_origin_eV": -1.2748738806724562,
+    "energy_label": "\u03bc \u2212 Ev (eV)"
+  },
+  "output_sha256": {
+    "hall.png": "1544ebcdd504195f11466b0cedf40dc1fd5c75d2cde695d0beb8a86ed8de7887",
+    "hall.pdf": "89220b3adde0f61876e9b5559581f9c33ae96ead26f84553831bf1aca101f34a",
+    "hall.svg": "b03b02bcf7bd58fd1b51b8a962e45b98d4e1cf8b432f0532478fb3252e0744c0"
+  }
+}

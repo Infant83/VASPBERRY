@@ -1,0 +1,189 @@
+{
+  "scope": "Path-sampled eigenvalues and k-resolved broadened transitions; no full-BZ gap or PL claim",
+  "cases": [
+    {
+      "case": "monolayer",
+      "occupied_bands": [
+        1,
+        18
+      ],
+      "final_bands": [
+        19,
+        20
+      ],
+      "source_nbands": 60,
+      "path_gap_eV": 1.6781490501129626,
+      "final_boundary_min_separation_eV": 0.006491640041861868,
+      "valleys": {
+        "K": {
+          "direct_gap_eV": 1.6781490522672042,
+          "native": {
+            "peak_photon_eV": 1.68,
+            "peak_eta": -1.0,
+            "peak_total_strength": 0.0392,
+            "units": "arbitrary units"
+          },
+          "paw": {
+            "peak_photon_eV": 1.68,
+            "peak_eta": -0.99999999999996,
+            "peak_total_strength": 74.75374697329886,
+            "units": "A^2/eV"
+          }
+        },
+        "Kprime": {
+          "direct_gap_eV": 1.6781490509109374,
+          "native": {
+            "peak_photon_eV": 1.68,
+            "peak_eta": 1.0,
+            "peak_total_strength": 0.0392,
+            "units": "arbitrary units"
+          },
+          "paw": {
+            "peak_photon_eV": 1.68,
+            "peak_eta": 0.9999999999999536,
+            "peak_total_strength": 74.75370853719573,
+            "units": "A^2/eV"
+          }
+        }
+      }
+    },
+    {
+      "case": "1h-bilayer",
+      "occupied_bands": [
+        1,
+        36
+      ],
+      "final_bands": [
+        37,
+        40
+      ],
+      "source_nbands": 64,
+      "path_gap_eV": 1.5284148503396544,
+      "final_boundary_min_separation_eV": 0.004934356807442031,
+      "valleys": {
+        "K": {
+          "direct_gap_eV": 1.656892023674634,
+          "native": {
+            "peak_photon_eV": 1.68,
+            "peak_eta": -1.0,
+            "peak_total_strength": 0.0749,
+            "units": "arbitrary units"
+          },
+          "paw": {
+            "peak_photon_eV": 1.68,
+            "peak_eta": -0.9999999993228107,
+            "peak_total_strength": 143.16482865884794,
+            "units": "A^2/eV"
+          }
+        },
+        "Kprime": {
+          "direct_gap_eV": 1.6568920236353668,
+          "native": {
+            "peak_photon_eV": 1.68,
+            "peak_eta": 1.0,
+            "peak_total_strength": 0.0749,
+            "units": "arbitrary units"
+          },
+          "paw": {
+            "peak_photon_eV": 1.68,
+            "peak_eta": 0.9999999993223943,
+            "peak_total_strength": 143.16483653460068,
+            "units": "A^2/eV"
+          }
+        }
+      }
+    },
+    {
+      "case": "2h-bilayer",
+      "occupied_bands": [
+        1,
+        36
+      ],
+      "final_bands": [
+        37,
+        40
+      ],
+      "source_nbands": 64,
+      "path_gap_eV": 1.2634005922161378,
+      "final_boundary_min_separation_eV": 0.03677462660612285,
+      "valleys": {
+        "K": {
+          "direct_gap_eV": 1.6733182146937466,
+          "native": {
+            "peak_photon_eV": 1.67,
+            "peak_eta": 0.0,
+            "peak_total_strength": 0.0786,
+            "units": "arbitrary units"
+          },
+          "paw": {
+            "peak_photon_eV": 1.67,
+            "peak_eta": 4.2104082807404524e-07,
+            "peak_total_strength": 148.74053058313953,
+            "units": "A^2/eV"
+          }
+        },
+        "Kprime": {
+          "direct_gap_eV": 1.6733182146689756,
+          "native": {
+            "peak_photon_eV": 1.67,
+            "peak_eta": 0.0,
+            "peak_total_strength": 0.0786,
+            "units": "arbitrary units"
+          },
+          "paw": {
+            "peak_photon_eV": 1.67,
+            "peak_eta": 1.3292514018608598e-07,
+            "peak_total_strength": 148.74050279723426,
+            "units": "A^2/eV"
+          }
+        }
+      }
+    },
+    {
+      "case": "3r-bilayer",
+      "occupied_bands": [
+        1,
+        36
+      ],
+      "final_bands": [
+        37,
+        40
+      ],
+      "source_nbands": 64,
+      "path_gap_eV": 1.2656305506616747,
+      "final_boundary_min_separation_eV": 0.011112523020389453,
+      "valleys": {
+        "K": {
+          "direct_gap_eV": 1.6101542910435,
+          "native": {
+            "peak_photon_eV": 1.67,
+            "peak_eta": -1.0,
+            "peak_total_strength": 0.0776,
+            "units": "arbitrary units"
+          },
+          "paw": {
+            "peak_photon_eV": 1.68,
+            "peak_eta": -0.9988384683656456,
+            "peak_total_strength": 171.51847231726236,
+            "units": "A^2/eV"
+          }
+        },
+        "Kprime": {
+          "direct_gap_eV": 1.6101542909718642,
+          "native": {
+            "peak_photon_eV": 1.67,
+            "peak_eta": 1.0,
+            "peak_total_strength": 0.0776,
+            "units": "arbitrary units"
+          },
+          "paw": {
+            "peak_photon_eV": 1.68,
+            "peak_eta": 0.9988384682222401,
+            "peak_total_strength": 171.51846934199105,
+            "units": "A^2/eV"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+Numerical source excerpts: parameter lines, convergence and completion footer.
+
+ vasp.5.4.4.18Apr17-6-g9f103f2a35 (build Sep 13 2026 16:50:19) complex          
+   k-points           NKPTS =     10   k-points in BZ     NKDIM =     10   number of bands    NBANDS=     96
+   LSORBIT =      T    spin-orbit coupling
+   NELECT =      36.0000    total number of electrons
+   LDIPOL =      T    correct potential (dipole corrections)
+   IDIPOL =      3    1-x, 2-y, 3-z, 4-all directions 
+ dipolmoment           0.000000      0.000000     -0.005617 electrons x Angstroem
+ dipolmoment           0.000000      0.000000     -0.005583 electrons x Angstroem
+ dipolmoment           0.000000      0.000000     -0.005539 electrons x Angstroem
+ dipolmoment           0.000000      0.000000     -0.005467 electrons x Angstroem
+ dipolmoment           0.000000      0.000000     -0.005299 electrons x Angstroem
+ dipolmoment           0.000000      0.000000     -0.005145 electrons x Angstroem
+ dipolmoment           0.000000      0.000000     -0.004989 electrons x Angstroem
+ dipolmoment           0.000000      0.000000     -0.004584 electrons x Angstroem
+ dipolmoment           0.000000      0.000000     -0.004199 electrons x Angstroem
+ dipolmoment           0.000000      0.000000     -0.004146 electrons x Angstroem
+ dipolmoment           0.000000      0.000000     -0.004155 electrons x Angstroem
+ dipolmoment           0.000000      0.000000     -0.004153 electrons x Angstroem
+------------------------ aborting loop because EDIFF is reached ----------------------------------------
+
+General timing and accounting informations for this job:
+ ========================================================
+  
+                  Total CPU time used (sec):      807.410
+                            User time (sec):      799.564
+                          System time (sec):        7.846
+                         Elapsed time (sec):      809.390
+  
+                   Maximum memory used (kb):   940589056.
+                   Average memory used (kb):           0.
+  
+                          Minor page faults:       230670
+                          Major page faults:            0
+                 Voluntary context switches:         1072

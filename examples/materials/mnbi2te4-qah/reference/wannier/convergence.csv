@@ -1,0 +1,9 @@
+plot,representation,base_mesh,refinement,radius_Ainv,point_count,local_equivalent_uniform_mesh,mu_eV,sigma_xy_S_per_cm,sigma_xy_e2_over_h,absolute_difference_from_one,change_from_previous_same_branch,producer
+true,true Wigner-Seitz translations,40,7,0.12,3088,280,3.261986,73.25983099999999,1.0001934839919,0.00019348399190000087,,official Wannier90 3.1.0 postw90
+true,true Wigner-Seitz translations,60,7,0.12,6528,420,3.261986,73.249673,1.0000548000054412,5.480000544122454e-05,0.00013868398645877633,Wannier90 3.1.0 postw90 with effective-model dimension initialization fix
+true,true Wigner-Seitz translations,60,11,0.12,10920,660,3.261986,73.249304,1.000049762164232,4.9762164231914596e-05,5.037841209309946e-06,Wannier90 3.1.0 postw90 with effective-model dimension initialization fix
+true,true Wigner-Seitz translations,60,11,0.18,21720,660,3.261986,73.28901499999999,1.0005919239860739,0.0005919239860738834,0.0005421618218419688,Wannier90 3.1.0 postw90 with effective-model dimension initialization fix
+true,true Wigner-Seitz translations,80,9,0.18,27600,720,3.261986,73.273857,1.0003849765685957,0.0003849765685957074,0.00020694741747817602,Wannier90 3.1.0 postw90 with effective-model dimension initialization fix
+false,original Wigner-Seitz supercell,40,7,0.12,3088,280,3.261986,73.254807,1.000124892896412,0.00012489289641193224,,official Wannier90 3.1.0 postw90
+false,original Wigner-Seitz supercell,60,11,0.12,10920,660,3.261986,73.247912,1.0000307576250362,3.075762503623736e-05,9.413527137569488e-05,official Wannier90 3.1.0 postw90
+false,original Wigner-Seitz supercell,60,11,0.18,21720,660,3.261986,73.28903700000001,1.0005922243451706,0.0005922243451705889,0.0005614667201343515,official Wannier90 3.1.0 postw90

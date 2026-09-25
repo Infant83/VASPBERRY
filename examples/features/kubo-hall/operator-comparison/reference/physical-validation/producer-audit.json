@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "nkpoints": 144,
+  "source_nbands": 60,
+  "source_sha256": {
+    "SPIN_VELOCITY.bin": "6aa4ac43fafcd59eeeae45cac3a97c34367a230d1a9f5557df6befdc9b05d4d0",
+    "BERRY_CONNECTION.bin": "483a438b108f6dd66727305ea5ab07ff563889f36ab45586b569ef5be42349f2",
+    "WAVECAR": "4d341bccc7a99b06e7b11bd9179cb9987b41f5e5003ec3f31d8da269d03728a1",
+    "OUTCAR": "c91b642f76365a5a9f9492bc5812842f9f1a8e12fecb0cb1f55db1a1378e7740",
+    "INCAR": "55b332efa99c1502486f9c597572ffc10437824950b6d020157181e3de3dce73",
+    "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+    "KPOINTS": "823f81dfcc69cdeae53f87ffda2293ca07e37c8cd77fb2dc95271954a3a3850f",
+    "run.json": "9f265cfcd5725647206dfa2e0185550e9d9a9264477c54853253ba26e1459ff2"
+  },
+  "producer_binary_sha256": "12d54450abcc4b0f81c600ba0e3354ece70a5b4c0f08701c8c6ebc8564090e24",
+  "pauli_metric_min_eigenvalue": 3.991809691105592e-15,
+  "optical_producer_cluster_threshold_eV": 0.002,
+  "optical_consistency_compared_elements": 1519908,
+  "optical_check_scope": "Internal consistency with the same optical derivation; not an independent physical benchmark.",
+  "metric_maxabs_error": 3.111460987938529e-14,
+  "pseudo_vs_saved_wavecar_maxabs": 6.978318145556273e-08,
+  "spin_hermiticity_maxabs": 1.4210869961786875e-14,
+  "augmentation_hermiticity_maxabs": 3.0541162047287296e-15,
+  "velocity_hermiticity_eVA": 1.7080496585745532e-12,
+  "optical_consistency_eVA": 8.738607347679422e-12,
+  "diagonal_consistency_eVA": 5.696812281967223e-13,
+  "commutator_identity_eVA": 0.0
+}

@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "total_points": 27600,
+  "completed_points": 27600,
+  "elapsed_seconds": 573.7848666580394,
+  "sigma_e2_over_h": 1.0003849781827807,
+  "source_operator_npz_sha256": "0f74a8e0679db924b89c17a5f1b3d8afe7131f4fa34f381e160bd6116f006053",
+  "source_cache_sha256": {
+    "operators.npz": "0f74a8e0679db924b89c17a5f1b3d8afe7131f4fa34f381e160bd6116f006053",
+    "operators.json": "12a0f339fb56c0f3bc40e8917cd08780f6aa79c916247ccf2b27ca8bd9f5b43c"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "vaspberry.spin-augmentation",
+  "version": 1,
+  "complete": true,
+  "source_wavecar_sha256": "4d341bccc7a99b06e7b11bd9179cb9987b41f5e5003ec3f31d8da269d03728a1",
+  "spin_basis": "Cartesian axes; SAXIS=(0,0,1)",
+  "gauge": "same_eigenvectors_as_source_wavecar",
+  "units": {
+    "spin": "dimensionless Pauli",
+    "overlap": "dimensionless"
+  },
+  "producer": "Audited opt-in VASP5.4.4 spin and velocity instrumentation",
+  "producer_status": "PASS",
+  "source_sha256": {
+    "SPIN_VELOCITY.bin": "6aa4ac43fafcd59eeeae45cac3a97c34367a230d1a9f5557df6befdc9b05d4d0",
+    "BERRY_CONNECTION.bin": "483a438b108f6dd66727305ea5ab07ff563889f36ab45586b569ef5be42349f2",
+    "WAVECAR": "4d341bccc7a99b06e7b11bd9179cb9987b41f5e5003ec3f31d8da269d03728a1",
+    "OUTCAR": "c91b642f76365a5a9f9492bc5812842f9f1a8e12fecb0cb1f55db1a1378e7740",
+    "INCAR": "55b332efa99c1502486f9c597572ffc10437824950b6d020157181e3de3dce73",
+    "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+    "KPOINTS": "823f81dfcc69cdeae53f87ffda2293ca07e37c8cd77fb2dc95271954a3a3850f",
+    "run.json": "9f265cfcd5725647206dfa2e0185550e9d9a9264477c54853253ba26e1459ff2"
+  },
+  "source_files": {
+    "SPIN_VELOCITY.bin": "SPIN_VELOCITY.bin",
+    "BERRY_CONNECTION.bin": "BERRY_CONNECTION.bin",
+    "WAVECAR": "WAVECAR",
+    "OUTCAR": "OUTCAR",
+    "INCAR": "INCAR",
+    "POSCAR": "POSCAR",
+    "KPOINTS": "KPOINTS",
+    "run.json": "run.json"
+  },
+  "data_npz_sha256": "230cdba0d7eaac0a1e65eaba5b0f97f63cfda42739531a57365fa52e17e982eb"
+}

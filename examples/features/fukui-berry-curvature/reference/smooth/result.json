@@ -1,0 +1,73 @@
+{
+  "method": "fukui",
+  "mesh": [
+    12,
+    12
+  ],
+  "map_quantity": "native_plaquette_averages",
+  "path_quantity": "periodic_bilinear_display_cut_of_plaquette_averages",
+  "axes": "Cartesian kx, ky in Angstrom^-1",
+  "curvature_units": "Angstrom^2",
+  "map_interpolation": "periodic_bilinear",
+  "display_grid": [
+    401,
+    401
+  ],
+  "path_nodes_1based": [
+    1,
+    25,
+    49
+  ],
+  "path_labels": [
+    "K",
+    "Gamma",
+    "Kprime"
+  ],
+  "path_vertices_fractional": [
+    [
+      0.3333333333333333,
+      0.6666666666666666,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      -0.3333333333333333,
+      -0.6666666666666666,
+      0.0
+    ]
+  ],
+  "path_node_distance_inv_A": [
+    0.0,
+    1.3207040296346038,
+    2.6414080592692066
+  ],
+  "energy_reference_eV": -1.2748738806943534,
+  "energy_reference": "maximum occupied energy on the supplied path",
+  "occupied_bands": [
+    1,
+    18
+  ],
+  "kubo_band": null,
+  "masked_map_points": 0,
+  "masked_path_points": 0,
+  "isolation_threshold_eV": null,
+  "color_limit_A2": 12.3125,
+  "source_sha256": {
+    "BERRYCURV.dat": "52d1d919d3ade539998f6728b24300b74fd041f293af7e87cd932920417c3b8f",
+    "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+    "bands.csv": "e7082383919d9cbb79fac30f653ba3e42726d61fdc941305f0dad3b0d415454f"
+  },
+  "path_input_sha256": null,
+  "plotter_sha256": "ed9896d490a790b76dca91d87c17e99c57895016f1490ffb182e524b5fa99547",
+  "status": "PASS",
+  "workflow_mode": "plot_existing_native_outputs",
+  "output_sha256": {
+    "figure.png": "8d587cf44fe4a48d238b14935081cb4be3c776fb943a89497d0cb124a83d4141",
+    "figure.pdf": "d11da3c0d696b37d9095c40c8ad05ad3504b9a2706e7440d1f5f2703b81ee6a2",
+    "path_curvature.csv": "475c62da9bc165d7542604faa066d90882a45cb9f6ec9b2496a4635261e12492"
+  }
+}

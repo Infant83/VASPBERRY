@@ -1,0 +1,15 @@
+study,mesh,source_nbands,retained_bands,sigma_zxy,interpretation
+mesh,6,64,48,1.382557631912924,same_retained_space_with_accurate_empty_eigenstates
+mesh,12,64,48,0.6907226657440981,same_retained_space_with_accurate_empty_eigenstates
+mesh,18,64,48,0.6470204611530637,same_retained_space_with_accurate_empty_eigenstates
+bands,6,48,18,1.3793163326573834,source48_retained_band_study
+bands,6,48,24,1.4345017460760776,source48_retained_band_study
+bands,6,48,28,1.4321362378151616,source48_retained_band_study
+bands,6,48,32,1.4103127908046291,source48_retained_band_study
+bands,6,48,36,1.3915280433802748,source48_retained_band_study
+bands,6,48,40,1.386327635067952,source48_retained_band_study
+bands,6,48,44,1.3840977569419335,source48_retained_band_study
+bands,6,48,48,1.382554994639501,source48_retained_band_study
+bands,6,80,48,1.3825576315902894,source80_retained_accurate_subspace
+bands,6,80,56,1.3830473051864272,source80_retained_accurate_subspace
+bands,6,80,64,1.3810006575174374,source80_retained_accurate_subspace

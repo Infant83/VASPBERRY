@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "source": "unchanged original assembled12 WAVECAR",
+  "bands_1based": [
+    1,
+    10
+  ],
+  "mesh": [
+    12,
+    12
+  ],
+  "method": "complex128 raw pseudo coefficient overlaps, reciprocal-shift matching, per-link slogdet and SVD; no TR reconstruction",
+  "chern_unrounded": 2.8271597168564594e-16,
+  "minimum_link_singular_value": 0.7986806028701178,
+  "maximum_absolute_flux_rad": 7.311828476019855e-09,
+  "maximum_absolute_curvature_A2": 4.4489682501263995e-07,
+  "area_per_plaquette_inv_A2": 0.01643488571942971,
+  "minimum_direct_gap_eV": 0.535028374770217,
+  "global_gap_eV": 0.4972714063015772,
+  "wall_seconds": 20.195348273962736,
+  "native_reported_chern": 0.0,
+  "scope": "Separate ordinary Chern calculation. Raw pseudo overlap metric, no PAW augmentation, not a Z2 gauge-reconstructed flux.",
+  "output_sha256": {
+    "python-fukui.npz": "eb60da930eabd9a9e37d878854ffc9c1046389e38d2266b167857756c55f1d38",
+    "plaquettes.csv": "bb2dbb0e49dec7e432e637374bbd8bcf6199f85780ffcd73d652bdfdfbd23c2e"
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "feature_id": "fukui-berry-curvature",
+  "status": "PASS",
+  "material": "1H-MoS2",
+  "mesh": [
+    12,
+    12
+  ],
+  "occupied_bands": [
+    1,
+    18
+  ],
+  "execution_mode": "archived_native_output_replot",
+  "workflow_mode": "archived_output_visualization",
+  "commands": [],
+  "provenance": {
+    "poscar_sha256": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+    "analysis_script_sha256": "37353be7fa87be67b7a28e00d98a69bc89e831d1f27c06fc055bb3cfe264a38f",
+    "plotter_sha256": "56cfaeb920befa1c38e3d20930eacf5f276abcfb4222efb3fa825aa47f91fc2b",
+    "producer_revision": "unknown",
+    "input_repository_path": "examples/1H-MoS2/BERRYCURV.dat",
+    "archived_output_sha256": "06d52b8950a30a7d9d3800e0e16c8725d9fdad4c2ca3f873ed762a495230bcdc",
+    "source_bands": 26,
+    "input_scope": "Historical VASP-based native output; matching full-mesh WAVECAR is not supplied"
+  },
+  "units": {
+    "k_cartesian": "Angstrom^-1",
+    "berry_curvature": "Angstrom^2",
+    "plaquette_flux": "radian"
+  },
+  "numerical_checks": {
+    "chern_absolute_tolerance": 0.0001,
+    "time_reversal_curvature_tolerance_A2": 0.001,
+    "chern_near_zero": true,
+    "time_reversal_odd": true,
+    "nonzero_local_curvature": true,
+    "reference_comparison": "not_applicable"
+  },
+  "native_display_rows": 1296,
+  "unique_plaquettes": 144,
+  "plaquette_area_inv_A2": 0.03147026501530105,
+  "total_chern_from_printed_values": -4.006918587078903e-08,
+  "minimum_curvature_A2": -12.233671,
+  "maximum_curvature_A2": 12.233671,
+  "max_time_reversal_odd_residual_A2": 4.000000000115023e-06,
+  "plot": {
+    "mesh": [
+      12,
+      12
+    ],
+    "first_bz_area_inv_A2": 4.531718162203352,
+    "rendering": "constant_native_plaquette_values_clipped_to_first_BZ",
+    "interpolation": "none",
+    "axes": "Cartesian kx, ky in Angstrom^-1",
+    "K_fractional": [
+      0.3333333333333333,
+      0.6666666666666666
+    ],
+    "Kprime_fractional": [
+      -0.3333333333333333,
+      -0.6666666666666666
+    ],
+    "color_min": -12.233671,
+    "color_max": 12.233671,
+    "native_to_cartesian_z_sign": 1
+  },
+  "historical_unit_label_note": "Native historical A^-2 label is incorrect; flux/deltaS has units A^2.",
+  "interpretation": "Opposite-sign K/Kprime valley curvature can coexist with vanishing total Chern number.",
+  "output_sha256": {
+    "BERRYCURV.dat": "06d52b8950a30a7d9d3800e0e16c8725d9fdad4c2ca3f873ed762a495230bcdc",
+    "summary.csv": "165ace27f40f67be3bd95b1e083ce1caee4bebd397d77b09a70c1d474ad80947",
+    "figure.png": "a7958909e03348664c9caf1d9f9db209bd1a6e9f9d73c9d0c944523ef791c83f",
+    "figure.pdf": "3dcdcbb0a20173a2c4e3ee659921ef890ce323eabc42e19b09c7982678ab393b"
+  },
+  "elapsed_seconds": 5.156211933819577
+}

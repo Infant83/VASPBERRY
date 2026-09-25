@@ -1,0 +1,44 @@
+--- a/src/postw90/get_oper.F90
++++ b/src/postw90/get_oper.F90
+@@ -62,6 +62,33 @@
+   !======================================================!
+ 
+   !======================================================
++
++  ! Export-only audit hook. It does not change any physical operator.
++  ! The downstream converter expands the exact pair-dependent WS translations.
++  subroutine export_exact_hh_aa_for_effective_model
++    use w90_io, only: io_file_unit, seedname, io_error
++    use w90_parameters, only: num_wann, real_lattice, use_ws_distance, transl_inv
++    use w90_postw90_common, only: nrpts, irvec, ndegen
++    use w90_ws_distance, only: ws_translate_dist, wdist_ndeg, irdist_ws
++    integer :: u
++    if (.not. use_ws_distance) call io_error('Export audit requires use_ws_distance=true')
++    if (transl_inv) call io_error('Export audit requires unchanged default transl_inv=false')
++    if (.not. allocated(HH_R)) call io_error('Export audit requires HH_R')
++    call ws_translate_dist(nrpts, irvec)
++    u = io_file_unit()
++    open(u, file=trim(seedname)//'_exact_operators.bin', access='stream', &
++         form='unformatted', status='new')
++    write(u) num_wann, nrpts, size(irdist_ws,2)
++    write(u) real_lattice
++    write(u) irvec
++    write(u) ndegen
++    write(u) HH_R
++    write(u) AA_R
++    write(u) wdist_ndeg
++    write(u) irdist_ws
++    close(u)
++  end subroutine export_exact_hh_aa_for_effective_model
++
+   subroutine get_HH_R
+     !======================================================
+     !
+@@ -483,6 +510,7 @@
+ 
+     call comms_bcast(AA_R(1, 1, 1, 1), num_wann*num_wann*nrpts*3)
+ 
++    if (on_root) call export_exact_hh_aa_for_effective_model
+     if (timing_level > 1 .and. on_root) call io_stopwatch('get_oper: get_AA_R', 2)
+     return
+ 

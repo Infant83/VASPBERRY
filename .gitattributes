@@ -1,2 +1,69 @@
 *.f whitespace=trailing-space,space-before-tab,cr-at-eol
+# Python csv writers emit RFC-style CRLF; retain exact reference checksums.
+examples/features/**/reference/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+validation/models/**/reference/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+# Preserve native Fortran record padding and the exact archived output hashes.
+examples/features/**/reference/*.dat -whitespace
+examples/features/**/reference/*.log -whitespace
+# Keep native VASP records and the archived Fukui output byte-for-byte.
+examples/features/fukui-berry-curvature/inputs/POSCAR -whitespace
+examples/features/fukui-berry-curvature/reference/archive/*.dat -whitespace
+examples/features/fukui-berry-curvature/reference/archive/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/features/fukui-berry-curvature/reference/python/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/features/fukui-berry-curvature/reference/vasp/OUTCAR -whitespace
+examples/features/fukui-berry-curvature/reference/vasp/EIGENVAL -whitespace
+examples/features/fukui-berry-curvature/reference/vasp/OSZICAR -whitespace
+# Preserve native VASP output and CSV line endings in the matching-path examples.
+examples/features/fukui-berry-curvature/reference/path/OUTCAR -whitespace
+examples/features/fukui-berry-curvature/reference/path/EIGENVAL -whitespace
+examples/features/fukui-berry-curvature/reference/path/OSZICAR -whitespace
+examples/features/**/reference/path/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/features/**/reference/map-path/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
 examples/Bi_Z2/WAVECAR filter=lfs diff=lfs merge=lfs -text
+
+# Preserve new bundle CSV and local-valley native VASP records.
+examples/features/**/reference/bundle/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/features/**/reference/smooth/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/features/kubo-curvature/valleys/reference/vasp/OUTCAR -whitespace
+examples/features/kubo-curvature/valleys/reference/vasp/EIGENVAL -whitespace
+examples/features/kubo-curvature/valleys/reference/vasp/OSZICAR -whitespace
+
+# Preserve computed material records and transport reference tables exactly.
+examples/materials/mnbi2te4-qah/inputs/POSCAR -whitespace
+examples/materials/mnbi2te4-qah/inputs/scf/OUTCAR -whitespace
+examples/materials/mnbi2te4-qah/inputs/scf/OSZICAR -whitespace
+examples/materials/mnbi2te4-qah/reference/**/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/materials/mnbi2te4-qah/reference/**/*.dat -whitespace
+examples/materials/mnbi2te4-qah/reference/**/*.wout -whitespace
+examples/materials/mnbi2te4-qah/reference/**/*.wpout -whitespace
+examples/materials/mnbi2te4-qah/reference/**/*.kpt -whitespace
+examples/materials/mnbi2te4-qah/reference/**/*.gnu -whitespace
+# Empty context lines in unified patches contain a required leading space.
+examples/materials/mnbi2te4-qah/inputs/wannier/toolchain/*.patch -whitespace
+examples/features/kubo-hall/reference/vasp/**/POSCAR -whitespace
+
+# Preserve nested transport tables and Matplotlib SVG path records exactly.
+examples/features/kubo-hall/reference/**/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/features/kubo-hall/reference/**/*.dat -whitespace
+examples/features/kubo-hall/reference/**/*.svg -whitespace
+examples/materials/mnbi2te4-qah/reference/figures/*.svg -whitespace
+
+# Keep actual Bi numerical tables and native wavefunction-topology outputs exact.
+examples/materials/bi-spin-hall/inputs/POSCAR -whitespace
+examples/materials/bi-spin-hall/inputs/wannier-source/POSCAR -whitespace
+examples/materials/bi-spin-hall/reference/**/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/materials/bi-spin-hall/reference/**/*.dat -whitespace
+examples/materials/bi-spin-hall/reference/**/*.log -whitespace
+examples/materials/bi-spin-hall/reference/figures/*.svg -whitespace
+
+# Preserve actual stacking and matched-operator records without reformatting.
+examples/features/kubo-hall/operator-comparison/reference/**/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/features/kubo-hall/operator-comparison/reference/**/*.dat -whitespace
+examples/features/kubo-hall/operator-comparison/reference/**/*.svg -whitespace
+examples/features/kubo-hall/operator-comparison/reference/vasp/POSCAR -whitespace
+examples/materials/mos2-stacking-valley/reference/**/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/materials/mos2-stacking-valley/reference/**/*.dat -whitespace
+examples/materials/mos2-stacking-valley/reference/**/*.svg -whitespace
+examples/materials/mos2-stacking-valley/reference/**/EIGENVAL -whitespace
+examples/materials/mos2-stacking-valley/reference/**/OSZICAR -whitespace
+examples/materials/mos2-stacking-valley/reference/**/OUTCAR-excerpts.txt -whitespace

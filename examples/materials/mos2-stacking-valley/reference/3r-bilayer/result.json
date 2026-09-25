@@ -1,0 +1,158 @@
+{
+  "status": "PASS",
+  "case": "3r-bilayer",
+  "nocc": 36,
+  "source_nbands": 64,
+  "nkpts": 49,
+  "optical_initial_bands": [
+    1,
+    36
+  ],
+  "optical_final_bands": [
+    37,
+    40
+  ],
+  "optical_final_boundary_gap_eV": 0.011112523020389453,
+  "degenerate_group_threshold_eV": 0.002,
+  "sampled_vbm_eV": 0.12570945759138163,
+  "sampled_path_gap_eV": 1.2656305506616747,
+  "path_node_indices_zero_based": [
+    0,
+    12,
+    24,
+    36,
+    48
+  ],
+  "path_labels": [
+    "Gamma",
+    "M",
+    "K",
+    "Gamma",
+    "Kprime"
+  ],
+  "lattice_A": [
+    [
+      3.1716343032172727,
+      0.0,
+      0.0
+    ],
+    [
+      1.5858171516086363,
+      2.746715878100315,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      24.0
+    ]
+  ],
+  "source_sha256": {
+    "WAVECAR": "204427fc99c0ab84fb4096f69e4c2f8239efb50fe9393e102d093202e27b3d86",
+    "EIGENVAL": "b39a756ccf4a8a590a47001f33cf9db00bcea4b74e51e6e8913a449b2517e2d6",
+    "POSCAR": "93431c335676db4680f627b9fcc69b33c4b22f880eb427578409511d4279b0a9",
+    "POTCAR": "b8f5bccb188e7a8b1082445abe307e62f27d3cd9f9f7b128325dacee3e9192a0",
+    "INCAR": "6c6a672b26a785eb87f1a8d71948205b07f97d7466d06d31f0d920c58349f286",
+    "KPOINTS": "f5fd015efeb9e5bd250d7994e2be84edfe03cb1bd5837eeab7aae1d2eb76d754",
+    "OUTCAR": "483349997e66ff52120aa2164750b573707a19b5dd81f1c0d99ed82d080600ca",
+    "WAVEDER": "2bd8d2943e453b851272b0c833f933f5725a49dfd5dfe07bca496749fe815577"
+  },
+  "eigenval_energy_max_difference_eV": 4.999289355822611e-07,
+  "commands": [
+    {
+      "name": "native-optical",
+      "argv": [
+        "<repository>/build/vaspberry-gfortran",
+        "-f",
+        "<VASP-run>/WAVECAR",
+        "-s",
+        "2",
+        "-kx",
+        "49",
+        "-ky",
+        "1",
+        "-cd",
+        "2",
+        "-if",
+        "40",
+        "-ien",
+        ".5",
+        "-fen",
+        "4",
+        "-nediv",
+        "351",
+        "-sigma",
+        ".05",
+        "-theta",
+        "0",
+        "-phi",
+        "0",
+        "-o",
+        "optical"
+      ],
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_seconds": 3.134661524090916
+    },
+    {
+      "name": "paw-optical",
+      "argv": [
+        "python3",
+        "<repository>/tools/vaspberry_kubo.py",
+        "waveder-optics",
+        "--run-dir",
+        "<VASP-run>",
+        "--occupied",
+        "36",
+        "--spinor-components",
+        "2",
+        "--energy-reference",
+        "unchanged VASP eigenvalue zero",
+        "--initial",
+        "1",
+        "36",
+        "--final",
+        "37",
+        "40",
+        "--photon-min",
+        ".5",
+        "--photon-max",
+        "4",
+        "--photon-num",
+        "351",
+        "--sigma-eV",
+        ".05",
+        "--relative-intensity-floor",
+        ".001",
+        "--formats",
+        "csv",
+        "dat",
+        "npz",
+        "--output-dir",
+        "<output>/paw-optical"
+      ],
+      "status": "PASS",
+      "returncode": 0,
+      "elapsed_seconds": 2.6423809670377523
+    }
+  ],
+  "convergence": "Fixed-geometry path demonstration; no full-BZ gap or response-convergence claim.",
+  "native_operator": "Pseudo-wavefunction canonical momentum, native photon/path normalization",
+  "optical_channel_convention": "Native LEFT corresponds to +; RIGHT to - for (x +/- i y), propagation +z.",
+  "native_eta_mask": {
+    "relative_floor_per_k": 0.001,
+    "absolute_floor_au": 0.0001
+  },
+  "optical_sigma_eV": 0.05,
+  "output_sha256": {
+    "bands.csv": "3ccba3941f67dd0f1bbbc9f487b29bc01fd72596a0745e1aff649da282553f18",
+    "native-optical.csv": "9237c03efe2651a73ef246f90c5fb0df3f11b3d148161046d7aaac72d1ab2ef7",
+    "bands.npz": "9477b9b6be6e8fdcdc54683689c147ef039c17344a5860a4ed314dbfb0db91ce",
+    "native-optical.npz": "82d95c44a83985eb81a989f610c89adc04598bd5606c42137648dc5a787f1288"
+  },
+  "distribution": {
+    "path_rewrite_only": true,
+    "original_metadata_sha256": "282751981327fcbc738acddd798b04fc2936628237d105ab9d8725c203738adf",
+    "paths": "<repository>, <VASP-run> and <output> denote local reproduction directories"
+  }
+}

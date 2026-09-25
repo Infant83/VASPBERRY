@@ -1,0 +1,165 @@
+{
+  "schema": "vaspberry.kubo-pairs",
+  "version": 1,
+  "complete": true,
+  "source_nbands": 60,
+  "normalization": "numerator=-2Im(D_a_nm*D_b_mn)",
+  "components": [
+    "yz",
+    "zx",
+    "xy"
+  ],
+  "units": {
+    "energy": "eV",
+    "numerator": "eV^2 Angstrom^2",
+    "lattice": "Angstrom",
+    "reciprocal": "1/Angstrom"
+  },
+  "sampling": {
+    "kind": "uniform_full_2d",
+    "mesh": [
+      12,
+      12
+    ],
+    "plane_axes": [
+      0,
+      1
+    ]
+  },
+  "spin_multiplicity": 1,
+  "spin_channel_1based": 1,
+  "source_nspin": 1,
+  "spinor_components": 2,
+  "energy_reference": "unchanged VASP eigenvalue zero",
+  "source_operator": {
+    "kind": "paw_full_velocity",
+    "accuracy_status": "audited_within_declared_producer_scope",
+    "definition": "D=hbar*v; full PAW, nonlocal and SOC velocity in supported producer",
+    "producer": "Audited opt-in VASP5.4.4 spin and velocity instrumentation",
+    "scope": "VASP 5.4.4 serial SOC spinors, spin-independent PAW metric, Cartesian +z SAXIS, semilocal functional without Hubbard U, no spin spiral, LREAL/LNABLA/LPEAD false; complete predivision commutator plus projector derivative and one-center dipole correction. No Hermitian repair.",
+    "normalization_applied": false,
+    "hermitian_repair_applied": false
+  },
+  "source_wavecar_sha256": "4d341bccc7a99b06e7b11bd9179cb9987b41f5e5003ec3f31d8da269d03728a1",
+  "source_sha256": {
+    "SPIN_VELOCITY.bin": "6aa4ac43fafcd59eeeae45cac3a97c34367a230d1a9f5557df6befdc9b05d4d0",
+    "BERRY_CONNECTION.bin": "483a438b108f6dd66727305ea5ab07ff563889f36ab45586b569ef5be42349f2",
+    "WAVECAR": "4d341bccc7a99b06e7b11bd9179cb9987b41f5e5003ec3f31d8da269d03728a1",
+    "OUTCAR": "c91b642f76365a5a9f9492bc5812842f9f1a8e12fecb0cb1f55db1a1378e7740",
+    "INCAR": "55b332efa99c1502486f9c597572ffc10437824950b6d020157181e3de3dce73",
+    "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+    "KPOINTS": "823f81dfcc69cdeae53f87ffda2293ca07e37c8cd77fb2dc95271954a3a3850f",
+    "run.json": "9f265cfcd5725647206dfa2e0185550e9d9a9264477c54853253ba26e1459ff2"
+  },
+  "source_producer_metadata": {
+    "schema": "vaspberry.spin-velocity",
+    "version": 1,
+    "complete": true,
+    "producer_status": "PASS",
+    "data_npz_sha256": "b2e40f5654d9273c369f53d836dff2b05163bdab6e6e693dedaf1bdca457fef4",
+    "source_wavecar_sha256": "4d341bccc7a99b06e7b11bd9179cb9987b41f5e5003ec3f31d8da269d03728a1",
+    "source_nbands": 60,
+    "nbands": 60,
+    "nkpoints": 144,
+    "units": {
+      "spin": "dimensionless Pauli",
+      "overlap": "dimensionless",
+      "velocity": "eV angstrom = hbar*v",
+      "energies": "eV",
+      "lattice": "angstrom"
+    },
+    "spin_basis": "Cartesian axes; SAXIS=(0,0,1)",
+    "spin_basis_id": "cartesian",
+    "velocity_basis": "cartesian",
+    "matrix_axes": [
+      "k",
+      "cartesian",
+      "bra",
+      "ket"
+    ],
+    "gauge": "same_eigenvectors_as_source_wavecar",
+    "operator_accuracy": "paw_full_velocity",
+    "spin_operator_accuracy": "paw_augmented",
+    "physical_paw_validated": true,
+    "normalization_applied": false,
+    "spinor_components": 2,
+    "spin_multiplicity": 1,
+    "full_source_band_coverage": true,
+    "diagonal_available": true,
+    "degenerate_blocks_available": true,
+    "producer": "Audited opt-in VASP5.4.4 spin and velocity instrumentation",
+    "operator_scope": "VASP 5.4.4 serial SOC spinors, spin-independent PAW metric, Cartesian +z SAXIS, semilocal functional without Hubbard U, no spin spiral, LREAL/LNABLA/LPEAD false; complete predivision commutator plus projector derivative and one-center dipole correction. No Hermitian repair.",
+    "spin_current_construction": "finite_band_projected_product",
+    "method_limitations": [
+      "Spin current uses the anticommutator of finite source-band projected spin and velocity; source-band closure must converge.",
+      "Finite plane-wave and PAW partial-wave basis; semilocal functional and spin-independent PAW metric only.",
+      "Exporter consistency checks do not establish k-mesh, DFT, or source-band convergence."
+    ],
+    "source_sha256": {
+      "SPIN_VELOCITY.bin": "6aa4ac43fafcd59eeeae45cac3a97c34367a230d1a9f5557df6befdc9b05d4d0",
+      "BERRY_CONNECTION.bin": "483a438b108f6dd66727305ea5ab07ff563889f36ab45586b569ef5be42349f2",
+      "WAVECAR": "4d341bccc7a99b06e7b11bd9179cb9987b41f5e5003ec3f31d8da269d03728a1",
+      "OUTCAR": "c91b642f76365a5a9f9492bc5812842f9f1a8e12fecb0cb1f55db1a1378e7740",
+      "INCAR": "55b332efa99c1502486f9c597572ffc10437824950b6d020157181e3de3dce73",
+      "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+      "KPOINTS": "823f81dfcc69cdeae53f87ffda2293ca07e37c8cd77fb2dc95271954a3a3850f",
+      "run.json": "9f265cfcd5725647206dfa2e0185550e9d9a9264477c54853253ba26e1459ff2"
+    },
+    "source_files": {
+      "SPIN_VELOCITY.bin": "SPIN_VELOCITY.bin",
+      "BERRY_CONNECTION.bin": "BERRY_CONNECTION.bin",
+      "WAVECAR": "WAVECAR",
+      "OUTCAR": "OUTCAR",
+      "INCAR": "INCAR",
+      "POSCAR": "POSCAR",
+      "KPOINTS": "KPOINTS",
+      "run.json": "run.json"
+    },
+    "producer_binary_sha256": "12d54450abcc4b0f81c600ba0e3354ece70a5b4c0f08701c8c6ebc8564090e24",
+    "producer_audit_sha256": "ad5d08c1d2e78c6fe77a0c7f973f1a254c56b4cba55378c3a9a46c3ea349e58a",
+    "metric_maxabs_error": 3.111460987938529e-14,
+    "metric_tolerance": 5e-05,
+    "optical_comparison_cluster_threshold_eV": 0.002,
+    "source_energy_reference": "Raw eigenvalue zero of matching WAVECAR; no shift applied."
+  },
+  "interpretation": "Charge pairs use only velocity. No spin current or band-by-band nondegeneracy is assumed.",
+  "convergence_status": "not_established_by_operator_validation",
+  "adapter_validation": {
+    "source_sha256": {
+      "matrices": "b2e40f5654d9273c369f53d836dff2b05163bdab6e6e693dedaf1bdca457fef4",
+      "metadata": "c02886d510f8e43277d8e80fcadb45b79c97ddcbc45d949728682bed3cb50145"
+    },
+    "estimated_memory_MiB": 174.287109375,
+    "overlap_identity_max_abs": 3.111460987938529e-14,
+    "hermiticity_max_abs": {
+      "spin_pauli": 1.4210869961786875e-14,
+      "velocity_eVA": 1.7080496585745532e-12,
+      "overlap": 3.0522730610355042e-15
+    },
+    "minimum_overlap_plus_minus_spin_eigenvalue": 3.991809691105592e-15
+  },
+  "provenance": {
+    "command": {
+      "command": "velocity-pairs",
+      "matrices": "reference/physical/physical-matrices.npz",
+      "metadata": "reference/physical/physical-matrices.json",
+      "mesh": [
+        12,
+        12
+      ],
+      "plane_axes": [
+        0,
+        1
+      ],
+      "energy_reference": "unchanged VASP eigenvalue zero",
+      "memory_limit_mib": 2048.0,
+      "output_dir": "reference/paw-pairs"
+    },
+    "implementation_sha256": {
+      "velocity_pairs.py": "385008626edbd5807b7ac63b3b7874fd05cbe88c0c4df624ef962824b480ef10",
+      "spin_hall_workflow.py": "3ba811414a169d4d7bdf3599fd0027b9d97d868baed4bc8442b78b258b056244",
+      "kubo_pairs.py": "1f9cee49e1eeac355cf054df2133be28c8f41886aa21aa101c64af18befd6014"
+    }
+  },
+  "data_npz_sha256": "dd5d718b30517ce0c58b6576de1ce54839d55934bb5442744c24a0bd5b5d410d"
+}

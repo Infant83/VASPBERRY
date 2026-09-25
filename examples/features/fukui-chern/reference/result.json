@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "feature_id": "fukui-chern",
+  "status": "PASS",
+  "workflow_mode": "vasp_wavecar_calculation",
+  "software_version": "1.3.0",
+  "summary": {
+    "mesh_nx": 12,
+    "mesh_ny": 12,
+    "plaquettes": 144,
+    "occupied_band_min": 1,
+    "occupied_band_max": 10,
+    "chern_from_native_log": -0.0,
+    "max_abs_printed_curvature_A2": 0.0,
+    "max_reference_curvature_difference_A2": 0.0,
+    "minimum_direct_gap_eV": 0.592448499860559,
+    "sampled_global_gap_eV": 0.5100443621628519
+  },
+  "numerical_checks": {
+    "status": "PASS",
+    "actual_wavecar_sha256": "PASS",
+    "wavecar_energies_match_archived_eigenval": "PASS",
+    "positive_sampled_gap": "PASS"
+  },
+  "provenance": {
+    "wavecar": "examples/Bi_Z2/WAVECAR",
+    "wavecar_url": "https://media.githubusercontent.com/media/Infant83/VASPBERRY/a692e21482d24767859d02b7885dd70b234c6a2c/examples/Bi_Z2/WAVECAR",
+    "wavecar_bytes": 200421600,
+    "wavecar_sha256": "a8d81854f2efc561938e478dde1be29a17ccc95d5d37325c122b9d9e82fa0838",
+    "eigenval": "examples/Bi_Z2/archive-2016-run/EIGENVAL",
+    "eigenval_sha256": "4c750e25bb807baef070d8144dce53eb7547432dc346d3ac6e8a1dc8db975b9a",
+    "source_sha256": "dc6674ddde8bd4c3064015ffcaba89d9ea150124f111925c63c90ab44a223df3",
+    "binary_sha256": "3a9c6a2150b6212dbd1a581dc87ba0249a4c7430097b51266d7e147f812174b7",
+    "input_kind": "real_archived_VASP_5.4.1_SOC_WAVECAR",
+    "command": [
+      "build/vaspberry-gfortran",
+      "-f",
+      "WAVECAR",
+      "-o",
+      "BERRYCURV",
+      "-kx",
+      "12",
+      "-ky",
+      "12",
+      "-s",
+      "2",
+      "-ii",
+      "1",
+      "-if",
+      "10"
+    ],
+    "runner_sha256": "0674de26fbec567d97391a5de1cc938aac9c3627823cf890150a6233655959eb",
+    "helper_sha256": "e124dbe598c94d1c2540561470e81b035a33c53fdf4cdd6345238c25d3299da0",
+    "elapsed_seconds": 22.53080280101858,
+    "reference_plaquettes_sha256": "b6e65d8c470b953570a3dfbd606fb1344cd124e6bf69d84cd426e0483229bca3",
+    "coordinate_tolerance_fractional": 5.1e-07,
+    "curvature_reference_tolerance_A2": 5.1e-05
+  },
+  "limitations": [
+    "Real archived VASP input; reproduces VASPBERRY postprocessing, not an end-to-end new VASP calculation.",
+    "Bi occupied bundle has C=0; this example does not demonstrate a nonzero-Chern material.",
+    "Native curvature output has four decimal places and all values round to zero; no extra precision is inferred.",
+    "WAVECAR pseudo-wavefunction overlaps omit PAW augmentation; mesh and gap convergence require separate calculations."
+  ],
+  "output_sha256": {
+    "BERRYCURV.dat": "8e3aa50d2ae7ae4f59187a26f50d5eb7de45ccba164b9b4514e9ce2c3d6a04f8",
+    "plaquettes.csv": "b6e65d8c470b953570a3dfbd606fb1344cd124e6bf69d84cd426e0483229bca3",
+    "band_edges.csv": "1fe1473cde6c4b71338365117683ef15edca31fbfa2419071c20e50bf6931892",
+    "summary.csv": "126e392e9a89498c65e90ab87852d63f48364d87b3f5d10909aa2cc3f67e8125",
+    "figure.png": "5595bc10e8cf2ecd98553c65d0201b9e03a339867cae4118ad6432b83a5fca4a",
+    "fortran.log": "80f5840ef51d7c78d803552e4964036d42dc68c54621eee2fefb599102cdc8c6",
+    "command.json": "c34df31bfc9a9b73e2fd83c9946ee9ecfb5e70a7ac3a17ef968a3ba021632933",
+    "figure.pdf": "f6f8c4fcb7295161d81e3526c6d18725ea8456e8dedca4784e05a1cade48c0cc",
+    "plotting.json": "18ac4ebfb6bece4a3e62be81f900f62d5dbce04bcab987a8ef3937792049f34f"
+  },
+  "figure_provenance": {
+    "workflow_mode": "plot_existing_native_output",
+    "record": "plotting.json",
+    "note": "Only figures were redrawn on 2026-09-20; the recorded VASP/VASPBERRY numerical calculation is unchanged."
+  }
+}

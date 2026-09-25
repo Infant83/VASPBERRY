@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "feature_id": "kubo-hall",
+  "workflow_mode": "vasp_wavecar_calculation",
+  "status": "PASS",
+  "mesh": [
+    12,
+    12
+  ],
+  "nbands": 26,
+  "pair_band_max": 26,
+  "vbm_eV": -1.2748738806724562,
+  "cbm_eV": 0.3986764790625275,
+  "gap_eV": 1.6735503597349837,
+  "mu_reference_eV": -0.4380987008049644,
+  "mu_minus_vbm_range_eV": [
+    -0.2,
+    0.1
+  ],
+  "temperatures_K": [
+    0,
+    300
+  ],
+  "source_wavecar_sha256": "e1955a6b3562870edd67030d7e64cb59b6956c53db7259b25a6adee400fc9e10",
+  "native_binary_sha256": "ff62d89c0e54bb50a77cf28b7b4ba7df154201fced8600dbe42cfae29c66944a",
+  "source_sha256": {
+    "examples/features/kubo-hall/run.py": "7a8163075e7cd98ac0b35cc84b7441629c9e739bece260447514612333aa1e14",
+    "examples/features/kubo-hall/regions.json": "32f39a23d8a6096ee08e54ae2b064b03f9c5b60914bd1344c32462ca52b0a832",
+    "tools/vaspberry_kubo.py": "ea09a2dfc0b3cc8696830178f10b7a71f6b00101fd365f055312aa8425a37207",
+    "tools/kubo_pairs.py": "1f9cee49e1eeac355cf054df2133be28c8f41886aa21aa101c64af18befd6014",
+    "tools/berry_data.py": "fa45cb3fd93ab576e12009d17ca010716aaf89487ee29edda9905f37b8e6b435",
+    "tools/plot_hall.py": "97bbd2000f8908f4d1083034dfc6462438278d83dd8b80804b08127867b21ed6"
+  },
+  "command": [
+    "python",
+    "tools/vaspberry_kubo.py",
+    "wavecar-hall",
+    "--binary",
+    "build/vaspberry-gfortran",
+    "--wavecar",
+    "INPUT/WAVECAR",
+    "--spinor-components",
+    "2",
+    "--spin-multiplicity",
+    "1",
+    "--mesh",
+    "12",
+    "12",
+    "--energy-reference",
+    "unchanged VASP eigenvalue zero",
+    "--mu-min",
+    "-1.4748738806724562",
+    "--mu-max",
+    "-1.1748738806724561",
+    "--mu-num",
+    "61",
+    "--mu-reference",
+    "-0.4380987008049644",
+    "--temperatures",
+    "0",
+    "300",
+    "--regions",
+    "examples/features/kubo-hall/regions.json",
+    "--difference",
+    "valley:K:Kprime",
+    "--degeneracy-policy",
+    "coalesce",
+    "--degeneracy-threshold-eV",
+    "1e-7",
+    "--formats",
+    "csv",
+    "dat",
+    "npz",
+    "--mpi-procs",
+    "1",
+    "--output-dir",
+    "OUTPUT/calculation"
+  ],
+  "interpretation": "rigid-band intrinsic regional charge Hall response; valley = K - Kprime without a factor of one half",
+  "returncode": 0,
+  "wall_seconds": 6.96640338585712,
+  "figure_sha256": {
+    "plot/hall.svg": "b03b02bcf7bd58fd1b51b8a962e45b98d4e1cf8b432f0532478fb3252e0744c0",
+    "plot/hall.pdf": "89220b3adde0f61876e9b5559581f9c33ae96ead26f84553831bf1aca101f34a",
+    "plot/hall.png": "1544ebcdd504195f11466b0cedf40dc1fd5c75d2cde695d0beb8a86ed8de7887"
+  },
+  "checks": {
+    "row_count": 610,
+    "max_abs_total_sigma_e2h": 7.447893051899099e-06,
+    "max_abs_total_delta_sigma_e2h": 4.841365743198101e-07,
+    "regional_sum_max_error_e2h": 6.106235105767834e-16,
+    "valley_difference_max_error_e2h": 5.551115123125783e-17,
+    "probe_delta_valley_e2h": {
+      "0.0": {
+        "-0.2": -0.28599038902201623,
+        "-0.15": -0.11684982767306828,
+        "-0.1": -0.06425871926569185,
+        "-0.05": -0.06425871926569185,
+        "0.0": 0.0,
+        "0.05": 0.0
+      },
+      "300.0": {
+        "-0.2": -0.21758443014206721,
+        "-0.15": -0.12406125725790254,
+        "-0.1": -0.07580593097197937,
+        "-0.05": -0.05816788886515405,
+        "0.0": -0.03242602947371827,
+        "0.05": -0.008158779411413625
+      }
+    }
+  },
+  "execution_output_sha256": {
+    "calculation/hall/conductivity.csv": "fa638b50803e70f7c17dc3aabaa6fd1fa5d300f26b1ccf60bf5308f63bf6d97d",
+    "calculation/hall/conductivity.dat": "17002550565d6fdb2d70072550fd369501243e89f9e40c768ebb1b1e29f10ba9",
+    "calculation/hall/conductivity.json": "3a625bbf987defd952a1b2179d3c7b43d966954676a5fbe66585e562fb74743c",
+    "calculation/hall/conductivity.npz": "afbfec481f924ac359f517ec91449d801603c1cd78b9d5aca52178da9e8ea590"
+  },
+  "published_metadata_note": "Workstation paths replaced by logical INPUT/OUTPUT filenames; numerical tables and figures are unchanged. Original execution metadata remains in the private run archive.",
+  "reference_scope": "Catalog baseline: existing actual12x12/26-band source, all26 bands retained. Padded convergence cases are separate.",
+  "output_sha256": {
+    "calculation/hall/conductivity.csv": "fa638b50803e70f7c17dc3aabaa6fd1fa5d300f26b1ccf60bf5308f63bf6d97d",
+    "calculation/hall/conductivity.json": "de04578149bbd57ef64cb0f83896ef9ccd561a0a01af2dd038449fa3302ceb6d",
+    "calculation/hall/conductivity.npz": "afbfec481f924ac359f517ec91449d801603c1cd78b9d5aca52178da9e8ea590",
+    "calculation/hall/conductivity.dat": "17002550565d6fdb2d70072550fd369501243e89f9e40c768ebb1b1e29f10ba9",
+    "plot/hall.svg": "b03b02bcf7bd58fd1b51b8a962e45b98d4e1cf8b432f0532478fb3252e0744c0",
+    "plot/plot.json": "0279c66bec81871dba6e782322eca4ee319cf7e10a10e63c7f9f8ead5bf4e423",
+    "plot/hall.pdf": "89220b3adde0f61876e9b5559581f9c33ae96ead26f84553831bf1aca101f34a",
+    "plot/hall.png": "1544ebcdd504195f11466b0cedf40dc1fd5c75d2cde695d0beb8a86ed8de7887"
+  }
+}

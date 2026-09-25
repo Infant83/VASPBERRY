@@ -1,0 +1,286 @@
+{
+  "status": "PASS_RETAINED_RAW_OPERATOR_AND_INDEPENDENT_KUBO_REDUCTION",
+  "mesh": [
+    18,
+    18
+  ],
+  "point_count": 324,
+  "source_bands": 64,
+  "occupied": 10,
+  "global_gap_eV": 0.45099103176048705,
+  "bz_area_inv_A2": 2.3666235435978784,
+  "matrix_sha256": "1e6bac2af2f8f31a4af5a62fb177c311bba293db26d263df38e1a02694f5e0d4",
+  "matrix_metadata_sha256": "74eff16e20504817524bb545cf3481f898f5749197cf6ce51d1ac348c2afb81b",
+  "assembled_wavecar_sha256": "2434fced97377a59521754c1b30f630e063d46f70d6514c8b008a006316a1e4f",
+  "raw_to_cache_arrays": "exact",
+  "source_runs": {
+    "bi-18x18-b64-chunk00": {
+      "export_sha256": "ae4b765a46a92457ccb226e4b543ed98c0bdba22ff19a13324921dd948581db0",
+      "run_sha256": "bc395e59d35efe9abc5e0dd0cabe7d69ba0c91a52b3b728ebbf6ed3e0983f7f6",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632",
+      "assembly_source_sha256_verified": {
+        "SPIN_VELOCITY.bin": "ae4b765a46a92457ccb226e4b543ed98c0bdba22ff19a13324921dd948581db0",
+        "BERRY_CONNECTION.bin": "5e0afbb949dba27aef13ff6b7894bda0284d24ab2ece93b8264c5f3f8017a8d2",
+        "WAVECAR": "ba90587ee904c9fb4c3bbdbba57ff216f8f0be4fe615126ebbf8e58cb58de8c8",
+        "OUTCAR": "ecec3474ab16674125501ad41571cf81743988463aa160cde4b4e72e00a161ce",
+        "INCAR": "64a08df230e08de1e11c99ba374b30b9454429383d80dba26629b8a3c5dbf7cc",
+        "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+        "KPOINTS": "d271397eb2d88e16884e5a9a0740f5b5cd47dad5bdaf2e558610a71f68152f57",
+        "run.json": "bc395e59d35efe9abc5e0dd0cabe7d69ba0c91a52b3b728ebbf6ed3e0983f7f6",
+        "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+        "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+      }
+    },
+    "bi-18x18-b64-chunk01": {
+      "export_sha256": "5474e4c1aec4835aa21e04c87129e8f56fecd91d2e31b74c310dc264276a144d",
+      "run_sha256": "87dc847281ae659598848bb9c7b3d118899d7b074b3f435571da3a1773358910",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632",
+      "assembly_source_sha256_verified": {
+        "SPIN_VELOCITY.bin": "5474e4c1aec4835aa21e04c87129e8f56fecd91d2e31b74c310dc264276a144d",
+        "BERRY_CONNECTION.bin": "f157f6adb24ec2d464e6fa7b2256fed6d513c6b4e2a4d4e77032c6b0b066a1ee",
+        "WAVECAR": "b735ad8ba6dc5eeb292f696a1fdc3bb3433f48e0f050e40c173804914f85a922",
+        "OUTCAR": "d0ad3574a7bd721d4e4701060c3f35cc049787da258c6084bef03c0107110f6d",
+        "INCAR": "64a08df230e08de1e11c99ba374b30b9454429383d80dba26629b8a3c5dbf7cc",
+        "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+        "KPOINTS": "f4098761d8647e73930d747651db77598b8ad610389d87b23374f853c7ad0f33",
+        "run.json": "87dc847281ae659598848bb9c7b3d118899d7b074b3f435571da3a1773358910",
+        "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+        "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+      }
+    },
+    "bi-18x18-b64-chunk02": {
+      "export_sha256": "08035d1dda810232c6912300079f4a004bd636ae1178af0091a6c8a9bca6055c",
+      "run_sha256": "5f8389680096c17ae084cb9a1fa5a8ee32876e231d67b78daf1f1fffd1b25aaa",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632",
+      "assembly_source_sha256_verified": {
+        "SPIN_VELOCITY.bin": "08035d1dda810232c6912300079f4a004bd636ae1178af0091a6c8a9bca6055c",
+        "BERRY_CONNECTION.bin": "bd9a6fe503fe510b0171529ff83b972956fce5fa04979b113b6c6a3a5457583c",
+        "WAVECAR": "865522c2f7d071a99021f59dda2c81a49c65ce7ca9a3f4c2384aa579b2f3771a",
+        "OUTCAR": "89f6b350030c7fe02f23cb0740e9d38d7833d30a2aba0cc4e718b9e6f2489f65",
+        "INCAR": "64a08df230e08de1e11c99ba374b30b9454429383d80dba26629b8a3c5dbf7cc",
+        "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+        "KPOINTS": "fac45314bcc15ad85091cf1dab00829e622dbb80cfe5132afe51240c97745d1f",
+        "run.json": "5f8389680096c17ae084cb9a1fa5a8ee32876e231d67b78daf1f1fffd1b25aaa",
+        "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+        "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+      }
+    },
+    "bi-18x18-b64-chunk03": {
+      "export_sha256": "705624d3575425a26a475c40203e15ebe4e7c4c5ae36803e8152914e085bd92c",
+      "run_sha256": "a7fd49980c2b9d33be0fbf124814d6e4e1170c965e3cba71de50cd21de04434e",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632",
+      "assembly_source_sha256_verified": {
+        "SPIN_VELOCITY.bin": "705624d3575425a26a475c40203e15ebe4e7c4c5ae36803e8152914e085bd92c",
+        "BERRY_CONNECTION.bin": "ee4242d857eb528634cf2cfbd2d30839503e5abc063ac4403423247529dc32ee",
+        "WAVECAR": "11e9df5ddf6c5103c51dfb5b13dc341bc035b7a212437a7aefba9e2628c62c52",
+        "OUTCAR": "c145ed1cf24b884ba7ad5b705816b925a3d0e16469ac799788cedc1a4a287c1b",
+        "INCAR": "64a08df230e08de1e11c99ba374b30b9454429383d80dba26629b8a3c5dbf7cc",
+        "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+        "KPOINTS": "e7e51c213aee8d1de6e5ee4f7c2c833a4ec7cab41b2e951a3f862783ff7f7cb8",
+        "run.json": "a7fd49980c2b9d33be0fbf124814d6e4e1170c965e3cba71de50cd21de04434e",
+        "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+        "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+      }
+    },
+    "bi-18x18-b64-chunk04": {
+      "export_sha256": "57b17a9282090fea3a009979c08daf9f30fdc4860500f89a8b28638c117b2975",
+      "run_sha256": "13fe24d313bd690379f0e46ea90aba99d7c4e3d0593e1e7691b3bad833b4d7c9",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632",
+      "assembly_source_sha256_verified": {
+        "SPIN_VELOCITY.bin": "57b17a9282090fea3a009979c08daf9f30fdc4860500f89a8b28638c117b2975",
+        "BERRY_CONNECTION.bin": "753b94f6ddefda689571bf9d3a6f059bac4a4dee27bd11c50d8d6572eac40dfc",
+        "WAVECAR": "3fda078df3d11f791fa697e9b8f582170dd367aa01bb6b7b990d3395921606f5",
+        "OUTCAR": "fe13151c19ef3c16ce0d32fff85f0c26659c37b48e74ffed9e52b9e30b3235f6",
+        "INCAR": "64a08df230e08de1e11c99ba374b30b9454429383d80dba26629b8a3c5dbf7cc",
+        "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+        "KPOINTS": "2ed3918f59bb9c0fd222415e2e74d82d5d2b40a3418dea73b21229ad350a0d73",
+        "run.json": "13fe24d313bd690379f0e46ea90aba99d7c4e3d0593e1e7691b3bad833b4d7c9",
+        "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+        "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+      }
+    },
+    "bi-18x18-b64-chunk05": {
+      "export_sha256": "d2c28b410f3665827a1f157f917692b09e0ff98a4a996a784da46d5a3c966680",
+      "run_sha256": "2b1bf19ee6a13e08444e6bc7308ec465e5d4b3f1ef3ef2dd45c63c5f37bbbd4f",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632",
+      "assembly_source_sha256_verified": {
+        "SPIN_VELOCITY.bin": "d2c28b410f3665827a1f157f917692b09e0ff98a4a996a784da46d5a3c966680",
+        "BERRY_CONNECTION.bin": "d62f3db524950914a571f4f5356fbff4ad370c7e502b3bdfa6058866d86834d5",
+        "WAVECAR": "022b67b94ce256bb8ed986069938b53ba5349789e73808e05fdd77d7e31c2173",
+        "OUTCAR": "04de2ea3015a49d655ee29355e6cd66f3733289c88c60b8068a1ed0b3d4c4ceb",
+        "INCAR": "64a08df230e08de1e11c99ba374b30b9454429383d80dba26629b8a3c5dbf7cc",
+        "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+        "KPOINTS": "ee80a54098b50b3e2d580fa8e370e5ee61a4468e509e2bdef34afdca1449898a",
+        "run.json": "2b1bf19ee6a13e08444e6bc7308ec465e5d4b3f1ef3ef2dd45c63c5f37bbbd4f",
+        "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+        "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+      }
+    },
+    "bi-18x18-b64-chunk06": {
+      "export_sha256": "e363ee61cda13508c3ba117f3f52c7fec0ad1e6c97f7f9e64f839c05c5d8df88",
+      "run_sha256": "2c832678522799336a444b72725df82d6486d36b76a974e0474a0e00e4b6665a",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632",
+      "assembly_source_sha256_verified": {
+        "SPIN_VELOCITY.bin": "e363ee61cda13508c3ba117f3f52c7fec0ad1e6c97f7f9e64f839c05c5d8df88",
+        "BERRY_CONNECTION.bin": "faa9afad28f44ec53bbad7bda5f899c23bcc7b160062ddc39676e773e1e1c267",
+        "WAVECAR": "c6706b2a49ac0dd8f6698b20e1c7a199a365a4f440390e536dd28dfebf5aefbd",
+        "OUTCAR": "fba75ac6621bae550b2a5f7b1e3107dbadd9e5e8fd15b61e83ecd34a8899833a",
+        "INCAR": "64a08df230e08de1e11c99ba374b30b9454429383d80dba26629b8a3c5dbf7cc",
+        "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+        "KPOINTS": "c660ba48ff7c0e681ddf7c68837b64f56a153958b6dddd2037d0e41412f05ae1",
+        "run.json": "2c832678522799336a444b72725df82d6486d36b76a974e0474a0e00e4b6665a",
+        "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+        "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+      }
+    },
+    "bi-18x18-b64-chunk07": {
+      "export_sha256": "89e107ef22b22768d48874d8b09ed6c72b4f6e67d5bd19d0421049647983a398",
+      "run_sha256": "fdb085e327f05c670e05d52f01e950af2d0cf966af9b375fff555ae3e4dd0add",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632",
+      "assembly_source_sha256_verified": {
+        "SPIN_VELOCITY.bin": "89e107ef22b22768d48874d8b09ed6c72b4f6e67d5bd19d0421049647983a398",
+        "BERRY_CONNECTION.bin": "47b9fe58dafb1e48a17aed154563d98ec4c8465d7615557521ce81171396ee7f",
+        "WAVECAR": "e2ded524afaefbe52431985185ee638c63cf71b29a1efa5074b618a79df8bbcf",
+        "OUTCAR": "4915f99e03261a179b43641cbcc0d30de460c14f24c905b2c6bf0cfbec015c1c",
+        "INCAR": "64a08df230e08de1e11c99ba374b30b9454429383d80dba26629b8a3c5dbf7cc",
+        "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+        "KPOINTS": "691d626b27d045bbd88e6949f526d347b8ef61ab1ea9fefd1ad36dac7dcd3e87",
+        "run.json": "fdb085e327f05c670e05d52f01e950af2d0cf966af9b375fff555ae3e4dd0add",
+        "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+        "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+      }
+    },
+    "bi-18x18-b64-chunk08": {
+      "export_sha256": "a84473a966a60146931e6bb87ad368c0a051a851ffa1d2fda7e3df014dfe18c6",
+      "run_sha256": "3ed0b818f54d14bea683a46f43df9527ecd78160336921c0c9514a5dd0a7d680",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632",
+      "assembly_source_sha256_verified": {
+        "SPIN_VELOCITY.bin": "a84473a966a60146931e6bb87ad368c0a051a851ffa1d2fda7e3df014dfe18c6",
+        "BERRY_CONNECTION.bin": "1a879a1a3464030acf2cd87111d82cdedafd45adbb2101a8b24956f87d5cce53",
+        "WAVECAR": "2b60cf218edb3badb5615b36a532653a1655facab558e9665ab35430f7bb984b",
+        "OUTCAR": "ddef555577c284bf2857e8df26f3d669a733d38a10d08bc9dcb47c1ed903f0e6",
+        "INCAR": "64a08df230e08de1e11c99ba374b30b9454429383d80dba26629b8a3c5dbf7cc",
+        "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+        "KPOINTS": "e84b2ab9d63d54c38b27a0e24fba0c16c61379b1b143ab5d4574b2efc22a0ff2",
+        "run.json": "3ed0b818f54d14bea683a46f43df9527ecd78160336921c0c9514a5dd0a7d680",
+        "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+        "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+      }
+    }
+  },
+  "common_hamiltonian_inputs": {
+    "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+    "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+    "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+  },
+  "caps": [
+    {
+      "retained_bands": 48,
+      "source_band_count": 64,
+      "sigma_zxy": 0.647020461153068,
+      "full_spin_tensor": [
+        [
+          [
+            -0.3303101152796532,
+            2.6443628171842383e-06,
+            3.532338670095819e-09
+          ],
+          [
+            -1.578084087689086e-06,
+            0.33030503503185854,
+            0.026536526641160418
+          ],
+          [
+            1.1549985410190216e-07,
+            0.18431513900503008,
+            -3.1477046321900195e-07
+          ]
+        ],
+        [
+          [
+            3.283563006391522e-08,
+            0.33030258040453625,
+            -0.026535741797988056
+          ],
+          [
+            0.3303070263718464,
+            1.098743516957094e-06,
+            -4.900189768587104e-09
+          ],
+          [
+            -0.18431423119044602,
+            -1.1518759972390652e-07,
+            -9.809261591593801e-09
+          ]
+        ],
+        [
+          [
+            6.656313351495852e-07,
+            0.647020461153068,
+            9.391537420131734e-07
+          ],
+          [
+            -0.6470231782359934,
+            -6.66911012651716e-07,
+            2.1449933066593828e-08
+          ],
+          [
+            -2.5050303896021318e-06,
+            -1.746931580079988e-07,
+            -1.195487358360035e-11
+          ]
+        ]
+      ],
+      "full_charge_tensor": [
+        [
+          1.182192533169453e-15,
+          4.90824119167368e-09,
+          -3.4723517554648473e-09
+        ],
+        [
+          -4.908222077380818e-09,
+          -4.161504857588679e-15,
+          2.40526464844074e-10
+        ],
+        [
+          3.4723498743074603e-09,
+          -2.405250864026172e-10,
+          9.086246872445253e-16
+        ]
+      ],
+      "cli_comparison": {
+        "omega_spin_A2": 5.647038392453396e-12,
+        "omega_charge_A2": 7.304313261820208e-12,
+        "sigma_hbar_over_e_e2_over_h": 5.449474981103529e-15,
+        "charge_sigma_e2_over_h": 1.0960154160015975e-14
+      },
+      "retained_pair_splitting_max_eV": 3.319184036065792e-06,
+      "retained_cutoff_minimum_gap_eV": 0.043206929335909194,
+      "complete_expected_doublets": true,
+      "tables": {
+        "conductivity_csv_dat_equal": true,
+        "conductivity_tensor_count": 27,
+        "curvature_csv_dat_equal": true,
+        "curvature_row_count": 8748,
+        "max_local_csv_spin_difference_A2": 5.647038392453396e-12
+      },
+      "cli_file_sha256": {
+        "spin_curvature.csv": "2b26187143b04d119f7800aaf6b8d5f3f0e6f5a13fdc6cab2bfde52920f3d517",
+        "spin_curvature.dat": "762fbb4f8c0505f7c704b3d541e420cf09ca173c99ff4d68b8750db9cf2ff72e",
+        "spin_hall.csv": "c4a162d8d2c84145e309e0460ea607ccaeba36032afbc354f88d337ae132f0eb",
+        "spin_hall.dat": "e7f546f1ea6d9942b622b7915df97b2a27f837269d6901e1380425c4ff5e3b8f",
+        "spin_hall.json": "377f96fe95d1d2180495bb2f9a4682519ec97ad5739ace427ee5d895dfb75e9e",
+        "spin_hall.npz": "89921cb49539b9cdd68b48c15997bb8147d47624b08e9b1a60a5b70585f032f7"
+      }
+    }
+  ],
+  "source_high_band_pair_splitting_max_eV": 0.0954696334335221,
+  "scope": "Independent sum restricted to each explicitly retained even band space. Stored source count is preserved; highest source states are not used or declared converged. Exact matrix association is checked for all exported source states.",
+  "independent_oracle": "Explicit intermediate-band outer products and occupied-empty scalar contractions; no production numerical helper",
+  "no_integer_rounding": true,
+  "no_source_modifications": true,
+  "audit_source_sha256": {
+    "audit_retained_production.py": "c802300941a063e7bfa226bb9f06f5602174980405e6e86e06d347cb51cacc90",
+    "audit_production.py": "4247ca3258653afb79383beb42e7ea8a831ea5eb3e52752c3070be049d7bdf1a"
+  }
+}

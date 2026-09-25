@@ -1,0 +1,6 @@
+{
+  "regions": [
+    {"name": "patch_A", "center_fractional": [0.0, 0.0, 0.0], "radius_inv_A": 1.2},
+    {"name": "patch_B", "center_fractional": [0.5, 0.5, 0.0], "radius_inv_A": 1.2}
+  ]
+}

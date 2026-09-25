@@ -1,0 +1,138 @@
+{
+  "status": "PASS_RETAINED_RAW_OPERATOR_AND_INDEPENDENT_KUBO_REDUCTION",
+  "mesh": [
+    12,
+    12
+  ],
+  "point_count": 144,
+  "source_bands": 64,
+  "occupied": 10,
+  "global_gap_eV": 0.49727140626960664,
+  "bz_area_inv_A2": 2.3666235435978784,
+  "matrix_sha256": "621fb7ef795dcfc369b75408181bf7cec1e02cf2d028cf59bb01835bf733a8be",
+  "raw_to_cache_arrays": "exact",
+  "source_runs": {
+    "bi-12x12-b64-chunk00": {
+      "export_sha256": "2c6a52c5b9b3df9d9692bb6e6e9ce3f07ffed726aeb2c7c08a951680082aa02f",
+      "run_sha256": "9404af3280b61ced25d84124f54b951a1ebef4c4ea9272e6dfe4996ef433d7fa",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632"
+    },
+    "bi-12x12-b64-chunk01": {
+      "export_sha256": "839be1247ef010d13ab7d21d0b4f666b3e2b5cd678a700e563dc690abb4a8568",
+      "run_sha256": "a51d1664d0693a6f81c0128aef9d9ac705a995caee3f58be52b33c1a7e1bd788",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632"
+    },
+    "bi-12x12-b64-chunk02": {
+      "export_sha256": "7cd4b9f8203e0ce3388b0e3a4ebb528cd5a9adbc1457a6c3071dc08755290024",
+      "run_sha256": "fa2c2bc3e37381d6bfc52524d66765a54893a65b6f6f4ffc665a29fcdd785ddc",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632"
+    },
+    "bi-12x12-b64-chunk03": {
+      "export_sha256": "caed82e62d3eeeac2d2f3ce3606c6d89aa6e1ab0769d3be30123fc2cb7564dbf",
+      "run_sha256": "4bfd5b73e2dbf93f82a91b772e2d9b3502ebed911dcf615eb740f5b96604d4a6",
+      "producer_binary_sha256": "673c20945bce66c6524015bf1a8231caa405e18beae60e25399f66ea6eaeb632"
+    }
+  },
+  "common_hamiltonian_inputs": {
+    "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+    "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+    "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489"
+  },
+  "caps": [
+    {
+      "retained_bands": 48,
+      "source_band_count": 64,
+      "sigma_zxy": 0.6907226657440981,
+      "full_spin_tensor": [
+        [
+          [
+            -0.34029539468155345,
+            2.4714955000052166e-06,
+            -4.149195856937092e-08
+          ],
+          [
+            -1.447079745580461e-06,
+            0.340293232152968,
+            0.02369207139495216
+          ],
+          [
+            2.114044574245932e-07,
+            0.1949663783414538,
+            -8.012405337181693e-08
+          ]
+        ],
+        [
+          [
+            -5.504376312845747e-08,
+            0.34029252475412813,
+            -0.023690108417724228
+          ],
+          [
+            0.3402924143257976,
+            9.693570953677689e-07,
+            4.1482434890605076e-08
+          ],
+          [
+            -0.19496670657067902,
+            -2.1150957304012126e-07,
+            -8.901682748755662e-09
+          ]
+        ],
+        [
+          [
+            5.606853489415656e-07,
+            0.6907226657440981,
+            2.6635119397032546e-07
+          ],
+          [
+            -0.690723833693647,
+            -5.606450868192701e-07,
+            8.896870302533383e-08
+          ],
+          [
+            -8.692136751312601e-07,
+            -1.9830166125532624e-07,
+            -2.3130034825265515e-12
+          ]
+        ]
+      ],
+      "full_charge_tensor": [
+        [
+          1.8354414031393357e-15,
+          -2.2852878522311046e-12,
+          -4.457506759402701e-12
+        ],
+        [
+          2.2819784308427033e-12,
+          -1.1404714148613646e-16,
+          1.799595978659727e-11
+        ],
+        [
+          4.458130185306401e-12,
+          -1.799700473760106e-11,
+          -5.7651530562820495e-16
+        ]
+      ],
+      "cli_comparison": {
+        "omega_spin_A2": 2.8990143619012088e-12,
+        "omega_charge_A2": 9.909440778678781e-13,
+        "sigma_hbar_over_e_e2_over_h": 4.6629367034256575e-15,
+        "charge_sigma_e2_over_h": 5.798635894520238e-15
+      },
+      "retained_pair_splitting_max_eV": 3.3453083165824182e-06,
+      "retained_cutoff_minimum_gap_eV": 0.04320692928759229,
+      "complete_expected_doublets": true,
+      "cli_file_sha256": {
+        "spin_hall.csv": "2731703bbd2450521bcd81370a6fc81a1c1ab9d31c7f962769ec357e073587f8",
+        "spin_hall.dat": "9c2520541c4aa34083d2c789505c70b9acbfcb0e3c23e998d0c05fdfbf463304",
+        "spin_hall.json": "04093988a07ec2d4007538df9be12cc618b9ffb44b30474e879126012fe08189",
+        "spin_hall.npz": "cf3f0b2d86f9841536b507d394bb8d375a6d68b11011b7112fb4511af55bdb8d"
+      }
+    }
+  ],
+  "source_high_band_pair_splitting_max_eV": 0.08387572803606957,
+  "scope": "Independent sum restricted to each explicitly retained even band space. Stored source count is preserved; highest source states are not used or declared converged. Exact matrix association is checked for all exported source states.",
+  "independent_oracle": "Explicit intermediate-band outer products and occupied-empty scalar contractions; no production numerical helper",
+  "no_integer_rounding": true,
+  "no_source_modifications": true
+}

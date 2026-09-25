@@ -1,0 +1,36 @@
+{
+  "complete": true,
+  "source_summary": {
+    "complete": true,
+    "material": "Bi buckled bilayer",
+    "model_occupied": 10,
+    "reference_midgap_eV": -1.128660411491021,
+    "dft_sampled_global_gap_eV": 0.4972714063015772,
+    "edge_case": "edge-w40",
+    "spin_case": "hall-12x12-b48",
+    "edge_display_broadening_eV": 0.01,
+    "spin_convergence_status": "NOT_CONVERGED_IN_K_MESH",
+    "spin_current": "Conventional anticommutator in finite PAW source-band subspace",
+    "z2": 1,
+    "half_zone_sums": [
+      -3,
+      3
+    ],
+    "scope": "Actual VASP reference outputs; response quadrature convergence and Wannier interpolation error are reported separately.",
+    "mesh_study": {
+      "mesh_sizes": [
+        6,
+        12,
+        18
+      ],
+      "source_bands": 64,
+      "retained_bands": 48,
+      "last_sigma_zxy": 0.6470204611530637,
+      "last_increment": -0.043702204591034466,
+      "last_relative_increment": 0.06754377522026458,
+      "note": "Original 18x18 quadrature; source-state and band-closure diagnostics are separate."
+    }
+  },
+  "curvature_display": "Periodic bilinear display interpolation only; integrals use the original points.",
+  "edge_display": "Gaussian spectral broadening of original strip eigenvalues; all degenerate-state weights summed."
+}

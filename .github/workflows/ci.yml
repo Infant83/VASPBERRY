@@ -24,11 +24,50 @@ jobs:
           cache-dependency-path: requirements-transport.txt
       - name: Install Python dependencies
         run: python -m pip install --upgrade pip && python -m pip install -r requirements-transport.txt
+      - name: Install compiled regression dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran libblas-dev liblapack-dev
       - name: Run unit and regression tests
         env:
           MPLBACKEND: Agg
           PYTHONPATH: tools
         run: python -m unittest discover -s tests -v
+
+  feature-examples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-transport.txt
+      - name: Install example dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran libblas-dev liblapack-dev
+          python -m pip install -r requirements-transport.txt
+      - name: Build current serial source
+        run: make serial
+      - name: Fetch and verify the real public Bi VASP input
+        run: python examples/fetch_inputs.py bi --output-dir results/inputs/bi
+      - name: Recalculate VASPBERRY outputs from real Bi and MoS2 WAVECAR files
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python examples/run_examples.py
+          fukui-chern kubo-curvature hall-valley z2 circular-dichroism wavefunction
+          --bi-wavecar results/inputs/bi/WAVECAR
+          --output-dir results/feature-examples
+      - name: Retain example results and failure logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: feature-example-results
+          path: results/feature-examples/
+          if-no-files-found: warn
 
   fortran-portability:
     strategy:

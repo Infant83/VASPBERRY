@@ -1,0 +1,44 @@
+{
+  "status": "PASS",
+  "mesh": [
+    12,
+    12
+  ],
+  "nbands": 60,
+  "source_wavecar_sha256": "3798f9ea551582b3f97b11d519ea29275e19e01df97d782325db78415cebe851",
+  "stages": [
+    {
+      "status": "PASS",
+      "nbands": 60,
+      "wall_seconds": 619.5255918230396,
+      "sampled_peak_rss_bytes": 975175680,
+      "converged": true,
+      "normal_footer": true,
+      "stop_reason": null,
+      "electronic_iterations": 8,
+      "input_incar": "SYSTEM = 1H-MoS2 public-CHGCAR SOC NSCF\nISTART = 0\nICHARG = 11\nPREC = Normal\nENCUT = 400\nEDIFF = 1E-6\nNELM = 200\nNBANDS = 60\nALGO = Normal\nLREAL = .FALSE.\nLASPH = .FALSE.\nISMEAR = 0\nSIGMA = 0.02\nISYM = -1\nLSORBIT = .TRUE.\nSAXIS = 0 0 1\nMAGMOM = 0 0 0 0 0 0 0 0 0\nGGA_COMPAT = .FALSE.\nLMAXMIX = 2\nNSW = 0\nIBRION = -1\nLWAVE = .TRUE.\nLCHARG = .FALSE.\nLVTOT = .FALSE.\n"
+    },
+    {
+      "status": "PASS",
+      "nbands": 60,
+      "ediff_eV": 1e-08,
+      "nelmin": 8,
+      "wall_seconds": 336.75809842697345,
+      "sampled_peak_rss_bytes": 983519232,
+      "converged": true,
+      "normal_footer": true,
+      "stop_reason": null,
+      "restart_input_wavecar_sha256": "0fd0ce5f46334a18c685f92a6b8bd1ce34269a0ab49230799f963494d602ca66",
+      "electronic_iterations": 8,
+      "input_incar": "SYSTEM = 1H-MoS2 public-CHGCAR SOC NSCF\nISTART = 1\nICHARG = 11\nPREC = Normal\nENCUT = 400\nEDIFF = 1e-08\nNELM = 200\nNBANDS = 60\nALGO = Normal\nLREAL = .FALSE.\nLASPH = .FALSE.\nISMEAR = 0\nSIGMA = 0.02\nISYM = -1\nLSORBIT = .TRUE.\nSAXIS = 0 0 1\nMAGMOM = 0 0 0 0 0 0 0 0 0\nGGA_COMPAT = .FALSE.\nLMAXMIX = 2\nNSW = 0\nIBRION = -1\nLWAVE = .TRUE.\nLCHARG = .FALSE.\nLVTOT = .FALSE.\nNELMIN = 8\n"
+    }
+  ],
+  "raw_files_sha256": {
+    "INCAR": "7d1540825dce5cff2ed415e4a2a4da0355e47a4833baf05e5906cf8308b5d111",
+    "OUTCAR.gz": "679426757fc70965e451d4270e502fc025f5887b4d650d339695e29899c08da1",
+    "POSCAR": "3dcf3204cf3142453e7525a08026783e97887d2cb1bf05accdd770ac86c24d53",
+    "OSZICAR.gz": "8d4d734f731570124042a08295f7801b1eb6f2be304eccc9421b3b14403241a9",
+    "KPOINTS": "823f81dfcc69cdeae53f87ffda2293ca07e37c8cd77fb2dc95271954a3a3850f",
+    "EIGENVAL.gz": "1f6d7ebd2815b0455a883dd02585079200b5557501ce99776cadf3d716a55bff"
+  }
+}
