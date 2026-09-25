@@ -1,8 +1,9 @@
 # MoS₂: intrinsic charge and regional valley Hall response
 
-This example starts from an actual VASP spinor `WAVECAR`. VASPBERRY exports
-interband matrix-element pairs and integrates their occupation-weighted Kubo
-response while scanning the chemical potential. The calculation uses the
+This example starts from an actual VASP spinor `WAVECAR`. The native Fortran program
+exports interband matrix-element pairs directly from those wavefunctions.
+The bundled Python integration tool applies occupations and integrates the
+Kubo response while scanning the chemical potential. No Wannierization is needed. The calculation uses the
 same monolayer 1H-MoS₂ structure and fixed SCF density as the
 [Berry-curvature example](../fukui-berry-curvature/README.md).
 
@@ -62,61 +63,100 @@ The setup is SOC, `ICHARG=11`, `ISYM=-1`, 400 eV, with 18 occupied spinor bands.
 Use a complete two-dimensional mesh; the supplied line-path `WAVECAR` cannot
 replace it.
 
-## 2. Calculate the Hall curves
+## 2. Export matrix-element pairs with native Fortran
+
+```bash
+make serial
+repo_dir="$PWD"
+mkdir -p results/mos2-24-native
+(
+  cd results/mos2-24-native
+  "$repo_dir/build/vaspberry" \
+    --wavecar "$repo_dir/results/mos2-24-b60-vasp/WAVECAR" \
+    --spinor 2 --task kubo-pairs --pairs-csv PAIRS.csv > vaspberry.log
+)
+```
+
+`PAIRS.csv` contains every stored band pair and all three Cartesian
+antisymmetric matrix products. This is the wavefunction calculation.
+Pair export uses all stored bands; omit `--bands` in this mode. For MPI, build with
+`make mpi` and use `mpiexec -n 4 "$repo_dir/build/vaspberry-mpi"`.
+
+## 3. Integrate occupations and plot
+
+First validate the exported coordinates, energies and pair coverage against
+the same WAVECAR and save a reusable pair cache:
+
+```bash
+python3 -m pip install -r requirements-transport.txt
+python3 tools/vaspberry_kubo.py import-pairs \
+  --csv results/mos2-24-native/PAIRS.csv \
+  --wavecar results/mos2-24-b60-vasp/WAVECAR \
+  --spinor-components 2 --spin-multiplicity 1 --mesh 24 24 \
+  --energy-reference 'unchanged VASP eigenvalue zero' \
+  --output-dir results/mos2-24-pairs
+
+python3 tools/vaspberry_kubo.py pair-hall \
+  --pairs-dir results/mos2-24-pairs --pair-band-max 40 \
+  --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 61 \
+  --mu-reference -0.43809870 --temperatures 0 300 \
+  --regions examples/features/kubo-hall/regions.json \
+  --difference valley:K:Kprime \
+  --degeneracy-policy coalesce --degeneracy-threshold-eV 1e-7 \
+  --formats csv dat npz --output-dir results/mos2-24-hall
+
+python3 tools/plot_hall.py results/mos2-24-hall/conductivity.csv \
+  --regions total K Kprime valley --temperatures 300 \
+  --quantity delta-sigma --energy-origin-eV -1.27487388 \
+  --energy-label 'μ − Ev (eV)' --output-dir results/mos2-24-hall-plot
+```
+
+The energies above belong to this reference: Ev ≈ −1.27487388 eV and the
+midgap reference μref ≈ −0.43809870 eV, using unchanged VASP eigenvalues.
+Check them against your completed VASP result. For another system or energy
+zero, replace the range and reference. The scan contains 61 chemical
+potentials from Ev − 0.20 to Ev + 0.10 eV at 0 and 300 K.
+
+`pair-hall` performs Fermi occupation weighting and Brillouin-zone integration;
+it is **numerical postprocessing**, not just plotting. Changing μ or T can
+reuse `results/mos2-24-pairs` without rereading WAVECAR or rerunning the native
+matrix-element calculation. `plot_hall.py` only reads the completed tables.
+The [region file](regions.json) defines optional K/K′ integration disks;
+`rest` closes the partition. JSON records this geometry, not electronic structure.
+
+| Output | Use |
+|---|---|
+| `mos2-24-native/PAIRS.csv` | Native interband pair numerators |
+| `mos2-24-pairs/pairs.npz` and `pairs.json` | Reusable validated pair data |
+| `mos2-24-hall/conductivity.csv`, `.dat`, `.npz` | Equivalent numerical Hall tables |
+| `mos2-24-hall/conductivity.json` | Units, sign, regions, operator and degeneracy diagnostics |
+| `mos2-24-hall-plot/hall.png`, `.pdf`, `.svg` | The 300 K regional curves relative to Ev |
+
+All paths in the table are under `results/`. The Hall tables include
+**absolute σ and Δσ**, `total`, `K`, `Kprime`, `rest` and `valley`, plus carrier
+counts. Conductivity is a two-dimensional sheet response in e²/h and siemens;
+no slab thickness is applied. Check the regional sum and the unhalved
+K − K′ difference, along with total-charge cancellation.
+
+The published composite figures use several mesh and band-window runs.
+They can be redrawn from the compact references with [plot.py](plot.py),
+using the command in [reference/README.md](reference/README.md).
+
+### Optional reproduction helper
+
+This MoS₂-specific command combines native pair export, integration, checks
+and plots. It locates Ev and the band-18 gap from the supplied WAVECAR:
 
 ```bash
 python3 examples/features/kubo-hall/run.py \
   --wavecar results/mos2-24-b60-vasp/WAVECAR \
-  --binary build/vaspberry-gfortran \
-  --mesh 24 --pair-band-max 40 --output-dir results/mos2-24-cap40-hall
+  --binary build/vaspberry \
+  --mesh 24 --pair-band-max 40 --output-dir results/mos2-24-checked
 ```
 
-This MoS₂-specific driver identifies the gap above band18 and calls the
-general `wavecar-hall` command. For another material, set its own spin convention,
-chemical-potential range and regions through the general CLI; see
-[applying the workflow to your system](../../APPLY_TO_YOUR_SYSTEM.md). It scans 61
-chemical potentials from (E_v-0.20) to (E_v+0.10) eV at 0 and 300 K.
-The [region file](regions.json) defines the two disks; a `rest` region closes
-the partition. JSON describes this optional integration geometry; the
-electronic-structure input remains the VASP `WAVECAR`.
-
-Outputs include:
-
-| Output | Use |
-|---|---|
-| `calculation/native/PAIRS.csv` | Native matrix-element pair export |
-| `calculation/pairs/` | Validated reusable pair cache |
-| `calculation/hall/conductivity.csv`, `.dat`, `.npz` | Equivalent numerical Hall tables |
-| `calculation/hall/conductivity.json` | Units, sign convention, regions, approximation and degeneracy diagnostics |
-| `result.json` (also `results.json`) | Band edges, run status, timings and numerical checks |
-| `plot/hall.png`, `.pdf`, `.svg` | The 300 K regional curves aligned to the VBM |
-
-The tables contain **absolute σ and Δσ**, `total`, `K`, `Kprime`, `rest` and
-`valley`, plus carrier counts. Conductivity is a two-dimensional sheet response
-in (e^2/h) and siemens; no arbitrary slab thickness is applied. The regional
-sum and the unhalved valley difference are checked automatically.
-
-To use MPI for native pair export, pass `--binary build/vaspberry-mpi
---mpi-procs 4`. Python integration then uses the exported cache. Additional
-chemical-potential scans can reuse that cache with the general `pair-hall`
-command; see `python3 tools/vaspberry_kubo.py pair-hall --help`.
-
-## 3. Plot and inspect the data
-
-```bash
-python3 tools/plot_hall.py \
-  results/mos2-24-cap40-hall/calculation/hall/conductivity.csv \
-  --regions total K Kprime valley --temperatures 300 \
-  --quantity delta-sigma --output-dir results/mos2-hall-curves
-```
-
-The general plotter accepts CSV, DAT or NPZ and writes PNG, PDF and SVG.
-Its default horizontal axis is μ − μref. For an axis relative to the VBM,
-pass the `vbm_eV` value from `results.json` as `--energy-origin-eV`.
-
-The published composite figures can be regenerated directly from their
-compact numerical references using [plot.py](plot.py). The command and measured
-convergence values are in [reference/README.md](reference/README.md).
+The general `wavecar-hall` command also combines these stages; see the
+[Kubo/Hall guide](../../../docs/KUBO_TRANSPORT.md). The separate native and
+integration commands above expose each output for reuse with another material.
 
 ## 4. Check k sampling and the intermediate-band window
 

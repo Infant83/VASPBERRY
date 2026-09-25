@@ -27,7 +27,7 @@ jobs:
       - name: Install compiled regression dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gfortran libblas-dev liblapack-dev
+          sudo apt-get install -y gfortran libblas-dev liblapack-dev openmpi-bin libopenmpi-dev
       - name: Run unit and regression tests
         env:
           MPLBACKEND: Agg

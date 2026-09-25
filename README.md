@@ -1,228 +1,193 @@
 # VASPBERRY
-Berry curvature, Chern number, two-dimensional Z2 topology, intrinsic charge
-Hall transport, conventional insulating spin Hall response, and optical
-transition analysis. VASPBERRY reads VASP `WAVECAR` wavefunctions and exported
-matrices; VASP-derived Wannier operators also support interpolation and Hall
-integration. It implements the discrete Brillouin-zone
-method of [Fukui, Hatsugai, and Suzuki, J. Phys. Soc. Jpn. 74, 1674
-(2005)](https://doi.org/10.1143/JPSJ.74.1674), together with circular
-dichroism and real-space wavefunction output.
 
-**Version 1.3.0 — [source release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.3.0).**
+**Topology and response functions directly from VASP wavefunctions.**
+VASPBERRY reads `WAVECAR` and evaluates wavefunction overlaps and interband
+matrix elements in Fortran. Use Fukui methods for Chern numbers and the 2D Z₂
+invariant, and Kubo calculations for Berry-curvature maps, symmetry paths and
+intrinsic charge Hall response. **No Wannier construction or interpolation is
+required for this workflow.**
 
-[Technical report](docs/TECHNICAL_REPORT.md) ([PDF](docs/TECHNICAL_REPORT.pdf)) · [Examples](examples/README.md) · [Installation](docs/BUILD.md)
-See the [1.3.0 notes](docs/releases/v1.3.0.md) and
-[migration guide](docs/MIGRATION.md) for the legacy Kubo factor-of-two fix.
+```text
+VASP calculation → WAVECAR → VASPBERRY Fortran → numerical output → analysis / plots
+```
 
-# Download
+VASP supplies the material's electronic structure. VASPBERRY postprocesses it;
+band plots provide context for the calculated topology and response.
 
-Clone the current default branch, `master`, which includes the examples below:
+[Technical report](docs/TECHNICAL_REPORT.md) ([PDF](docs/TECHNICAL_REPORT.pdf)) ·
+[Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
+[Output formats](docs/OUTPUT_FORMAT.md)
+
+**Latest release: [1.3.0](https://github.com/Infant83/VASPBERRY/releases/tag/v1.3.0).**
+The commands below use current `master`, including the new readable Fortran
+options. The original short options remain supported. See the
+[unreleased changes](CHANGELOG.md#unreleased), [version policy](docs/RELEASING.md)
+and [1.3.0 migration notes](docs/MIGRATION.md).
+
+## Download and compile
 
 ```bash
 git clone https://github.com/Infant83/VASPBERRY.git
 cd VASPBERRY
+make serial
+./build/vaspberry --help
 ```
 
-For a calculation that must remain on version 1.3.0, use its release tag:
+The serial executable is `build/vaspberry`; `build/vaspberry-gfortran` remains
+a compatibility name. For MPI, run `make mpi` and use `build/vaspberry-mpi`.
+See the [build guide](docs/BUILD.md) for GNU/Intel compilers and MPI checks.
+Python is needed for the supplied postprocessing and plotting tools:
+
+```bash
+python3 -m pip install -r requirements-transport.txt
+```
+
+For the fixed 1.3.0 release, clone its tag and follow that version's commands:
 
 ```bash
 git clone --branch v1.3.0 --single-branch https://github.com/Infant83/VASPBERRY.git VASPBERRY-1.3.0
-cd VASPBERRY-1.3.0
 ```
 
-The [release page](https://github.com/Infant83/VASPBERRY/releases/tag/v1.3.0)
-also provides source ZIP and tar archives. The Bi WAVECAR is stored with Git
-LFS; an archive may contain a pointer. Use the input-fetch command below or
-follow the [input guide](examples/INPUTS.md) to obtain the actual wavefunctions.
-Build executables locally with the commands below.
+Update an existing `master` checkout with `git pull --ff-only`. Release tags
+stay fixed; source archives are available on the release page. Large Git LFS
+inputs may need the [input-fetch procedure](examples/INPUTS.md).
 
-To update an existing `master` checkout, run `git pull --ff-only`. A release
-tag stays fixed. Record `git describe --tags --always --dirty` with your
-calculation; see the [version policy](docs/RELEASING.md).
+## Features
 
-# Compile
-
-GNU serial and OpenMPI builds are available through the `Makefile`:
-
-```bash
-make serial
-make mpi
-```
-
-These targets write `build/vaspberry-gfortran` and `build/vaspberry-mpi`.
-Commands below use the serial product; substitute the path if you build an
-executable under another name.
-
-Intel `ifx`/`mpiifx` and legacy `ifort` commands, the direct-access record
-length requirement, and BLAS/LAPACK ABI constraints are documented in the
-[`build guide`](docs/BUILD.md).
-
-WAVECAR format and compiler compatibility are described in the
-[build guide](docs/BUILD.md).
-
-# Features
-
-| Quantity / task | Main interface and guide | Runnable example and results |
+| Task | Native command | Actual VASP example and results |
 |---|---|---|
-| Fukui Berry curvature across the Brillouin zone | Fortran wavefunction overlaps | [MoS₂ curvature map](examples/features/fukui-berry-curvature/) |
-| Chern number of an isolated band or band bundle | Fortran; [Python Fukui workflow](docs/VALLEY_TRANSPORT.md) | [Bi occupied Chern number](examples/features/fukui-chern/); [magnetic MnBi₂Te₄](examples/materials/mnbi2te4-qah/) |
-| Two-dimensional Z₂ invariant | Fortran `-z2 1`; [Fukui–Hatsugai guide](docs/Z2_FUKUI_HATSUGAI.md) | [Z₂ / Bi](examples/features/z2/) |
-| Circular dichroism / optical selectivity | Fortran `-cd`; [usage below](#usage) | [Circular dichroism](examples/features/circular-dichroism/) |
-| Optional PAW circular transition strengths | Standard unmodified VASP optical files; [`waveder-optics` guide](docs/PAW_OPTICS.md) | [MoS₂ monolayer and 1H/2H/3R optical selection](examples/materials/mos2-stacking-valley/) |
-| Real-space wavefunction at Gamma | Fortran `-wf`; [usage below](#usage) | [Wavefunction](examples/features/wavefunction/) |
-| WAVECAR Kubo Berry curvature | Fortran canonical-momentum implementation; [Kubo guide](docs/KUBO_TRANSPORT.md) | [MoS₂ BZ map, symmetry path and bands](examples/features/kubo-curvature/) |
-| WAVECAR Kubo charge Hall versus chemical potential and temperature | Native pair export plus bundled Python integration; [one-command guide](docs/KUBO_TRANSPORT.md#wavecar-to-charge-hall-in-one-command) | [MoS₂ bands, regions and Hall curves](examples/features/kubo-hall/) |
-| Optional full-velocity charge Hall comparison | `velocity-pairs` and `pair-hall`; [operator guide](docs/OPERATOR_ROUTES.md) | [Matched MoS₂ WAVECAR/PAW operators](examples/features/kubo-hall/operator-comparison/) |
-| Insulating PAW optical Hall response | Standard VASP optical files; [`waveder-hall` guide](docs/KUBO_TRANSPORT.md#standard-waveder-insulating-paw-hall-response) | [MnBi₂Te₄ optical integration and convergence checks](examples/materials/mnbi2te4-qah/) |
-| Conventional insulating spin Hall and PAW spin matrices | `spin-export`, `spin-merge`, `spin-matrix`, `spin-hall`; [calculation guide](docs/SPIN_HALL.md) | [Actual Bi matrices, response and convergence](examples/materials/bi-spin-hall/) |
-| Ideal Wannier strip spectra | `wannier-edge`; [edge interpretation](docs/SPIN_HALL.md#edge-spectrum-and-interpretation) | [Bi bands, boundary probabilities and width checks](examples/materials/bi-spin-hall/) |
-| VASP-derived Wannier interpolation and insulating Hall response | `wannier-import`, `wannier-bands`, `wannier-hall`; [operator and transport guide](docs/WANNIER_TRANSPORT.md) | [VASP-derived MnBi₂Te₄ QAH workflow](examples/materials/mnbi2te4-qah/NATIVE_WANNIER.md) |
-| Exported interband-matrix curvature and transport | [Matrix interface and physical-operator contract](docs/KUBO_TRANSPORT.md) | [Developer numerical checks](validation/models/kubo-curvature/) |
-| Two-dimensional intrinsic charge Hall response and reciprocal-space regions | Standardized curvature and occupations; [Hall guide](docs/KUBO_TRANSPORT.md) | [Actual Bi occupied-subspace Hall](examples/features/hall-valley/) |
-| WAVECAR-direct Fukui export and guarded geometric transport | `tools/wavecar_fukui.py`; [valley-transport guide](docs/VALLEY_TRANSPORT.md) | [Actual Bi occupied-subspace calculation](examples/features/hall-valley/) |
-| Historical Kubo normalization import | `tools/vaspberry_kubo.py import-legacy`; [migration guide](docs/MIGRATION.md) | [Import commands and identification checks](docs/MIGRATION.md#historical-doubled-output) |
+| Fukui Berry flux and Chern number of an isolated band or bundle | `--task chern` | [MoS₂ BZ map](examples/features/fukui-berry-curvature/), [Bi occupied bundle](examples/features/fukui-chern/) |
+| 2D Fukui–Hatsugai Z₂ invariant and n-field | `--task z2` | [Bi topological insulator](examples/features/z2/) |
+| Kubo Berry curvature on a BZ mesh or symmetry path | `--task kubo` | [MoS₂ occupied bundle and isolated-band maps, paths and bands](examples/features/kubo-curvature/) |
+| Intrinsic charge Hall response versus chemical potential and temperature | `--task kubo-pairs`, then occupation-weighted postprocessing | [MoS₂ Hall and valley-region curves](examples/features/kubo-hall/) |
+| Circular optical selectivity and transition spectra | `--task optical` / `--task spectrum` | [MoS₂ circular dichroism](examples/features/circular-dichroism/) |
+| Real-space wavefunction at Γ | `--task wavefunction` | [MoS₂ wavefunction](examples/features/wavefunction/) |
 
-These are general-purpose interfaces. Choose the observable and input operator
-for the physical system; use the standardized output in your own analysis.
-The [output specification](docs/OUTPUT_FORMAT.md) distinguishes point
-curvature in Å² from geometric plaquette flux in radians. A finite-mesh Kubo
-integral need not be an integer; a Fukui lattice integer still needs mesh and
-band-isolation checks.
+Fukui plaquette flux and Kubo point curvature are different finite-grid
+quantities. A Fukui integer needs band isolation and mesh checks. A Kubo
+integral is not rounded to an integer; its k mesh and intermediate band
+window must be converged. Native Kubo uses canonical momentum of the stored
+pseudo-wavefunctions. Optional full-velocity comparisons assess the missing
+PAW/nonlocal/SOC terms; see [operator choices](docs/OPERATOR_ROUTES.md).
 
-# Usage
+## Usage
 
-## Start with actual VASP files
+### First calculation: the supplied MoS₂ WAVECAR
 
-The [user tutorials](examples/README.md) reproduce calculations from public
-**MoS₂ and Bi WAVECAR files**. Each explains the input files, the explicit
-VASPBERRY command and its options, original output files, plotting, comparison
-with a checked reference, and how to apply the command to your own material.
+Run from the repository root. This small example uses the actual SOC
+band-path WAVECAR already in the repository, and writes the curvature of
+the occupied bands 1–18 at its supplied k points:
 
 ```bash
-make serial
-python3 -m pip install -r requirements-transport.txt
-# A complete real MoS2 example; its WAVECAR is already in the repository:
-python3 examples/features/kubo-curvature/run.py --output-dir results/mos2-kubo
-
-# Fetch the real Bi WAVECAR if you do not have its Git LFS payload:
-python3 examples/fetch_inputs.py bi --output-dir results/inputs/bi
-python3 examples/features/z2/run.py --wavecar results/inputs/bi/WAVECAR \
-  --output-dir results/bi-z2
+mkdir -p results/mos2-path
+./build/vaspberry --task kubo \
+  --wavecar examples/1H-MoS2/KPATH/2.band/WAVECAR --spinor 2 --bands 1:18 --bundle 1 \
+  --curvature-csv results/mos2-path/KUBO.csv
 ```
 
-The wrappers execute and record the production commands shown in each tutorial.
-The [input catalog](examples/INPUTS.md) lists the available VASP files and their k sampling.
-For another material, follow [the transfer guide](examples/APPLY_TO_YOUR_SYSTEM.md)
-and set the mesh, bands, spinor setting and energies from your own VASP output.
+The CSV contains numerical point curvatures. The
+[MoS₂ tutorial](examples/features/kubo-curvature/) separately provides a
+matching full-BZ/path dataset and commands for the reference panels. A line
+path alone cannot supply a BZ integral. Use a fresh output
+path for each run.
 
-## Apply the calculation to your input
+### Apply the same commands to your system
 
-Run `./build/vaspberry-gfortran -h`,
-`python3 tools/wavecar_fukui.py --help`, or
-`python3 tools/vaspberry_kubo.py --help` for all options.
-The following Fortran commands assume a compatible `WAVECAR` in the working
-directory. Use a separate output directory for each calculation.
+Choose the mesh, band range and spinor count from your VASP calculation.
+These illustrative commands assume the appropriate `WAVECAR` in the working
+directory; the band indices are examples, not universal occupied counts.
 
 ```bash
-# Berry flux / Chern: full 12 × 12 mesh, bands 1–18.
-./build/vaspberry-gfortran -kx 12 -ky 12 -ii 1 -if 18
+# Fukui flux and Chern number: full 12 × 12 mesh, bands 1–18.
+./build/vaspberry --task chern --wavecar WAVECAR \
+  --mesh 12,12 --spinor 2 --bands 1:18 --output BERRYCURV
 
-# Z₂: full even Gamma-centered SOC mesh, occupied bands 1–10.
-./build/vaspberry-gfortran -f WAVECAR -o NFIELD -z2 1 \
-  -kx 12 -ky 12 -s 2 -ii 1 -if 10
+# Bi example: full even mesh, occupied spinor bands 1–10.
+./build/vaspberry --task z2 --wavecar WAVECAR \
+  --mesh 12,12 --spinor 2 --bands 1:10 --output NFIELD
 
-# Circular optical response for bands 11 → 12.
-./build/vaspberry-gfortran -kx 12 -ky 12 -cd 1 -ii 11 -if 12
+# Occupied-bundle point curvature, excluding internal transitions.
+./build/vaspberry --task kubo --wavecar WAVECAR --spinor 2 \
+  --bands 1:18 --bundle 1 --curvature-csv KUBO_BUNDLE.csv
 
-# Real-space band 18 at Gamma; matching POSCAR and EIGENVAL are also required.
-./build/vaspberry-gfortran -wf 18 -k 1 -ng 40,40,40
+# Reusable all-band pair numerators for charge Hall postprocessing.
+./build/vaspberry --task kubo-pairs --wavecar WAVECAR --spinor 2 \
+  --pairs-csv PAIRS.csv
 ```
 
-Z₂ requires a nonmagnetic time-reversal-symmetric insulator and a full,
-unshifted, even `Nx × Ny × 1` mesh with `Nx,Ny >= 4`, generated with `ISYM=-1`.
-Use only a final `Z2_FIELD.csv` with `result_status=PASS`,
-`reportable_invariant=1` and matching half-zone parities. Input gap, physical
-time-reversal symmetry and mesh convergence require separate checks; see the
-[Z₂ guide](docs/Z2_FUKUI_HATSUGAI.md).
-
-For a semimetal, `-ne 18` can select a fixed 18-band geometric manifold when
-the automatically counted occupations differ across k points. This does not
-supply the changing occupations for metallic Hall transport. Use the
-transport workflow with its occupation and band-window checks.
-
-### Python workflows
-
-Use `tools/vaspberry_kubo.py wavecar-hall` for a complete WAVECAR-to-Kubo-Hall
-calculation. Fortran computes the matrix elements; the bundled Python tool
-integrates occupations, temperatures and user-defined regions. `pair-hall`
-reuses saved matrix data for further scans. Numerical output can be CSV, DAT
-or NPZ, with JSON conditions; `tools/plot_hall.py` reads any of these and writes
-PNG, PDF or SVG. See the [actual MoS₂ transport example](examples/features/kubo-hall/).
-
-For the supported standard VASP optical output, `waveder-hall` integrates the
-PAW occupied-to-empty matrix elements directly inside a global insulating
-gap at zero temperature. Its [input and operator scope](docs/KUBO_TRANSPORT.md#standard-waveder-insulating-paw-hall-response)
-is distinct from the native canonical-momentum calculation.
-
-For a validated VASP-derived Wannier representation, `wannier-import`,
-`wannier-bands` and `wannier-hall` compute full-connection bands and insulating
-Hall response inside VASPBERRY. Both Hamiltonian and position matrices are
-required. See the [general guide](docs/WANNIER_TRANSPORT.md) and
-[actual magnetic-film tutorial](examples/materials/mnbi2te4-qah/NATIVE_WANNIER.md).
-
-The [MoS₂ Kubo tutorial](examples/features/kubo-curvature/) starts from real
-WAVECARs and pairs a Brillouin-zone curvature map with a marked symmetry path,
-band structure and path curvature. The
-[Bi Hall tutorial](examples/features/hall-valley/) uses full-mesh occupied-subspace
-Fukui flux in its insulating gap. Its unresolved Kramers partners are not
-used as separately isolated Kubo bands.
-
-For exported physical interband matrices, use the [matrix/Hall guide](docs/KUBO_TRANSPORT.md)
-and [NPZ/JSON output specification](docs/OUTPUT_FORMAT.md). This interface is
-separate from the native WAVECAR approximation.
-
-The WAVECAR-direct workflow exports Fukui plaquette flux, four vertex energies,
-adjacent-band gaps and link-quality diagnostics. A basic full-mesh export is:
+The native syntax groups a mesh as `NX,NY` and a band range as `FIRST:LAST`.
+Specialized legacy options can still be used; for example, `--task kubo` is
+`-kubo 2`, and `--bands 1:18` is `-ii 1 -if 18`. The optional
+`--task kubo-integral` (`-kubo 1`) additionally evaluates the mesh integral.
+Use `./build/vaspberry --help` for the full list. MPI uses the same arguments:
 
 ```bash
-python3 tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 \
-  --energy-band 19 --output-dir results/direct-fukui
+mpiexec -n 4 ./build/vaspberry-mpi --task chern --wavecar WAVECAR \
+  --mesh 12,12 --spinor 2 --bands 1:18 --output BERRYCURV
 ```
 
-The [valley-transport guide](docs/VALLEY_TRANSPORT.md) gives
-`--transport-t0`, `--transport-full-t0`, region definitions and the required
-unoccupied sentinel band. These scans report cumulative `sigma_xy(mu)`;
-a smooth energy derivative or material convergence needs further analysis.
-Read the [migration guide](docs/MIGRATION.md) before comparing historical
-Kubo data: version 1.3.0 corrects their factor-of-two normalization.
+For Z₂, use a nonmagnetic time-reversal-symmetric insulator and a full,
+unshifted, even `Nx × Ny × 1` mesh with `Nx,Ny >= 4`, generated with
+`ISYM=-1`. Report only a final `Z2_FIELD.csv` with `result_status=PASS`,
+`reportable_invariant=1` and matching half-zone parities. See the
+[Z₂ guide](docs/Z2_FUKUI_HATSUGAI.md) for input and convergence checks.
 
-# Examples and material datasets
+### Postprocess and plot saved results
 
-See the [technical report](docs/TECHNICAL_REPORT.md) for reciprocal-space maps,
-band-resolved curvature, optical spectra and their physical interpretation.
+The native program writes Berry-flux maps, point-curvature CSVs, pair data
+and task-specific outputs. The supplied Python tools read those results:
 
-- [Feature tutorials](examples/README.md): actual VASP files, production
-  commands, numerical reference outputs, figures and application to your system.
-- [Material catalog](examples/materials/): existing MoS₂/Bi data, sampling and
-  reproduction requirements. Their original paths remain available.
-- [1H-MoS₂](examples/1H-MoS2/): full-mesh stored maps and a separate band-path
-  WAVECAR. A line-mode input cannot supply a full-BZ integral.
-- [Bi buckled honeycomb](examples/Bi_Z2/): reviewed input templates,
-  Z₂ result and full-mesh wavefunctions.
-- [Standalone Hall CSV plotting](examples/kubo/): reusable plotting for
-  standardized transport output.
-- [Developer numerical checks](validation/models/): analytic/synthetic fixtures
-  retained separately for testing formulas and regressions.
+- **Curvature maps and paths:** plot the computed samples, with optional
+  interpolation for display; the [MoS₂ example](examples/features/kubo-curvature/)
+  shows both maps and symmetry-path panels alongside the material's bands.
+- **Charge Hall:** `import-pairs` checks and caches native pairs; `pair-hall`
+  applies occupations, temperature and BZ/region integration. Reuse the cache
+  for new scans. This is numerical postprocessing, in addition to plotting.
+  See the [explicit three-stage workflow](docs/KUBO_TRANSPORT.md#native-pairs-to-charge-hall).
+- **Figures and tables:** Hall output supports CSV, DAT and NPZ with JSON
+  metadata; `tools/plot_hall.py` produces PNG, PDF and SVG. JSON records
+  conditions and units, rather than replacing VASP input files.
 
-Method details, diagnostics and output contracts are kept in the linked
-guides. An importable Python-library port remains a [roadmap](docs/ROADMAP.md)
-item.
+Example `run.py` scripts and `wavecar-hall` remain optional convenience
+wrappers that execute and record these stages. They are not needed to run
+the Fortran program. For your own material, start with the
+[transfer guide](examples/APPLY_TO_YOUR_SYSTEM.md).
 
-# Contributors
+## Optional extensions and supporting checks
+
+The main tutorials above use ordinary VASP wavefunctions. Separate guides
+cover extra operators and independent checks:
+
+- [PAW optical and full-velocity comparisons](docs/OPERATOR_ROUTES.md),
+  including [matched MoS₂ charge Hall data](examples/features/kubo-hall/operator-comparison/).
+- [Conventional spin Hall response](docs/SPIN_HALL.md) with explicitly
+  supplied spin and velocity matrices; [Bi results](examples/materials/bi-spin-hall/)
+  complement its directly calculated Z₂ invariant.
+- [Wannier-based supporting calculations](docs/WANNIER_TRANSPORT.md):
+  externally prepared Wannier90 operators, with optional bundled NumPy
+  response/strip calculations and independent postw90 comparisons. The Bi
+  edge spectrum supports the Z₂ interpretation; the
+  [MnBi₂Te₄ benchmark](examples/materials/mnbi2te4-qah/) illustrates a nonzero
+  Chern invariant and integration convergence. These are optional validation
+  routes, outside the WAVECAR/Fortran workflow.
+- [Advanced geometric transport](docs/VALLEY_TRANSPORT.md),
+  [matrix interfaces](docs/KUBO_TRANSPORT.md#applying-the-workflow-to-other-data)
+  and [developer model checks](validation/models/).
+
+The [technical report](docs/TECHNICAL_REPORT.md) connects these capabilities
+to reference figures. The [material catalog](examples/materials/) records
+input preparation and sampling. VASPBERRY implements the lattice method of
+[Fukui, Hatsugai and Suzuki, JPSJ 74, 1674 (2005)](https://doi.org/10.1143/JPSJ.74.1674);
+method-specific references are given in each guide.
+
+## Contributors
+
 * Hyun-Jung Kim: Main developer
 * Sun-Woo Kim: Circular dichroism and Kubo formula
 
-# Citation of the code:
+## Citation
+
+```bibtex
 @software{Kim_VASPBERRY_2018,author = {Kim, Hyun-Jung},doi = {10.5281/zenodo.1402593},month = {8},title = {{VASPBERRY}},url = {https://github.com/Infant83/VASPBERRY},version = {1.0},year = {2018}}
 
 @article{PhysRevLett.128.046401,
@@ -239,3 +204,4 @@ item.
   doi = {10.1103/PhysRevLett.128.046401},
   url = {https://link.aps.org/doi/10.1103/PhysRevLett.128.046401}
 }
+```

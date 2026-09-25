@@ -51,40 +51,60 @@ to generate `results/mos2-fullmesh-vasp/WAVECAR` and
 `results/mos2-path-vasp/WAVECAR` with your licensed VASP and PAW datasets.
 Only the k-point list changes between these calculations.
 
-## Calculate and plot
+## 1. Calculate the mesh and path with native Fortran
 
-From the repository root:
+After completing the two VASP preparations above, run from the repository root:
 
 ```bash
 make serial
-python3 -m pip install -r requirements-transport.txt
-python3 examples/features/kubo-curvature/run_fullmesh.py \
-  --wavecar results/mos2-fullmesh-vasp/WAVECAR \
-  --path-wavecar results/mos2-path-vasp/WAVECAR \
-  --output-dir results/mos2-kubo-panels
+repo_dir="$PWD"
+mkdir -p results/mos2-kubo-mesh results/mos2-kubo-path
+(
+  cd results/mos2-kubo-mesh
+  "$repo_dir/build/vaspberry" \
+    --wavecar "$repo_dir/results/mos2-fullmesh-vasp/WAVECAR" \
+    --spinor 2 --task kubo --bundle 1 --bands 1:18 \
+    --curvature-csv KUBO.csv > vaspberry.log
+)
+(
+  cd results/mos2-kubo-path
+  "$repo_dir/build/vaspberry" \
+    --wavecar "$repo_dir/results/mos2-path-vasp/WAVECAR" \
+    --spinor 2 --task kubo --bundle 1 --bands 1:18 \
+    --curvature-csv KUBO.csv > vaspberry.log
+)
 ```
 
-The runner defaults to `--mode bundle --map-style smooth`. It executes
-VASPBERRY, validates coordinates and external gaps against both WAVECARs,
-and exports unchanged VASP energies, native CSV results, PNG/PDF figures
-and execution records. The prepared-input workflow takes about four seconds
-on the reference machine.
+Both calculations read the VASP wavefunctions directly. No Wannierization
+or fitted Hamiltonian is required. `--task kubo` uses every stored point and
+creates no new sampling. `--bundle 1` writes one trace-curvature row per
+k point and spin, including the minimum gap to excluded states. It rejects
+external gaps ≤10⁻⁵ eV before creating the CSV; internal valence-band
+degeneracies are allowed. The native outputs are
+`results/mos2-kubo-mesh/KUBO.csv` and `results/mos2-kubo-path/KUBO.csv`.
+See the [output format](../../../docs/OUTPUT_FORMAT.md) for their columns.
 
-The native command in each calculation directory is:
+For MPI, build with `make mpi` and replace the executable with
+`mpiexec -n 2 "$repo_dir/build/vaspberry-mpi"` in each command.
+
+## 2. Plot the native results
 
 ```bash
-/path/to/vaspberry-gfortran \
-  -f /path/to/WAVECAR -s 2 -kubo 2 -kubo_bundle 1 -ii 1 -if 18 \
-  -kubo_csv KUBO.csv > vaspberry.log
+python3 -m pip install -r requirements-transport.txt
+python3 tools/plot_berry_panels.py \
+  --method kubo-bundle --input results/mos2-kubo-mesh/KUBO.csv \
+  --path-input results/mos2-kubo-path/KUBO.csv \
+  --path-wavecar results/mos2-path-vasp/WAVECAR \
+  --poscar examples/features/fukui-berry-curvature/inputs/POSCAR \
+  --occupied 18 --path-node-indices 1 25 49 --path-labels K Gamma Kprime \
+  --map-style smooth --display-grid 401 \
+  --title '1H-MoS2' --output results/mos2-kubo-panels/figure.png
 ```
 
-Run it separately for the mesh and path WAVECARs. `-kubo 2` uses their actual
-stored points; it creates no new sampling. `-kubo_bundle 1` writes one
-trace-curvature row per k point and spin, with its minimum external gap.
-It rejects external gaps ≤10⁻⁵ eV before creating the CSV. Internal
-valence-band degeneracies are allowed. This option writes a standalone
-bundle CSV; see the [output format](../../../docs/OUTPUT_FORMAT.md).
-For MPI, use `make mpi` and prefix the MPI executable with `mpiexec -n 2`.
+This Python step reads the two native curvature tables and the stored VASP
+band energies; it does not recalculate curvature. It writes the figure,
+plotted path values and an unchanged-energy band table. Use a PDF output
+suffix for a vector figure.
 
 ## Redraw the supplied results
 
@@ -135,6 +155,21 @@ occupied space. Their finite-resolution values can differ: Fukui uses
 plaquette averages, whereas native Kubo uses point samples, a finite
 empty-band window and the canonical-momentum approximation.
 
+## Optional reproduction helper
+
+The following command combines the two native calculations, input checks
+and plotting for this specific MoS₂ reference:
+
+```bash
+python3 examples/features/kubo-curvature/run_fullmesh.py \
+  --wavecar results/mos2-fullmesh-vasp/WAVECAR \
+  --path-wavecar results/mos2-path-vasp/WAVECAR \
+  --output-dir results/mos2-kubo-checked
+```
+
+Its defaults are `--mode bundle --map-style smooth`. Use the native commands
+above when selecting another material, band bundle or sampling.
+
 ## A meaningful single-band example
 
 The [local K/K′ valley example](valleys/) provides two actual 9×9 VASP patches
@@ -152,13 +187,44 @@ quantity used in the main figure.
 ## Supplied 32-band path example
 
 The original downloadable [48-point WAVECAR](../../1H-MoS2/KPATH/2.band/WAVECAR)
-and its 32-band Kubo calculation remain available:
+is ready for a direct calculation without a new VASP run. Use the complete
+occupied bundle so that its internal degeneracy at Γ is handled correctly:
 
 ```bash
-python3 examples/features/kubo-curvature/run.py \
+mkdir -p results/mos2-path
+build/vaspberry --task kubo \
   --wavecar examples/1H-MoS2/KPATH/2.band/WAVECAR \
-  --output-dir results/mos2-kubo-supplied-path
+  --spinor 2 --bands 1:18 --bundle 1 \
+  --curvature-csv results/mos2-path/KUBO.csv
 ```
+
+`KUBO.csv` has one occupied-bundle row per stored k point. This 32-band input
+has 48 points, including Γ twice; it is distinct from the 26-band, 49-point
+map/path calculation above. Inspect the native CSV directly. The composite
+plotter above requires a full mesh and a matching path, so it is not a
+standalone plotting command for this line file.
+
+### Historical band-resolved path reference
+
+The earlier band-17/18 calculation and its numerical reference remain
+available. Its explicit native command is:
+
+```bash
+repo_dir="$PWD"
+mkdir -p results/mos2-kubo-supplied-path
+(
+  cd results/mos2-kubo-supplied-path
+  "$repo_dir/build/vaspberry" \
+    --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
+    --spinor 2 --task kubo --bands 17:18 --curvature-csv KUBO.csv --output BERRYCURV \
+    > vaspberry.log
+)
+```
+
+Here the output is band-resolved, and unresolved individual-band points
+must remain marked. The optional `examples/features/kubo-curvature/run.py`
+helper calculates this path again in a new `--output-dir` and produces its
+reference figure; it is not a plot-only command.
 
 [Original path figure](reference/figure.png) · [PDF](reference/figure.pdf) ·
 [Summary](reference/summary.csv) · [Native Kubo CSV](reference/KUBO.csv).

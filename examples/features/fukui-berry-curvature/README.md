@@ -52,22 +52,22 @@ The [input guide](inputs/README.md) describes the charge density, potential
 specification, MPI launch option and expected convergence checks. Complete
 this VASP calculation before the next step.
 
-## 2. Run VASPBERRY
+## 2. Run native Fortran on WAVECAR
 
 ```bash
 make serial
 mkdir -p results/mos2-fukui-native
 cd results/mos2-fukui-native
-../../build/vaspberry-gfortran \
-  -f ../mos2-fullmesh-vasp/WAVECAR \
-  -s 2 -kx 12 -ky 12 -ii 1 -if 18 -o BERRYCURV \
+../../build/vaspberry \
+  --wavecar ../mos2-fullmesh-vasp/WAVECAR \
+  --task chern --spinor 2 --mesh 12,12 --bands 1:18 --output BERRYCURV \
   > vaspberry.log
 cd ../..
 ```
 
-`-s 2` reads both components of each SOC spinor. `-ii 1 -if 18` uses the
+`--spinor 2` reads both components of each SOC spinor. `--bands 1:18` uses the
 determinant of the occupied-subspace overlap matrix, allowing degeneracy
-within that subspace. `-kx` and `-ky` describe the WAVECAR mesh; they do not
+within that subspace. `--mesh 12,12` describes the WAVECAR mesh; it does not
 generate missing k points. This Fukui calculation does not use the Kubo
 sum over empty intermediate states.
 
@@ -76,7 +76,22 @@ The sign convention is `phi = −Arg(product of link determinants)` around
 `Omega_z = phi / deltaS`, and the Chern number is `sum(phi)/(2*pi)`.
 Since `deltaS` has units Å⁻², Ωz has units **Å²**.
 
-## 3. Plot the BZ map, band structure and symmetry-path cut
+## 3. Plot the native curvature
+
+For a first look, plot the completed native file directly:
+
+```bash
+python3 -m pip install -r requirements-transport.txt
+python3 tools/plot_berry_curvature.py \
+  --input results/mos2-fukui-native/BERRYCURV.dat \
+  --poscar examples/features/fukui-berry-curvature/inputs/POSCAR \
+  --output results/mos2-fukui-native/curvature.png --title '1H-MoS2'
+```
+
+This reads the existing plaquette values and uses the matching POSCAR to draw
+the Cartesian first Brillouin zone. It does not recalculate wavefunction overlaps.
+
+### Add the band structure and symmetry-path cut
 
 The figure pairs the BZ map with bands and curvature along **K–Γ–K′**.
 The dashed line in the map is the path used in both right-hand panels.
@@ -126,7 +141,10 @@ figure; exported band energies retain their original VASP zero.
 
 For a standalone map, `tools/plot_berry_curvature.py` remains available.
 
-An optional runner calculates the standalone map, verifies the complete mesh, occupied
+## Optional reproduction helper
+
+An optional runner repeats the native calculation and makes the standalone map.
+It verifies the complete mesh, occupied
 window and sampled gap, and checks the expected zero integral and
 opposite-sign time-reversed curvature:
 

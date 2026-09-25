@@ -32,19 +32,20 @@ SERIAL_SOURCE := vaspberry.f
 # Historical no-Kubo source is available explicitly via
 # make serial SERIAL_SOURCE=vaspberry_gfortran_serial.f BUILD_DIR=build-legacy
 MPI_SOURCE := vaspberry.f
-GNU_SERIAL_BIN := $(BUILD_DIR)/vaspberry-gfortran
+GNU_SERIAL_BIN := $(BUILD_DIR)/vaspberry
+GNU_SERIAL_COMPAT_BIN := $(BUILD_DIR)/vaspberry-gfortran
 GNU_MPI_BIN := $(BUILD_DIR)/vaspberry-mpi
 MPI_RUNTIME_TEST := $(BUILD_DIR)/test-mpi-runtime
 
 .PHONY: all gnu serial mpi check check-gnu check-serial-help \
 	check-mpi-help check-mpi-runtime check-build-dir ifx ifx-mpi \
-	ifort ifort-mpi clean
+	ifort ifort-mpi clean force-serial-compat
 
 all: gnu
 
 gnu: serial mpi
 
-serial: $(GNU_SERIAL_BIN)
+serial: $(GNU_SERIAL_BIN) $(GNU_SERIAL_COMPAT_BIN)
 
 mpi: $(GNU_MPI_BIN)
 
@@ -61,6 +62,12 @@ $(BUILD_DIR): | check-build-dir
 $(GNU_SERIAL_BIN): $(SERIAL_SOURCE) | $(BUILD_DIR)
 	$(FC) $(GNU_FLAGS) -o $@ $< $(GNU_LIBS)
 
+# Keep the old compiler-specific name without a second compiled binary.
+force-serial-compat:
+
+$(GNU_SERIAL_COMPAT_BIN): $(GNU_SERIAL_BIN) force-serial-compat
+	ln -sf vaspberry "$@"
+
 $(GNU_MPI_BIN): $(MPI_SOURCE) | $(BUILD_DIR)
 	$(MPIFC) $(GNU_FLAGS) -DMPI_USE -o $@ $< $(GNU_LIBS)
 
@@ -72,7 +79,7 @@ check: check-gnu
 check-gnu: check-serial-help check-mpi-runtime check-mpi-help
 
 check-serial-help: $(GNU_SERIAL_BIN)
-	$< -h > $(BUILD_DIR)/help-serial.txt
+	$< --help > $(BUILD_DIR)/help-serial.txt
 	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-serial.txt
 
 check-mpi-runtime: $(MPI_RUNTIME_TEST)

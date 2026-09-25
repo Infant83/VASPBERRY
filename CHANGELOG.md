@@ -2,6 +2,33 @@
 
 All notable changes to VASPBERRY are recorded here.
 
+## [Unreleased]
+
+### Added
+
+- Readable native Fortran task and input aliases, including `--task chern`,
+  `z2`, `kubo` and `kubo-pairs`, with argument validation. Existing short
+  options and numerical methods remain available.
+- Full-program serial/MPI Fukui regression for curvature, Chern number and
+  extrema metadata, exercised by CI alongside the native command tests.
+- Canonical serial executable `build/vaspberry`, with the previous
+  `build/vaspberry-gfortran` name retained for existing scripts.
+
+### Fixed
+
+- Populate Fukui MPI output-header curvature extrema and their k points from
+  the gathered mesh, matching the printed numerical data.
+- Avoid a zero divisor in the wavefunction progress display for real-space
+  grids with fewer than five z points. The reconstruction formula is unchanged.
+
+### Documentation
+
+- Lead README, examples and the technical report with direct VASP WAVECAR →
+  Fortran calculation → saved results → postprocessing/plotting workflows.
+  Separate optional PAW/spin operator extensions and Wannier supporting checks.
+- Show native commands before optional example runners, and distinguish
+  Python occupation-weighted Hall integration from plotting.
+
 ## [1.3.0] - 2026-09-25
 
 ### Added

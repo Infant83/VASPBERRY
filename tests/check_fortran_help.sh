@@ -11,6 +11,12 @@ version=$(tr -d '[:space:]' < VERSION)
 
 for required in \
   "Ver $version" \
+  "build/vaspberry --task chern --wavecar WAVECAR" \
+  "--mesh NX,NY" \
+  "--bands FIRST:LAST or N" \
+  "--task rejects conflicting legacy task options." \
+  "No integer expectation on a path." \
+  "All legacy flags remain accepted" \
   "-h               : Print this help and stop" \
   "-z2  1" \
   "-kubo_bundle 1" \

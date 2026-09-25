@@ -1,10 +1,15 @@
 # MnBi₂Te₄: a magnetic Chern-insulator example
 
-This example starts from an actual VASP calculation of a three-septuple-layer
-MnBi₂Te₄ slab. The main workflow computes the occupied-bundle Fukui invariant from VASP
-wavefunctions, imports the actual VASP-derived Hamiltonian and position
-operators, and evaluates their full Berry-curvature Hall response with
-VASPBERRY. A separate postw90 calculation checks the interpolated result.
+This example computes the complete occupied-bundle Fukui invariant directly
+from an actual VASP WAVECAR with the native Fortran executable. It gives
+**C = −1 for occupied bands 1–123**. A separate standard-WAVEDER integral
+illustrates why an integer invariant does not establish convergence of a
+pointwise Hall integral.
+
+The optional supporting sections retain VASP-derived Wannier bands and dense
+Hall integration, together with an independent postw90 comparison. Those
+calculations require additional supplied Hamiltonian and position operators;
+the direct-wavefunction Chern calculation does not require a Wannier model.
 
 ## Material and reference calculation
 
@@ -46,9 +51,11 @@ Use the PAW datasets listed in [PSEUDOPOTENTIAL.md](PSEUDOPOTENTIAL.md).
 VASP and licensed POTCAR files must be supplied locally. The bundled
 [self-consistent density](inputs/scf/README.md) fixes the electronic source
 state so the NSCF and post-processing steps can be repeated directly.
-**This standard-WAVEDER workflow currently requires VASP 5.4.4**: the
-audited `waveder-hall` adapter rejects other producer versions. Confirm the
-version before running the optical calculation.
+The native Chern step reads the supported spinor WAVECAR directly. The
+supplied reference setup additionally generates the optional optical files.
+**That standard-WAVEDER companion requires VASP 5.4.4**: the audited
+`waveder-hall` adapter rejects other producer versions. Confirm the producer
+version before reproducing the optical diagnostic.
 
 Run from the repository root:
 
@@ -75,33 +82,59 @@ uses a coarse 3×3 SCF mesh; converge the density, structure, basis, magnetic
 state, and NSCF sampling separately before using this setup for a material
 prediction.
 
-## 2. Calculate the occupied Fukui invariant and optical diagnostic
+## 2. Calculate the occupied Chern invariant from WAVECAR
 
-Return to the repository root and run:
+Return to the repository root, build the native MPI executable, and use a
+fresh output directory. The archived calculation used four MPI ranks:
+
+```sh
+make mpi
+mkdir -p work/mbt3-native-fukui
+cd work/mbt3-native-fukui
+mpirun -np 4 ../../build/vaspberry-mpi --task chern \
+  --wavecar ../mbt3-optics/WAVECAR --mesh 6,6 \
+  --spinor 2 --bands 1:123 --output BERRYCURV \
+  > vaspberry.stdout.log
+cd ../..
+```
+
+The native output reports **Chern Number = −1.000000**. It contains the
+occupied-bundle plaquette curvature in `BERRYCURV.dat`, including periodic
+display copies. The [actual native reference](reference/native-fukui/)
+records its command, output, input association and comparison with the
+independent Python overlap calculation on all 36 distinct plaquettes.
+The existing Python data and link-quality diagnostics are retained unchanged.
+For a serial execution, run `make serial` and replace the MPI invocation
+with `../../build/vaspberry`, keeping the same numerical options.
+The `--task` aliases above use the current repository version; the immutable
+v1.3.0 release retains the older `-f`, `-kx`, `-ky`, `-s`, `-ii` and `-if`
+spelling.
+
+### Optional optical diagnostic and independent overlap check
+
+The following helper evaluates the same WAVECAR with the general
+[Python wavefunction-Fukui tool](../../../tools/wavecar_fukui.py) and runs
+the common [`waveder-hall` command](../../../tools/vaspberry_kubo.py):
 
 ```sh
 python examples/materials/mnbi2te4-qah/run.py \
   --run-dir work/mbt3-optics --mesh 6 --output-dir work/mbt3-results
 ```
 
-This invokes the general [wavefunction Fukui tool](../../../tools/wavecar_fukui.py)
-for the occupied bundle and the common
-[`waveder-hall` command](../../../tools/vaspberry_kubo.py) for the
-zero-temperature occupied/empty optical sum. The output contains Fukui
-maps and link-quality diagnostics, conductivity CSV/DAT/NPZ tables, and a
-summary with the actual sampled band edges. No rounding or factor of two
-is applied to the optical integral.
+The output contains the independent overlap maps and link diagnostics,
+conductivity CSV/DAT/NPZ tables, and sampled band edges. Its standard-WAVEDER
+Hall integral is **+163.1092 e²/h**, a coarse-mesh diagnostic rather than a
+quantized result. No rounding or factor of two is applied to that integral.
 
 If a full mesh is divided into fixed-charge VASP runs, `--run-dir` accepts
-all of those directories. Supply the complete corresponding
-`--wavecar` for the Fukui links. The example checks the mesh coverage,
-energies, plane-wave bases, and all complex coefficients against those
-source runs. Independently recomputed or interpolated wavefunctions do not
-satisfy this assembly contract.
+all of those directories. Supply the complete corresponding `--wavecar`
+for the Fukui links. The helper checks mesh coverage, energies, plane-wave
+bases and all complex coefficients against the source runs. Independently
+recomputed or interpolated wavefunctions do not satisfy this assembly contract.
 
-## 3. Compute the full Hall response with VASPBERRY
+## 3. Optional support: dense Wannier-model Hall integration
 
-Follow [the native Wannier workflow](NATIVE_WANNIER.md): restore the actual
+Follow [the optional Wannier workflow](NATIVE_WANNIER.md): restore the actual
 Hamiltonian and position matrices, import them with the general
 `wannier-import` command, then run `wannier-hall`. VASPBERRY performs the
 Fourier transforms, diagonalization, occupied-bundle J0 + J1 + J2 calculation,
@@ -120,9 +153,9 @@ Three distinctions matter for this example:
 - The standard-WAVEDER 6×6 result contains the audited optical matrix elements,
   but its grid badly undersamples the narrow Γ peak.
 - A dense result calculated by postw90 establishes an independent reference.
-  The VASPBERRY result must come from the native solver's own output.
+  The VASPBERRY result comes from its own Python Wannier backend.
 
-All five native integration runs below were completed and independently
+All five VASPBERRY model-integration runs below were completed and independently
 checked against postw90 on identical points and weights, including all three
 curvature components and their J0/J1/J2 contributions.
 
@@ -141,7 +174,7 @@ reached. The quadrature study tests integration of that model. It does
 not establish convergence with respect to the source 6×6 DFT mesh,
 SCF density, basis, structural relaxation, or Wannier optimization.
 
-### VASPBERRY results and convergence
+### Finite-model results and integration convergence
 
 The completed VASPBERRY full-connection integral is **σ_xy = 1.000384978 e²/h**
 at each of three calculated chemical potentials spanning the central 90% of
@@ -166,16 +199,16 @@ numerical quantization to the reported quadrature accuracy for this fixed
 model; they do not establish full material convergence. No result was rounded
 to an integer or selected for being closest to one.
 
-The [native reference data](reference/vaspberry-wannier/README.md) contain
+The [finite-model reference data](reference/vaspberry-wannier/README.md) contain
 matching common CSV/DAT/NPZ Hall tables, all sampled curvatures, run records
 and all 138 bands. The [convergence table](reference/vaspberry-wannier/convergence.csv)
-retains every native control beside its independent postw90 comparison.
-The final native run took 9.6 minutes with four NumPy workers and about
+retains every VASPBERRY integration control beside its independent postw90 comparison.
+The final Python Wannier run took 9.6 minutes with four NumPy workers and about
 2.2 GiB peak resident memory on the reference computer; timings vary by host.
 The independently calculated postw90 value is 1.000384977 e²/h, agreeing
 within its recorded output precision.
 
-## 4. Plot the reference
+## 4. Optional support: plot the Wannier reference
 
 ```sh
 python examples/materials/mnbi2te4-qah/plot.py \
@@ -183,7 +216,7 @@ python examples/materials/mnbi2te4-qah/plot.py \
 ```
 
 The figure combines VASP-derived Wannier bands with direct VASP sample markers and a
-gap enlargement, the three native Hall samples inside the gap, and unrounded
+gap enlargement, the three finite-model Hall samples inside the gap, and unrounded
 integration convergence. Hollow markers show the independent postw90
 calculation. VASPBERRY integrates the sheet response directly from reciprocal
 area; the external S/cm reference uses the full simulation-cell height for
@@ -198,7 +231,7 @@ and convergence markers are the independent postw90 values on the same
 grids. All five prescribed quadrature controls are shown. The independent
 occupied-bundle Fukui invariant is C = −1; the Hall values are not rounded.
 
-## 5. Run the independent postw90 crosscheck
+## 5. Optional support: independent postw90 crosscheck
 
 The independent reference uses **Wannier90/postw90** to check the
 VASPBERRY full-connection calculation on the same finite operators. It retains the Hamiltonian and all
@@ -234,6 +267,7 @@ exported band/projection counts.
 
 ## Reference data
 
+- [Native Fortran occupied-bundle Fukui output and comparison](reference/native-fukui/).
 - [VASP-derived Wannier bands, VASPBERRY Hall response and all five convergence runs](reference/vaspberry-wannier/README.md).
 - [Occupied-bundle Fukui map](reference/fukui/fukui_occupied.csv) and
   [link diagnostics](reference/fukui/diagnostics.json).

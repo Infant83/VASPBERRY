@@ -12,7 +12,7 @@ grid values. (b) The corresponding density averaged over the in-plane cell.
 Both spinor components are included. [PDF](reference/figure.pdf) ·
 [Plane-averaged numerical data](reference/summary.csv).
 
-## Calculation
+## 1. Calculate from VASP wavefunctions
 
 Use `WAVECAR`, `POSCAR` and `EIGENVAL` from the supplied
 [MoS₂ band-path calculation](../../1H-MoS2/KPATH/2.band/). Its 48-point
@@ -28,17 +28,28 @@ cp examples/1H-MoS2/KPATH/2.band/POSCAR results/mos2-wavefunction/
 cp examples/1H-MoS2/KPATH/2.band/EIGENVAL results/mos2-wavefunction/
 (
   cd results/mos2-wavefunction
-  "$repo_dir/build/vaspberry-gfortran" \
-    -f "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-    -s 2 -kx 48 -ky 1 -wf 18 -k 24 -ng 24,24,64 -im 1 > stdout.log
+  "$repo_dir/build/vaspberry" \
+    --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
+    --task wavefunction --spinor 2 --mesh 48,1 --wavefunction-band 18 --kpoint 24 --real-grid 24,24,64 --imaginary 1 > stdout.log
 )
+```
+
+## 2. Postprocess the native output
+
+```bash
 python3 examples/features/wavefunction/run.py \
   --output-dir results/mos2-wavefunction --postprocess-only
 ```
 
-`-wf 18` selects the band and `-k 24` selects Γ. `-ng 24,24,64` sets the
-real-space sampling along the cell vectors, and `-im 1` includes imaginary
-amplitudes. To calculate and plot in one step in a new directory:
+`--wavefunction-band 18` selects the band and `--kpoint 24` selects Γ. `--real-grid 24,24,64` sets the
+real-space sampling along the cell vectors, and `--imaginary 1` includes imaginary
+amplitudes. The postprocessor reads these amplitude grids, combines the two
+spinor components and checks the result against the stored WAVECAR coefficients.
+`--postprocess-only` does not rerun Fortran.
+
+## Optional reproduction helper
+
+To calculate, check and plot in one step in a fresh directory:
 
 ```bash
 python3 examples/features/wavefunction/run.py --output-dir results/mos2-wavefunction-auto

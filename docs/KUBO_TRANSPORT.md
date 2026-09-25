@@ -6,11 +6,12 @@ Actual VASP-based tutorials and reference results are provided for
 [Bi occupied-subspace Fukui Hall](../examples/features/hall-valley/). Their
 methods and required sampling are explicitly different.
 
-The `tools/vaspberry_kubo.py` command converts declared interband matrices or
-legacy Kubo data into a common point-curvature format and integrates a
-two-dimensional intrinsic charge Hall response. It also provides a public
-analytic model demonstration. Python 3.10+ and the dependencies in
-`requirements-transport.txt` are required.
+The native Fortran program reads WAVECAR and exports point curvature or
+interband pair numerators. The supplied `tools/vaspberry_kubo.py` tool
+postprocesses those results: it validates a reusable cache, applies occupations
+and integrates the two-dimensional intrinsic charge Hall response. Its
+additional matrix import and analytic-check commands are advanced interfaces.
+Python 3.10+ and `requirements-transport.txt` are required for this stage.
 
 Use `python tools/vaspberry_kubo.py --help` and each subcommand's `--help` for
 the available options. The [output specification](OUTPUT_FORMAT.md) describes
@@ -36,79 +37,74 @@ insulating gap. Bi's unresolved Kramers pairs prevent treating its individual
 bands as isolated point-Kubo input. Its zero charge Hall plateau is an actual
 material sanity check, not a nonzero valley-Hall demonstration.
 
-## WAVECAR to charge Hall in one command
+## Native pairs to charge Hall
 
-The native Fortran program computes the wavefunction matrix elements. The
-bundled Python tool applies Fermi occupations and integrates over the full
-Brillouin zone. `wavecar-hall` executes both stages; no user-written Python
-postprocessing is needed. For the actual MoS₂ 12×12 reference WAVECAR:
+The main workflow has three explicit stages: native Fortran export, numerical
+postprocessing, and plotting. No Wannier model or custom VASP producer is
+needed. For the actual MoS₂ 12×12 reference WAVECAR, run from the repository
+root with a fresh result directory:
 
 ```bash
-python3 tools/vaspberry_kubo.py wavecar-hall \
-  --wavecar WAVECAR --binary build/vaspberry-gfortran \
+mkdir -p results/mos2-hall/native
+build/vaspberry --task kubo-pairs --wavecar WAVECAR --spinor 2 \
+  --pairs-csv results/mos2-hall/native/PAIRS.csv
+
+python3 tools/vaspberry_kubo.py import-pairs \
+  --csv results/mos2-hall/native/PAIRS.csv --wavecar WAVECAR \
   --spinor-components 2 --spin-multiplicity 1 --mesh 12 12 \
   --energy-reference 'unchanged VASP eigenvalue zero' \
+  --output-dir results/mos2-hall/pairs
+
+python3 tools/vaspberry_kubo.py pair-hall \
+  --pairs-dir results/mos2-hall/pairs \
   --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 121 \
   --mu-reference -0.43809870 --temperatures 0 300 \
   --degeneracy-policy coalesce --degeneracy-threshold-eV 1e-7 \
-  --formats csv dat npz --output-dir results/mos2-hall
-```
+  --formats csv dat npz --output-dir results/mos2-hall/hall
 
-These energies belong to this MoS₂ reference. Choose the range and reference
-from your own bands. The tutorial adds periodic K/K′ regions, their difference,
-band plots and convergence comparisons. The default degeneracy policy is
-`error`; the explicit `coalesce` choice above is explained below.
-
-The output directory contains:
-
-- `native/PAIRS.csv` and native execution logs;
-- `pairs/pairs.npz` plus `pairs.json`, reusable without WAVECAR;
-- `hall/conductivity.csv`, `.dat`, `.npz` and `.json`;
-- `workflow.json`, including overall status and any reported error.
-
-`--formats npz` alone is valid. JSON records units, the operator, occupations,
-regions and numerical diagnostics. CSV and DAT are readable long tables;
-NPZ stores typed arrays. Plot any selected table without a format conversion:
-
-```bash
 python3 tools/plot_hall.py results/mos2-hall/hall/conductivity.npz \
   --quantity delta-sigma --formats png pdf svg \
   --output-dir results/mos2-hall-plot
 ```
 
-To change temperature or chemical potential, reuse the expensive matrix data:
+These energies belong to this MoS₂ reference. Choose the range and reference
+from your own bands. The [complete example](../examples/features/kubo-hall/)
+adds periodic K/K′ regions, their difference, band plots and convergence
+comparisons. The default degeneracy policy is `error`; the explicit `coalesce`
+choice above is explained below.
+
+The pair export includes every stored band pair and all three Cartesian
+components. Omit band selectors in pair mode. The importer checks coordinates,
+energies, lattice and complete selected-spin pair coverage against WAVECAR.
+For a collinear two-channel calculation, import and integrate each spin with
+multiplicity one, then sum the two charge responses.
+
+`pairs/pairs.npz` and `pairs.json` form a reusable cache. To change temperature,
+chemical potential or region definitions, repeat only `pair-hall` with that
+cache and a new output directory. The postprocessor writes
+`conductivity.csv`, `.dat`, `.npz` and `.json`; `--formats npz` alone is also
+valid. JSON records units, operator, occupations, regions and diagnostics.
+CSV and DAT are readable tables; NPZ stores typed arrays. The plotter reads
+any of the three numerical formats without a conversion step.
+
+For MPI, replace the native command with:
 
 ```bash
-python3 tools/vaspberry_kubo.py pair-hall \
-  --pairs-dir results/mos2-hall/pairs \
-  --mu-min -1.47 --mu-max -1.17 --mu-num 121 \
-  --mu-reference -0.43809870 --temperatures 100 300 \
-  --degeneracy-policy coalesce --formats dat npz \
-  --output-dir results/mos2-hall-rescan
+mpiexec -n 4 build/vaspberry-mpi --task kubo-pairs --wavecar WAVECAR \
+  --spinor 2 --pairs-csv results/mos2-hall/native/PAIRS.csv
 ```
 
-For explicit separate stages, run the native exporter and then `import-pairs`:
+Native k-point work is distributed across ranks. Python integration then uses
+NumPy and bounded chemical-potential chunks. Coefficient caching is capped at
+64 MiB per native rank, with a direct-read fallback. The complete pair cache
+still scales as the number of k points times the square of `NBANDS`.
 
-```bash
-build/vaspberry-gfortran -f WAVECAR -s 2 -kubo 2 -kubo_pairs PAIRS.csv
-python3 tools/vaspberry_kubo.py import-pairs \
-  --csv PAIRS.csv --wavecar WAVECAR --spinor-components 2 \
-  --spin-multiplicity 1 --mesh 12 12 \
-  --energy-reference 'unchanged VASP eigenvalue zero' \
-  --output-dir results/pairs
-```
+### Intermediate-state convergence
 
-The native export includes every stored band pair and all three Cartesian
-components. Omit `-ii`, `-if` and `-is` in pair mode. The importer checks the
-coordinates, energies, lattice and complete selected-spin pair coverage against
-the WAVECAR. For a collinear two-channel calculation, import and integrate each
-spin with multiplicity one, then sum the two charge responses.
-
-For a clean intermediate-state convergence test, generate a sufficiently large,
-well-converged WAVECAR once and rescan its cache with `--pair-band-max M`.
-This restricts both ends of each pair to bands 1:M while retaining the actual
-source `NBANDS` in the metadata. A reduced virtual-state window is labeled
-`truncated_pair_space`; using all stored bands is labeled `all_source_bands`.
+Generate a sufficiently large, well-converged WAVECAR once and rescan its
+cache with `--pair-band-max M`. This restricts both ends of each pair to bands
+1:M while retaining the source `NBANDS` in the metadata. A reduced window is
+labeled `truncated_pair_space`; using all stored bands is `all_source_bands`.
 The cutoff must leave the occupied window complete and must not split an
 unresolved degenerate group. Comparing M values on identical eigenstates
 separates truncation of the virtual-state sum from changes in the VASP solver.
@@ -116,12 +112,26 @@ Check the highest empty eigenstates themselves: convergence of the occupied
 total energy alone does not guarantee their accuracy. For nonmagnetic MoS₂,
 the equality of energies at k and −k provides a useful additional check.
 
-For MPI, supply the MPI binary and `--mpi-procs N` to `wavecar-hall`, or run
-`mpiexec -np N build/vaspberry-mpi ... -kubo_pairs PAIRS.csv` directly. Native
-k-point work is distributed across ranks; Python integration then uses NumPy
-and bounded chemical-potential chunks. Coefficient caching is capped at 64 MiB
-per native rank, with a direct-read fallback. The complete pair cache still
-scales as the number of k points times the square of `NBANDS`.
+## WAVECAR to charge Hall in one command
+
+The optional `wavecar-hall` wrapper executes and records the same native export,
+cache import and occupation-weighted integration. It is convenient for batch
+work; the separate commands above expose each stage directly:
+
+```bash
+python3 tools/vaspberry_kubo.py wavecar-hall \
+  --wavecar WAVECAR --binary build/vaspberry \
+  --spinor-components 2 --spin-multiplicity 1 --mesh 12 12 \
+  --energy-reference 'unchanged VASP eigenvalue zero' \
+  --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 121 \
+  --mu-reference -0.43809870 --temperatures 0 300 \
+  --degeneracy-policy coalesce --degeneracy-threshold-eV 1e-7 \
+  --formats csv dat npz --output-dir results/mos2-hall-wrapped
+```
+
+The result contains `native/PAIRS.csv`, native execution logs, `pairs/`,
+`hall/` and `workflow.json` with overall status and any error. Supply an MPI
+binary with `--mpi-procs N` to parallelize the native stage.
 
 ### Occupations and degeneracies
 
@@ -170,8 +180,8 @@ of bands directly from WAVECAR. For the eighteen occupied SOC bands in the
 MoS₂ example:
 
 ```bash
-build/vaspberry-gfortran -f WAVECAR -s 2 -kubo 2 \
-  -ii 1 -if 18 -kubo_bundle 1 -kubo_csv KUBO_BUNDLE.csv
+build/vaspberry --task kubo --wavecar WAVECAR --spinor 2 \
+  --bands 1:18 --bundle 1 --curvature-csv KUBO_BUNDLE.csv
 ```
 
 Choose `-ii` and `-if` for the physical subspace in your own material. The
@@ -457,6 +467,10 @@ WAVEDER integral from VASPBERRY's dense full-connection Wannier calculation; a
 successful file/producer check does not establish integration convergence.
 
 ## Full-connection Wannier bands and Hall response
+
+This is an optional supporting calculation on externally prepared operators,
+separate from the main WAVECAR/Fortran workflow. It is retained to reproduce
+the technical report’s model checks; the native tutorials require none of it.
 
 For dense integration of a VASP-derived Wannier model, use `wannier-import`,
 `wannier-bands` and `wannier-hall`. VASPBERRY evaluates Hamiltonian and position

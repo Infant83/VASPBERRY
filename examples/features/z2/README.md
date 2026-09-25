@@ -19,21 +19,21 @@ The public VASP `WAVECAR` contains 144 points on a full Γ-centered mesh and
 [band energies](../../Bi_Z2/archive-2016-run/EIGENVAL) and
 [material calculation notes](../../Bi_Z2/README.md) accompany the input.
 
-## Run VASPBERRY
+## 1. Run native Fortran on WAVECAR
 
 ```bash
 repo_dir="$PWD"
 mkdir results/bi-z2
 (
   cd results/bi-z2
-  "$repo_dir/build/vaspberry-gfortran" \
-    -f "$repo_dir/results/inputs/bi/WAVECAR" -o NFIELD -z2 1 \
-    -kx 12 -ky 12 -s 2 -ii 1 -if 10 > fortran.log
+  "$repo_dir/build/vaspberry" \
+    --wavecar "$repo_dir/results/inputs/bi/WAVECAR" --output NFIELD --task z2 \
+    --mesh 12,12 --spinor 2 --bands 1:10 > fortran.log
 )
 ```
 
-`-z2 1` selects the integer-field method, `-s 2` reads SOC spinors, and
-`-ii 1 -if 10` selects the complete occupied subspace. The mesh dimensions
+`--task z2` selects the integer-field method, `--spinor 2` reads SOC spinors, and
+`--bands 1:10` selects the complete occupied subspace. The mesh dimensions
 must match the WAVECAR. For MPI, use `make mpi` and prefix the MPI executable
 with `mpiexec -n 4`.
 
@@ -52,7 +52,7 @@ Use a result only when `result_status=PASS`, `reportable_invariant=1`, and the
 two half-zone parities agree. The [method guide](../../../docs/Z2_FUKUI_HATSUGAI.md)
 explains the numerical checks.
 
-## Plot the integer field
+## 2. Plot the native integer field
 
 ```bash
 python3 examples/features/z2/run.py \
@@ -60,6 +60,9 @@ python3 examples/features/z2/run.py \
   --poscar examples/Bi_Z2/inputs/POSCAR \
   --figure results/bi-z2/nfield.png
 ```
+
+The explicit `--plot-only` mode reads the completed CSV and does not run
+VASPBERRY again.
 
 ![Bi Z2 integer field in reduced reciprocal coordinates](reference/figure.png)
 
@@ -80,7 +83,9 @@ shows those summation domains directly.
 [Numerical summary](reference/summary.csv) ·
 [Figure PDF](reference/figure.pdf)
 
-To calculate, validate and plot in one command:
+## Optional reproduction helper
+
+To repeat the native calculation, validation and plotting in a fresh directory:
 
 ```bash
 python3 examples/features/z2/run.py \

@@ -14,7 +14,7 @@ intensity to form a meaningful ratio. Normal incidence, Gaussian broadening
 0.05 eV, occupied bands 1–18 and final bands 19–20 are used. Intensities are in
 arbitrary units. [PDF](reference/figure.pdf) · [Numerical data](reference/summary.csv).
 
-## Calculation
+## 1. Calculate from VASP wavefunctions
 
 Use the [MoS₂ band-path files](../../1H-MoS2/KPATH/2.band/): `WAVECAR`
 contains 48 k points, 32 bands and both SOC spinor components, at a plane-wave
@@ -30,23 +30,33 @@ repo_dir="$PWD"
 mkdir -p results/mos2-optical
 (
   cd results/mos2-optical
-  "$repo_dir/build/vaspberry-gfortran" \
-    -f "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-    -s 2 -kx 48 -ky 1 -cd 2 -if 20 \
+  "$repo_dir/build/vaspberry" \
+    --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
+    --spinor 2 --mesh 48,1 --task spectrum --bands 1:20 \
     -ien 1 -fen 3 -nediv 201 -sigma 0.05 \
-    -theta 0 -phi 0 -o optical > stdout.log
+    --theta 0 --phi 0 --output optical > stdout.log
 )
+```
+
+## 2. Postprocess the native output
+
+```bash
 python3 examples/features/circular-dichroism/run.py \
   --output-dir results/mos2-optical --postprocess-only
 ```
 
-Here `-cd 2` sums transitions from occupied states, `-if 20` includes the
-first two empty bands, and `-theta 0 -phi 0` specifies incidence along z.
-`-s 2` reads a two-component spinor; it is not a conductivity multiplicity.
+Here `--task spectrum` sums transitions from occupied states, `--bands 1:20` includes the
+first two empty bands, and `--theta 0 --phi 0` specifies incidence along z.
+`--spinor 2` reads a two-component spinor; it is not a conductivity multiplicity.
 The photon-energy range is 1–3 eV with 201 samples. The 48 stored path points
-are selected by `-kx 48 -ky 1`; these options do not generate new k points.
+are selected by `--mesh 48,1`; these options do not generate new k points.
 
-To run the calculation and plotting together in a fresh directory:
+`--postprocess-only` reads the native spectra, forms the polarization ratio
+and plots them; it does not rerun Fortran or recalculate matrix elements.
+
+## Optional reproduction helper
+
+To repeat the native calculation and plotting together in a fresh directory:
 
 ```bash
 python3 examples/features/circular-dichroism/run.py --output-dir results/mos2-optical-auto
@@ -84,7 +94,7 @@ standard VASP optical run is available, [`waveder-optics`](../../../docs/PAW_OPT
 calculates PAW circular transition strengths and spectra with physical length
 units and complete initial/final degenerate groups. This optional route uses
 unmodified VASP and offers CSV, DAT and NPZ output. Its normalization differs
-from native `-cd 2`, so compare selection rules or match the conventions before
+from native `--task spectrum`, so compare selection rules or match the conventions before
 comparing intensities. Neither route predicts photoluminescence polarization.
 
 ## Other materials

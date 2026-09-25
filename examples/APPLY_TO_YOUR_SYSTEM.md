@@ -1,11 +1,16 @@
-# Apply a VASPBERRY tutorial to your material
+# Apply the native WAVECAR workflow to your material
 
-First reproduce the named tutorial with its supplied VASP outputs. Compare
-native output files, numerical checks and the figure with `reference/`.
-Then use the same **production command** with your own files and settings.
-The wrappers provide fixed tutorial settings and compare the named reference
-only for matching inputs. Use each production CLI for general calculations;
-see individual READMEs for supported wrapper overrides.
+Start with a real-material tutorial and compare its native outputs with the
+supplied reference. Then use the **same native Fortran command** with your
+VASP files, band selection and k sampling. Fukui, Z₂, Kubo curvature, optical
+transitions and wavefunction export read WAVECAR directly; Wannierization is
+not required for these calculations.
+
+The calculation produces text or CSV tables and, for wavefunctions, volumetric
+amplitude grids. Use the supplied Python tools for plots and numerical
+postprocessing. Hall transport adds occupation weighting and BZ integration
+after native pair export. The optional tutorial `run.py` helpers combine
+these steps with fixed reference checks; use the native CLI for general work.
 
 ## Select the input and observable
 
@@ -15,21 +20,19 @@ see individual READMEs for supported wrapper overrides.
 | Z₂ | A gapped nonmagnetic TR-symmetric spinor calculation; even, unshifted Gamma-centered full Nx×Ny×1 mesh with ISYM=-1 |
 | Kubo curvature along a path | WAVECAR for the desired points; choose bands using your EIGENVAL and inspect near-degeneracies |
 | Charge Hall | A full integration mesh, a valid occupied subspace or valid point curvature, an energy reference and a sufficient band window |
-| Physical spin Hall | A full uniform 2D mesh, gapped occupied group at T=0, and full complex PAW spin/velocity matrices in the same eigenstate basis |
-| Ideal edge spectrum | A validated VASP-derived Wannier Hamiltonian, a periodic direction, an open direction and a converged strip width |
 | Optical response | Initial/final bands and photon-energy range appropriate to your system; check transition strength before forming a ratio |
 | Wavefunction | Matching WAVECAR/POSCAR/EIGENVAL, actual Gamma-point index, band and real-space grid |
 
 A symmetry-reduced mesh or band path cannot replace the full periodic mesh
-required by a Brillouin-zone integral. The example's numerical `-kx`, `-ky`,
-`-ii`, `-if`, `-k` and chemical potentials belong to its material.
+required by a Brillouin-zone integral. The example's numerical `--mesh`, `--bands`,
+`--kpoint` and chemical potentials belong to its material.
 
 ## Replace the relevant settings
 
 1. Put your VASP outputs in a stable input directory. Check WAVECAR format and
    record-length compatibility using the [build guide](../docs/BUILD.md).
 2. Read your EIGENVAL/OUTCAR and choose occupied bands, selected states, spinor
-   representation and the actual k sampling. SOC normally uses `-s 2`; this
+   representation and the actual k sampling. SOC normally uses `--spinor 2`; this
    means two spinor components, not an extra factor of two in conductivity.
 3. Copy the tutorial's explicit VASPBERRY command into a fresh result directory.
    Replace the WAVECAR path and all material-dependent indices/grid settings.
@@ -51,11 +54,12 @@ nonzero Chern-insulator benchmark.
 For point-curvature transport, the [Kubo/Hall guide](../docs/KUBO_TRANSPORT.md)
 explains normalized curvature, occupations, intermediate-band windows and
 user-defined reciprocal-space regions. The [MoS₂ Hall tutorial](features/kubo-hall/)
-starts from a full VASP WAVECAR and runs native pair export followed by the
-bundled occupation and integration routines in one command. It includes
+starts from a full VASP WAVECAR and shows native pair export, reusable pair
+import, occupation-weighted integration and plotting as separate commands. It includes
 chemical-potential and temperature scans, regional contributions and
-independent mesh and band-window checks. Reuse its general command with your
-material's band filling, energy reference and region definitions.
+independent mesh and band-window checks. Reuse those commands with your
+material's band filling, energy reference and region definitions. Python
+`pair-hall` performs the integration; `plot_hall.py` reads the finished table.
 
 The native WAVECAR Kubo implementation
 uses canonical momentum; full material velocity can require PAW, nonlocal,
@@ -68,7 +72,7 @@ Use CSV, text DAT or NumPy NPZ tables in your own analysis; preserve normalizati
 provenance, excluded points and region definitions. See [migration](../docs/MIGRATION.md)
 before combining results with older doubled Kubo files.
 
-## Dense full-connection Wannier response
+## Optional extension: Wannier interpolation and edge spectra
 
 For a validated VASP-derived Wannier representation, import **both** real-space
 Hamiltonian and position operators with `wannier-import`, compute bands with
@@ -85,7 +89,7 @@ backend currently requires T=0 and all chemical potentials inside a sampled
 global gap; use the documented μ/T workflows for their supported operators
 when studying metallic occupations.
 
-## Physical spin Hall and quantum spin Hall topology
+## Optional extension: physical spin Hall and quantum spin Hall topology
 
 The [Bi spin Hall example](materials/bi-spin-hall/) starts from a fresh SCF
 density, matching PAW inputs and the [serial VASP producer](../tools/vasp544_spin_bridge/).

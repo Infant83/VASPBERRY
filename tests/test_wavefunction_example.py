@@ -58,6 +58,45 @@ class WavefunctionBoundsRegression(unittest.TestCase):
                     for name, digest in before.items():
                         self.assertEqual(EXAMPLE.sha(case/name), digest)
 
+                    if source == "vaspberry.f":
+                        # The progress display previously computed mod(i3, 0)
+                        # for nz=1..4. Use real direct-access WAVECAR records
+                        # and the complete binary, then check complex values
+                        # against the independent plane-wave expression.
+                        for nz in range(1, 5):
+                            grid = (4, 4, nz)
+                            payloads = []
+                            for mode in ("legacy", "modern"):
+                                tiny = case / f"tiny-{nz}-{mode}"
+                                tiny.mkdir()
+                                inputs = EXAMPLE.fixture(tiny)
+                                if mode == "legacy":
+                                    options = ["-f", "WAVECAR.synthetic", "-s", "1",
+                                               "-kx", "1", "-ky", "1", "-wf", "1",
+                                               "-k", "1", "-ng", f"4,4,{nz}", "-im", "1"]
+                                else:
+                                    options = ["--task", "wavefunction", "--wavecar", "WAVECAR.synthetic",
+                                               "--spinor", "1", "--mesh", "1,1", "--wavefunction-band", "1",
+                                               "--kpoint", "1", "--real-grid", f"4,4,{nz}", "--imaginary", "1"]
+                                result = subprocess.run([str(binary), *options], cwd=tiny,
+                                                        capture_output=True, text=True, timeout=30)
+                                self.assertEqual(result.returncode, 0, result.stderr)
+                                real_path = tiny / real_file.name
+                                imag_path = tiny / imag_file.name
+                                values = (EXAMPLE.read_grid(real_path, grid) +
+                                          1j*EXAMPLE.read_grid(imag_path, grid)) / np.sqrt((2*np.pi)**3)
+                                axis = np.arange(4)/4
+                                expected = (1+np.exp(2j*np.pi*axis)[None, :]+
+                                            np.exp(2j*np.pi*axis)[:, None])/np.sqrt(3)
+                                np.testing.assert_allclose(values, np.broadcast_to(expected, values.shape),
+                                                           atol=2e-6, rtol=0)
+                                self.assertTrue(np.isfinite(values).all())
+                                self.assertAlmostEqual(float(np.mean(abs(values)**2)), 1., delta=2e-6)
+                                payloads.append((real_path.read_bytes(), imag_path.read_bytes()))
+                                for name, digest in inputs.items():
+                                    self.assertEqual(EXAMPLE.sha(tiny/name), digest)
+                            self.assertEqual(payloads[0], payloads[1])
+
 
 if __name__ == "__main__":
     unittest.main()

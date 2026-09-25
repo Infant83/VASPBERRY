@@ -1,0 +1,120 @@
+{
+  "schema": "vaspberry.native-fukui-reference",
+  "version": 1,
+  "status": "PASS",
+  "material": "three-septuple-layer MnBi2Te4",
+  "producer": "native Fortran MPI Fukui overlap calculation",
+  "baseline_source_revision": "f788f7f875aab976ca96c47b879ff0a63a06598d",
+  "source_revision_scope": "Working source adds task-based CLI aliases, progress-display guard and MPI extrema-header correction; no Fukui link-formula change. Exact source and executable hashes are recorded.",
+  "input": {
+    "wavecar": "WAVECAR",
+    "wavecar_sha256": "dc0f4bcbb38dc378c2acba89dcc3719493c4bfe4015bf227aad21372a5470f77",
+    "spinor_components": 2,
+    "source_bands": 192,
+    "selected_bands": [
+      1,
+      123
+    ],
+    "mesh": [
+      6,
+      6
+    ],
+    "encut_eV": 270.0
+  },
+  "portable_argv": [
+    "mpirun",
+    "-np",
+    "4",
+    "build/vaspberry-mpi",
+    "--task",
+    "chern",
+    "--wavecar",
+    "WAVECAR",
+    "--mesh",
+    "6,6",
+    "--spinor",
+    "2",
+    "--bands",
+    "1:123",
+    "--output",
+    "BERRYCURV"
+  ],
+  "equivalent_serial_reproduction_argv": [
+    "build/vaspberry",
+    "--task",
+    "chern",
+    "--wavecar",
+    "WAVECAR",
+    "--spinor",
+    "2",
+    "--mesh",
+    "6,6",
+    "--bands",
+    "1:123",
+    "--output",
+    "BERRYCURV"
+  ],
+  "command_scope": "Portable reproduction commands; exact local argv is retained in the private run record.",
+  "chern_from_native_stdout": -1.0,
+  "chern_from_native_printed_map": -1.0000033248237907,
+  "python_reference_chern": -1.0,
+  "unique_plaquettes": 36,
+  "raw_native_display_rows": 324,
+  "native_plaquette_area_inv_A2": 0.06735162545089246,
+  "double_precision_pi_plaquette_area_inv_A2": 0.06735162170243317,
+  "native_pi_constant": 3.1415927410125732,
+  "native_area_relative_offset": 5.565507099625222e-08,
+  "native_area_scope": "The unchanged legacy recilatt routine initializes pi with the single-precision expression 4.*atan(1.); reconstructing flux uses that actual normalization.",
+  "max_abs_flux_difference_rad": 3.328141927882132e-06,
+  "flux_tolerance_from_native_printing_rad": 3.4349328979955154e-06,
+  "max_abs_stdout_flux_difference_rad": 3.236923124590868e-08,
+  "stdout_flux_tolerance_from_native_printing_rad": 3.434932897995515e-08,
+  "native_curvature_decimal_places": {
+    "map": 4,
+    "stdout": 6
+  },
+  "native_map_curvature_extrema_A2": {
+    "minimum": -30.5884,
+    "maximum": 0.3955
+  },
+  "native_extrema_header": {
+    "MAXVAL": [
+      0.25,
+      0.0833,
+      0.0,
+      0.3955
+    ],
+    "MINVAL": [
+      0.0833,
+      -0.0833,
+      0.0,
+      -30.5884
+    ]
+  },
+  "native_extrema_header_matches_rows": true,
+  "comparison_scope": "Every occupied-bundle plaquette, matched periodically by cell index; existing Python reference is unchanged.",
+  "result_scope": "Integer lattice invariant of the selected VASP occupied subspace; does not establish continuum curvature or transport convergence.",
+  "wall_seconds": 371.880692692,
+  "mpi_ranks": 4,
+  "max_resident_bytes": 16162816,
+  "resource_scope": "Reported by macOS /usr/bin/time -l for the MPI launch; not an independently measured aggregate MPI RSS.",
+  "thread_environment": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1"
+  },
+  "source_sha256": "bc07cdab741f7635f4b8b4ad853dd5cc55d3e6f8e5d2f2d33617b006e0b40c95",
+  "binary_sha256": "92fda7ef7625a8d5fa369447ab7e32819edc77c688a300080e854bfb2b3e4916",
+  "comparison_reference_sha256": {
+    "diagnostics.json": "9c346c21ace0ce569dae676715800719152c13bf9fb2c6e4c843994b15b5ff16",
+    "fukui_occupied.csv": "892b28df52ed1c92bfbf4ba101428b9c1cccb3a2fb9d0dd40ad91ebe2d505483"
+  },
+  "output_sha256": {
+    "BERRYCURV.dat": "6d9aff709873c9dfa9d8233bef919e2174b1ddb21c0456dedb2dae046b2ff444",
+    "vaspberry.stdout.log": "34355520c0dd1cf9564ff0db4308300ad7f4a433b7362c4ba13eb5aeafe3085e",
+    "resources.log": "1a8f604022cbe0069c1ef6d49ccb14c94f1f2d5e45435b0e702e159c4cfb88f0",
+    "flux-comparison.csv": "0338ef9649864d554b2c463d215b2460408cfb12dfc6fcb590305389a2d343ff"
+  }
+}

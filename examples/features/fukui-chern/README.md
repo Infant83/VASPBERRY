@@ -21,28 +21,28 @@ The input is the public Bi `WAVECAR`: 144 k points, 18 SOC spinor bands,
 [calculation record](../../Bi_Z2/README.md) describe the material.
 The download command checks the input automatically.
 
-## Run VASPBERRY
+## 1. Run native Fortran on WAVECAR
 
 ```bash
 repo_dir="$PWD"
 mkdir results/bi-fukui
 (
   cd results/bi-fukui
-  "$repo_dir/build/vaspberry-gfortran" \
-    -f "$repo_dir/results/inputs/bi/WAVECAR" -o BERRYCURV \
-    -kx 12 -ky 12 -s 2 -ii 1 -if 10 > fortran.log
+  "$repo_dir/build/vaspberry" \
+    --wavecar "$repo_dir/results/inputs/bi/WAVECAR" --output BERRYCURV \
+    --task chern --mesh 12,12 --spinor 2 --bands 1:10 > fortran.log
 )
 ```
 
-`-kx 12 -ky 12` specifies the mesh already present in WAVECAR. `-s 2` reads
-SOC spinors. `-ii 1 -if 10` selects the complete occupied band bundle;
+`--mesh 12,12` specifies the mesh already present in WAVECAR. `--spinor 2` reads
+SOC spinors. `--bands 1:10` selects the complete occupied band bundle;
 its internal Kramers degeneracies do not require separate band invariants.
 The result is written to `BERRYCURV.dat`, and the log reports C = 0.
 
 For MPI, build with `make mpi` and replace the executable by
 `mpiexec -n 4 "$repo_dir/build/vaspberry-mpi"`.
 
-## Plot the first Brillouin zone
+## 2. Plot the native curvature file
 
 ```bash
 python3 tools/plot_berry_curvature.py \
@@ -73,7 +73,9 @@ resolution, not a resolved signal. The direct occupied–empty gap is
 [Numerical summary](reference/summary.csv) ·
 [Figure PDF](reference/figure.pdf)
 
-To calculate, validate and plot in one command:
+## Optional reproduction helper
+
+To repeat the native calculation, validation and plotting in a fresh directory:
 
 ```bash
 python3 examples/features/fukui-chern/run.py \

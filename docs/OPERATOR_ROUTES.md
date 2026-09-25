@@ -4,14 +4,14 @@ Begin with your material's VASP electronic structure and the ordinary
 WAVECAR workflow. Additional operator files provide optional comparisons or
 enable observables that require more information than WAVECAR contains.
 VASP computes the electronic states; VASPBERRY evaluates their topology and
-response. A VASP-derived Wannier representation can interpolate those states
-and operators for denser sampling.
+response. A separately prepared Wannier representation is retained for optional
+supporting checks; it is not required by the native workflow.
 
 ## Available routes
 
 | Route | Input and approximation | Present scope | VASP source modification |
 |---|---|---|---|
-| Native Kubo / `wavecar-hall` | Standard WAVECAR; canonical momentum of its pseudo-wavefunctions | Band or occupied-bundle curvature; charge response and regional contributions with chemical-potential and temperature scans | None |
+| Native `--task kubo` / `--task kubo-pairs` | Standard WAVECAR; canonical momentum of its pseudo-wavefunctions | Band or occupied-bundle curvature; charge response and regional contributions with chemical-potential and temperature scans | None |
 | `waveder-hall` | Same-run WAVEDER, WAVECAR, INCAR and OUTCAR; PAW longitudinal optical occupied–empty matrix elements | Gapped 2D occupied bundle at T=0; global and specified regional charge integrals | None; supported standard VASP 5.4.4 optical branch |
 | `waveder-optics` | Same standard optical files; complete initial and final degenerate groups | k-resolved circular transition strengths and spectra; paths are allowed, with no inferred BZ integral | None; the same supported standard optical branch |
 | Full velocity export / `velocity-pairs` → `pair-hall` | Audited full complex PAW velocity matrices, converted to reusable charge-response pairs | Charge and regional Hall response with chemical-potential and temperature scans | Optional instrumentation of the supported VASP 5.4.4 source copy |
@@ -26,8 +26,10 @@ VASP calculation with an analytic model.
 ## 1. Ordinary WAVECAR: the starting point
 
 Follow the [MoS₂ charge-Hall example](../examples/features/kubo-hall/) to
-prepare a full VASP mesh and run `wavecar-hall`. The native Fortran stage
-evaluates interband pairs; the bundled Python stage applies occupations,
+prepare a full VASP mesh and run `--task kubo-pairs` with the Fortran
+executable, then `import-pairs` and `pair-hall` on the saved output. The
+[explicit commands](KUBO_TRANSPORT.md#native-pairs-to-charge-hall) separate
+wavefunction evaluation from postprocessing. The bundled Python stage applies occupations,
 integrates the BZ and writes reusable numerical outputs. No custom VASP
 producer or user-written integration script is needed. The same pair cache
 can be reused for other chemical potentials, temperatures or region choices.

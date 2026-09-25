@@ -49,12 +49,13 @@ make gnu
 make check-gnu
 ```
 
-The products are `build/vaspberry-gfortran` and
-`build/vaspberry-mpi`. A normal MPI calculation is launched, for example, as
+The products are `build/vaspberry` and `build/vaspberry-mpi`.
+`build/vaspberry-gfortran` is retained as a compatibility symlink to the serial
+executable; existing scripts continue to work. A normal MPI calculation is launched, for example, as
 
 ```bash
-mpiexec -n 4 build/vaspberry-mpi -f WAVECAR -kx 12 -ky 12 \
-  -s 2 -ii 1 -if 10 -z2 1
+mpiexec -n 4 build/vaspberry-mpi --task z2 --wavecar WAVECAR \
+  --mesh 12,12 --spinor 2 --bands 1:10 --output NFIELD
 ```
 
 Compiler commands can be overridden without editing the Makefile. This is

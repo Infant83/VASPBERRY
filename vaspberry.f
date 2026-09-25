@@ -115,6 +115,7 @@
       real*8, allocatable:: w_half_klist(:,:)
       integer, allocatable:: i_half_klist(:),i_trim_klist(:)
       integer :: myrank, nprocs, ierr, mpierr
+      integer :: imaxberry,iminberry
       integer ::  mpi_comm_earth
 #ifdef MPI_USE
       include 'mpif.h'
@@ -792,6 +793,15 @@
          recilat(:,:)=recilat_tot(:,:)
 #endif
        if(myrank==0)then
+#ifdef MPI_USE
+! Metadata uses the complete native grid, before periodic extension.
+        imaxberry=maxloc(berrycurv,dim=1)
+        iminberry=minloc(berrycurv,dim=1)
+        berrymax(1:3)=recilat(:,imaxberry)
+        berrymax(4)=berrycurv(imaxberry)
+        berrymin(1:3)=recilat(:,iminberry)
+        berrymin(4)=berrycurv(iminberry)
+#endif
         write(6,'(A,F16.6)')"# Chern Number =    ",chernnumber
        endif
 !KKKKK NOTE : START-sorting
@@ -2523,7 +2533,7 @@
            enddo !ispinor
           enddo !i1
          enddo !i2
-         if(mod(i3,nint(nz/10.)) == 0 )then
+         if(mod(i3,max(1,nint(nz/10.))) == 0 )then
           write(6,'(F5.1,A)',advance='yes')i3/dble(nz)*100,"%"
          endif
         enddo !i3
@@ -5294,13 +5304,17 @@
      &    iwf,ikwf,ng,rs,imag,init_e,fina_e,nediv,sigma,
      &    klist_fname,sw_fname,atlist_fname,flag_atom_project,
      &    theta,phi,kubo_csv,ikubo_bundle,kubo_pairs)
+      use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
       implicit real*8(a-h,o-z)
       character*256 filename,foname,fbz,ver_tag,vdirec
       character*256 foname_base
       character*256 klist_fname, sw_fname, atlist_fname
       character*256 kubo_csv,kubo_pairs
       real*8 x,y
-      character*256 option,value
+      character*256 option,value,task,raw_option,number_string
+      integer cli_ios,cli_j,cli_delim,cli_values(3)
+      integer task_kubo,task_cd,task_vel,task_z2
+      logical modern_cli,modern_option,task_seen
       integer iarg,narg,ia,nkx,nky,ispinor,iskp,ine,ng(3)
       integer ikubo_bundle
       dimension rs(3)
@@ -5325,12 +5339,134 @@
       kubo_pairs=""
       pair_band_selection=.false.
       ikubo_bundle=0
+      task=""
+      task_seen=.false.
+      modern_cli=.false.
+      do cli_j=1,iarg
+       call getarg(cli_j,option)
+       if(option(1:2).eq.'--')modern_cli=.true.
+      enddo
+      if(iarg.eq.1)then
+       call getarg(1,option)
+       if(trim(option).eq.'--help')call help(ver_tag)
+      endif
       if(iarg.ne.2*nargs) then
-         call help(ver_tag)
+       if(modern_cli)then
+        write(0,*)'*** error - each option needs a separate value; ',
+     &            'use --help alone'
+        call vaspberry_fail
+       endif
+       call help(ver_tag)
       endif
       do ia=1,nargs
          call getarg(2*ia-1,option)
          call getarg(2*ia,value)
+         raw_option=option
+         modern_option=option(1:2).eq.'--'
+         if(modern_option.and.(len_trim(value).eq.0.or.
+     &      value(1:2).eq.'--'))goto 910
+! Long options normalize to the same legacy parser and dispatch below.
+! Keep this routine self-contained for standalone parser regression builds.
+         select case(trim(option))
+         case('--task')
+          if(task_seen)then
+           write(0,*)'*** error - specify --task only once'
+           call vaspberry_fail
+          endif
+          task=trim(value)
+          task_seen=.true.
+          cycle
+         case('--mesh','--real-grid','--bands')
+          number_string=trim(value)
+          cli_delim=0
+          do cli_j=1,len_trim(value)
+           if((option.eq.'--bands'.and.value(cli_j:cli_j).eq.':')
+     &       .or.(option.ne.'--bands'.and.
+     &                 value(cli_j:cli_j).eq.','))then
+            cli_delim=cli_delim+1
+            if(cli_j.eq.1.or.cli_j.eq.len_trim(value))goto 910
+            if(number_string(cli_j-1:cli_j-1).eq.',')goto 910
+            number_string(cli_j:cli_j)=','
+           else if(index('0123456789',value(cli_j:cli_j)).eq.0)then
+            goto 910
+           endif
+          enddo
+          cli_values=0
+          select case(trim(option))
+          case('--mesh')
+           if(cli_delim.ne.1)goto 910
+           read(number_string,*,iostat=cli_ios)cli_values(1:2)
+           if(cli_ios.ne.0.or.any(cli_values(1:2).lt.1))goto 910
+           nkx=cli_values(1);nky=cli_values(2)
+          case('--real-grid')
+           if(cli_delim.ne.2)goto 910
+           read(number_string,*,iostat=cli_ios)cli_values
+           if(cli_ios.ne.0.or.any(cli_values.lt.1))goto 910
+           ng=cli_values
+          case('--bands')
+           if(cli_delim.gt.1)goto 910
+           if(cli_delim.eq.0)then
+            read(number_string,*,iostat=cli_ios)cli_values(1)
+            cli_values(2)=cli_values(1)
+           else
+            read(number_string,*,iostat=cli_ios)cli_values(1:2)
+           endif
+           if(cli_ios.ne.0.or.any(cli_values(1:2).lt.1))goto 910
+           if(cli_values(1).gt.cli_values(2))goto 910
+           nini=cli_values(1);nmax=cli_values(2)
+           pair_band_selection=.true.
+          end select
+          cycle
+         case('--wavecar')
+          option='-f'
+         case('--output')
+          foname=trim(value)
+          cycle
+         case('--curvature-csv')
+          option='-kubo_csv'
+         case('--pairs-csv')
+          option='-kubo_pairs'
+         case('--spinor','--bundle','--wavefunction-band',
+     &        '--kpoint','--imaginary')
+          do cli_j=1,len_trim(value)
+           if(index('0123456789',value(cli_j:cli_j)).eq.0)goto 910
+          enddo
+          read(value,*,iostat=cli_ios)cli_values(1)
+          if(cli_ios.ne.0)goto 910
+          select case(trim(option))
+          case('--spinor')
+           if(cli_values(1).lt.1.or.cli_values(1).gt.2)goto 910
+           option='-s'
+          case('--bundle')
+           if(cli_values(1).lt.0.or.cli_values(1).gt.1)goto 910
+           option='-kubo_bundle'
+          case('--imaginary')
+           if(cli_values(1).lt.0.or.cli_values(1).gt.1)goto 910
+           option='-im'
+          case('--wavefunction-band')
+           if(cli_values(1).lt.1)goto 910
+           option='-wf'
+          case('--kpoint')
+           if(cli_values(1).lt.1)goto 910
+           option='-k'
+          end select
+         case('--theta','--phi')
+          do cli_j=1,len_trim(value)
+           if(index('0123456789+-.eEdD',value(cli_j:cli_j)).eq.0)
+     &       goto 910
+          enddo
+          read(value,*,iostat=cli_ios)x
+          if(cli_ios.ne.0)goto 910
+          if(.not.ieee_is_finite(x))goto 910
+          if(option.eq.'--theta')option='-theta'
+          if(option.eq.'--phi')option='-phi'
+         case default
+          if(modern_option)then
+           write(0,*)'*** error - unknown option ',trim(option),
+     &               '; use --help'
+           call vaspberry_fail
+          endif
+         end select
          if(option == "-f") then
             filename = trim(value)
            else if(option == "-o") then
@@ -5414,9 +5550,57 @@
            else if(option =="-h") then
               call help(ver_tag)
            else
+           if(modern_cli)then
+            write(0,*)'*** error - unknown option ',trim(option),
+     &                '; use --help'
+            call vaspberry_fail
+           endif
            call help(ver_tag)
           endif
       enddo
+! Resolve the task after all options, independent of argument order.
+      if(task_seen)then
+       task_kubo=0;task_cd=0;task_vel=0;task_z2=0
+       select case(trim(task))
+       case('chern')
+       case('z2')
+        task_z2=1
+       case('kubo','kubo-line','kubo-pairs')
+        task_kubo=2
+       case('kubo-integral')
+        task_kubo=1
+       case('optical')
+        task_cd=1
+       case('spectrum')
+        task_cd=2
+       case('velocity')
+        task_vel=1
+       case('wavefunction')
+        if(iwf.lt.1)then
+         write(0,*)'*** error - wavefunction task needs ',
+     &             '--wavefunction-band N (or -wf N)'
+         call vaspberry_fail
+        endif
+       case default
+        write(0,*)'*** error - unknown task ',trim(task),
+     &            '; use --help'
+        call vaspberry_fail
+       end select
+       if((ikubo.ne.0.and.ikubo.ne.task_kubo).or.
+     &    (icd.ne.0.and.icd.ne.task_cd).or.
+     &    (ivel.ne.0.and.ivel.ne.task_vel).or.
+     &    (iz.ne.0.and.iz.ne.task_z2).or.ixt.ne.0.or.it.ne.0.or.
+     &    (iwf.ne.0.and.task.ne.'wavefunction'))then
+        write(0,*)'*** error - --task conflicts with legacy task ',
+     &            'options; choose one calculation'
+        call vaspberry_fail
+       endif
+       ikubo=task_kubo;icd=task_cd;ivel=task_vel;iz=task_z2
+       if(task.eq.'kubo-pairs'.and.len_trim(kubo_pairs).eq.0)then
+        write(0,*)'*** error - kubo-pairs task needs --pairs-csv PATH'
+        call vaspberry_fail
+       endif
+      endif
       if(ikubo.lt.0.or.ikubo.gt.2)then
        write(0,*) '*** error - Kubo option must be 0, 1 or 2'
        call vaspberry_fail
@@ -5518,6 +5702,9 @@
       endif
 
       return
+ 910  write(0,*)'*** error - invalid value for ',trim(raw_option),
+     &         ': ',trim(value)
+      call vaspberry_fail
       end subroutine parse
 
 !!$*  subroutine for reading basic information
@@ -5803,6 +5990,50 @@
       write(6,*)"          **** PROGRAM INSTRUCTION ***"
       write(6,*)" "
       write(6,*)ver_tag
+      write(6,*)" "
+      write(6,*)"*Native WAVECAR workflow: make serial"
+      write(6,*)"  build/vaspberry --task chern --wavecar WAVECAR"
+      write(6,*)"    --mesh 12,12 --bands 1:18 --spinor 2"
+      write(6,*)"  build/vaspberry --task kubo --bands 18"
+      write(6,*)"    --curvature-csv curvature.csv"
+      write(6,*)"  build/vaspberry --task kubo-pairs --pairs-csv pairs.csv"
+      write(6,*)"  build/vaspberry --help"
+      write(6,*)"  build/vaspberry-gfortran remains a compatibility alias."
+      write(6,*)" "
+      write(6,*)"*Tasks (--task NAME; default: chern / Fukui):"
+      write(6,*)"  chern          Fukui links on a full periodic 2D mesh"
+      write(6,*)"  z2             native n-field Z2 (-z2 1; limits below)"
+      write(6,*)"  kubo           point curvature on supplied k points"
+      write(6,*)"                 (-kubo 2; kubo-line is a synonym)"
+      write(6,*)"                 No integer expectation on a path."
+      write(6,*)"  kubo-integral  legacy integration diagnostic (-kubo 1)"
+      write(6,*)"  kubo-pairs     all source-band pairs; --pairs-csv needed"
+      write(6,*)"                 Omit --bands; no occupations or gaps."
+      write(6,*)"  optical        selected-transition selectivity (-cd 1)"
+      write(6,*)"  spectrum       broadened transition spectrum (-cd 2)"
+      write(6,*)"                 Not a calibrated absolute optical rate."
+      write(6,*)"  wavefunction   requires --wavefunction-band N (-wf N)"
+      write(6,*)"                 Existing Gamma-only reconstruction."
+      write(6,*)"  velocity       velocity expectation (-vel 1)"
+      write(6,*)"  --task rejects conflicting legacy task options."
+      write(6,*)" "
+      write(6,*)"*Readable aliases (each takes a separate value):"
+      write(6,*)"  --wavecar PATH            -f PATH"
+      write(6,*)"  --mesh NX,NY              -kx NX -ky NY"
+      write(6,*)"  --bands FIRST:LAST or N   -ii FIRST -if LAST or -is N"
+      write(6,*)"  --spinor 1|2              -s 1|2 (scalar|spinor)"
+      write(6,*)"  --output PREFIX          -o PREFIX (not a directory)"
+      write(6,*)"  --curvature-csv PATH     -kubo_csv PATH"
+      write(6,*)"  --pairs-csv PATH         -kubo_pairs PATH"
+      write(6,*)"  --bundle 0|1             -kubo_bundle 0|1"
+      write(6,*)"                           1 needs --curvature-csv PATH"
+      write(6,*)"  --wavefunction-band N    -wf N"
+      write(6,*)"  --kpoint N               -k N"
+      write(6,*)"  --real-grid NX,NY,NZ     -ng NX,NY,NZ"
+      write(6,*)"  --imaginary 0|1          -im 0|1"
+      write(6,*)"  --theta DEG --phi DEG    -theta DEG -phi DEG"
+      write(6,*)"  --help                  print this help and stop"
+      write(6,*)"  All legacy flags remain accepted (details below)."
       write(6,*)" "
       write(6,*)"*LIMITATION : -This program is ONLY for 2D system."
       write(6,*)"            : -It tries to find the VBM for first KPT,"
