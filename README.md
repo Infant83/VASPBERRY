@@ -18,45 +18,106 @@ band plots provide context for the calculated topology and response.
 [Hands-on commands](docs/HANDS_ON.md) · [Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
 [Output formats](docs/OUTPUT_FORMAT.md)
 
-**Latest release: [1.4.1](https://github.com/Infant83/VASPBERRY/releases/tag/v1.4.1).**
-The commands below are available in the fixed `v1.4.1` source. The original
-short options remain supported. See the [release notes](docs/releases/v1.4.1.md),
+**Latest release: [1.4.2](https://github.com/Infant83/VASPBERRY/releases/tag/v1.4.2).**
+The commands below are available in the fixed `v1.4.2` source. The original
+short options remain supported. See the [release notes](docs/releases/v1.4.2.md),
 [changelog](CHANGELOG.md), [version policy](docs/RELEASING.md)
 and [migration notes](docs/MIGRATION.md).
 
-## Download and compile
+## Install and run the Fortran program
+
+The native program requires a **Fortran compiler, GNU Make, POSIX shell/tools
+and LP64 BLAS/LAPACK libraries**. An MPI build additionally needs the matching
+MPI **development package/compiler wrapper and runtime launcher**. Python,
+VASP and Wannier90 are not required to compile or run VASPBERRY on an existing
+compatible `WAVECAR`; Python is used by the optional numerical postprocessing
+and plotting tools.
+
+| Environment | Required native development environment | Build and executable |
+|---|---|---|
+| Linux, Intel serial | Intel oneAPI `ifx` + oneMKL | `make ifx` → `build/vaspberry-ifx` |
+| Linux, Intel MPI (main walkthrough) | `ifx` + Intel MPI SDK (`mpiifx`) + oneMKL | `make ifx-mpi` → `build/vaspberry-ifx-mpi` |
+| Linux, GNU serial | GNU Fortran + LP64 BLAS/LAPACK | `make serial` → `build/vaspberry` |
+| Linux, GNU MPI | GNU Fortran + Open MPI or MPICH development libraries + LP64 BLAS/LAPACK | `make mpi` → `build/vaspberry-mpi` |
+| macOS, GNU | Compatible GNU Fortran/MPI libraries and LP64 BLAS/LAPACK | See the architecture-specific [build guide](docs/BUILD.md) for paths and available packages |
+
+Retained Intel Classic installations use `make ifort` or `make ifort-mpi`.
+On Windows use a Linux environment such as WSL2 and its Linux compiler stack;
+there is no native Windows build. The [build guide](docs/BUILD.md) distinguishes
+CI-validated environments from installation guidance and covers cluster modules,
+macOS, MPICH, runtime libraries and common errors.
+
+### Get the source
+
+Clone the repository's default branch (`master`):
 
 ```bash
-git clone --branch v1.4.1 --single-branch https://github.com/Infant83/VASPBERRY.git VASPBERRY-1.4.1
-cd VASPBERRY-1.4.1
-# Activate Intel oneAPI (or the equivalent compiler/MPI modules on your cluster).
+git clone https://github.com/Infant83/VASPBERRY.git
+cd VASPBERRY
+make help
+```
+
+For a fixed release, download and extract the source archive from
+[v1.4.2](https://github.com/Infant83/VASPBERRY/releases/tag/v1.4.2), then run the
+same build commands from the extracted directory containing `Makefile`.
+**Archive builds do not require Git or Python.** No precompiled executable or
+system-wide installation is needed; the build creates local files in `build/`.
+Update an existing default-branch checkout with `git pull --ff-only`, then
+rebuild. Release tags stay fixed. Large example inputs may separately need
+the [input-fetch procedure](examples/INPUTS.md).
+
+### Intel oneAPI and Intel MPI on Linux
+
+Install/load the Fortran compiler, Intel MPI SDK and oneMKL development
+components; having only runtime libraries is insufficient. In Bash, activate
+the installed environment or use the site's equivalent modules:
+
+```bash
 source /opt/intel/oneapi/setvars.sh
 make ifx-mpi
 make check-ifx-mpi
 mpiexec -n 4 ./build/vaspberry-ifx-mpi --help
 ```
 
-The executable is `build/vaspberry-ifx-mpi`, built with Intel `mpiifx`,
-Intel MPI and sequential LP64 oneMKL. Use the `mpiexec` from that same Intel
-MPI installation. For Intel Classic, use `make ifort-mpi`,
-`make check-ifort-mpi` and `build/vaspberry-ifort-mpi`. The
-[build guide](docs/BUILD.md) also covers GNU/OpenMPI (`make gnu`) and
-compiler-specific serial builds.
-Python is needed for the supplied postprocessing and plotting tools:
+Replace the setup path with the site's actual oneAPI installation. Use the
+`mpiexec` from the same Intel MPI environment as `mpiifx`, and run within an
+allocation that permits the requested rank count. `check-ifx-mpi` builds and
+checks two-rank startup/communication/help. Intel Classic uses
+`make check-ifort-mpi`. For a machine without MPI, use `make ifx`,
+`make check-ifx`, and run `./build/vaspberry-ifx --help` directly.
+
+### GNU on Ubuntu/Debian
+
+The serial executable needs no MPI package:
 
 ```bash
-python3 -m pip install -r requirements-transport.txt
+sudo apt-get update
+sudo apt-get install make gfortran libblas-dev liblapack-dev
+make serial
+make check-serial-help
+./build/vaspberry --help
 ```
 
-For development work on the latest default branch:
+For Open MPI, add the development/runtime packages and build the MPI version:
 
 ```bash
-git clone https://github.com/Infant83/VASPBERRY.git
+sudo apt-get install openmpi-bin libopenmpi-dev
+make mpi
+make check-gnu
+mpiexec -n 4 ./build/vaspberry-mpi --help
 ```
 
-Update an existing `master` checkout with `git pull --ff-only`. Release tags
-stay fixed; source archives are available on the release page. Large Git LFS
-inputs may need the [input-fetch procedure](examples/INPUTS.md).
+On a cluster, use its installed modules/libraries instead of these administrator
+commands. Compiler, wrapper and library paths can be supplied to Make; see
+[build overrides and platform recipes](docs/BUILD.md). The supplied builds
+use byte-based WAVECAR records and **LP64**, not ILP64, numerical libraries.
+Serial executables run directly; MPI executables run with their matching
+launcher. Keep the compiler/MPI/library environment loaded when running.
+
+Use your usual Python environment for the optional `tools/` commands. Their
+full dependency versions are in [requirements-transport.txt](requirements-transport.txt);
+Matplotlib is used by the supplied postprocessing and plotting tools.
+Environment creation and package installation follow your site's usual practice.
 
 ## Features
 

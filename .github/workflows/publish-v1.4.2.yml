@@ -1,0 +1,42 @@
+name: Publish VASPBERRY 1.4.2
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/publish-v1.4.2.yml'
+      - '.github/scripts/publish_v142.py'
+      - 'docs/releases/v1.4.2.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-vaspberry-v1.4.2
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'Infant83/VASPBERRY' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact-source CI, Bi, Intel MPI and archive installation, then publish once
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/publish_v142.py
+      - name: Retain publication validation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v1.4.2-publication-validation
+          path: release-validation.json
+          if-no-files-found: warn

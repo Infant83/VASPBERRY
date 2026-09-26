@@ -1,0 +1,148 @@
+name: Installation validation
+
+on:
+  push:
+    branches: [master, "feature/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  archive-install:
+    name: Archive install (${{ matrix.label }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: macOS ARM64, GNU/OpenMPI
+            os: macos-15
+            id: macos-arm64-openmpi
+            architecture: arm64
+          - label: Linux, GNU/MPICH
+            os: ubuntu-24.04
+            id: linux-mpich
+            architecture: x86_64
+    env:
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Extract a clean archive of the exact commit
+        run: |
+          install_root="$RUNNER_TEMP/vaspberry-archive-install"
+          mkdir -p "$install_root/source" "$install_root/results"
+          # Archive committed bytes: the unused Bi LFS fixture remains a pointer.
+          # MoS2 is ordinary Git data, independently checksummed by the numerical test.
+          git -c filter.lfs.process= -c filter.lfs.smudge=cat \
+            -c filter.lfs.required=false archive --format=tar HEAD > "$install_root/source.tar"
+          tar -xf "$install_root/source.tar" -C "$install_root/source"
+          test ! -e "$install_root/source/.git"
+          test ! -e "$install_root/source/build"
+          test "$(uname -m)" = '${{ matrix.architecture }}'
+          {
+            git rev-parse HEAD
+            shasum -a 256 "$install_root/source.tar"
+            uname -a
+          } > "$install_root/results/source.txt"
+          echo "INSTALL_ROOT=$install_root" >> "$GITHUB_ENV"
+      - name: Install the macOS ARM64 Homebrew compiler, MPI and LP64 OpenBLAS
+        if: runner.os == 'macOS'
+        run: |
+          brew install gcc open-mpi openblas \
+            2>&1 | tee "$INSTALL_ROOT/results/package-install.log"
+          export PATH="$(brew --prefix gcc)/bin:$PATH"
+          echo "$(brew --prefix gcc)/bin" >> "$GITHUB_PATH"
+          mpi_prefix="$(brew --prefix open-mpi)"
+          blas_prefix="$(brew --prefix openblas)"
+          # Use the compiler that built this MPI wrapper, without overriding OMPI_FC.
+          compiler="$("$mpi_prefix/bin/mpifort" --showme:command)"
+          compiler="$(command -v "$compiler")"
+          test -x "$compiler"
+          {
+            echo "FC=$compiler"
+            echo "MPIFC=$mpi_prefix/bin/mpifort"
+            echo "MPIEXEC=$mpi_prefix/bin/mpiexec"
+            echo "GNU_LIBS=-L$blas_prefix/lib -lopenblas"
+            echo "LDFLAGS=-Wl,-rpath,$blas_prefix/lib"
+          } >> "$GITHUB_ENV"
+          {
+            brew list --versions gcc open-mpi openblas
+            "$compiler" --version
+            "$mpi_prefix/bin/mpifort" --showme
+            "$mpi_prefix/bin/mpiexec" --version
+          } > "$INSTALL_ROOT/results/toolchain.txt" 2>&1
+      - name: Install the Linux GNU compiler, MPICH and LP64 BLAS/LAPACK
+        if: runner.os == 'Linux'
+        run: |
+          {
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends \
+              gfortran make mpich libmpich-dev libblas-dev liblapack-dev
+          } 2>&1 | tee "$INSTALL_ROOT/results/package-install.log"
+          # Distro-specific names prevent accidentally selecting preinstalled Open MPI.
+          {
+            echo 'FC=gfortran'
+            echo 'MPIFC=mpifort.mpich'
+            echo 'MPIEXEC=mpiexec.mpich'
+            echo 'GNU_LIBS=-llapack -lblas'
+          } >> "$GITHUB_ENV"
+          {
+            gfortran --version
+            mpifort.mpich -show
+            mpiexec.mpich -version
+            dpkg-query -W gfortran mpich libmpich-dev libblas-dev liblapack-dev
+          } > "$INSTALL_ROOT/results/toolchain.txt" 2>&1
+      - name: Build from the archive and check help and the two-rank runtime
+        run: |
+          set +e
+          (
+            set -ex
+            cd "$INSTALL_ROOT/source"
+            make help
+            make -j2 gnu
+            make check-gnu
+            # Kubo exports alone do not call LAPACK; exercise its complex ABI too.
+            "$FC" -O2 tests/fortran/test_lapack_runtime.f90 \
+              -o build/test-lapack-runtime $LDFLAGS $GNU_LIBS
+            build/test-lapack-runtime
+            if [ "$RUNNER_OS" = macOS ]; then
+              otool -L build/vaspberry build/vaspberry-mpi
+            else
+              ldd build/vaspberry
+              ldd build/vaspberry-mpi
+            fi
+            shasum -a 256 Makefile vaspberry.f build/vaspberry build/vaspberry-mpi
+          ) 2>&1 | tee "$INSTALL_ROOT/results/build-runtime.log"
+          status=${PIPESTATUS[0]}
+          echo "$status" > "$INSTALL_ROOT/results/build-runtime.exit"
+          exit "$status"
+      - name: Compare real MoS2 serial and two-rank MPI Kubo exports
+        run: |
+          cd "$INSTALL_ROOT/source"
+          # This numerical checker uses only Python's standard library.
+          # Its name preserves the existing Intel MPI validation entry point.
+          python tests/run_intel_mpi_validation.py \
+            --serial build/vaspberry --mpi build/vaspberry-mpi \
+            --mpiexec "$MPIEXEC" --output-dir "$INSTALL_ROOT/results/numerics"
+      - name: Retain toolchains, commands, checksums and numerical failure logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: archive-install-${{ matrix.id }}
+          path: |
+            ${{ runner.temp }}/vaspberry-archive-install/results/
+            ${{ runner.temp }}/vaspberry-archive-install/source/build/help-*.txt
+          if-no-files-found: warn
+          retention-days: 14

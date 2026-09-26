@@ -4,6 +4,32 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-09-26
+
+### Fixed
+
+- Honor environment-selected compilers, MPI wrappers and launchers in Make;
+  retain `gfortran` as the default instead of GNU Make's built-in `f77`.
+- Rebuild GNU executables when their source choice, compiler command or build
+  flags change, avoiding silent reuse of a previously configured binary.
+- Remove incomplete GNU binaries after failed compilation and reject symlink
+  build directories before writing or cleaning generated files.
+
+### Build and documentation
+
+- Add `make help`, Intel serial help checks and standard extra compiler/link
+  flag controls while retaining byte-RECL, fixed-form and LP64 defaults.
+- Document native-only prerequisites separately from Python postprocessing:
+  compiler and numerical-library development packages, MPI SDK/runtime,
+  shell/Make, matching launcher and runtime library paths.
+- Add fresh-source-archive numerical installation checks for GNU/MPICH on
+  Linux and GNU/OpenMPI/OpenBLAS on macOS ARM64, alongside the existing
+  Linux GNU/OpenMPI and Intel ifx/ifort/Intel MPI checks.
+- Clarify Intel Mac existing-toolchain support, current Homebrew limitations,
+  WSL2 recipe scope, cluster modules, release archives and troubleshooting.
+- Numerical kernels, output schemas and scientific reference data are
+  unchanged. Rebuild after updating to use the corrected build behavior.
+
 ## [1.4.1] - 2026-09-26
 
 ### Build and validation
