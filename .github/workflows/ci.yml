@@ -52,7 +52,24 @@ jobs:
       - name: Build current serial source
         run: make serial
       - name: Fetch and verify the real public Bi VASP input
-        run: python examples/fetch_inputs.py bi --output-dir results/inputs/bi
+        run: |
+          test ! -e results/inputs/bi
+          for attempt in 1 2 3; do
+            attempt_dir="results/inputs/bi-attempt-$attempt"
+            if python examples/fetch_inputs.py bi --output-dir "$attempt_dir"; then
+              mv "$attempt_dir" results/inputs/bi
+              break
+            fi
+            # Keep the failed attempt's record; the fetcher still verifies
+            # the pinned payload size and SHA-256 before publishing WAVECAR.
+            if [ -f "$attempt_dir/download.json" ]; then
+              cat "$attempt_dir/download.json"
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              sleep 10
+            fi
+          done
+          test -f results/inputs/bi/WAVECAR
       - name: Recalculate VASPBERRY outputs from real Bi and MoS2 WAVECAR files
         env:
           MPLBACKEND: Agg
@@ -79,7 +96,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: feature-example-results
-          path: results/feature-examples/
+          path: |
+            results/feature-examples/
+            results/inputs/**/download.json
           if-no-files-found: warn
 
   fortran-portability:

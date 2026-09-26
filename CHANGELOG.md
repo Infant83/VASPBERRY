@@ -4,6 +4,10 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+- CI retries the checksum-pinned public Bi input fetch up to three times
+  and retains each attempt's download/verification record, including failures
+  before the numerical examples start. Persistent failures still fail CI.
+
 ## [1.5.0] - 2026-09-26
 
 ### Added
