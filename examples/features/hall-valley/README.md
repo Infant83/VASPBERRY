@@ -53,7 +53,7 @@ From the repository root:
 
 ```sh
 python3 tools/wavecar_fukui.py results/inputs/bi/WAVECAR \
-  --nx 12 --ny 12 --spinor-components 2 \
+  --nx 12 --ny 12 \
   --energy-band 11 --map occupied=1:10 \
   --transport-full-t0 10 \
   --mu-min -1.3 --mu-max -0.9 --mu-num 41 \

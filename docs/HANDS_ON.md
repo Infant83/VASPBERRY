@@ -4,7 +4,7 @@ The main workflow is **VASP → WAVECAR → VASPBERRY execution with Intel MPI �
 
 For routine Hall and PROCAR analysis, start with the [single-file postprocessing guide](POSTPROCESSING.md) and [public Bi example](../examples/features/simple-postprocess/README.md): `python3 tools/vaspberry_post.py run analysis.ini` executes VASPBERRY and performs the requested numerical postprocessing and `python3 tools/vaspberry_post.py plot results/run01` draws them. An optional `python3 tools/vaspberry_post.py check analysis.ini` checks the inputs before running. The [settings reference](POSTPROCESSING_REFERENCE.md) lists the same input, output and naming conventions. The explicit stages below explain the native outputs and provide advanced controls.
 
-Use VASPBERRY 1.5.0 for this walkthrough. Start in the repository root in Bash on a Linux host with Intel oneAPI Fortran, oneMKL and Intel MPI available. The following uses four MPI ranks; select the rank count allowed by your cluster allocation. Choose a fresh output directory when repeating a calculation.
+Use VASPBERRY 1.6.0 for this walkthrough. Start in the repository root in Bash on a Linux host with Intel oneAPI Fortran, oneMKL and Intel MPI available. The following uses four MPI ranks; select the rank count allowed by your cluster allocation. Choose a fresh output directory when repeating a calculation.
 
 ```bash
 source /opt/intel/oneapi/setvars.sh
@@ -35,7 +35,7 @@ mkdir -p results/first-kubo
   cd results/first-kubo
   mpiexec -n 4 "$vb_bin" --task kubo \
     --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-    --spinor 2 --bands 1:18 --bundle 1 --curvature-csv KUBO.csv \
+    --bands 1:18 --bundle 1 --curvature-csv KUBO.csv \
     > vaspberry.log 2> vaspberry.err
 )
 ```
@@ -44,11 +44,10 @@ mkdir -p results/first-kubo
 |---|---|
 | `--task kubo` | Calculate point curvature at the k points already in WAVECAR |
 | `--wavecar` | Read this VASP wavefunction file |
-| `--spinor 2` | Use its two-component SOC states; no extra spin factor of two |
 | `--bands 1:18 --bundle 1` | Trace the isolated group as a whole, allowing internal degeneracies |
 | `--curvature-csv KUBO.csv` | Save the numerical table separately from the console log |
 
-The input WAVECAR supplies eigenvalues, plane-wave coefficients, k points and the lattice. `results/first-kubo/KUBO.csv` contains 48 rows, with `spin,k_index,kx_frac,ky_frac,kz_frac,omega_z_A2,min_external_gap_eV`. Here `omega_z_A2` is the already calculated occupied-bundle Ωxy in Å²; the gap is in eV. Comment lines beginning `#` record the operator, normalization, band selection and PASS status. Keep the CSV and native log.
+The input WAVECAR supplies eigenvalues, plane-wave coefficients, k points and the lattice. VASPBERRY detects its spinor components automatically. `results/first-kubo/KUBO.csv` contains 48 rows, with `spin,k_index,kx_frac,ky_frac,kz_frac,omega_z_A2,min_external_gap_eV`. Here `omega_z_A2` is the already calculated occupied-bundle Ωxy in Å²; the gap is in eV. Comment lines beginning `#` record the operator, normalization, band selection and PASS status. Keep the CSV and native log.
 
 This input is a line path: it supports a curvature-versus-path-sample plot. A full-zone map or Hall integral needs the separately supplied full-mesh recipe.
 
@@ -119,12 +118,12 @@ mkdir -p results/my-native
 (
   cd results/my-native
   mpiexec -n 4 "$vb_bin" --task kubo-pairs --wavecar "$wavecar" \
-    --spinor 2 --pairs-csv PAIRS.csv > vaspberry.log 2> vaspberry.err
+    --pairs-csv PAIRS.csv > vaspberry.log 2> vaspberry.err
 )
 
 python3 tools/vaspberry_kubo.py import-pairs \
   --csv results/my-native/PAIRS.csv --wavecar "$wavecar" \
-  --spinor-components 2 --spin-multiplicity 1 --mesh "$NX" "$NY" \
+  --mesh "$NX" "$NY" \
   --energy-reference 'unchanged VASP eigenvalue zero' \
   --output-dir results/my-pairs
 ```
@@ -144,7 +143,7 @@ integration together:
 ```bash
 python3 tools/vaspberry_kubo.py wavecar-hall \
   --wavecar results/mos2-24-b60-vasp/WAVECAR --binary "$vb_bin" --mpi-procs 4 \
-  --spinor-components 2 --spin-multiplicity 1 --mesh 24 24 \
+  --mesh 24 24 \
   --energy-reference 'unchanged VASP eigenvalue zero' --pair-band-max 40 \
   --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 61 \
   --mu-reference -0.43809870 --temperatures 0 300 \

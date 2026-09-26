@@ -31,9 +31,9 @@ required by a Brillouin-zone integral. The example's numerical `--mesh`, `--band
 
 1. Put your VASP outputs in a stable input directory. Check WAVECAR format and
    record-length compatibility using the [build guide](../docs/BUILD.md).
-2. Read your EIGENVAL/OUTCAR and choose occupied bands, selected states, spinor
-   representation and the actual k sampling. SOC normally uses `--spinor 2`; this
-   means two spinor components, not an extra factor of two in conductivity.
+2. Read your EIGENVAL/OUTCAR and choose occupied bands, selected states and the
+   actual k sampling. Spinor components are detected from WAVECAR; two-component
+   states receive no extra spin-degeneracy factor.
 3. Copy the tutorial's explicit VASPBERRY command into a fresh result directory.
    Replace the WAVECAR path and all material-dependent indices/grid settings.
 4. Inspect result status and diagnostics before plotting. Near-degenerate

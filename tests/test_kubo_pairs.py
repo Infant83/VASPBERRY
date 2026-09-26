@@ -258,6 +258,7 @@ class NativePairContractTests(unittest.TestCase):
         self.data=from_vertices([-1.,-1.,2.],random_vertices())
         self.wave=self.root/'WAVECAR';self.wave.write_bytes(b'synthetic parser-contract fixture')
         self.fake=SimpleNamespace(energies=self.data.energies_eV,kpoints=self.data.kpoints_fractional,
+            spinor_components=1, resolve_spin_multiplicity=lambda value=None: 2 if value is None else value,
             header=SimpleNamespace(ispin=1,lattice=self.data.lattice_A,reciprocal=self.data.reciprocal_inv_A),
             coefficients=lambda k,b:np.ones((1,1,1)))
         self.options=dict(spin=1,spinor_components=1,spin_multiplicity=1,
@@ -311,6 +312,15 @@ class NativePairContractTests(unittest.TestCase):
                           lambda rows:[dict(rows[0],gap_eV=1.)]+rows[1:]):
             with self.subTest(transform=transform),self.assertRaises(ValueError):
                 self.load(self.native('bad-row.csv',row_transform=transform))
+
+    def test_automatic_source_options_record_resolved_layout_and_scalar_factor(self):
+        path = self.native()
+        with patch.object(kp, 'Wavecar', return_value=self.fake):
+            auto = kp.import_native_pairs(path, self.wave, sampling=self.options['sampling'],
+                                          energy_reference='fixture zero')
+        self.assertEqual(auto.metadata['spinor_components'], 1)
+        self.assertEqual(auto.metadata['spin_multiplicity'], 2)
+        np.testing.assert_array_equal(auto.numerator_eV2_A2, self.data.numerator_eV2_A2)
 
     def test_integer_indices_and_pair_coverage_are_required(self):
         for field in ('k_ids','band_ids','pair_n','pair_m'):

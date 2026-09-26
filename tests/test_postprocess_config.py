@@ -96,12 +96,20 @@ class PostprocessConfigTests(unittest.TestCase):
         self.assertEqual(settings['run']['mpi_procs'], 4)
 
     def test_all_spin_modes_have_distinct_physical_mappings(self):
-        mappings = {'soc': (1, 2, 1, 1), 'scalar-degenerate': (1, 1, 2, 1),
+        mappings = {'auto': (1, None, None, None), 'spinor': (1, 2, 1, 1),
+                    'soc': (1, 2, 1, 1), 'scalar-degenerate': (1, 1, 2, 1),
                     'collinear-up': (1, 1, 1, 2), 'collinear-down': (2, 1, 1, 2)}
         for mode, expected in mappings.items():
             with self.subTest(mode=mode):
                 run = self.load(BASE.replace('spin_mode = soc', 'spin_mode = '+mode))['run']
                 self.assertEqual(tuple(run[k] for k in ('spin', 'spinor_components', 'spin_multiplicity', 'expected_nspin')), expected)
+
+    def test_omitted_spin_mode_is_auto_without_reading_wavecar(self):
+        settings = self.load(BASE.replace('spin_mode = soc\n', '') + PROJECTION)
+        self.assertEqual(settings['run']['spin_mode'], 'auto')
+        self.assertIsNone(settings['run']['spinor_components'])
+        self.assertIsNone(settings['run']['spin_multiplicity'])
+        self.assertIsNotNone(settings['projection'])
 
     def test_region_fraction_group_case_and_projection_inheritance(self):
         settings = self.load(BASE+PROJECTION+REGIONS)
@@ -189,7 +197,7 @@ hall_regions = second contrast
     def test_invalid_scientific_values_fail_in_parser(self):
         replacements = [
             ('mesh = 14 14', 'mesh = 1 14'), ('mesh = 14 14', 'mesh = 2.0 14'),
-            ('mesh = 14 14', 'mesh = 2 2 2'), ('spin_mode = soc', 'spin_mode = auto'),
+            ('mesh = 14 14', 'mesh = 2 2 2'), ('spin_mode = soc', 'spin_mode = guess'),
             ('mu = -3.15 -1.05 101', 'mu = -1 -3 101'),
             ('mu = -3.15 -1.05 101', 'mu = -1 -1 101'),
             ('mu = -3.15 -1.05 101', 'mu = -1 1 1'),

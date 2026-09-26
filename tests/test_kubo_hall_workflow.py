@@ -31,6 +31,7 @@ class HallWorkflowTests(unittest.TestCase):
         self.q = np.array([[0., 0., 0.], [0., .5, 0.], [.5, 0., 0.], [.5, .5, 0.]])
         self.energy = np.tile([-1., 2.], (4, 1))
         self.fake_wavecar = SimpleNamespace(energies=self.energy, kpoints=self.q,
+            spinor_components=1, resolve_spin_multiplicity=lambda value=None: 2 if value is None else value,
             header=SimpleNamespace(ispin=1, lattice=np.eye(3), reciprocal=2*np.pi*np.eye(3)),
             coefficients=lambda k, b: np.ones((1, 1, 1)))
         self.addCleanup(patch.stopall)
@@ -76,7 +77,8 @@ class HallWorkflowTests(unittest.TestCase):
     def native_process(self, *, returncode=0, footer=True, omit_csv=False):
         def run(argv, *, cwd, stdout, stderr, check):
             self.assertFalse(check)
-            self.assertEqual(argv[-4:], ['-kubo', '2', '-kubo_pairs', 'PAIRS.csv'])
+            self.assertEqual(argv[argv.index('--task')+1], 'kubo-pairs')
+            self.assertEqual(argv[argv.index('--pairs-csv')+1], 'PAIRS.csv')
             stdout.write('native diagnostic retained\n')
             stderr.write('STOP 0\n' if not footer else '')
             if not omit_csv:
@@ -90,6 +92,16 @@ class HallWorkflowTests(unittest.TestCase):
             meta = workflow.wavecar_hall_command(args)
         self.assertEqual(native.call_count, 1)
         return args, meta
+
+    def test_automatic_native_layout_and_scalar_multiplicity_defaults(self):
+        args = self.wave_args('auto')
+        args.spinor_components = args.spin_multiplicity = None
+        with patch.object(workflow.subprocess, 'run', side_effect=self.native_process()) as native:
+            meta = workflow.wavecar_hall_command(args)
+        self.assertNotIn('--spinor', native.call_args.args[0])
+        self.assertEqual(meta['spin_multiplicity'], 2)
+        cache = pairs.read_pairs(args.output_dir/'pairs')
+        self.assertEqual(cache.metadata['spinor_components'], 1)
 
     def test_all_in_one_npz_only_and_reusable_cache_rescan_match(self):
         args, meta = self.run_success(extra=['--formats', 'npz'])

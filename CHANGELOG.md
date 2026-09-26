@@ -4,6 +4,26 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-09-27
+
+### Automatic WAVECAR layout
+
+- VASPBERRY and the WAVECAR-based Python tools detect scalar versus
+  two-component wavefunctions from coefficient counts and the full plane-wave
+  basis. All k points and stored spin channels must agree.
+- Existing `-s 1|2`, `--spinor 1|2` and Python component arguments remain
+  optional assertions. A conflicting value fails instead of being ignored.
+- The INI `spin_mode` now defaults to `auto`. Ordinary scalar/spinor occupation
+  multiplicities follow the detected source; collinear INI runs still require
+  an explicit up/down channel choice. `soc` remains a compatibility alias for
+  two-component storage, not evidence that SOC was enabled.
+- Native logs report spinor components without inferring `LSORBIT`. Unsupported
+  or inconsistent coefficient layouts fail before numerical work.
+- Direct commands, hands-on examples and settings files omit redundant spinor
+  arguments. Numerical formulas and saved-result schemas are unchanged.
+
+### Additional fixes and documentation
+
 - Usage guides and CLI help explicitly name VASPBERRY execution, distinguish
   it from Python integration/plotting, and show direct Intel MPI commands for
   curvature CSVs and reusable pair data. Numerical behavior is unchanged.

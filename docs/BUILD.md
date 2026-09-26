@@ -129,7 +129,7 @@ mkdir results-intel-kubo-01
   cd results-intel-kubo-01
   mpiexec.hydra -n 4 "$repo_dir/build/vaspberry-ifx-mpi" --task kubo \
     --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-    --spinor 2 --bands 1:18 --bundle 1 --curvature-csv KUBO.csv \
+    --bands 1:18 --bundle 1 --curvature-csv KUBO.csv \
     > vaspberry.log 2> vaspberry.err
 )
 ```

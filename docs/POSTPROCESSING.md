@@ -99,7 +99,7 @@ mkdir results/mos2-direct-kubo && (
   mpiexec.hydra -n 4 "$repo_dir/build/vaspberry-ifx-mpi" \
     --task kubo \
     --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-    --spinor 2 --bands 1:18 --bundle 1 \
+    --bands 1:18 --bundle 1 \
     --curvature-csv KUBO.csv > vaspberry.log
 )
 ```
@@ -137,7 +137,6 @@ wavecar = /path/to/your/vasp-calculation/WAVECAR
 binary = build/vaspberry-ifx-mpi
 output = results/run01
 mesh = 24 24
-spin_mode = soc
 energy_reference = unchanged VASP eigenvalue zero
 mpi_procs = 4
 mpi_launcher = mpiexec.hydra
@@ -152,8 +151,9 @@ temperatures = 0 100 300
 
 Set `wavecar` and `mesh` from your input; choose `mu`, `reference` and
 `temperatures` for your research question. Set the executable/launcher once
-for your installation. `spin_mode = soc` is for two-component spinors;
-other spin conventions are in the [reference](POSTPROCESSING_REFERENCE.md).
+for your installation. Spinor components and state counting are automatic.
+For a collinear `ISPIN=2` input, select `spin_mode = collinear-up` or
+`collinear-down`; see the [reference](POSTPROCESSING_REFERENCE.md).
 
 **Energy numbers must use the WAVECAR eigenvalue zero.** In this example the
 plot spans −0.2 to +0.2 eV because its x coordinate is `mu - reference`.

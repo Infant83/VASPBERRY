@@ -32,15 +32,18 @@ Both `[run]` and `[hall]` are required, including when using `--reuse`.
 | `[run] binary` | Path to the compiled VASPBERRY executable; a path, not a command with arguments. Required in the file even for `--reuse`, where the executable is not used. |
 | `[run] output` | New result directory. An existing directory is rejected, including an empty one. |
 | `[run] mesh` | `NX NY`, two integers at least 2. Their product equals the source k-point count; coordinates must match that uniform grid. |
-| `[run] spin_mode` | One of the four modes below, matching the source VASP calculation. |
 | `[run] energy_reference` | Descriptive text recording the WAVECAR energy convention, e.g. `unchanged VASP eigenvalue zero`. It does not shift any energy. |
 | `[hall] mu` | `MIN MAX N`: N equally spaced chemical potentials in eV, including endpoints. Use `MIN < MAX` and integer `N >= 2`, or `MIN = MAX` and `N = 1` for a single total-Hall point. |
 | `[hall] reference` | Reference chemical potential in eV for Δσ and the plot's horizontal origin. Uses the same energy zero as `mu` and WAVECAR; need not be a sampled `mu` value. |
 | `[hall] temperatures` | Distinct nonnegative temperatures in K, e.g. `0 100 300`. |
 
+`[run] spin_mode` is optional and defaults to `auto`.
+
 | `spin_mode` | Source and counting |
 |---|---|
-| `soc` | Two-component spinors, WAVECAR `ISPIN=1`; each stored spinor state counted once. Required for `[projection]`. |
+| `auto` | Detect components from WAVECAR: two-component states count once; scalar `ISPIN=1` states have multiplicity 2. For `ISPIN=2`, choose a channel below. |
+| `spinor` | Assert two-component `ISPIN=1` wavefunctions, counted once. |
+| `soc` | Compatibility alias for `spinor`; it does not establish that SOC was enabled. |
 | `scalar-degenerate` | Scalar states, WAVECAR `ISPIN=1`; spin multiplicity 2. |
 | `collinear-up` | First scalar channel of an `ISPIN=2` WAVECAR; multiplicity 1. |
 | `collinear-down` | Second scalar channel of an `ISPIN=2` WAVECAR; multiplicity 1. |
@@ -84,8 +87,8 @@ See [build and runtime requirements](BUILD.md).
 
 ### Atom, layer, orbital and spin character
 
-`[projection]` is optional. If present, `spin_mode` must be `soc` and at
-least one `[group NAME]` must exist. Groups also require `[projection]`.
+`[projection]` is optional. It requires detected two-component wavefunctions
+and at least one `[group NAME]`. Groups also require `[projection]`.
 
 | `[projection]` key | Default | Meaning |
 |---|---|---|

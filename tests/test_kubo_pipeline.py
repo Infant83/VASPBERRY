@@ -149,6 +149,8 @@ class PipelineTests(unittest.TestCase):
             lattice=np.eye(3);reciprocal=2*np.pi*np.eye(3);ispin=1
         class FakeWavecar:
             header=Header();energies=self.data.energies_eV;kpoints=self.data.kpoints_fractional
+            spinor_components=2
+            def resolve_spin_multiplicity(self, value=None): return 1 if value is None else value
             def coefficients(self,*args):return None
         wave=self.root/'WAVECAR';wave.write_bytes(b'test fixture')
         for norm,col,factor in [('legacy-double','omega_legacy_A2',2.),('physical','omega_z_A2',1.)]:

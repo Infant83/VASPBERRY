@@ -75,3 +75,9 @@ jobs, with the new parser/workflow tests and public settings example in CI.
 It also requires the postprocessing command, guide and example files, and
 preserves the immutable v1.4.2 tag. The scientific report remains the
 retained method edition; new command instructions are in the current guides.
+
+The `publish-v1.6.0.yml` workflow requires all thirteen exact-source validation
+jobs, including GNU/Bi, both Intel MPI builds, and Linux/macOS archive installs.
+It preserves the immutable v1.5.0 tag. Automatic spinor detection is exercised
+by reader, native and INI regressions; explicit component assertions remain
+supported. Historical reference tables retain their original provenance.

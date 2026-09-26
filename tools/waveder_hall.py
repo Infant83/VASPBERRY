@@ -27,7 +27,7 @@ from berry_data import require, write_hall
 from exported_matrix_kubo import sha256
 from kubo_pairs import hall_metadata, integration_setup, result_rows
 from vasp_optical_export import read_waveder
-from wavecar_fukui import Wavecar
+from wavecar_fukui import Wavecar, resolve_spin_multiplicity
 
 PRODUCER_THRESHOLD_EV = .002
 NUMBER = r'[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[EeDd][+-]?\d+)?'
@@ -165,7 +165,7 @@ def occupied_curvature(connection, occupied):
                      for a, b in ((1, 2), (2, 0), (0, 1))], axis=1)
 
 
-def read_validated_optical_states(run_dir, *, spin, spinor_components, energy_reference):
+def read_validated_optical_states(run_dir, *, spin=1, spinor_components=None, energy_reference):
     """Shared same-run checks, without Hall filling, weight or mesh assumptions.
 
     WAVEDER has no coordinates or energies. The directory association remains
@@ -179,7 +179,7 @@ def read_validated_optical_states(run_dir, *, spin, spinor_components, energy_re
     text = paths['OUTCAR'].read_text()
     settings = read_run_settings(paths['INCAR'].read_text(), text)
     expected_spinors = 2 if settings['LNONCOLLINEAR'] else 1
-    require(spinor_components == expected_spinors and (not settings['LSORBIT'] or expected_spinors == 2),
+    require(spinor_components in (None, expected_spinors) and (not settings['LSORBIT'] or expected_spinors == 2),
             'spinor declaration disagrees with OUTCAR')
     require(type(spin) is int and 1 <= spin <= settings['ISPIN'], 'selected spin channel outside OUTCAR')
     require(isinstance(energy_reference, str) and bool(energy_reference.strip()), 'describe the unchanged VASP energy reference')
@@ -187,9 +187,10 @@ def read_validated_optical_states(run_dir, *, spin, spinor_components, energy_re
     printed_q, printed_e, printed_occ, lattice, grid = outcar_arrays(text, nk, nb, ns)
     require(np.all(grid[:, 3] >= 0), 'nonnegative OUTCAR k-point weights required')
     waves = []
-    physical_spin_factor = 2 if ns == 1 and spinor_components == 1 else 1
+    physical_spin_factor = resolve_spin_multiplicity(ns, expected_spinors)
     for channel in range(1, ns+1):
         w = Wavecar(paths['WAVECAR'], spin=channel, spinor_components=spinor_components)
+        require(w.spinor_components == expected_spinors, 'WAVECAR spinor layout disagrees with OUTCAR')
         w.coefficients(0, [1])
         require(w.header.ispin == ns and w.energies.shape == (nk, nb), 'OUTCAR/WAVECAR dimensions disagree')
         require(np.all(np.diff(w.energies, axis=1) >= -1e-8), 'energy-ordered bands required')
@@ -211,13 +212,15 @@ def read_validated_optical_states(run_dir, *, spin, spinor_components, energy_re
         waves=waves, wave=w, source=source, grid=grid, physical_spin_factor=physical_spin_factor)
 
 
-def read_validated_run(run_dir, mus, *, occupied, spin, spinor_components, spin_multiplicity,
+def read_validated_run(run_dir, mus, *, occupied, spin=1, spinor_components=None, spin_multiplicity=None,
                        energy_reference, mu_reference):
     """Read genuine per-run states and optical curvature without a mesh assumption."""
     state = read_validated_optical_states(run_dir, spin=spin, spinor_components=spinor_components,
                                          energy_reference=energy_reference)
     run, paths, hashes, settings = state.run, state.paths, state.hashes, state.settings
     w, waves, source = state.wave, state.waves, state.source
+    spinor_components = w.spinor_components
+    spin_multiplicity = resolve_spin_multiplicity(w.header.ispin, spinor_components, spin_multiplicity)
     physical_spin_factor = state.physical_spin_factor
     ns, nk, nb = (settings[name] for name in ('ISPIN', 'NKPTS', 'NBANDS'))
     require(type(occupied) is int and 0 < occupied < nb, 'occupied leading bundle and stored empty bands required')
@@ -290,7 +293,7 @@ def shared_chunk_inputs(runs):
     return records
 
 
-def waveder_hall_spectrum(run_dir, mus, *, occupied, spin, spinor_components, spin_multiplicity,
+def waveder_hall_spectrum(run_dir, mus, *, occupied, spin=1, spinor_components=None, spin_multiplicity=None,
                          sampling, energy_reference, mu_reference, region_spec=None, differences=()):
     """Integrate one full run or a validated union of genuine fixed-charge runs."""
     runs = [Path(run_dir)] if isinstance(run_dir, (str, Path)) else [Path(v) for v in run_dir]
@@ -301,6 +304,7 @@ def waveder_hall_spectrum(run_dir, mus, *, occupied, spin, spinor_components, sp
     chunks = [read_validated_run(run, mus, occupied=occupied, spin=spin, spinor_components=spinor_components,
         spin_multiplicity=spin_multiplicity, energy_reference=energy_reference, mu_reference=mu_reference) for run in runs]
     first = chunks[0]
+    spin_multiplicity = first.metadata['spin_multiplicity']
     common_settings = {k: v for k, v in first.metadata['producer_settings'].items() if k != 'NKPTS'}
     for data in chunks[1:]:
         require({k: v for k, v in data.metadata['producer_settings'].items() if k != 'NKPTS'} == common_settings,
@@ -358,8 +362,8 @@ def add_arguments(p):
                    help='one full optical run, or fixed-charge chunks whose union is the full mesh')
     p.add_argument('--occupied', type=int, required=True)
     p.add_argument('--spin', type=int, default=1)
-    p.add_argument('--spinor-components', type=int, choices=[1, 2], required=True)
-    p.add_argument('--spin-multiplicity', type=int, choices=[1, 2], required=True)
+    p.add_argument('--spinor-components', type=int, choices=[1, 2], help='optional WAVECAR layout assertion; default auto')
+    p.add_argument('--spin-multiplicity', type=int, choices=[1, 2], help='default: 2 for scalar degenerate states, otherwise 1')
     p.add_argument('--mesh', type=int, nargs=2, required=True)
     p.add_argument('--plane-axes', type=int, nargs=2, default=[0, 1])
     p.add_argument('--energy-reference', required=True)

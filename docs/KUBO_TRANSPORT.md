@@ -45,6 +45,10 @@ VASPBERRY executable**, then reads its saved interband pairs. It performs no
 VASP calculation. Plotting remains a separate command so the same numerical
 results can be displayed in several ways.
 
+WAVECAR-based commands detect the component count and spin multiplicity.
+Use `--spin 1` or `--spin 2` to choose a collinear channel; explicit
+`--spinor-components` values check the detected layout.
+
 First choose the executable and native rank count. From the repository root,
 with the Python dependencies installed, a serial GNU build uses:
 
@@ -75,7 +79,7 @@ After preparing the actual MoS₂ input described below, run:
 python3 tools/vaspberry_kubo.py wavecar-hall \
   --binary "$binary" --mpi-procs "$ranks" --mpi-launcher mpiexec \
   --wavecar results/mos2-24-b60-vasp/WAVECAR \
-  --spinor-components 2 --spin-multiplicity 1 --mesh 24 24 \
+  --mesh 24 24 \
   --energy-reference 'unchanged VASP eigenvalue zero' --pair-band-max 40 \
   --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 121 \
   --mu-reference -0.43809870 --temperatures 0 300 \
@@ -135,13 +139,13 @@ Run from the repository root with a fresh result directory:
 ```bash
 mkdir -p results/mos2-hall/native
 build/vaspberry --task kubo-pairs \
-  --wavecar results/mos2-24-b60-vasp/WAVECAR --spinor 2 \
+  --wavecar results/mos2-24-b60-vasp/WAVECAR \
   --pairs-csv results/mos2-hall/native/PAIRS.csv
 
 python3 tools/vaspberry_kubo.py import-pairs \
   --csv results/mos2-hall/native/PAIRS.csv \
   --wavecar results/mos2-24-b60-vasp/WAVECAR \
-  --spinor-components 2 --spin-multiplicity 1 --mesh 24 24 \
+  --mesh 24 24 \
   --energy-reference 'unchanged VASP eigenvalue zero' \
   --output-dir results/mos2-hall/pairs
 
@@ -200,7 +204,7 @@ For MPI, replace the native command with:
 ```bash
 mpiexec -n 4 build/vaspberry-mpi --task kubo-pairs \
   --wavecar results/mos2-24-b60-vasp/WAVECAR \
-  --spinor 2 --pairs-csv results/mos2-hall/native/PAIRS.csv
+  --pairs-csv results/mos2-hall/native/PAIRS.csv
 ```
 
 Native k-point work is distributed across ranks. Python integration then uses
@@ -292,7 +296,7 @@ of bands directly from WAVECAR. For the eighteen occupied SOC bands in the
 MoS₂ example:
 
 ```bash
-build/vaspberry --task kubo --wavecar WAVECAR --spinor 2 \
+build/vaspberry --task kubo --wavecar WAVECAR \
   --bands 1:18 --bundle 1 --curvature-csv KUBO_BUNDLE.csv
 ```
 
@@ -535,7 +539,7 @@ for a spinor calculation:
 ```bash
 python3 tools/vaspberry_kubo.py waveder-hall \
   --run-dir path/to/optics-run --occupied "$N_OCC" \
-  --spinor-components 2 --spin-multiplicity 1 --mesh "$NX" "$NY" \
+  --mesh "$NX" "$NY" \
   --energy-reference 'unchanged VASP eigenvalue zero' \
   --mu-min "$MU_LO" --mu-max "$MU_HI" --mu-reference "$MU_REF" \
   --formats csv dat npz --output-dir results/paw-insulating-hall

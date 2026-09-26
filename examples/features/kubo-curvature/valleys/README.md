@@ -46,7 +46,7 @@ mkdir -p results/mos2-valleys-native
   cd results/mos2-valleys-native
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/mos2-valleys-vasp/WAVECAR" \
-    --spinor 2 --task kubo --bands 17:18 \
+    --task kubo --bands 17:18 \
     --curvature-csv KUBO.csv --output BERRYCURV > vaspberry.log
 )
 ```

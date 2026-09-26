@@ -20,7 +20,7 @@ mkdir results-native-path-01
 cd results-native-path-01
 mpiexec -n 4 "$VB_BIN" --task kubo \
   --wavecar "$VB_ROOT/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-  --spinor 2 --bands 1:18 --bundle 1 --curvature-csv KUBO.csv
+  --bands 1:18 --bundle 1 --curvature-csv KUBO.csv
 cd "$VB_ROOT"
 ```
 
@@ -42,8 +42,9 @@ run time and a rank count consistent with the scheduler allocation.
 
 ## Choose the result
 
-All commands accept `--wavecar PATH --spinor 2` for SOC spinors. The parameters
-below use the MoS₂ occupied rank 18 as an example, not a universal band count.
+All commands accept `--wavecar PATH` and detect the spinor components
+automatically. The parameters below use the MoS₂ occupied rank 18 as an
+example, not a universal band count.
 
 | Task | Additional arguments | Numerical result and required sampling |
 |---|---|---|
@@ -71,7 +72,7 @@ so specify a single band.
 |---|---|
 | `--task NAME` | One calculation. Explicit task names reject conflicting legacy task flags. Default is Fukui `chern`. |
 | `--wavecar PATH` | Input WAVECAR, default `WAVECAR` in the working directory. Quote paths containing spaces. |
-| `--spinor 2` / `--spinor 1` | Two-component SOC/noncollinear state / scalar state. This is not a spin-degeneracy factor. Always state it explicitly for your data. |
+| `--spinor auto` / `--spinor 1` / `--spinor 2` | Default `auto`: detect the component count from WAVECAR. Explicit `1` or `2` checks the file layout; it is not a spin-degeneracy factor. |
 | `--mesh NX,NY` | Mesh dimensions for mesh-based algorithms. It does not generate k points, interpolate, or convert a path into a mesh. |
 | `--bands FIRST:LAST` / `--bands N` | Inclusive one-based band range / one band. Explicit selection avoids guessing the occupied boundary. |
 | `--bundle 1` | Trace curvature of the selected group, allowing internal degeneracies; requires `--curvature-csv`. |
@@ -82,6 +83,9 @@ Every option takes a separate value: use `--mesh 12,12`, not
 `--mesh=12,12` or `--mesh 12 12`. Lists contain no spaces. Modern names and
 legacy flags can be mixed where needed; optical energy-grid controls above
 retain their short names. There is no need to learn every historical flag.
+
+Two components identify a noncollinear spinor, not whether VASP enabled SOC.
+The spin-axis convention still comes from the matching OUTCAR.
 
 The supplied Intel and GNU targets expect byte-record, single-precision complex
 WAVECAR coefficients (`RTAG=45200`). Older files whose RECL is in compiler

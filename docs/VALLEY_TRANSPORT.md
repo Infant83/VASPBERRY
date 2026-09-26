@@ -295,9 +295,8 @@ The default map ranges follow `--energy-band N` dynamically: 1:`N-1`, 1:`N`,
 1:`N+1`, `N`, and `N`:`N+1`. Raw export and plotting require band `N+1` for
 the reported upper energy/gap and pair maps. `--transport-t0` additionally
 requires band `N+2` for the upper-manifold isolation and energy-window check.
-For a collinear
-`ISPIN=2` WAVECAR, use `--spinor-components 1 --spin 1` or `--spin 2`; an SOC
-`ISPIN=1` WAVECAR uses `--spinor-components 2 --spin 1`.
+Spinor components are detected from WAVECAR. For a collinear `ISPIN=2`
+WAVECAR, select `--spin 1` or `--spin 2`; this chooses the analyzed channel.
 
 At zero temperature, the guarded cumulative-subspace scan assigns each of the
 four vertices to 1:18, 1:19, or 1:20 according to its band-19 and band-20

@@ -49,7 +49,7 @@ def source_options(args):
 
 def record_provenance(args, meta):
     meta['provenance'] = {
-        'vaspberry_version': '1.5.0',
+        'vaspberry_version': '1.6.0',
         'command': {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
         'implementation_sha256': {name: sha256(Path(__file__).with_name(name)) for name in
                                  ('kubo_hall_workflow.py', 'kubo_pairs.py', 'berry_data.py', 'vaspberry_transport.py')},
@@ -90,8 +90,9 @@ def wavecar_hall_command(args):
     out = args.output_dir.resolve()
     require(not out.exists(), 'output directory exists; choose a new directory')
     raw = out/'native'
-    argv = [str(binary), '-f', str(wavecar), '-s', str(args.spinor_components),
-            '-kubo', '2', '-kubo_pairs', 'PAIRS.csv']
+    argv = [str(binary), '--task', 'kubo-pairs', '--wavecar', str(wavecar), '--pairs-csv', 'PAIRS.csv']
+    if args.spinor_components is not None:
+        argv += ['--spinor', str(args.spinor_components)]
     if args.mpi_procs > 1:
         launcher = shutil.which(args.mpi_launcher)
         require(launcher is not None, 'MPI launcher not found')
@@ -139,8 +140,10 @@ def add_commands(sub):
     for p in (imp, bundle, wave):
         p.add_argument('--wavecar', type=Path, required=True)
         p.add_argument('--spin', type=int, default=1)
-        p.add_argument('--spinor-components', type=int, choices=[1, 2], required=True)
-        p.add_argument('--spin-multiplicity', type=int, choices=[1, 2], required=True)
+        p.add_argument('--spinor-components', type=int, choices=[1, 2],
+                       help='optional assertion; default detects the WAVECAR layout')
+        p.add_argument('--spin-multiplicity', type=int, choices=[1, 2],
+                       help='default: 2 for scalar spin-degenerate states, otherwise 1')
         p.add_argument('--mesh', nargs=2, type=int, required=True, metavar=('NX', 'NY'))
         p.add_argument('--plane-axes', nargs=2, type=int, default=[0, 1])
         p.add_argument('--energy-reference', required=True, help='description of unchanged input energy zero')

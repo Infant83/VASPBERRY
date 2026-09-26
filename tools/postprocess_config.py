@@ -15,6 +15,8 @@ import re
 
 _NAME = re.compile(r'[A-Za-z][A-Za-z0-9_.-]*\Z')
 _SPINS = {
+    'auto': (1, None, None, None),
+    'spinor': (1, 2, 1, 1),
     'soc': (1, 2, 1, 1),
     'scalar-degenerate': (1, 1, 2, 1),
     'collinear-up': (1, 1, 1, 2),
@@ -125,14 +127,14 @@ def load_settings(path):
     src = parser['run']
     _keys(src, {'wavecar', 'binary', 'output', 'mesh', 'spin_mode', 'energy_reference',
                 'mpi_procs', 'mpi_launcher', 'plane_axes'},
-          {'wavecar', 'binary', 'output', 'mesh', 'spin_mode', 'energy_reference'})
+          {'wavecar', 'binary', 'output', 'mesh', 'energy_reference'})
     run = {key: _path(src[key], base) for key in ('wavecar', 'binary', 'output')}
     run['mesh'] = _list(src['mesh'], lambda v, c: _int(v, c, 2), '[run] mesh', length=2)
     axes = _list(src.get('plane_axes', '0 1'), lambda v, c: _int(v, c, 0),
                  '[run] plane_axes', length=2, unique=True)
     _require(all(i <= 2 for i in axes), '[run] plane_axes: use distinct axes from 0 1 2')
     run['plane_axes'] = axes
-    run['spin_mode'] = mode = src['spin_mode']
+    run['spin_mode'] = mode = src.get('spin_mode', 'auto')
     _require(mode in _SPINS, '[run] spin_mode: choose '+', '.join(_SPINS))
     run.update(zip(('spin', 'spinor_components', 'spin_multiplicity', 'expected_nspin'), _SPINS[mode]))
     run['energy_reference'] = src['energy_reference']
@@ -182,7 +184,8 @@ def load_settings(path):
     if 'projection' in parser:
         src = parser['projection']
         _keys(src, {'bands', 'axis', 'procar', 'outcar', 'mu', 'reference', 'temperatures'}, {'bands', 'axis'})
-        _require(mode == 'soc', '[projection] requires [run] spin_mode = soc')
+        _require(mode in ('auto', 'spinor', 'soc'),
+                 '[projection] requires a two-component spinor WAVECAR')
         _require(bool(groups), '[projection] requires at least one [group NAME]')
         projection = dict(bands=_list(src['bands'], _int, '[projection] bands', unique=True),
                           axis=_list(src['axis'], _float, '[projection] axis', length=3))

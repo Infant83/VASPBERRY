@@ -90,7 +90,7 @@ the native calculation on that many ranks.
 python3 tools/vaspberry_kubo.py wavecar-hall \
   --binary "$binary" --mpi-procs "$ranks" --mpi-launcher mpiexec \
   --wavecar results/mos2-24-b60-vasp/WAVECAR \
-  --spinor-components 2 --spin-multiplicity 1 --mesh 24 24 \
+  --mesh 24 24 \
   --energy-reference 'unchanged VASP eigenvalue zero' --pair-band-max 40 \
   --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 61 \
   --mu-reference -0.43809870 --temperatures 0 300 \
@@ -148,7 +148,7 @@ mkdir -p results/mos2-24-native
   cd results/mos2-24-native
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/mos2-24-b60-vasp/WAVECAR" \
-    --spinor 2 --task kubo-pairs --pairs-csv PAIRS.csv > vaspberry.log
+    --task kubo-pairs --pairs-csv PAIRS.csv > vaspberry.log
 )
 ```
 
@@ -167,7 +167,7 @@ python3 -m pip install -r requirements-transport.txt
 python3 tools/vaspberry_kubo.py import-pairs \
   --csv results/mos2-24-native/PAIRS.csv \
   --wavecar results/mos2-24-b60-vasp/WAVECAR \
-  --spinor-components 2 --spin-multiplicity 1 --mesh 24 24 \
+  --mesh 24 24 \
   --energy-reference 'unchanged VASP eigenvalue zero' \
   --output-dir results/mos2-24-pairs
 

@@ -199,7 +199,7 @@ mkdir -p results/bi/z2
   cd results/bi/z2
   ../../../build/vaspberry --task z2 \
     --wavecar ../wavecar12/WAVECAR --output NFIELD \
-    --mesh 12,12 --spinor 2 --bands 1:10 > vaspberry.log
+    --mesh 12,12 --bands 1:10 > vaspberry.log
 )
 python3 examples/features/z2/run.py \
   --plot-only results/bi/z2/Z2_FIELD.csv \

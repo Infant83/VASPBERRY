@@ -101,7 +101,7 @@ python tools/procar_character.py project \
 python tools/vaspberry_kubo.py import-pairs \
   --csv results/procar-demo/input/PAIRS.csv \
   --wavecar results/procar-demo/input/WAVECAR \
-  --spinor-components 2 --spin-multiplicity 1 --mesh 2 2 \
+  --mesh 2 2 \
   --energy-reference 'synthetic analytic fixture zero' \
   --output-dir results/procar-demo/pairs
 
@@ -180,12 +180,12 @@ occupation-independent pair cache:
 ```sh
 mkdir -p results/my-sample-native
 build/vaspberry --task kubo-pairs --wavecar /absolute/path/to/WAVECAR \
-  --spinor 2 --pairs-csv results/my-sample-native/PAIRS.csv
+  --pairs-csv results/my-sample-native/PAIRS.csv
 
 python tools/vaspberry_kubo.py import-pairs \
   --csv results/my-sample-native/PAIRS.csv \
   --wavecar /absolute/path/to/WAVECAR \
-  --spinor-components 2 --spin-multiplicity 1 --mesh 24 24 \
+  --mesh 24 24 \
   --energy-reference 'unchanged VASP eigenvalue zero' \
   --output-dir results/my-sample-pairs
 

@@ -87,6 +87,7 @@ class IndependentCommunityContractTests(unittest.TestCase):
         data = fixture()
         energies = np.tile([3., 0., 1.], (4, 1))
         wave = SimpleNamespace(energies=energies, kpoints=data.kpoints_fractional,
+            spinor_components=1, resolve_spin_multiplicity=lambda value=None: 2 if value is None else value,
             header=SimpleNamespace(ispin=1, lattice=data.lattice_A, reciprocal=data.reciprocal_inv_A),
             coefficients=lambda *args: np.zeros((1, 1)))
         with tempfile.TemporaryDirectory() as temp:
@@ -123,6 +124,7 @@ class IndependentCommunityContractTests(unittest.TestCase):
         from vaspberry_kubo import import_legacy
         data = fixture()
         wave = SimpleNamespace(energies=np.zeros((4, 2)), kpoints=data.kpoints_fractional,
+            spinor_components=1, resolve_spin_multiplicity=lambda value=None: 2 if value is None else value,
             header=SimpleNamespace(ispin=1, lattice=data.lattice_A, reciprocal=data.reciprocal_inv_A),
             coefficients=lambda *args: np.zeros((1, 1)))
         with tempfile.TemporaryDirectory() as temp:

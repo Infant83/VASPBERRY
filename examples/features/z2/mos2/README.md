@@ -39,7 +39,7 @@ mkdir results/mos2-z2
   cd results/mos2-z2
   "$repo_dir/build/vaspberry" --task z2 \
     --wavecar "$repo_dir/results/mos2-fullmesh-vasp/WAVECAR" \
-    --mesh 12,12 --spinor 2 --bands 1:18 --output NFIELD \
+    --mesh 12,12 --bands 1:18 --output NFIELD \
     > fortran.log
 )
 ```

@@ -34,12 +34,13 @@ mkdir results/bi-z2
   cd results/bi-z2
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/inputs/bi/WAVECAR" --output NFIELD --task z2 \
-    --mesh 12,12 --spinor 2 --bands 1:10 > fortran.log
+    --mesh 12,12 --bands 1:10 > fortran.log
 )
 ```
 
-`--task z2` selects the integer-field method, `--spinor 2` reads SOC spinors, and
-`--bands 1:10` selects the complete occupied subspace. The mesh dimensions
+`--task z2` selects the integer-field method and `--bands 1:10` selects the
+complete occupied subspace. Spinor components are detected automatically.
+The mesh dimensions
 must match the WAVECAR. For MPI, use `make mpi` and prefix the MPI executable
 with `mpiexec -n 4`.
 

@@ -94,9 +94,23 @@ def preflight(settings, reuse=None):
     require(not output.exists(), 'output directory exists; set [run] output to a new directory')
     wavecar = Path(run['wavecar'])
     require(wavecar.is_file(), 'WAVECAR does not exist: ' + str(wavecar))
-    wave = Wavecar(wavecar, spin=run['spin'], spinor_components=run['spinor_components'])
-    require(wave.header.ispin == run['expected_nspin'],
-            '[run] spin_mode does not match the WAVECAR ISPIN header')
+    auto = run['spin_mode'] == 'auto'
+    wave = Wavecar(wavecar, spin=run['spin'],
+                   spinor_components=None if auto else run['spinor_components'])
+    if auto:
+        require(wave.header.ispin == 1,
+                '[run] this WAVECAR has two collinear channels; select '
+                'spin_mode = collinear-up or collinear-down')
+    if not auto:
+        require(wave.header.ispin == run['expected_nspin'],
+                '[run] spin_mode does not match the WAVECAR ISPIN header')
+    run['spinor_components'] = wave.spinor_components
+    run['spin_multiplicity'] = wave.resolve_spin_multiplicity(
+        None if auto else run['spin_multiplicity'])
+    run['expected_nspin'] = wave.header.ispin
+    run['resolved_spin_mode'] = ('spinor' if wave.spinor_components == 2 else
+                                 'scalar-degenerate' if wave.header.ispin == 1 else
+                                 'collinear-up' if run['spin'] == 1 else 'collinear-down')
     require(len(wave.kpoints) == run['mesh'][0] * run['mesh'][1],
             '[run] mesh size does not match the number of WAVECAR k points')
     axes = run['plane_axes']
@@ -104,6 +118,8 @@ def preflight(settings, reuse=None):
     infer_uniform_grid(wave.kpoints[:, axes + [other]], *run['mesh'])
     wave.coefficients(0, [1])
     projection = settings['projection']
+    require(not projection or wave.spinor_components == 2,
+            '[projection] requires a two-component spinor WAVECAR')
     inputs = {'wavecar': {'path': str(wavecar), 'sha256': sha256(wavecar)}}
     if projection:
         for name in ('procar', 'outcar'):
@@ -148,7 +164,8 @@ def settings_summary(settings):
     run, hall = settings['run'], settings['hall']
     print('WAVECAR: ' + run['wavecar'])
     print('Output:  ' + run['output'])
-    print(f"Source: {run['spin_mode']}; full {run['mesh'][0]} x {run['mesh'][1]} mesh")
+    mode = run.get('resolved_spin_mode', run['spin_mode'])
+    print(f"Source: {mode}; full {run['mesh'][0]} x {run['mesh'][1]} mesh")
     print('Energy zero: ' + run['energy_reference'])
     print(f"Hall: mu {hall['mu_min']:g} to {hall['mu_max']:g} eV ({hall['mu_num']} points), "
           f"reference {hall['mu_reference']:g} eV; T={hall['temperatures']} K")

@@ -61,7 +61,7 @@ run. All band indices are one-based and inclusive. For example:
 ```bash
 python3 tools/vaspberry_kubo.py waveder-optics \
   --run-dir path/to/optics-run --occupied "$N_OCC" \
-  --spinor-components 2 --energy-reference 'unchanged VASP eigenvalue zero' \
+  --energy-reference 'unchanged VASP eigenvalue zero' \
   --initial "$V_FIRST" "$V_LAST" --final "$C_FIRST" "$C_LAST" \
   --beam-vector 0 0 1 --polarization-axis 1 0 0 \
   --photon-min 1 --photon-max 3 --photon-num 401 --sigma-eV 0.05 \
@@ -69,7 +69,7 @@ python3 tools/vaspberry_kubo.py waveder-optics \
 ```
 
 The standalone command `python3 tools/waveder_optics.py` takes the same options.
-Use `--spinor-components 1` for a scalar calculation and `--spin` to select a
+Spinor components are detected automatically; use `--spin` to select a
 collinear spin channel. Intensities refer to that one channel; the command
 applies no additional spin factor. A scalar spin-degenerate total has a factor
 of two, while SOC spinors already represent both spin components. This common

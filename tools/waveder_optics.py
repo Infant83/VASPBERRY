@@ -161,7 +161,7 @@ def transition_tables(energies, connection, kpoints, weights, *, occupied, initi
     return transitions, spectra, meta
 
 
-def waveder_optics(run_dir, *, occupied, spin, spinor_components, energy_reference, **options):
+def waveder_optics(run_dir, *, occupied, spin=1, spinor_components=None, energy_reference, **options):
     state = read_validated_optical_states(run_dir, spin=spin, spinor_components=spinor_components,
                                          energy_reference=energy_reference)
     fillings = []
@@ -183,7 +183,7 @@ def waveder_optics(run_dir, *, occupied, spin, spinor_components, energy_referen
             'source_conversion': 'standard lower occupied-to-empty WAVEDER C, in Angstrom; no second energy denominator'},
         source_nbands=state.settings['NBANDS'], source_nkpoints=state.settings['NKPTS'],
         source_ndbands=state.source.C_A.shape[4], source_nspin=state.settings['ISPIN'],
-        spin_channel_1based=spin, spinor_components=spinor_components,
+        spin_channel_1based=spin, spinor_components=state.wave.spinor_components,
         source_precision='complex64 WAVEDER; complex128 accumulation', producer_settings=state.settings,
         occupied_counts_by_spin=fillings, lattice_A=state.wave.header.lattice.tolist(),
         reciprocal_inv_A=state.wave.header.reciprocal.tolist(), reciprocal_convention='2pi',
@@ -222,7 +222,7 @@ def add_arguments(p):
     p.add_argument('--run-dir', type=Path, required=True)
     p.add_argument('--occupied', type=int, required=True)
     p.add_argument('--spin', type=int, default=1)
-    p.add_argument('--spinor-components', type=int, choices=[1, 2], required=True)
+    p.add_argument('--spinor-components', type=int, choices=[1, 2], help='optional WAVECAR layout assertion; default auto')
     p.add_argument('--energy-reference', required=True)
     p.add_argument('--initial', type=int, nargs=2, metavar=('FIRST', 'LAST'), required=True)
     p.add_argument('--final', type=int, nargs=2, metavar=('FIRST', 'LAST'), required=True,

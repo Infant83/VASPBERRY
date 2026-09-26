@@ -34,7 +34,7 @@ def digest(path):
 
 def export_bands(path_wavecar, destination, occupied=18):
     """Export unchanged VASP energies and path coordinates as a long-form CSV."""
-    w = Wavecar(Path(path_wavecar), spinor_components=2)
+    w = Wavecar(Path(path_wavecar))
     if not 0 < occupied < w.header.nbands:
         raise ValueError("occupied boundary must lie inside the stored band window")
     q = w.kpoints

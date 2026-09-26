@@ -30,7 +30,7 @@ from vasp_spin_export import add_arguments as add_spin_export_arguments, command
 from spin_assembly import add_command as add_spin_merge, command as spin_merge_command
 from velocity_pairs import add_command as add_velocity_pairs, command as velocity_pairs_command
 
-__version__ = '1.5.0'
+__version__ = '1.6.0'
 
 
 def sampling(args):
@@ -75,10 +75,7 @@ def matrix_command(args):
 def import_legacy(args):
     """Explicit one-time migration of old or corrected per-band canonical data."""
     w = Wavecar(args.wavecar, spin=args.spin, spinor_components=args.spinor_components)
-    require(not (args.spinor_components == 2 and args.spin_multiplicity != 1),
-            'SOC spinors must have multiplicity one')
-    require(not (w.header.ispin == 2 and args.spin_multiplicity != 1),
-            'one explicit collinear spin channel requires multiplicity one; sum channels separately')
+    spin_multiplicity = w.resolve_spin_multiplicity(args.spin_multiplicity)
     # Resolve WAVECAR scalar/spinor layout instead of inferring it from ISPIN alone.
     w.coefficients(0, [1])
     with args.csv.open() as f:
@@ -127,7 +124,7 @@ def import_legacy(args):
             'finite nonnegative degeneracy threshold required')
     valid = actual_gaps > args.degeneracy_threshold_eV
     omega[:,:,2] = np.where(valid, factor*z, np.nan)
-    meta = base_metadata(source_nbands=nb, spin_multiplicity=args.spin_multiplicity,
+    meta = base_metadata(source_nbands=nb, spin_multiplicity=spin_multiplicity,
                          method='canonical_momentum_kubo', energy_reference=args.energy_reference,
                          sampling=sampling(args), available_components=(False, False, True),
                          source_operator={'kind': 'canonical_momentum', 'accuracy_status': 'approximation',
@@ -138,7 +135,7 @@ def import_legacy(args):
     meta['spin_channel'] = args.spin
     meta['source_nspin'] = int(w.header.ispin)
     meta['spin_channel_1based'] = args.spin
-    meta['spinor_components'] = args.spinor_components
+    meta['spinor_components'] = w.spinor_components
     meta['degeneracy_threshold_eV'] = args.degeneracy_threshold_eV
     meta['gap_validation'] = {
         'source': 'minimum over all other WAVECAR band energies; sorted adjacent gaps then restored band order',
@@ -218,11 +215,13 @@ def parser():
     old.add_argument('--csv',type=Path,required=True); old.add_argument('--wavecar',type=Path,required=True)
     old.add_argument('--normalization',choices=['legacy-double','physical'],required=True,
                      help='legacy-double reads omega_legacy_A2 and halves once; physical reads omega_z_A2 unchanged')
-    old.add_argument('--spin',type=int,default=1); old.add_argument('--spinor-components',type=int,choices=[1,2],required=True)
+    old.add_argument('--spin',type=int,default=1)
+    old.add_argument('--spinor-components',type=int,choices=[1,2],help='optional WAVECAR layout assertion; default auto')
     for cmd in (m,old):
         cmd.add_argument('--mesh',nargs=2,type=int,metavar=('NX','NY'),help='declare and validate full uniform 2D mesh; omitted means points only')
         cmd.add_argument('--plane-axes',nargs=2,type=int,default=[0,1],help='ordered reciprocal axes (zero-based) for oriented 2D plane')
-        cmd.add_argument('--spin-multiplicity',type=int,choices=[1,2],required=True,help='1 for SOC or one explicit spin channel; 2 only for scalar degenerate spin')
+        cmd.add_argument('--spin-multiplicity',type=int,choices=[1,2],required=cmd is m,
+                         help='1 for spinors or one spin channel, 2 for scalar degenerate spin; WAVECAR imports infer the default')
         cmd.add_argument('--energy-reference',required=True,help='description of unchanged input energy zero; no Fermi shift is inferred')
         cmd.add_argument('--degeneracy-threshold-eV',type=float,required=True)
         cmd.add_argument('--output-dir',type=Path,required=True)

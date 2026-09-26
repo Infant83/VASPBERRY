@@ -84,7 +84,7 @@ without the Python front end. After step 1, the equivalent pair export is:
 mkdir results/direct-bi
 mpiexec.hydra -n 4 build/vaspberry-ifx-mpi \
   --task kubo-pairs --wavecar results/simple-bi-input/WAVECAR \
-  --spinor 2 --pairs-csv results/direct-bi/PAIRS.csv
+  --pairs-csv results/direct-bi/PAIRS.csv
 ```
 
 `results/direct-bi` must be new. VASPBERRY reads `WAVECAR` and writes energies,

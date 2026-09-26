@@ -44,7 +44,7 @@ class PostprocessWorkflowTests(unittest.TestCase):
         self.config = self.root/'study.ini'
         self.native_calls = []
 
-    def settings(self, name='result', *, projection=False):
+    def settings(self, name='result', *, projection=False, auto=False):
         text = '''[run]
 wavecar = input files/WAVECAR
 binary = native executable
@@ -75,6 +75,8 @@ ions = 1
 [group upper]
 ions = 2
 '''
+        if auto:
+            text = text.replace('spin_mode = soc\n', '')
         self.config.write_text(text)
         return load_settings(self.config)
 
@@ -110,8 +112,11 @@ ions = 2
         self.assertFalse(Path(settings['run']['output']).exists())
 
     def test_full_workflow_matches_direct_numerical_kernel_and_projection_analytics(self):
-        settings = self.settings(projection=True)
+        settings = self.settings(projection=True, auto=True)
         record = self.calculate(settings)
+        self.assertEqual(record['settings']['run']['spin_mode'], 'auto')
+        self.assertEqual(record['settings']['run']['resolved_spin_mode'], 'spinor')
+        self.assertEqual(record['settings']['run']['spinor_components'], 2)
         out = Path(settings['run']['output'])
         self.assertEqual((record['status'], record['complete']), ('PASS', True))
         self.assertEqual(len(self.native_calls), 1)
@@ -152,6 +157,41 @@ ions = 2
         execute.assert_not_called()
         self.assertEqual(list(out.iterdir()), [sentinel])
         self.assertEqual(sentinel.read_bytes(), b'untouched\x00data')
+
+    def scalar_layout(self, collinear=False):
+        """Change only the analytic fixture's coefficient-record layout."""
+        path = self.inputs/'WAVECAR'
+        blob = bytearray(path.read_bytes())
+        for ik in range(4):
+            offset = (2+ik*3)*512
+            count, = struct.unpack_from('<d', blob, offset)
+            struct.pack_into('<d', blob, offset, count/2)
+        if collinear:
+            struct.pack_into('<d', blob, 8, 2)
+            blob.extend(blob[1024:])
+        path.write_bytes(blob)
+
+    def test_auto_scalar_resolves_multiplicity_and_rejects_spinor_assertion(self):
+        self.scalar_layout()
+        settings = self.settings(auto=True)
+        post.preflight(settings)
+        self.assertEqual(settings['run']['resolved_spin_mode'], 'scalar-degenerate')
+        self.assertEqual(settings['run']['spinor_components'], 1)
+        self.assertEqual(settings['run']['spin_multiplicity'], 2)
+        self.assert_preflight_failure(self.settings())
+        self.assert_preflight_failure(self.settings(auto=True, projection=True), 'two-component')
+
+    def test_auto_collinear_requires_channel_choice_and_explicit_channels_work(self):
+        self.scalar_layout(collinear=True)
+        self.assert_preflight_failure(self.settings(auto=True), 'collinear-up or collinear-down')
+        for mode, channel in [('collinear-up', 1), ('collinear-down', 2)]:
+            self.settings()
+            self.config.write_text(self.config.read_text().replace('spin_mode = soc', 'spin_mode = '+mode))
+            settings = load_settings(self.config)
+            post.preflight(settings)
+            self.assertEqual(settings['run']['spin'], channel)
+            self.assertEqual(settings['run']['spinor_components'], 1)
+            self.assertEqual(settings['run']['spin_multiplicity'], 1)
 
     def test_missing_invalid_or_wrong_spin_source_fails_before_output_or_native(self):
         settings = self.settings()
@@ -242,7 +282,7 @@ ions = 2
     def test_reuse_skips_native_without_binary_and_retains_exact_numerical_arrays(self):
         first = self.settings('first'); self.calculate(first)
         first_dir = Path(first['run']['output'])
-        second = self.settings('second')
+        second = self.settings('second', auto=True)
         self.binary.unlink()
         second['run']['mpi_procs'] = 8
         second['run']['mpi_launcher'] = '/missing/launcher'

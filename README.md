@@ -17,9 +17,9 @@ band plots provide context for the calculated topology and response.
 [Hands-on commands](docs/HANDS_ON.md) · [Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
 [Postprocessing guide](docs/POSTPROCESSING.md) · [Output formats](docs/OUTPUT_FORMAT.md)
 
-**Latest release: [1.5.0](https://github.com/Infant83/VASPBERRY/releases/tag/v1.5.0).**
-The commands below are available in the fixed `v1.5.0` source. The original
-short options remain supported. See the [release notes](docs/releases/v1.5.0.md),
+**Latest release: [1.6.0](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.0).**
+The commands below are available in the fixed `v1.6.0` source. The original
+short options remain supported. See the [release notes](docs/releases/v1.6.0.md),
 [changelog](CHANGELOG.md), [version policy](docs/RELEASING.md)
 and [migration notes](docs/MIGRATION.md).
 
@@ -57,7 +57,7 @@ make help
 ```
 
 For a fixed release, download and extract the source archive from
-[v1.5.0](https://github.com/Infant83/VASPBERRY/releases/tag/v1.5.0), then run the
+[v1.6.0](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.0), then run the
 same build commands from the extracted directory containing `Makefile`.
 **Archive builds do not require Git or Python.** No precompiled executable or
 system-wide installation is needed; the build creates local files in `build/`.
@@ -158,7 +158,7 @@ the occupied bands 1–18 at its supplied k points:
 ```bash
 mkdir -p results/mos2-path
 mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo \
-  --wavecar examples/1H-MoS2/KPATH/2.band/WAVECAR --spinor 2 --bands 1:18 --bundle 1 \
+  --wavecar examples/1H-MoS2/KPATH/2.band/WAVECAR --bands 1:18 --bundle 1 \
   --curvature-csv results/mos2-path/KUBO.csv
 ```
 
@@ -174,25 +174,27 @@ path for each run.
 
 ### Apply the same commands to your system
 
-Choose the mesh, band range and spinor count from your VASP calculation.
+Choose the mesh and band range from your VASP calculation. VASPBERRY detects
+one- or two-component wavefunctions from WAVECAR automatically; an optional
+`--spinor 1` or `--spinor 2` checks that the file matches your expectation.
 These illustrative commands assume the appropriate `WAVECAR` in the working
 directory; the band indices are examples, not universal occupied counts.
 
 ```bash
 # Fukui flux and Chern number: full 12 × 12 mesh, bands 1–18.
 mpiexec -n 4 ./build/vaspberry-ifx-mpi --task chern --wavecar WAVECAR \
-  --mesh 12,12 --spinor 2 --bands 1:18 --output BERRYCURV
+  --mesh 12,12 --bands 1:18 --output BERRYCURV
 
 # Bi example: full even mesh, occupied spinor bands 1–10.
 mpiexec -n 4 ./build/vaspberry-ifx-mpi --task z2 --wavecar WAVECAR \
-  --mesh 12,12 --spinor 2 --bands 1:10 --output NFIELD
+  --mesh 12,12 --bands 1:10 --output NFIELD
 
 # Occupied-bundle point curvature, excluding internal transitions.
-mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo --wavecar WAVECAR --spinor 2 \
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo --wavecar WAVECAR \
   --bands 1:18 --bundle 1 --curvature-csv KUBO_BUNDLE.csv
 
 # Reusable all-band pair numerators for charge Hall postprocessing.
-mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo-pairs --wavecar WAVECAR --spinor 2 \
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo-pairs --wavecar WAVECAR \
   --pairs-csv PAIRS.csv
 ```
 
@@ -204,7 +206,7 @@ Use `mpiexec -n 4 ./build/vaspberry-ifx-mpi --help` or the [native command refer
 
 ```bash
 mpiexec -n 4 ./build/vaspberry-ifx-mpi --task chern --wavecar WAVECAR \
-  --mesh 12,12 --spinor 2 --bands 1:18 --output BERRYCURV
+  --mesh 12,12 --bands 1:18 --output BERRYCURV
 ```
 
 For Z₂, use a nonmagnetic time-reversal-symmetric insulator and a full,

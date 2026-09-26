@@ -192,9 +192,9 @@ class SpinAssemblyTests(unittest.TestCase):
             if replacement is None:struct.pack_into('<d',raw,0,64.)
             else:struct.pack_into('<d',raw,2*256,replacement)
             (self.cases[0]/'WAVECAR').write_bytes(raw)
-            waves=[Wavecar(c/'WAVECAR',spinor_components=2) for c in self.cases]
             target=self.path/(name+'-WAVECAR')
             with self.subTest(name=name),self.assertRaises(ValueError):
+                waves=[Wavecar(c/'WAVECAR',spinor_components=2) for c in self.cases]
                 assembly.assemble_wavecar([c/'WAVECAR' for c in self.cases],waves,[3,1,2,0],target)
             self.assertFalse(target.exists())
         (self.cases[0]/'WAVECAR').write_bytes(original)

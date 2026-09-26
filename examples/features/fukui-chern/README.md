@@ -30,12 +30,12 @@ mkdir results/bi-fukui
   cd results/bi-fukui
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/inputs/bi/WAVECAR" --output BERRYCURV \
-    --task chern --mesh 12,12 --spinor 2 --bands 1:10 > fortran.log
+    --task chern --mesh 12,12 --bands 1:10 > fortran.log
 )
 ```
 
-`--mesh 12,12` specifies the mesh already present in WAVECAR. `--spinor 2` reads
-SOC spinors. `--bands 1:10` selects the complete occupied band bundle;
+`--mesh 12,12` specifies the mesh already present in WAVECAR. Spinor components
+are detected automatically. `--bands 1:10` selects the complete occupied band bundle;
 its internal Kramers degeneracies do not require separate band invariants.
 The result is written to `BERRYCURV.dat`, and the log reports C = 0.
 
@@ -85,7 +85,7 @@ python3 examples/features/fukui-chern/run.py \
 ## Apply to your material
 
 Use a full uniform mesh with an isolated band or a fixed band bundle separated
-from all other bands. Set the mesh, spinor setting and band range from your
+from all other bands. Set the mesh and band range from your
 VASP calculation, then pass its matching POSCAR to the plotter. A band path
 cannot replace the two-dimensional mesh needed for a Chern integral.
 

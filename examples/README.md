@@ -68,7 +68,7 @@ mkdir -p results/bi-fukui
   cd results/bi-fukui
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/inputs/bi/WAVECAR" \
-    --task chern --spinor 2 --mesh 12,12 --bands 1:10 --output BERRYCURV > vaspberry.log
+    --task chern --mesh 12,12 --bands 1:10 --output BERRYCURV > vaspberry.log
 )
 ```
 
@@ -105,8 +105,9 @@ optical and real-space examples. A path cannot replace a full integration mesh.
 
 ## Apply the commands to your material
 
-Keep the native command structure and change the input path, spinor setting,
-band selection and k mesh to match your VASP output. Start from
+Keep the native command structure and change the input path, band selection
+and k mesh to match your VASP output. Spinor components are detected
+automatically. Start from
 [applying the workflow to your system](APPLY_TO_YOUR_SYSTEM.md), then inspect
 the [output conventions](../docs/OUTPUT_FORMAT.md). Verify the relevant gaps,
 occupations and convergence before interpreting a material result.
@@ -120,7 +121,7 @@ mkdir -p results/mos2-kubo-mpi
   cd results/mos2-kubo-mpi
   mpiexec -np 2 ../../build/vaspberry-mpi \
     --wavecar ../../examples/1H-MoS2/KPATH/2.band/WAVECAR \
-    --spinor 2 --task kubo --bundle 1 --bands 1:18 --curvature-csv KUBO.csv
+    --task kubo --bundle 1 --bands 1:18 --curvature-csv KUBO.csv
 )
 ```
 

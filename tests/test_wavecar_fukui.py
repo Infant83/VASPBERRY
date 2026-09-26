@@ -37,7 +37,7 @@ class WavecarFukuiUnitTests(unittest.TestCase):
             data = bytearray(4 * stride)
             struct.pack_into("<3d", data, 0, logical_recl, 1.0, 45200.0)
             lattice = (3.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 15.0)
-            struct.pack_into("<12d", data, stride, 1.0, 1.0, 400.0, *lattice)
+            struct.pack_into("<12d", data, stride, 1.0, 1.0, 0.1, *lattice)
             struct.pack_into(
                 "<7d", data, 2 * stride, 2.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0
             )
@@ -55,7 +55,7 @@ class WavecarFukuiUnitTests(unittest.TestCase):
             path = Path(directory) / "WAVECAR"
             truncated = bytearray(4 * stride)
             struct.pack_into("<3d", truncated, 0, stride, 2.0, 45200.0)
-            struct.pack_into("<12d", truncated, stride, 1.0, 1.0, 400.0, *lattice)
+            struct.pack_into("<12d", truncated, stride, 1.0, 1.0, 0.1, *lattice)
             struct.pack_into(
                 "<7d", truncated, 2 * stride,
                 1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0,

@@ -30,7 +30,7 @@ cp examples/1H-MoS2/KPATH/2.band/EIGENVAL results/mos2-wavefunction/
   cd results/mos2-wavefunction
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-    --task wavefunction --spinor 2 --mesh 48,1 --wavefunction-band 18 --kpoint 24 --real-grid 24,24,64 --imaginary 1 > stdout.log
+    --task wavefunction --mesh 48,1 --wavefunction-band 18 --kpoint 24 --real-grid 24,24,64 --imaginary 1 > stdout.log
 )
 ```
 

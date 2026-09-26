@@ -30,7 +30,7 @@ from typing import Iterable, Sequence
 import numpy as np
 
 
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 KINETIC_C = 0.262465831  # 2 m_e / hbar^2, 1/(eV Angstrom^2)
 VALLEY_DISTANCE_TIE_ATOL = 1.0e-12  # inverse Angstrom
 TRANSPORT_OUTPUT_NAMES = (
@@ -100,10 +100,23 @@ class WavecarHeader:
     reciprocal: np.ndarray
 
 
+def resolve_spin_multiplicity(ispin: int, spinor_components: int, requested: int | None = None) -> int:
+    """Count scalar spin degeneracy, preserving an explicit one-spin response."""
+    natural = 2 if ispin == 1 and spinor_components == 1 else 1
+    if requested is None:
+        return natural
+    if type(requested) is not int or requested not in (1, 2):
+        raise ValueError("spin multiplicity must be 1 or 2")
+    if requested == 2 and natural == 1:
+        raise ValueError("SOC spinors or explicit collinear channels have multiplicity one")
+    return requested
+
+
 class Wavecar:
-    def __init__(self, path: Path, spinor_components: int = 2, spin: int = 1):
-        self.path = path
-        self.spinor_components = spinor_components
+    def __init__(self, path: Path, spinor_components: int | None = None, spin: int = 1):
+        self.path = Path(path)
+        if spinor_components is not None and (type(spinor_components) is not int or spinor_components not in (1, 2)):
+            raise ValueError("spinor_components must be 1, 2 or None (automatic)")
         self.spin = spin
         self.header = self._read_header()
         if self.header.rtag != 45200:
@@ -111,8 +124,6 @@ class Wavecar:
                 f"RTAG={self.header.rtag} is unsupported; this validator expects "
                 "single-precision complex coefficients (RTAG=45200)."
             )
-        if self.header.ispin == 2 and spinor_components != 1:
-            raise ValueError("ISPIN=2 WAVECAR requires --spinor-components 1")
         if not (1 <= spin <= self.header.ispin):
             raise ValueError(f"spin channel {spin} is invalid for ISPIN={self.header.ispin}")
         self.kpoints, self.nplane, self.energies, self.occupations = (
@@ -130,12 +141,55 @@ class Wavecar:
                 raise ValueError(f"WAVECAR {label} must all be finite")
         self.nbmax = self._reciproperty_bounds()
         self._g_cache: dict[int, np.ndarray] = {}
+        self.spinor_components = self._detect_spinor_components()
+        if spinor_components is not None and spinor_components != self.spinor_components:
+            raise ValueError(f"declared spinor components {spinor_components} disagree with WAVECAR "
+                             f"detected layout {self.spinor_components}")
+
+    @property
+    def spin_multiplicity(self) -> int:
+        return self.resolve_spin_multiplicity()
+
+    def resolve_spin_multiplicity(self, requested: int | None = None) -> int:
+        return resolve_spin_multiplicity(self.header.ispin, self.spinor_components, requested)
+
+    def _detect_spinor_components(self) -> int:
+        detected = None
+        for channel in range(1, self.header.ispin + 1):
+            if channel == self.spin:
+                q, counts = self.kpoints, self.nplane
+            else:
+                q, counts, energies, occupations = self._read_k_headers(spin=channel)
+                if not all(np.isfinite(v).all() for v in (q, energies, occupations)):
+                    raise ValueError(f"nonfinite WAVECAR headers in spin channel {channel}")
+                mismatch = (counts != self.nplane) | np.any(abs(q-self.kpoints) > 1e-10, axis=1)
+                if mismatch.any():
+                    ik = int(np.flatnonzero(mismatch)[0])
+                    raise ValueError("WAVECAR k coordinates or coefficient counts disagree between "
+                                     f"spin channels at spin={channel}, k={ik + 1}")
+            for ik, (kpoint, count) in enumerate(zip(q, counts)):
+                ng = self._generate_g_vectors(kpoint).shape[0]
+                components = int(count) // ng if ng and count % ng == 0 else 0
+                if components not in (1, 2):
+                    raise ValueError(f"unsupported WAVECAR layout at spin={channel}, k={ik + 1}: "
+                                     f"NPLANE={count}, full G-vector count={ng}; "
+                                     "expected one or two full-complex components")
+                if count * 8 > self.header.stride_bytes:
+                    raise ValueError(f"coefficient record exceeds RECL at spin={channel}, k={ik + 1}")
+                if detected is not None and components != detected:
+                    raise ValueError(f"inconsistent spinor layout at spin={channel}, k={ik + 1}")
+                detected = components
+        if self.header.ispin == 2 and detected != 1:
+            raise ValueError("ISPIN=2 WAVECAR must contain one component per spin channel")
+        return detected
 
     def _read_header(self) -> WavecarHeader:
         with self.path.open("rb") as handle:
             rec1 = np.fromfile(handle, dtype="<f8", count=3)
         if rec1.size != 3:
             raise ValueError("WAVECAR is too short for record 1")
+        if not np.isfinite(rec1).all() or not np.equal(rec1, np.rint(rec1)).all():
+            raise ValueError("WAVECAR RECL, ISPIN and RTAG must be finite integers")
         logical_recl, ispin, rtag = (int(round(x)) for x in rec1)
         if ispin not in (1, 2):
             raise ValueError(f"invalid ISPIN={ispin}; expected 1 or 2")
@@ -149,6 +203,8 @@ class Wavecar:
                 rec2 = np.fromfile(handle, dtype="<f8", count=12)
             if rec2.size != 12:
                 continue
+            if not np.isfinite(rec2).all() or not np.equal(rec2[:2], np.rint(rec2[:2])).all():
+                continue
             nk, nb = int(round(rec2[0])), int(round(rec2[1]))
             encut = float(rec2[2])
             lattice = rec2[3:12].reshape(3, 3)
@@ -161,6 +217,7 @@ class Wavecar:
                 and 0 < nb < 1_000_000
                 and 0.0 < encut < 100_000.0
                 and abs(volume) > 1.0e-12
+                and (4 + 3 * nb) * 8 <= stride
                 and expected_min <= file_size
             )
             if plausible:
@@ -205,7 +262,7 @@ class Wavecar:
             rec += band
         return rec
 
-    def _read_k_headers(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def _read_k_headers(self, spin: int | None = None) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         h = self.header
         kpoints = np.empty((h.nkpoints, 3), dtype=np.float64)
         nplane = np.empty(h.nkpoints, dtype=np.int64)
@@ -213,12 +270,14 @@ class Wavecar:
         occupations = np.empty_like(energies)
         with self.path.open("rb") as handle:
             for ik in range(h.nkpoints):
-                offset = (self.record_number(ik, spin=self.spin) - 1) * h.stride_bytes
+                offset = (self.record_number(ik, spin=self.spin if spin is None else spin) - 1) * h.stride_bytes
                 handle.seek(offset)
                 raw = np.fromfile(handle, dtype="<f8", count=4 + 3 * h.nbands)
                 if raw.size != 4 + 3 * h.nbands:
                     raise ValueError(f"truncated k header at k index {ik + 1}")
-                nplane[ik] = int(round(raw[0]))
+                if not np.isfinite(raw[0]) or raw[0] != round(raw[0]):
+                    raise ValueError(f"NPLANE must be a finite integer at k index {ik + 1}")
+                nplane[ik] = int(raw[0])
                 kpoints[ik] = raw[1:4]
                 energies[ik] = raw[4::3]
                 occupations[ik] = raw[6::3]
@@ -265,20 +324,24 @@ class Wavecar:
             for i in range(3)
         )
 
+    def _generate_g_vectors(self, kpoint: np.ndarray) -> np.ndarray:
+        """Enumerate the full-complex basis in VASP order with bounded memory."""
+        n1, n2, n3 = self.nbmax
+        reciprocal = self.header.reciprocal
+        g2, g1 = np.meshgrid(signed_vasp_sequence(n2), signed_vasp_sequence(n1), indexing='ij')
+        plane = np.column_stack((g1.ravel(), g2.ravel(), np.zeros(g1.size, dtype=int)))
+        accepted = []
+        for g3 in signed_vasp_sequence(n3):
+            plane[:, 2] = g3
+            cart = (plane + kpoint) @ reciprocal
+            keep = np.einsum('ij,ij->i', cart, cart) / KINETIC_C < self.header.encut_ev
+            accepted.append(plane[keep].copy())
+        return np.concatenate(accepted).astype(np.int32, copy=False)
+
     def g_vectors(self, ik: int) -> np.ndarray:
         if ik in self._g_cache:
             return self._g_cache[ik]
-        n1, n2, n3 = self.nbmax
-        kpoint = self.kpoints[ik]
-        reciprocal = self.header.reciprocal
-        accepted: list[tuple[int, int, int]] = []
-        for g3 in signed_vasp_sequence(n3):
-            for g2 in signed_vasp_sequence(n2):
-                for g1 in signed_vasp_sequence(n1):
-                    cart = (kpoint + np.array((g1, g2, g3))) @ reciprocal
-                    if float(np.dot(cart, cart)) / KINETIC_C < self.header.encut_ev:
-                        accepted.append((g1, g2, g3))
-        result = np.asarray(accepted, dtype=np.int16)
+        result = self._generate_g_vectors(self.kpoints[ik])
         expected = int(self.nplane[ik]) // self.spinor_components
         if expected * self.spinor_components != int(self.nplane[ik]):
             raise ValueError(f"NPLANE at k={ik + 1} is incompatible with spinor count")
@@ -1385,6 +1448,8 @@ def write_t0_transport(
 
     diagnostics = {
         "method": "Sawahata-style T=0 cumulative-subspace plaquette average",
+        "spin_multiplicity": 1,
+        "spin_scope": "one represented spin channel; scalar spin degeneracy is not multiplied",
         "maps": {"V": label_v, "V_plus_1": label_v1, "V_plus_2": label_v2},
         "energy_band": energy_band,
         "mu_range_ev": [mu_min, mu_max, mu_num],
@@ -1983,6 +2048,8 @@ def write_full_t0_transport(
         )
     diagnostics = {
         "method": "all-band Sawahata-style T=0 cumulative-subspace plaquette average",
+        "spin_multiplicity": 1,
+        "spin_scope": "one represented spin channel; scalar spin degeneracy is not multiplied",
         "occupation_convention": "E <= mu is occupied",
         "gauge_treatment": (
             "determinant links of cumulative subspaces 1:n; no isolated-band "
@@ -2957,7 +3024,8 @@ def main() -> None:
     parser.add_argument("wavecar", type=Path)
     parser.add_argument("--nx", type=int, required=True)
     parser.add_argument("--ny", type=int, required=True)
-    parser.add_argument("--spinor-components", type=int, choices=(1, 2), default=2)
+    parser.add_argument("--spinor-components", type=int, choices=(1, 2), default=None,
+                        help="optional assertion; default detects the WAVECAR layout")
     parser.add_argument(
         "--spin",
         type=int,
@@ -3167,6 +3235,8 @@ def main() -> None:
         "ispin": wavecar.header.ispin,
         "spin_channel": wavecar.spin,
         "spinor_components": wavecar.spinor_components,
+        "transport_spin_multiplicity": 1,
+        "transport_spin_scope": "one represented spin channel; scalar spin degeneracy is not multiplied",
         "rtag": wavecar.header.rtag,
         "nkpoints": wavecar.header.nkpoints,
         "nbands": wavecar.header.nbands,

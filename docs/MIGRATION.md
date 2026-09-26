@@ -88,7 +88,8 @@ python3 tools/vaspberry_kubo.py import-legacy \
 ```
 
 Replace the mesh and gap threshold with the actual calculation's choices.
-SOC spinors instead use `--spinor-components 2 --spin-multiplicity 1`.
+The current importer detects both values when they are omitted. Explicit
+`--spinor-components` checks the file; `--spin-multiplicity` sets the counting.
 For explicit collinear spin channels, select `--spin` and use multiplicity 1;
 each imported channel remains a charge-response contribution. The importer
 checks coordinates and energies against the supplied WAVECAR.

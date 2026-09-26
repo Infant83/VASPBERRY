@@ -93,7 +93,7 @@ mkdir -p work/mbt3-native-fukui
 cd work/mbt3-native-fukui
 mpirun -np 4 ../../build/vaspberry-mpi --task chern \
   --wavecar ../mbt3-optics/WAVECAR --mesh 6,6 \
-  --spinor 2 --bands 1:123 --output BERRYCURV \
+  --bands 1:123 --output BERRYCURV \
   > vaspberry.stdout.log
 cd ../..
 ```

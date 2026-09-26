@@ -60,12 +60,12 @@ mkdir -p results/mos2-fukui-native
 cd results/mos2-fukui-native
 ../../build/vaspberry \
   --wavecar ../mos2-fullmesh-vasp/WAVECAR \
-  --task chern --spinor 2 --mesh 12,12 --bands 1:18 --output BERRYCURV \
+  --task chern --mesh 12,12 --bands 1:18 --output BERRYCURV \
   > vaspberry.log
 cd ../..
 ```
 
-`--spinor 2` reads both components of each SOC spinor. `--bands 1:18` uses the
+Spinor components are detected automatically. `--bands 1:18` uses the
 determinant of the occupied-subspace overlap matrix, allowing degeneracy
 within that subspace. `--mesh 12,12` describes the WAVECAR mesh; it does not
 generate missing k points. This Fukui calculation does not use the Kubo
@@ -216,8 +216,8 @@ native `phi/deltaS` quantity has units Å². Its numerical file is unchanged.
 
 ## Apply the workflow to another material
 
-Supply its complete uniform mesh, matching POSCAR and appropriate spinor
-setting. Select an isolated band or isolated group of bands, then change
+Supply its complete uniform mesh and matching POSCAR.
+Select an isolated band or isolated group of bands, then change
 the band indices and mesh dimensions in the native command. The optional
 runner above checks this specific 12 × 12 MoS₂ reference; use the general
 native CLI and plotting tool for other systems. Plot with the matching

@@ -49,8 +49,15 @@ class WaveDerHallTests(unittest.TestCase):
     def fake_wavecar(self, path, spinor_components, spin):
         e, o, q = self.fake_sources.get(Path(path).parent.resolve(), (self.energies, self.occupations, self.q))
         return SimpleNamespace(energies=e[spin-1].copy(), occupations=o[spin-1].copy(),
+            spinor_components=self.spinors,
             kpoints=q.copy(), header=SimpleNamespace(ispin=len(e), lattice=np.eye(3),
-            reciprocal=2*np.pi*np.eye(3)), coefficients=lambda k, b: np.ones((1, spinor_components, 1)))
+            reciprocal=2*np.pi*np.eye(3)), coefficients=lambda k, b: np.ones((1, self.spinors, 1)))
+
+    def test_auto_spinor_and_multiplicity_preserve_explicit_spinor_result(self):
+        explicit, _ = self.spectrum()
+        auto, metadata = self.spectrum(spinor_components=None, spin_multiplicity=None)
+        self.assertEqual(auto, explicit)
+        self.assertEqual((metadata['source_metadata']['spinor_components'], metadata['spin_multiplicity']), (2, 1))
 
     def write_run(self):
         ns, nk, nb = self.energies.shape

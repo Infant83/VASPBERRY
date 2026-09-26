@@ -116,10 +116,8 @@ def validate_pairs(data):
 
 def native_wavecar(csv_path, wavecar_path, spin, spinor_components, spin_multiplicity):
     w = Wavecar(wavecar_path, spin=spin, spinor_components=spinor_components)
-    w.coefficients(0, [1])  # Resolve actual scalar/spinor layout.
-    require(spin_multiplicity in (1, 2), 'spin multiplicity must be1 or2')
-    require(spin_multiplicity == 1 or (w.header.ispin == 1 and spinor_components == 1),
-            'SOC spinors or explicit collinear channels have multiplicity one')
+    w.coefficients(0, [1])
+    w.resolve_spin_multiplicity(spin_multiplicity)
     meta = metadata_lines(csv_path)
     require(meta.get('normalization') == 'STANDARD_MINUS_TWO_IM'
             and meta.get('operator') == OPERATOR and meta.get('berry_connection') == CONNECTION
@@ -127,9 +125,11 @@ def native_wavecar(csv_path, wavecar_path, spin, spinor_components, spin_multipl
     return w, meta
 
 
-def import_native_pairs(csv_path, wavecar_path, *, spin, spinor_components, spin_multiplicity,
+def import_native_pairs(csv_path, wavecar_path, *, spin=1, spinor_components=None, spin_multiplicity=None,
                         sampling, energy_reference):
     w, source = native_wavecar(csv_path, wavecar_path, spin, spinor_components, spin_multiplicity)
+    spinor_components = w.spinor_components
+    spin_multiplicity = w.resolve_spin_multiplicity(spin_multiplicity)
     nk, nb = w.energies.shape
     require(source.get('schema') == NATIVE_SCHEMA and source.get('pair_order') == 'n_lt_m'
             and source.get('result_kind') == 'UNORDERED_INTERBAND_NUMERATORS'
@@ -372,12 +372,14 @@ def hall_metadata(data, area, normal, region_spec, differences, regions, mu_refe
                      'Operator approximations are preserved in source_metadata.'])
 
 
-def bundle_hall_spectrum(csv_path, wavecar_path, mus, *, occupied, spin, spinor_components,
-                         spin_multiplicity, sampling, energy_reference, mu_reference,
+def bundle_hall_spectrum(csv_path, wavecar_path, mus, *, occupied, spin=1, spinor_components=None,
+                         spin_multiplicity=None, sampling, energy_reference, mu_reference,
                          region_spec=None, differences=()):
     """Only the zero-temperature common insulating gap is valid for a fixed bundle."""
     from types import SimpleNamespace
     w, source = native_wavecar(csv_path, wavecar_path, spin, spinor_components, spin_multiplicity)
+    spinor_components = w.spinor_components
+    spin_multiplicity = w.resolve_spin_multiplicity(spin_multiplicity)
     nk, nb = w.energies.shape
     require(0 < occupied < nb and source.get('schema') == 'VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1',
             'native occupied bundle with stored empty states required')

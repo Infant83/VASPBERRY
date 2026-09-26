@@ -32,7 +32,7 @@ mkdir -p results/mos2-optical
   cd results/mos2-optical
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-    --spinor 2 --mesh 48,1 --task spectrum --bands 1:20 \
+    --mesh 48,1 --task spectrum --bands 1:20 \
     -ien 1 -fen 3 -nediv 201 -sigma 0.05 \
     --theta 0 --phi 0 --output optical > stdout.log
 )
@@ -47,7 +47,7 @@ python3 examples/features/circular-dichroism/run.py \
 
 Here `--task spectrum` sums transitions from occupied states, `--bands 1:20` includes the
 first two empty bands, and `--theta 0 --phi 0` specifies incidence along z.
-`--spinor 2` reads a two-component spinor; it is not a conductivity multiplicity.
+Spinor components are detected from WAVECAR.
 The photon-energy range is 1–3 eV with 201 samples. The 48 stored path points
 are selected by `--mesh 48,1`; these options do not generate new k points.
 
@@ -99,7 +99,7 @@ comparing intensities. Neither route predicts photoluminescence polarization.
 
 ## Other materials
 
-Select the spinor setting, occupied/empty bands and photon-energy window from
+Select the occupied/empty bands and photon-energy window from
 your own VASP calculation. Check the transition intensity before interpreting
 η, especially near forbidden transitions. Use a full integration mesh for
 an integrated optical observable. The [synthetic angular-response reference](../../../validation/models/circular-dichroism/)

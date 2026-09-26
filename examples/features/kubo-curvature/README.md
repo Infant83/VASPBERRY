@@ -63,14 +63,14 @@ mkdir -p results/mos2-kubo-mesh results/mos2-kubo-path
   cd results/mos2-kubo-mesh
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/mos2-fullmesh-vasp/WAVECAR" \
-    --spinor 2 --task kubo --bundle 1 --bands 1:18 \
+    --task kubo --bundle 1 --bands 1:18 \
     --curvature-csv KUBO.csv > vaspberry.log
 )
 (
   cd results/mos2-kubo-path
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/mos2-path-vasp/WAVECAR" \
-    --spinor 2 --task kubo --bundle 1 --bands 1:18 \
+    --task kubo --bundle 1 --bands 1:18 \
     --curvature-csv KUBO.csv > vaspberry.log
 )
 ```
@@ -194,7 +194,7 @@ occupied bundle so that its internal degeneracy at Γ is handled correctly:
 mkdir -p results/mos2-path
 build/vaspberry --task kubo \
   --wavecar examples/1H-MoS2/KPATH/2.band/WAVECAR \
-  --spinor 2 --bands 1:18 --bundle 1 \
+  --bands 1:18 --bundle 1 \
   --curvature-csv results/mos2-path/KUBO.csv
 ```
 
@@ -216,7 +216,7 @@ mkdir -p results/mos2-kubo-supplied-path
   cd results/mos2-kubo-supplied-path
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-    --spinor 2 --task kubo --bands 17:18 --curvature-csv KUBO.csv --output BERRYCURV \
+    --task kubo --bands 17:18 --curvature-csv KUBO.csv --output BERRYCURV \
     > vaspberry.log
 )
 ```

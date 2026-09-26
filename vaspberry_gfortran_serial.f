@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.5.0 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.6.0 (f77) for VASP
 ! Written by Hyun-Jung Kim
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -31,7 +31,9 @@
 !               and GNU/OpenMPI portability checks
 !               : 2026. Sep. 04.
 
-! last update and bug fixes : 2026. Sep. 19.
+! version 1.6.0 automatic WAVECAR spinor layout with checked -s
+!               : 2026. Sep. 27. H.-J. Kim
+! last update and bug fixes : 2026. Sep. 27.
 ! NOTE: This version only support serial calculations and modified
 !#define MPI_USE
 !#undef  MPI_USE
@@ -75,8 +77,8 @@
       nprocs=1
       myrank=0
 
-      ver_tag="# VASPBERRY (Ver 1.5.0), by Hyun-Jung Kim."//
-     &        " 2026. Sep. 19."
+      ver_tag="# VASPBERRY (Ver 1.6.0), by Hyun-Jung Kim."//
+     &        " 2026. Sep. 27."
       pi=4.*atan(1.)
       berrymax=0d0
       berrymin=0d0
@@ -84,7 +86,7 @@
       !default settings
       kperiod=2
       nkx=12 ;nky=12 
-      ispinor=2  ! 2 for soc, 1 for non-soc
+      ispinor=0  ! infer scalar/spinor components from WAVECAR
       itr=0;itrim=0
 
 !!$*  reading general informations
@@ -104,7 +106,8 @@
       if (it .eq. 1) call test
       if(myrank == 0)write(6,'(A,A)')"# File reading... : ",filename
       call inforead(irecl,ispin,nk,nband,ecut,a1,a2,a3,filename)
-      if (ispin .eq. 2) ispinor=1
+      call infer_wavecar_spinor(ispinor,irecl,
+     &                         ispin,nk,nband,ecut,a1,a2,a3)
       if(iz .eq. 1)then
        if(ihf .ne. 0)then
         write(0,*) '*** error - Z2 n-field needs a full k mesh'
@@ -221,9 +224,9 @@
       if(myrank == 0)then
        write(6,'(A,I6)')   "# NELECT     : ",ne*ispin
        if (ispinor .eq. 2)then
-        write(6,'(A,I6,A)')"# ISPIN      : ",ispin," (LSORBIT =.TRUE.)"
+        write(6,'(A,I6,A)')"# ISPIN      : ",ispin," (spinor components = 2)"
        else
-        write(6,'(A,I6,A)')"# ISPIN      : ",ispin," (LSORBIT =.FALSE.)"
+        write(6,'(A,I6,A)')"# ISPIN      : ",ispin," (spinor components = 1)"
        endif
        write(6,'(A,F11.4)')  "# ENCUT (eV) : ",ecut
        write(6,'(A,I6)')     "# NKPOINT    : ",nk
@@ -1034,7 +1037,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.5.0'
+      write(94,'(A)')'# vaspberry_version=1.6.0'
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
@@ -1234,7 +1237,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.5.0'
+      write(94,'(A)')'# vaspberry_version=1.6.0'
       if(fieldok)then
        write(94,'(A)')'# result_status=PASS'
       else
@@ -1416,10 +1419,10 @@
        write(32,'(A,I9)')"# TOTAL RECORD LENGTH = ",irecl
        if (ispinor .eq. 2)then
         write(32,'(A,I6,A)')"# ISPIN            : ",ispin,
-     &                      " (LSORBIT = .TRUE.)"
+     &                      " (spinor components = 2)"
         else
          write(32,'(A,I6,A)')"# ISPIN            : ",ispin,
-     &                       " (LSORBIT = .FALSE.)"
+     &                       " (spinor components = 1)"
        endif
        write(32,'(A,F11.4)')  "# ENCUT (eV)       : ",ecut
        write(32,'(A,I6)')     "# NKPOINT          : ",nk
@@ -2694,10 +2697,10 @@
         write(61,'(A,I9)')"# TOTAL RECORD LENGTH = ",irecl
         if (ispinor .eq. 2)then
          write(61,'(A,I6,A)')"# ISPIN            : ",ispin,
-     &                       " (LSORBIT = .TRUE.)"
+     &                       " (spinor components = 2)"
          else
           write(61,'(A,I6,A)')"# ISPIN            : ",ispin,
-     &                        " (LSORBIT = .FALSE.)"
+     &                        " (spinor components = 1)"
         endif
         write(61,'(A,F11.4)')  "# ENCUT (eV)       : ",ecut
         write(61,'(A,I6)')     "# NKPOINT          : ",nk
@@ -2826,6 +2829,126 @@
       return
       end subroutine reciproperty
       
+! Infer scalar/spinor layout from full-complex WAVECAR coefficients.
+! ISPIN counts channels; it does not identify SOC or spinor components.
+      subroutine infer_wavecar_spinor(ispinor,irecl,ispin,nk,nband,
+     &                               ecut,a1,a2,a3)
+      use, intrinsic :: ieee_arithmetic
+      implicit none
+      integer ispinor,irecl,ispin,nk,nband,nbmax(3),npmax
+      integer isp,ik,irec,iost,ncoeff,ng,components,detected
+      real*8 ecut,a1(3),a2(3),a3(3),b1(3),b2(3),b3(3),cross(3)
+      real*8 volume,area,xnplane,wk(3),xnfirst,wkfirst(3)
+      if(.not.ieee_is_finite(ecut).or.ecut.le.0d0.or.
+     &   .not.all(ieee_is_finite(a1)).or.
+     &   .not.all(ieee_is_finite(a2)).or.
+     &   .not.all(ieee_is_finite(a3)))then
+       write(0,*)'*** error - invalid WAVECAR cutoff or lattice'
+       call vaspberry_fail
+      endif
+      call vcross(cross,a2,a3)
+      volume=dot_product(a1,cross)
+      if(.not.ieee_is_finite(volume).or.abs(volume).lt.1d-12)then
+       write(0,*)'*** error - singular WAVECAR lattice'
+       call vaspberry_fail
+      endif
+      call recilatt(b1,b2,b3,area,a1,a2,a3,1,1)
+! The G-vector bounds do not depend on the spinor component count.
+      call reciproperty(nbmax,npmax,b1,b2,b3,ecut,1)
+      detected=0
+      do isp=1,ispin
+       do ik=1,nk
+        irec=3+((isp-1)*nk+ik-1)*(nband+1)
+        read(10,rec=irec,iostat=iost)xnplane,wk
+        if(iost.ne.0)then
+         write(0,*)'*** error - WAVECAR k header read, spin/k:',
+     &             isp,ik
+         call vaspberry_fail
+        endif
+        if(.not.ieee_is_finite(xnplane).or.
+     &     .not.all(ieee_is_finite(wk)))then
+         write(0,*)'*** error - nonfinite WAVECAR coefficient layout'
+         call vaspberry_fail
+        endif
+        if(xnplane.lt.1d0.or.xnplane.gt.dble(irecl/8))then
+         write(0,*)'*** error - invalid WAVECAR coefficient count',
+     &             ' at spin/k:',isp,ik
+         call vaspberry_fail
+        endif
+        ncoeff=nint(xnplane)
+        if(xnplane.ne.dble(ncoeff))then
+         write(0,*)'*** error - noninteger WAVECAR coefficient count'
+         call vaspberry_fail
+        endif
+        call count_wavecar_g(ng,wk,b1,b2,b3,nbmax,ecut)
+        components=0
+        if(ng.gt.0.and.ncoeff.eq.ng)components=1
+        if(ng.gt.0.and.ncoeff.eq.2*ng)components=2
+        if(components.eq.0)then
+         write(0,*)'*** error - unsupported WAVECAR layout at spin/k:',
+     &             isp,ik,'; Ncoeff/full-G:',ncoeff,ng
+         call vaspberry_fail
+        endif
+        if(ispin.eq.2.and.components.ne.1)then
+         write(0,*)'*** error - ISPIN=2 needs scalar coefficients'
+         call vaspberry_fail
+        endif
+        if(detected.ne.0.and.components.ne.detected)then
+         write(0,*)'*** error - inconsistent WAVECAR spinor layout',
+     &             ' at spin/k:',isp,ik
+         call vaspberry_fail
+        endif
+        if(isp.gt.1)then
+         read(10,rec=3+(ik-1)*(nband+1),iostat=iost)xnfirst,wkfirst
+         if(iost.ne.0)then
+          write(0,*)'*** error - WAVECAR first spin header read'
+          call vaspberry_fail
+         endif
+         if(xnplane.ne.xnfirst.or.any(abs(wk-wkfirst).gt.1d-10))then
+          write(0,*)'*** error - inconsistent WAVECAR spin channels'
+          call vaspberry_fail
+         endif
+        endif
+        detected=components
+       enddo
+      enddo
+      if(ispinor.ne.0.and.ispinor.ne.detected)then
+       write(0,*)'*** error - --spinor/-s disagrees with WAVECAR:',
+     &           ' requested=',ispinor,' detected=',detected
+       call vaspberry_fail
+      endif
+      ispinor=detected
+      end subroutine infer_wavecar_spinor
+
+! Count the same full-complex basis used by plindx, without a spinor guess.
+      subroutine count_wavecar_g(ncnt,wk,b1,b2,b3,nbmax,ecut)
+      implicit none
+      integer ncnt,nbmax(3),ig1,ig2,ig3,ig1p,ig2p,ig3p,j
+      real*8 wk(3),b1(3),b2(3),b3(3),sumkg(3),ecut,gtot,etot
+      real*8 c
+      parameter(c=0.262465831d0)
+      ncnt=0
+      do ig3=0,2*nbmax(3)
+       ig3p=ig3
+       if(ig3.gt.nbmax(3))ig3p=ig3-2*nbmax(3)-1
+       do ig2=0,2*nbmax(2)
+        ig2p=ig2
+        if(ig2.gt.nbmax(2))ig2p=ig2-2*nbmax(2)-1
+        do ig1=0,2*nbmax(1)
+         ig1p=ig1
+         if(ig1.gt.nbmax(1))ig1p=ig1-2*nbmax(1)-1
+         do j=1,3
+          sumkg(j)=(wk(1)+ig1p)*b1(j)+(wk(2)+ig2p)*b2(j)
+     &             +(wk(3)+ig3p)*b3(j)
+         enddo
+         gtot=sqrt(dot_product(sumkg,sumkg))
+         etot=gtot**2/c
+         if(etot.lt.ecut)ncnt=ncnt+1
+        enddo
+       enddo
+      enddo
+      end subroutine count_wavecar_g
+
 !!$*  subroutine for computing planewave G index
       subroutine plindx(ig,ncnt,
      &    ispinor,wk,b1,b2,b3,nbmax,np,ecut,npmax)
@@ -3242,7 +3365,17 @@
            else if(option == "-ky") then
             read(value,*) nky
            else if(option == "-s") then
-            read(value,*) ispinor
+            select case(trim(value))
+            case('auto')
+             ispinor=0
+            case('1')
+             ispinor=1
+            case('2')
+             ispinor=2
+            case default
+             write(0,*)'*** error - --spinor/-s needs auto, 1 or 2'
+             call vaspberry_fail
+            end select
            else if(option == "-ii") then
             read(value,*) nini
            else if(option == "-if") then
@@ -3335,6 +3468,7 @@
 
 !!$*  subroutine for reading basic information
       subroutine inforead(irecl,ispin,nk,nband,ecut,a1,a2,a3,filename)
+      use, intrinsic :: ieee_arithmetic
       implicit real*8(a-h,o-z)
       character*75 filename
       dimension a1(3),a2(3),a3(3)
@@ -3351,13 +3485,29 @@
        call vaspberry_fail
       endif
 
-      read(10,rec=1)xirecl,xispin,xiprec !RDUM,RISPIN,RTAG(in real type)
-      close(10)
-      irecl=nint(xirecl);ispin=nint(xispin);iprec=nint(xiprec) ! set to integer
-      if(iprec.eq.45210) then
-       write(0,*) '*** error - WAVECAR_double needs complex*16'
+      read(10,rec=1,iostat=iost)xirecl,xispin,xiprec
+      if(iost.ne.0)then
+       write(0,*)'*** error - WAVECAR header read'
        call vaspberry_fail
       endif
+      if(.not.ieee_is_finite(xirecl).or.
+     &   .not.ieee_is_finite(xispin).or.
+     &   .not.ieee_is_finite(xiprec))then
+       write(0,*)'*** error - nonfinite WAVECAR header'
+       call vaspberry_fail
+      endif
+      if(xirecl.lt.96d0.or.xirecl.gt.dble(huge(irecl)).or.
+     &   (xispin.ne.1d0.and.xispin.ne.2d0))then
+       write(0,*)'*** error - invalid WAVECAR RECL/ISPIN'
+       call vaspberry_fail
+      endif
+      if(xiprec.ne.45200d0)then
+       write(0,*)'*** error - unsupported WAVECAR RTAG; expected',
+     &           ' full-complex 45200, found:',xiprec
+       call vaspberry_fail
+      endif
+      close(10)
+      irecl=nint(xirecl);ispin=nint(xispin);iprec=nint(xiprec) ! set to integer
       open(unit=10,file=filename,access='direct',
      & form='unformatted',recl=irecl,action='read',
      & iostat=iost,status='old')
@@ -3365,10 +3515,30 @@
        write(0,*) '*** error - WAVECAR data open, iostat =',iost
        call vaspberry_fail
       endif
-      read(10,rec=2) xnk,xnband,ecut,                 !RNKPTS,RNB_TOT,ENCUT
+      read(10,rec=2,iostat=iost) xnk,xnband,ecut,
      &(a1(j),j=1,3),(a2(j),j=1,3),(a3(j),j=1,3)       !A1(3),A2(3),A3(3)
+      if(iost.ne.0)then
+       write(0,*)'*** error - WAVECAR lattice header read'
+       call vaspberry_fail
+      endif
+      if(.not.ieee_is_finite(xnk).or.
+     &   .not.ieee_is_finite(xnband))then
+       write(0,*)'*** error - nonfinite WAVECAR dimensions'
+       call vaspberry_fail
+      endif
+      if(xnk.lt.1d0.or.xnk.gt.dble(huge(nk)).or.
+     &   xnband.lt.1d0.or.xnband.gt.dble((irecl/8-4)/3))then
+       write(0,*)'*** error - invalid WAVECAR dimensions'
+       call vaspberry_fail
+      endif
       nk=nint(xnk)
       nband=nint(xnband)
+      if(xirecl.ne.dble(irecl).or.xnk.ne.dble(nk).or.
+     &   xnband.ne.dble(nband).or.
+     &   dble(ispin)*nk*(nband+1)+2d0.gt.dble(huge(nk)))then
+       write(0,*)'*** error - invalid WAVECAR record dimensions'
+       call vaspberry_fail
+      endif
 
       return
       end subroutine inforead
@@ -3415,8 +3585,8 @@
       write(6,*)"#       matching "
       write(6,*)" "
       write(6,*)"#*Syntax:"
-      write(6,*)"# ./vaspberry -f file -kx nx -ky ny -s 2 -ii ni -if nf"
-      write(6,*)"#*  (or) ./vaspberry -f file -kx nx -ky ny -s 2 -is n "
+      write(6,*)"# ./vaspberry -f file -kx nx -ky ny -ii ni -if nf"
+      write(6,*)"#*  (or) ./vaspberry -f file -kx nx -ky ny -is n "
       write(6,*)" "
       write(6,*)"#*For the detailed help: ./vaspberry -h"
       write(6,*)" "
@@ -3638,19 +3808,18 @@
       write(6,*)"       zero (at least for cases investigated thus far)"
       write(6,*)" "
       write(6,*)"*Syntax: build/vaspberry-gfortran -f file"
-      write(6,*)"*        -kx nx -ky ny -s 2 -ii ni -if nf"
+      write(6,*)"*        -kx nx -ky ny -ii ni -if nf"
       write(6,*)"*   (or) build/vaspberry-gfortran -f file"
-      write(6,*)"*        -kx nx -ky ny -s 2 -is n"
+      write(6,*)"*        -kx nx -ky ny -is n"
       write(6,*)" "
       write(6,*)"             ### POSSIBLE OPTIONS ###"
       write(6,*)" -h               : Print this help and stop"
       write(6,*)" -f filename      : File name to be read"
       write(6,*)"                  : Default: WAVECAR"
       write(6,*)" -kx(ky) kx(ky)   : k-point grid of your system"
-      write(6,*)" -s 2 or 1        : for the noncollinear case, -s 2"
-      write(6,*)"                  : for the collinear or NM,   -s 1"
-      write(6,*)"                  :  Default : 2 if ISPIN 1"
-      write(6,*)"                  :          : 1 if ISPIN 2"
+      write(6,*)" -s auto|1|2      : infer components from WAVECAR (default)"
+      write(6,*)"                  : 1 or 2 asserts the detected layout"
+      write(6,*)"                  : checks every spin/k; does not infer SOC"
       write(6,*)" -ii(if) ni(nf)   : Once specified, berry curvature "
       write(6,*)"                  : for multiband (from ni-th to nf-th"
       write(6,*)"                  : state) states will be evaluated,"
@@ -3702,7 +3871,7 @@
       write(6,*)"                  : ICHARG=11 run with ISYM=-1 and"
       write(6,*)"                  : a full, even Gamma-centered mesh"
       write(6,*)"                  : with Nx,Ny >= 4 and kz=0 modulo G."
-      write(6,*)"                  : Requires ISPIN=1 spinors (-s 2)"
+      write(6,*)"                  : Requires ISPIN=1 two-component spinors"
       write(6,*)"                  : occupied bands 1:NE, NBANDS>NE,"
       write(6,*)"                  : and each of four 2D TRIM once."
       write(6,*)"                  : Example (12x12, NE=10):"
@@ -3732,7 +3901,7 @@
       write(6,*)" "
       write(6,*)"*VALLEY TRANSPORT POSTPROCESSING:"
       write(6,*)" Use the opt-in Python tools."
-      write(6,*)" Legacy outputs and defaults are unchanged."
+      write(6,*)" Legacy output formats are unchanged."
       write(6,*)" python3 tools/vaspberry_transport.py -h"
       write(6,*)" python3 tools/wavecar_fukui.py -h"
       write(6,*)" A full uniform 2D BZ is required for transport."
@@ -3741,8 +3910,8 @@
       write(6,*)" A CBM-only result is an incremental contribution."
       write(6,*)" Total sigma_xy also needs the valence manifold."
       write(6,*)" "
-      write(6,*)"* default: -f WAVECAR -kx 2 -ky 2 -s 2 -ii 1 -if VBM 
-     &-kp 1"
+      write(6,*)"* default: -f WAVECAR -kx 2 -ky 2 -ii 1 -if VBM"//
+     &" -kp 1"
       write(6,*)"* here, VBM is valence band maximum"
       write(6,*)" "
       write(6,*)"*Compilation: see Makefile and docs/BUILD.md."
