@@ -4,6 +4,9 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+- The hands-on guide now explicitly separates strict INI workflows from
+  advanced coalesced calculations and distinguishes their saved-result formats.
+
 - Postprocessing documentation now separates a first-run guide from the complete
   INI reference, with linked Bi rescan/region exercises, user-defined group and
   region names, and explicit numerical-output versus plotting instructions.

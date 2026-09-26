@@ -2,13 +2,14 @@
 
 The main workflow is **VASP → WAVECAR → VASPBERRY Fortran with Intel MPI → numerical files → analysis and plots**. Native curvature is already a numerical result that you can plot in your preferred program. A charge-Hall scan additionally integrates Kubo pairs with occupations.
 
-For routine Hall and PROCAR analysis, start with the [single-file postprocessing guide](POSTPROCESSING.md) and [public Bi example](../examples/features/simple-postprocess/README.md): `vaspberry_post.py run analysis.ini` calculates the requested tables and `vaspberry_post.py plot results/run01` draws them. The explicit stages below explain the native outputs and how to use them independently.
+For routine Hall and PROCAR analysis, start with the [single-file postprocessing guide](POSTPROCESSING.md) and [public Bi example](../examples/features/simple-postprocess/README.md): `python3 tools/vaspberry_post.py run analysis.ini` calculates the requested tables and `python3 tools/vaspberry_post.py plot results/run01` draws them. An optional `python3 tools/vaspberry_post.py check analysis.ini` checks the inputs before running. The [settings reference](POSTPROCESSING_REFERENCE.md) lists the same input, output and naming conventions. The explicit stages below explain the native outputs and provide advanced controls.
 
 Use VASPBERRY 1.5.0 for this walkthrough. Start in the repository root in Bash on a Linux host with Intel oneAPI Fortran, oneMKL and Intel MPI available. The following uses four MPI ranks; select the rank count allowed by your cluster allocation. Choose a fresh output directory when repeating a calculation.
 
 ```bash
 source /opt/intel/oneapi/setvars.sh
 make ifx-mpi
+make check-ifx-mpi
 repo_dir="$PWD"
 vb_bin="$repo_dir/build/vaspberry-ifx-mpi"
 mpiexec -n 4 "$vb_bin" --help
@@ -102,6 +103,8 @@ python3 tools/plot_hall.py results/saved-hall/conductivity.csv \
 
 `pair-hall` performs the **transport calculation**: it applies Fermi occupations, energy denominators, k weights and the BZ/region integral. It writes σ in e²/h and siemens, Δσ relative to μref, and represented electron counts. `plot_hall.py` then reads those finished rows and writes `results/saved-hall-plot/hall.png`, `.pdf` and `.svg`: the selected 300 K regional Δσ curves versus μ−μref. The `.json` sidecar records units, input hashes and integration choices. The explicit `coalesce` policy approximates tiny numerical energy splittings by a group mean and records the shifts.
 
+This MoS₂ example deliberately uses an advanced degeneracy policy. The INI front end uses strict defaults and has no `degeneracy-policy` key. Keep these explicit commands when reproducing this `coalesce` example; the public Bi INI example demonstrates the strict route. The policy choice is part of the numerical calculation, not a different spelling of the same settings.
+
 To study another temperature or μ range, rerun only `pair-hall` into a new directory, then plot it. To change the visual selection, rerun only `plot_hall.py`. For new region shapes use a supported periodic-circle or k-ID JSON definition; K/K′ coordinates depend on the actual reciprocal basis. The [transport guide](KUBO_TRANSPORT.md) explains this scope and the difference between regional charge response and a valley-current operator.
 
 ## 4. Generate that reusable data for your material
@@ -130,7 +133,7 @@ python3 tools/vaspberry_kubo.py import-pairs \
 
 `import-pairs` checks that every row matches WAVECAR and that the declared mesh is complete. It writes the same numerical information as compact arrays in `pairs.npz`, with checked geometry, units and provenance in `pairs.json`. It does **not** calculate Hall conductivity. Keep both cache files together.
 
-Then use the `pair-hall` and plot commands from step 3 with `--pairs-dir results/my-pairs` and **your** μ range/reference, regions and retained-band cutoff. Pair export uses every stored band and k point, so it needs neither `--bands` nor `--mesh`. `--pair-band-max` selects the retained virtual-state window during integration. The [complete MoS₂ tutorial](../examples/features/kubo-hall/) provides a specified full-mesh VASP input, density, reference energies and convergence cases.
+Then use the `pair-hall` and plot commands from step 3 with `--pairs-dir results/my-pairs` and **your** μ range/reference, regions and retained-band cutoff. Pair export uses every stored band and k point, so it needs neither `--bands` nor `--mesh`. `--pair-band-max N` keeps pairs whose two band indices both lie in `1..N` during total charge-Hall integration; it does not reduce the native export. The [complete MoS₂ tutorial](../examples/features/kubo-hall/) provides a specified full-mesh VASP input, density, reference energies and convergence cases.
 
 ### Optional one-command export and integration
 
@@ -157,6 +160,8 @@ Plot `results/mos2-hall-workflow/hall/conductivity.csv` with the command in
 step 3. Only the native stage uses MPI; the Python integration is a separate
 NumPy calculation. Reuse `pairs/` for subsequent μ/T scans.
 
+The single-file front end accepts `--reuse` and `plot` only for a completed result created by `vaspberry_post.py`, identified by its `run.json`. The standalone cache in step 3 and the `wavecar-hall` result with `workflow.json` are not interchangeable with that input. Use `pair-hall` and `plot_hall.py` for these explicit-stage results. Both routes retain numerical tables that other plotting tools can read.
+
 ## 5. Add layer, orbital and spin character
 
 Use matching SOC `PROCAR`, `WAVECAR` and `OUTCAR` from one final VASP run. The public [PROCAR example](../examples/features/procar-character/) gives complete commands and a small runnable analytic fixture. Its three stages have distinct jobs:
@@ -177,4 +182,4 @@ The atom IDs and Cartesian spin axis are user inputs; no material-specific layer
 - The optional [spin Hall route](SPIN_HALL.md) needs full spin/velocity matrices and supports a gapped 2D occupied group at T=0. The supplied instrumented VASP producer excludes Hubbard U; do not apply its Bi instructions unchanged to a DFT+U magnetic material.
 - Converge k sampling, source `NBANDS`, retained pair window and region choice separately. A smooth μ curve or picture does not refine the original k mesh.
 
-For report figures, use the linked feature/material recipes and their compact reference outputs. Those example-specific assembly scripts arrange known panels; general native commands and `tools/` interfaces accept user data within their documented contracts. Optional Wannier examples are collected in the report's supporting appendix.
+For report figures, use the linked feature/material recipes and their compact reference outputs. Those example-specific assembly scripts arrange known panels; general native commands and `tools/` interfaces accept user data within their documented contracts.
