@@ -266,8 +266,10 @@ method-specific references are given in each guide.
 
 ## Contributors
 
-* Hyun-Jung Kim: Main developer
-* Sun-Woo Kim: Circular dichroism and Kubo formula
+* Hyun-Jung Kim: Main developer and maintainer; responsible for subsequent
+  development and ongoing updates of the Kubo implementation.
+* Sun-Woo Kim: Contributions to circular dichroism and the initial Kubo
+  implementation.
 
 ## Citation
 
