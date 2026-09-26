@@ -4,8 +4,7 @@
 VASPBERRY reads `WAVECAR` and evaluates wavefunction overlaps and interband
 matrix elements in Fortran. Use Fukui methods for Chern numbers and the 2D Z₂
 invariant, and Kubo calculations for Berry-curvature maps, symmetry paths and
-intrinsic charge Hall response. **No Wannier construction or interpolation is
-required for this workflow.**
+intrinsic charge Hall response.
 
 ```text
 VASP calculation → WAVECAR → VASPBERRY Fortran → numerical output → analysis / plots
@@ -28,9 +27,9 @@ and [migration notes](docs/MIGRATION.md).
 
 The native program requires a **Fortran compiler, GNU Make, POSIX shell/tools
 and LP64 BLAS/LAPACK libraries**. An MPI build additionally needs the matching
-MPI **development package/compiler wrapper and runtime launcher**. Python,
-VASP and Wannier90 are not required to compile or run VASPBERRY on an existing
-compatible `WAVECAR`; Python is used by the optional numerical postprocessing
+MPI **development package/compiler wrapper and runtime launcher**. These
+native dependencies are sufficient to compile and run VASPBERRY on an existing
+compatible `WAVECAR`. Python is used by the optional numerical postprocessing
 and plotting tools.
 
 | Environment | Required native development environment | Build and executable |
@@ -255,13 +254,6 @@ cover extra operators and independent checks:
 - [Conventional spin Hall response](docs/SPIN_HALL.md) with explicitly
   supplied spin and velocity matrices; [Bi results](examples/materials/bi-spin-hall/)
   complement its directly calculated Z₂ invariant.
-- [Wannier-based supporting calculations](docs/WANNIER_TRANSPORT.md):
-  externally prepared Wannier90 operators, with optional bundled NumPy
-  response/strip calculations and independent postw90 comparisons. The Bi
-  edge spectrum supports the Z₂ interpretation; the
-  [MnBi₂Te₄ benchmark](examples/materials/mnbi2te4-qah/) illustrates a nonzero
-  Chern invariant and integration convergence. These are optional validation
-  routes, outside the WAVECAR/Fortran workflow.
 - [Advanced geometric transport](docs/VALLEY_TRANSPORT.md),
   [matrix interfaces](docs/KUBO_TRANSPORT.md#applying-the-workflow-to-other-data)
   and [developer model checks](validation/models/).
