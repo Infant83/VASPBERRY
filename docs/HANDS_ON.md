@@ -1,8 +1,10 @@
 # Hands-on: native calculation, saved data, and reusable plots
 
-The main workflow is **VASP → WAVECAR → VASPBERRY Fortran with Intel MPI → numerical files → analysis and plots**. Native curvature is already a numerical result that you can plot in your preferred program. A charge-Hall scan additionally integrates Kubo pairs with occupations. Wannier is optional.
+The main workflow is **VASP → WAVECAR → VASPBERRY Fortran with Intel MPI → numerical files → analysis and plots**. Native curvature is already a numerical result that you can plot in your preferred program. A charge-Hall scan additionally integrates Kubo pairs with occupations.
 
-Use VASPBERRY 1.4.2 for this walkthrough. Start in the repository root in Bash on a Linux host with Intel oneAPI Fortran, oneMKL and Intel MPI available. The following uses four MPI ranks; select the rank count allowed by your cluster allocation. Choose a fresh output directory when repeating a calculation.
+For routine Hall and PROCAR analysis, start with the [single-file postprocessing guide](POSTPROCESSING.md) and [public Bi example](../examples/features/simple-postprocess/README.md): `vaspberry_post.py run analysis.ini` calculates the requested tables and `vaspberry_post.py plot results/run01` draws them. The explicit stages below explain the native outputs and how to use them independently.
+
+Use VASPBERRY 1.5.0 for this walkthrough. Start in the repository root in Bash on a Linux host with Intel oneAPI Fortran, oneMKL and Intel MPI available. The following uses four MPI ranks; select the rank count allowed by your cluster allocation. Choose a fresh output directory when repeating a calculation.
 
 ```bash
 source /opt/intel/oneapi/setvars.sh
@@ -24,7 +26,7 @@ Use your site's oneAPI setup path or modules when they differ. A retained Intel 
 
 ## 1. Calculate a real supplied WAVECAR with Fortran
 
-This first calculation uses the ordinary SOC MoS₂ band-path WAVECAR already in the repository. No VASP execution or Wannier input is needed. It evaluates occupied-bundle point curvature, with bands 1–18 and the stored empty bands as intermediate states.
+This first calculation uses the ordinary SOC MoS₂ band-path WAVECAR already in the repository. It evaluates occupied-bundle point curvature, with bands 1–18 and the stored empty bands as intermediate states.
 
 ```bash
 mkdir -p results/first-kubo
@@ -53,11 +55,7 @@ This input is a line path: it supports a curvature-versus-path-sample plot. A fu
 
 **Python is optional for plotting this native result.** In Origin, a spreadsheet or another CSV plotter: import comma-separated values, skip `#` metadata lines, use the next line as column names, select `spin=1`, then plot `k_index` on x and `omega_z_A2` on y. That gives the curvature along the ordered input samples. Keep the metadata beside any exported table.
 
-The equivalent Python/Matplotlib example follows. It only reads the finished CSV and saves `curvature.png`, `.pdf` and `.svg`; no VASPBERRY module or Fortran execution is involved. Install Python 3.10+ and the small dependency set if using this plotter or the later transport tools:
-
-```bash
-python3 -m pip install -r requirements-transport.txt
-```
+The equivalent Python/Matplotlib example follows. It only reads the finished CSV and saves `curvature.png`, `.pdf` and `.svg`; no VASPBERRY module or Fortran execution is involved. Use your usual Python 3.10+ environment with Matplotlib. The [dependency file](../requirements-transport.txt) lists supported versions.
 
 ```bash
 python3 - <<'PY'

@@ -69,3 +69,9 @@ The `publish-v1.4.2.yml` workflow retains all eleven v1.4.1 validation jobs
 and adds two clean source-archive installation jobs: Linux GNU/MPICH and
 macOS ARM64 GNU/OpenMPI/OpenBLAS. All thirteen jobs must pass on the exact
 publication commit. Previous tags and publication scripts remain immutable.
+
+The `publish-v1.5.0.yml` workflow requires the same thirteen exact-source
+jobs, with the new parser/workflow tests and public settings example in CI.
+It also requires the postprocessing command, guide and example files, and
+preserves the immutable v1.4.2 tag. The scientific report remains the
+retained method edition; new command instructions are in the current guides.

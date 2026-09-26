@@ -49,7 +49,7 @@ def source_options(args):
 
 def record_provenance(args, meta):
     meta['provenance'] = {
-        'vaspberry_version': '1.4.2',
+        'vaspberry_version': '1.5.0',
         'command': {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
         'implementation_sha256': {name: sha256(Path(__file__).with_name(name)) for name in
                                  ('kubo_hall_workflow.py', 'kubo_pairs.py', 'berry_data.py', 'vaspberry_transport.py')},

@@ -30,7 +30,7 @@ from vasp_spin_export import add_arguments as add_spin_export_arguments, command
 from spin_assembly import add_command as add_spin_merge, command as spin_merge_command
 from velocity_pairs import add_command as add_velocity_pairs, command as velocity_pairs_command
 
-__version__ = '1.4.2'
+__version__ = '1.5.0'
 
 
 def sampling(args):

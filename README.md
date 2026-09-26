@@ -15,11 +15,11 @@ band plots provide context for the calculated topology and response.
 
 [Technical report](docs/TECHNICAL_REPORT.md) ([PDF](docs/TECHNICAL_REPORT.pdf)) ·
 [Hands-on commands](docs/HANDS_ON.md) · [Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
-[Output formats](docs/OUTPUT_FORMAT.md)
+[Postprocessing guide](docs/POSTPROCESSING.md) · [Output formats](docs/OUTPUT_FORMAT.md)
 
-**Latest release: [1.4.2](https://github.com/Infant83/VASPBERRY/releases/tag/v1.4.2).**
-The commands below are available in the fixed `v1.4.2` source. The original
-short options remain supported. See the [release notes](docs/releases/v1.4.2.md),
+**Latest release: [1.5.0](https://github.com/Infant83/VASPBERRY/releases/tag/v1.5.0).**
+The commands below are available in the fixed `v1.5.0` source. The original
+short options remain supported. See the [release notes](docs/releases/v1.5.0.md),
 [changelog](CHANGELOG.md), [version policy](docs/RELEASING.md)
 and [migration notes](docs/MIGRATION.md).
 
@@ -57,7 +57,7 @@ make help
 ```
 
 For a fixed release, download and extract the source archive from
-[v1.4.2](https://github.com/Infant83/VASPBERRY/releases/tag/v1.4.2), then run the
+[v1.5.0](https://github.com/Infant83/VASPBERRY/releases/tag/v1.5.0), then run the
 same build commands from the extracted directory containing `Makefile`.
 **Archive builds do not require Git or Python.** No precompiled executable or
 system-wide installation is needed; the build creates local files in `build/`.
@@ -138,7 +138,8 @@ PAW/nonlocal/SOC terms; see [operator choices](docs/OPERATOR_ROUTES.md).
 
 For **layer, atom, orbital and spin character**, combine a matching SOC
 `PROCAR` with the WAVECAR and actual spin frame from `OUTCAR` using
-`tools/procar_character.py`. Named atom/orbital groups and a Cartesian spin
+the optional `[projection]` and `[group NAME]` sections in the
+[postprocessing settings](docs/POSTPROCESSING.md). Named atom/orbital groups and a Cartesian spin
 axis define the projections. The same saved native pair data support
 chemical-potential/temperature scans of selected-band projected charge-Hall
 contributions. Follow the [projection tutorial](examples/features/procar-character/)
@@ -235,14 +236,23 @@ Origin, gnuplot or other analysis tools. Follow the
 [Hall](examples/features/kubo-hall/) and
 [PROCAR](examples/features/procar-character/) examples for concrete figures.
 
-For a shorter repeatable workflow, the existing `wavecar-hall` command runs
-native Fortran pair export, cache import and Hall integration together. It
-keeps `native/PAIRS.csv`, `pairs/pairs.npz` and `hall/conductivity.csv` under a
-fresh output directory; plotting is a separate command. The
-[Kubo tutorial](docs/KUBO_TRANSPORT.md#native-pairs-to-charge-hall) shows both
-the shortcut and the explicit stages. Reuse the cache with `pair-hall` to
-scan new μ/T values without repeating Fortran. For a new material, start with
-the [transfer guide](examples/APPLY_TO_YOUR_SYSTEM.md).
+For repeated Hall and PROCAR analysis, keep the input paths, μ/T scan and
+optional atom groups or regions in **one commented settings file**:
+
+```bash
+python3 tools/vaspberry_post.py run analysis.ini
+python3 tools/vaspberry_post.py plot results/run01
+```
+
+The first command launches the compiled Fortran executable and the requested
+numerical postprocessing. The second draws the saved tables. `analysis.ini`
+specifies `results/run01` relative to that file; it also sets the executable
+and MPI rank count. No user-written JSON is needed. Start with the
+[complete public Bi example](examples/features/simple-postprocess/) and
+[settings guide](docs/POSTPROCESSING.md). Reuse a previous run's pair cache
+with `run analysis-next.ini --reuse results/run01` when changing μ/T, without
+repeating Fortran. The individual [Kubo commands](docs/KUBO_TRANSPORT.md#native-pairs-to-charge-hall)
+and `procar_character.py` remain available for advanced controls.
 
 ## Optional extensions and supporting checks
 

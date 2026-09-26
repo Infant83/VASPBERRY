@@ -4,6 +4,29 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-26
+
+### Added
+
+- A short `vaspberry_post.py check/run/plot` interface using one commented
+  INI file for native execution, μ/T scans, optional PROCAR atom/orbital/spin
+  groups and reciprocal-space regions. No manually written JSON is needed.
+- Reuse of a completed run's validated pair cache for the same WAVECAR;
+  saved-table plotting without original VASP inputs or the native executable.
+- Source/mesh/spin checks, no-overwrite outputs, settings snapshots and
+  command/status records. Existing numerical engines and tables are reused.
+- A public full-mesh Bi example covering native pairs, insulating Hall,
+  cache rescans and figures, plus focused parser/workflow regression tests.
+
+### Documentation
+
+- Lead repeated postprocessing with short run/plot commands; explain the
+  editable settings, native raw data, numerical integration and drawing.
+- Clarify initial Kubo contributions by Sun-Woo Kim and ongoing subsequent
+  development by Hyun-Jung Kim in the README contributors section.
+- Retain existing commands, numerical schemas and the scientific report.
+  Fortran kernels and integration/projection formulas are unchanged.
+
 ## [1.4.2] - 2026-09-26
 
 ### Fixed

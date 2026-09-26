@@ -2,8 +2,7 @@
 
 VASPBERRY reads **VASP WAVECAR files directly**. Its native Fortran program
 calculates Fukui curvature and Chern numbers, Z₂, Kubo curvature, circular
-optical transitions and real-space wavefunctions. These workflows require
-**no Wannierization**. Use the resulting numerical files in your own analysis
+optical transitions and real-space wavefunctions. Use the resulting numerical files in your own analysis
 or the supplied Python plotting tools.
 
 Build with `make serial` and run `build/vaspberry --help` for the native CLI.
@@ -17,6 +16,8 @@ The [report reproduction table](REPORT_REPRODUCTION.md) maps every report
 figure to its calculation, numerical files and input-regeneration requirements.
 Start with the [hands-on commands](../docs/HANDS_ON.md); use the compact
 [native command reference](../docs/NATIVE_COMMANDS.md) when changing task options.
+For a short Hall workflow, the [single-settings-file Bi example](features/simple-postprocess/)
+uses one command to run Fortran plus integration, and one to draw the saved results.
 
 ## Choose a calculation
 

@@ -194,7 +194,7 @@ def _read_records(path: Path) -> tuple[dict[str, str], list[str], list[list[str]
 
 
 def load_z2_field(path: Path) -> Z2Field:
-    """Load a reportable 12 x 12 schema-2 field from reviewed v1.2.0, v1.3.0, v1.4.0, v1.4.1 or v1.4.2 producers."""
+    """Load a reportable 12 x 12 schema-2 field from reviewed v1.2.0, v1.3.0, v1.4.0, v1.4.1, v1.4.2 or v1.5.0 producers."""
     metadata, header, records = _read_records(path)
 
     if len(header) != len(set(header)):
@@ -214,7 +214,7 @@ def load_z2_field(path: Path) -> Z2Field:
             f"{path}: schema-v2 CSV columns are invalid ({'; '.join(details)})"
         )
 
-    if metadata.get("vaspberry_version") not in {"1.2.0", "1.3.0", "1.4.0", "1.4.1", "1.4.2"}:
+    if metadata.get("vaspberry_version") not in {"1.2.0", "1.3.0", "1.4.0", "1.4.1", "1.4.2", "1.5.0"}:
         raise Z2ComparisonError("unsupported schema-2 producer version")
     for key, expected in REQUIRED_EXACT_METADATA.items():
         if key not in metadata:

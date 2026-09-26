@@ -1,18 +1,18 @@
 cff-version: 1.2.0
 message: >-
-  If you use VASPBERRY 1.4.2, cite this versioned source release,
+  If you use VASPBERRY 1.5.0, cite this versioned source release,
   the exact commit, and the scientific method references appropriate to
   the calculation you performed.
 title: VASPBERRY
 type: software
-version: 1.4.2
+version: 1.5.0
 date-released: '2026-09-26'
 authors:
   - family-names: Kim
     given-names: Hyun-Jung
     orcid: "https://orcid.org/0000-0002-5602-1404"
 repository-code: "https://github.com/Infant83/VASPBERRY"
-url: "https://github.com/Infant83/VASPBERRY/releases/tag/v1.4.2"
+url: "https://github.com/Infant83/VASPBERRY/releases/tag/v1.5.0"
 abstract: >-
   VASPBERRY reads VASP WAVECAR wavefunctions to calculate Berry curvature,
   Chern numbers, a Fukui-Hatsugai n-field Z2 invariant, circular dichroism,

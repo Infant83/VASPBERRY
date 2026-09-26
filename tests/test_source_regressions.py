@@ -726,8 +726,8 @@ class FortranSourceRegressionTests(unittest.TestCase):
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
             source = source_path.read_text(encoding="utf-8", errors="strict")
             with self.subTest(source=source_path.name):
-                self.assertIn("PROGRAM VASPBERRY Version 1.4.2", source)
-                self.assertIn("# VASPBERRY (Ver 1.4.2)", source)
+                self.assertIn("PROGRAM VASPBERRY Version 1.5.0", source)
+                self.assertIn("# VASPBERRY (Ver 1.5.0)", source)
 
 
 if __name__ == "__main__":

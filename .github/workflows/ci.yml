@@ -67,6 +67,13 @@ jobs:
         run: >-
           python examples/features/procar-character/run_example.py
           --output-dir results/feature-examples/procar-character
+      - name: Run the public settings-file example, cached rescan and plots
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python tests/run_simple_postprocess_example.py
+          --wavecar results/inputs/bi/WAVECAR --binary build/vaspberry
+          --output-dir results/feature-examples/simple-postprocess
       - name: Retain example results and failure logs
         if: always()
         uses: actions/upload-artifact@v4
