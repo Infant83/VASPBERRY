@@ -1,9 +1,9 @@
-# One settings file: native Bi pairs, Hall table and figures
+# One settings file: VASPBERRY Bi pairs, Hall table and figures
 
 This example uses the public **Bi bilayer SOC WAVECAR on a complete 12×12
-mesh**. One INI file specifies the native executable, input, output and Hall
-scan. Fortran calculates interband pairs; numerical postprocessing integrates
-them; a separate command draws the saved table.
+mesh**. One INI file specifies the VASPBERRY executable, input, output and Hall
+scan. `run` launches VASPBERRY to calculate interband pairs, then performs
+numerical postprocessing to integrate them. `plot` draws the saved table.
 
 At T=0, the supplied μ range lies inside the sampled gap between occupied
 bands 1–10 and empty bands 11–18. The ideal time-reversal-symmetric total
@@ -20,7 +20,7 @@ one thing; no group, region or plot section is required for the first run.
 
 | Input file | What changes | Result directory |
 |---|---|---|
-| [`bi.ini`](bi.ini) | First run: native pairs and a total Hall scan | `results/simple-bi` |
+| [`bi.ini`](bi.ini) | First run: VASPBERRY pair export and a total Hall scan | `results/simple-bi` |
 | [`bi-rescan.ini`](bi-rescan.ini) | A different μ scan, reusing the first run | `results/simple-bi-rescan` |
 | [`bi-regions.ini`](bi-regions.ini) | A named subset of two k points, reusing the first run | `results/simple-bi-regions` |
 
@@ -58,23 +58,44 @@ settings are:
 | μ scan | −1.3 to −0.9 eV, 9 points |
 | Reference μ | −1.1 eV |
 | Temperature | 0 K |
-| Native execution | Intel MPI, 4 ranks |
+| VASPBERRY execution | Intel MPI, 4 ranks |
 
 ```bash
 python3 tools/vaspberry_post.py check examples/features/simple-postprocess/bi.ini
 python3 tools/vaspberry_post.py run examples/features/simple-postprocess/bi.ini
 ```
 
-The front end launches only the Fortran stage with MPI. Do not prepend
+`run` executes the compiled VASPBERRY program through MPI, then runs the
+Python Hall integration. Only VASPBERRY runs under MPI. Do not prepend
 `mpiexec` to the Python command. Choose a rank count allowed by your machine
 or scheduler allocation. For GNU MPI, build with `make mpi`, then change
 `binary` to `../../../build/vaspberry-mpi` and `mpi_launcher` to your matching
 GNU MPI launcher in the same INI. For GNU serial, use `make serial`,
 `binary = ../../../build/vaspberry`, and `mpi_procs = 1`.
 
-The native stage is equivalent to running `--task kubo-pairs` on the named
-WAVECAR. You do not need to assemble separate import and integration
-commands or write a JSON input file.
+<details>
+<summary>Optional: run VASPBERRY directly for the raw pair data</summary>
+
+For the full Hall table and figures, continue with the INI commands above and
+below. You can also run VASPBERRY directly to obtain the raw pair data,
+without the Python front end. After step 1, the equivalent pair export is:
+
+```bash
+mkdir results/direct-bi
+mpiexec.hydra -n 4 build/vaspberry-ifx-mpi \
+  --task kubo-pairs --wavecar results/simple-bi-input/WAVECAR \
+  --spinor 2 --pairs-csv results/direct-bi/PAIRS.csv
+```
+
+`results/direct-bi` must be new. VASPBERRY reads `WAVECAR` and writes energies,
+k coordinates and interband matrix-element numerators to `PAIRS.csv`. That
+file is the input for numerical Hall integration, not a conductivity table.
+This direct command does not create an INI-run result directory, so do not
+pass `results/direct-bi` to the front end's `plot` or `--reuse` options. The
+[manual Hall workflow](../kubo-hall/README.md) shows the individual import and
+integration commands when you need them.
+
+</details>
 
 ## 3. Draw the saved data
 
@@ -86,7 +107,7 @@ Outputs under `results/simple-bi/` are:
 
 | File | Meaning |
 |---|---|
-| `native/PAIRS.csv` | 22,032 unordered band-pair rows: 144 k points × 18×17/2 pairs. Each stores energies, k coordinates and three interband numerators in eV² Å². |
+| `native/PAIRS.csv` | Written by VASPBERRY: 22,032 unordered band-pair rows (144 k points × 18×17/2 pairs). Each stores energies, k coordinates and three interband numerators in eV² Å². |
 | `pairs/pairs.npz`, `pairs/pairs.json` | Checked reusable pair arrays and their units, lattice and source identity. |
 | `hall/conductivity.csv`, `.dat`, `.npz` | Completed charge-Hall scan, with absolute σ, Δσ relative to −1.1 eV and represented carrier counts. There are 18 rows: 9 μ values for each of `total` and `rest`. With no explicit regions, both cover the full mesh. |
 | `figures/charge-hall/hall.png`, `.pdf`, `.svg` | Total sheet σ in e²/h versus μ−reference, at T=0. |
@@ -107,9 +128,10 @@ python3 tools/vaspberry_post.py run examples/features/simple-postprocess/bi-resc
 python3 tools/vaspberry_post.py plot results/simple-bi-rescan
 ```
 
-This skips native Fortran export, copies the validated pair cache, and
+This skips VASPBERRY execution, copies the validated pair cache, and
 calculates the new occupation-weighted table. Keep the same WAVECAR available
-for the source-identity check. The native executable and MPI launcher are not used with `--reuse`.
+for the source-identity check. The VASPBERRY executable and MPI launcher are
+not used with `--reuse`.
 For a later fresh calculation, set them to match the compiler/MPI environment.
 
 ## 5. Name a k-space subset
@@ -126,7 +148,7 @@ hall_regions = total sampled_k rest
 ```
 
 `sampled_k` is an arbitrary label. `k_ids` selects the **1-based k-point
-indices** in the WAVECAR/native output. Here it selects the first two of the
+indices** in the WAVECAR/VASPBERRY output. Here it selects the first two of the
 144 saved points to demonstrate the interface. It is not a definition of a
 physical valley or M point. A symmetry-point label such as `M` also needs
 actual coordinates and a radius, as explained in the
@@ -138,7 +160,7 @@ python3 tools/vaspberry_post.py run examples/features/simple-postprocess/bi-regi
 python3 tools/vaspberry_post.py plot results/simple-bi-regions
 ```
 
-This does not rerun Fortran. `results/simple-bi-regions/hall/conductivity.csv`
+This does not rerun VASPBERRY. `results/simple-bi-regions/hall/conductivity.csv`
 has 27 rows: 9 μ values for each of `total`, `sampled_k` and `rest`. Each subset
 keeps its original full-BZ integration weights; `rest` is the complement of
 the selected points, so `sampled_k + rest = total` at each μ and temperature.
@@ -171,7 +193,8 @@ represented electrons per cell. The rescan reproduces the same values at its
 operator and stored-band sum; its cause and convergence are not established
 by this example. It should not be interpreted as an anomalous Hall signal.
 
-The native operator is canonical momentum of the stored pseudo-wavefunctions.
+The VASPBERRY pair export uses canonical momentum of the stored
+pseudo-wavefunctions.
 The input includes near-degenerate Kramers partners, so this example uses the
 total occupied response and does not request individual-band PROCAR attribution.
 The near-degenerate occupied pairs have equal T=0 occupations and cancel

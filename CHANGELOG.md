@@ -4,6 +4,10 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+- Usage guides and CLI help explicitly name VASPBERRY execution, distinguish
+  it from Python integration/plotting, and show direct Intel MPI commands for
+  curvature CSVs and reusable pair data. Numerical behavior is unchanged.
+
 - The hands-on guide now explicitly separates strict INI workflows from
   advanced coalesced calculations and distinguishes their saved-result formats.
 

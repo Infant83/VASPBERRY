@@ -6,7 +6,7 @@ Actual VASP-based tutorials and reference results are provided for
 [Bi occupied-subspace Fukui Hall](../examples/features/hall-valley/). Their
 methods and required sampling are explicitly different.
 
-The native Fortran program reads WAVECAR and exports point curvature or
+The VASPBERRY executable reads WAVECAR and exports point curvature or
 interband pair numerators. The supplied `tools/vaspberry_kubo.py` tool
 postprocesses those results: it validates a reusable cache, applies occupations
 and integrates the two-dimensional intrinsic charge Hall response. Its
@@ -22,8 +22,8 @@ which routes require VASP source instrumentation.
 
 ## Start from actual VASP output
 
-Use the [MoS₂ tutorial](../examples/features/kubo-curvature/) to run the native
-Fortran Kubo calculation on real VASP WAVECARs generated with the linked
+Use the [MoS₂ tutorial](../examples/features/kubo-curvature/) to execute
+VASPBERRY for a Kubo calculation on real VASP WAVECARs generated with the linked
 preparation recipes. It includes the actual
 commands, high-precision CSV files, occupied-bundle maps and a single-band
 valley example. The full mesh and band path are calculated separately; a path
@@ -40,8 +40,8 @@ material sanity check, not a nonzero valley-Hall demonstration.
 ## WAVECAR to charge Hall in one command
 
 For a first calculation, `wavecar-hall` combines the native export, cache
-validation and numerical Hall integration. **Python launches the existing
-Fortran executable**, then reads its saved interband pairs. It performs no
+validation and numerical Hall integration. **Python launches the
+VASPBERRY executable**, then reads its saved interband pairs. It performs no
 VASP calculation. Plotting remains a separate command so the same numerical
 results can be displayed in several ways.
 
@@ -95,7 +95,7 @@ MoS₂ example; replace them for another material.
 
 | File under `results/mos2-hall-wrapped/` | What it contains | Next use |
 |---|---|---|
-| `native/PAIRS.csv` | Fortran k/band-pair energies, coordinates and undivided Cartesian matrix-product numerators | Import or inspect the raw electronic response data |
+| `native/PAIRS.csv` | VASPBERRY k/band-pair energies, coordinates and undivided Cartesian matrix-product numerators | Import or inspect the raw electronic response data |
 | `native/stdout.log`, `native/stderr.log` | Native calculation diagnostics | Check that the export completed |
 | `pairs/pairs.npz`, `pairs/pairs.json` | Validated full source pair cache, energies, mesh, lattice and provenance | Reuse for a different μ/T/region/window scan or PROCAR attribution |
 | `hall/conductivity.csv`, `.dat`, `.npz` | Equivalent tables of absolute σ, reference-subtracted Δσ, carrier counts, μ, T and region | Plot in VASPBERRY, NumPy or another analysis tool |
@@ -120,16 +120,15 @@ python3 tools/vaspberry_kubo.py pair-hall \
   --output-dir results/mos2-hall-100K
 ```
 
-This command reads `pairs/`, so neither Fortran nor WAVECAR is rerun. Its
+This command reads `pairs/`; it does not execute VASPBERRY or reread WAVECAR. Its
 `conductivity.*` files are directly under `results/mos2-hall-100K/`; pass that
 CSV, DAT or NPZ to the same plotter. For the explicit native-first procedure,
 see [Native pairs to charge Hall](#native-pairs-to-charge-hall) below.
 
 ## Native pairs to charge Hall
 
-The main workflow has three explicit stages: native Fortran export, numerical
-postprocessing, and plotting. No Wannier model or custom VASP producer is
-needed. First generate the 24×24, 60-band MoS₂ WAVECAR with the
+The main workflow has three explicit stages: execute VASPBERRY to export pair
+data, perform numerical postprocessing, and plot the results. First generate the 24×24, 60-band MoS₂ WAVECAR with the
 [material tutorial](../examples/features/kubo-hall/#1-prepare-and-run-vasp).
 Run from the repository root with a fresh result directory:
 
@@ -582,7 +581,7 @@ successful file/producer check does not establish integration convergence.
 ## Full-connection Wannier bands and Hall response
 
 This is an optional supporting calculation on externally prepared operators,
-separate from the main WAVECAR/Fortran workflow. It is retained to reproduce
+separate from the main WAVECAR/VASPBERRY workflow. It is retained to reproduce
 the technical report’s model checks; the native tutorials require none of it.
 
 For dense integration of a VASP-derived Wannier model, use `wannier-import`,

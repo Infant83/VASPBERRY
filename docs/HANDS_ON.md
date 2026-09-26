@@ -1,8 +1,8 @@
-# Hands-on: native calculation, saved data, and reusable plots
+# Hands-on: execute VASPBERRY, inspect its data, and plot results
 
-The main workflow is **VASP → WAVECAR → VASPBERRY Fortran with Intel MPI → numerical files → analysis and plots**. Native curvature is already a numerical result that you can plot in your preferred program. A charge-Hall scan additionally integrates Kubo pairs with occupations.
+The main workflow is **VASP → WAVECAR → VASPBERRY execution with Intel MPI → numerical files → analysis and plots**. Native curvature is already a numerical result that you can plot in your preferred program. A charge-Hall scan additionally integrates Kubo pairs with occupations.
 
-For routine Hall and PROCAR analysis, start with the [single-file postprocessing guide](POSTPROCESSING.md) and [public Bi example](../examples/features/simple-postprocess/README.md): `python3 tools/vaspberry_post.py run analysis.ini` calculates the requested tables and `python3 tools/vaspberry_post.py plot results/run01` draws them. An optional `python3 tools/vaspberry_post.py check analysis.ini` checks the inputs before running. The [settings reference](POSTPROCESSING_REFERENCE.md) lists the same input, output and naming conventions. The explicit stages below explain the native outputs and provide advanced controls.
+For routine Hall and PROCAR analysis, start with the [single-file postprocessing guide](POSTPROCESSING.md) and [public Bi example](../examples/features/simple-postprocess/README.md): `python3 tools/vaspberry_post.py run analysis.ini` executes VASPBERRY and performs the requested numerical postprocessing and `python3 tools/vaspberry_post.py plot results/run01` draws them. An optional `python3 tools/vaspberry_post.py check analysis.ini` checks the inputs before running. The [settings reference](POSTPROCESSING_REFERENCE.md) lists the same input, output and naming conventions. The explicit stages below explain the native outputs and provide advanced controls.
 
 Use VASPBERRY 1.5.0 for this walkthrough. Start in the repository root in Bash on a Linux host with Intel oneAPI Fortran, oneMKL and Intel MPI available. The following uses four MPI ranks; select the rank count allowed by your cluster allocation. Choose a fresh output directory when repeating a calculation.
 
@@ -19,15 +19,15 @@ Use your site's oneAPI setup path or modules when they differ. A retained Intel 
 
 | Stage | Reads → writes | Purpose |
 |---|---|---|
-| Native `--task kubo` | WAVECAR → `KUBO.csv` | Calculate point curvature Ωxy in Å²; ready for a curvature plot |
-| Native `--task kubo-pairs` | WAVECAR → `PAIRS.csv` | Calculate raw interband numerators N in eV² Å²; reusable transport input |
+| VASPBERRY `--task kubo` | WAVECAR → `KUBO.csv` | Calculate point curvature Ωxy in Å²; ready for a curvature plot |
+| VASPBERRY `--task kubo-pairs` | WAVECAR → `PAIRS.csv` | Calculate raw interband numerators N in eV² Å²; reusable transport input |
 | Python `import-pairs` | `PAIRS.csv` + same WAVECAR → `pairs.npz/json` | Validate, organize and cache those numbers; no Hall integration |
 | Python `pair-hall` | pair cache + μ/T/regions → `conductivity.csv/dat/npz/json` | Calculate the occupation-weighted Kubo transport integral |
 | `plot_hall.py` or another plotter | completed conductivity table → figures | Plot existing results; no new curvature or transport calculation |
 
-## 1. Calculate a real supplied WAVECAR with Fortran
+## 1. Execute VASPBERRY directly on the supplied WAVECAR
 
-This first calculation uses the ordinary SOC MoS₂ band-path WAVECAR already in the repository. It evaluates occupied-bundle point curvature, with bands 1–18 and the stored empty bands as intermediate states.
+No Python script is needed for this VASPBERRY execution. This first calculation uses the ordinary SOC MoS₂ band-path WAVECAR already in the repository. It evaluates occupied-bundle point curvature, with bands 1–18 and the stored empty bands as intermediate states.
 
 ```bash
 mkdir -p results/first-kubo
@@ -56,7 +56,7 @@ This input is a line path: it supports a curvature-versus-path-sample plot. A fu
 
 **Python is optional for plotting this native result.** In Origin, a spreadsheet or another CSV plotter: import comma-separated values, skip `#` metadata lines, use the next line as column names, select `spin=1`, then plot `k_index` on x and `omega_z_A2` on y. That gives the curvature along the ordered input samples. Keep the metadata beside any exported table.
 
-The equivalent Python/Matplotlib example follows. It only reads the finished CSV and saves `curvature.png`, `.pdf` and `.svg`; no VASPBERRY module or Fortran execution is involved. Use your usual Python 3.10+ environment with Matplotlib. The [dependency file](../requirements-transport.txt) lists supported versions.
+The equivalent Python/Matplotlib example follows. It only reads the finished CSV and saves `curvature.png`, `.pdf` and `.svg`; VASPBERRY is not executed again. Use your usual Python 3.10+ environment with Matplotlib. The [dependency file](../requirements-transport.txt) lists supported versions.
 
 ```bash
 python3 - <<'PY'
@@ -82,7 +82,7 @@ PY
 
 Other tools can read the same CSV after skipping `#` metadata lines. Preserve those lines alongside exported data. The [output specification](OUTPUT_FORMAT.md) describes the columns, axes and units. For a physical Cartesian BZ map, matching band path and symmetry labels, use the [full-mesh/path MoS₂ tutorial](../examples/features/kubo-curvature/); its inputs and plot command reproduce report Figure 2. Display interpolation changes the drawing only.
 
-## 3. Reintegrate saved Kubo data without repeating Fortran
+## 3. Reintegrate saved Kubo data without rerunning VASPBERRY
 
 The public MoS₂ cache below contains native **canonical-momentum** pair numerators on a 12×12 mesh, with 60 stored bands. It was saved during the optional matched-operator study; reusing this canonical cache requires neither that study's PAW producer nor VASP. The small scan demonstrates the general integration interface; it is not the full mesh-convergence study.
 
@@ -155,9 +155,10 @@ python3 tools/vaspberry_kubo.py wavecar-hall \
 
 The new directory contains `native/PAIRS.csv` and native logs, `pairs/` caches,
 `hall/conductivity.*` and `workflow.json`. This is an execution shortcut;
-the Fortran calculation and Python integration retain their distinct roles.
+VASPBERRY calculates the pair numerators, and Python performs the numerical
+Hall integration.
 Plot `results/mos2-hall-workflow/hall/conductivity.csv` with the command in
-step 3. Only the native stage uses MPI; the Python integration is a separate
+step 3. Only VASPBERRY execution uses MPI; the Python integration is a separate
 NumPy calculation. Reuse `pairs/` for subsequent μ/T scans.
 
 The single-file front end accepts `--reuse` and `plot` only for a completed result created by `vaspberry_post.py`, identified by its `run.json`. The standalone cache in step 3 and the `wavecar-hall` result with `workflow.json` are not interchangeable with that input. Use `pair-hall` and `plot_hall.py` for these explicit-stage results. Both routes retain numerical tables that other plotting tools can read.

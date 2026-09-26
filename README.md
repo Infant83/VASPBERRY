@@ -7,7 +7,7 @@ invariant, and Kubo calculations for Berry-curvature maps, symmetry paths and
 intrinsic charge Hall response.
 
 ```text
-VASP calculation → WAVECAR → VASPBERRY Fortran → numerical output → analysis / plots
+VASP calculation → WAVECAR → VASPBERRY → numerical output → analysis / plots
 ```
 
 VASP supplies the material's electronic structure. VASPBERRY postprocesses it;
@@ -23,9 +23,9 @@ short options remain supported. See the [release notes](docs/releases/v1.5.0.md)
 [changelog](CHANGELOG.md), [version policy](docs/RELEASING.md)
 and [migration notes](docs/MIGRATION.md).
 
-## Install and run the Fortran program
+## Install and run VASPBERRY
 
-The native program requires a **Fortran compiler, GNU Make, POSIX shell/tools
+The VASPBERRY executable requires a **Fortran compiler, GNU Make, POSIX shell/tools
 and LP64 BLAS/LAPACK libraries**. An MPI build additionally needs the matching
 MPI **development package/compiler wrapper and runtime launcher**. These
 native dependencies are sufficient to compile and run VASPBERRY on an existing
@@ -164,7 +164,7 @@ mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo \
 
 `KUBO.csv` contains one row per k point/spin channel, with fractional
 k coordinates, `omega_z_A2` (Ωxy in Å²) and `min_external_gap_eV`.
-The occupied-bundle sum is already evaluated by Fortran: plot `omega_z_A2`
+VASPBERRY has already evaluated the occupied-bundle sum: plot `omega_z_A2`
 against the ordered `k_index` for this path. For a mesh map, convert the
 fractional coordinates with the reciprocal lattice. The
 [MoS₂ tutorial](examples/features/kubo-curvature/) separately provides a
@@ -225,13 +225,14 @@ python3 tools/vaspberry_post.py run examples/features/simple-postprocess/bi.ini
 python3 tools/vaspberry_post.py plot results/simple-bi
 ```
 
-The first command runs Fortran and numerical integration; the second draws
-the completed table. You edit one INI file, and the tool records the underlying
+The first command executes **VASPBERRY** with the configured MPI launcher
+and rank count, then uses Python for numerical Hall integration. The second
+command draws the completed table. You edit one INI file, and the tool records the underlying
 commands. The files remain usable in Python, Origin, gnuplot or other software:
 
 | Stage | File under `results/simple-bi/` | Contents and use |
 |---|---|---|
-| Fortran calculation from `WAVECAR` | `native/PAIRS.csv` | Energies, k coordinates and three interband pair numerators in eV² Å²; reusable matrix data before occupations and Hall integration. |
+| VASPBERRY execution: `WAVECAR` → pair data | `native/PAIRS.csv` | Energies, k coordinates and three interband pair numerators in eV² Å²; reusable matrix data before occupations and Hall integration. |
 | Numerical postprocessing | `hall/conductivity.csv` and `.dat` | Sheet σ and reference-subtracted Δσ in e²/h, as functions of μ, temperature and region, plus represented carrier counts. |
 | Plotting | `figures/charge-hall/hall.png`, `.pdf`, `.svg` | Total charge-Hall conductivity versus μ−reference. |
 
@@ -247,7 +248,9 @@ and units.
 
 For a curvature map or symmetry-path curve, native `--task kubo` already
 writes gap-divided `omega_z_A2` in `KUBO.csv`; that result can be plotted
-directly without a Hall scan. See the [MoS₂ curvature example](examples/features/kubo-curvature/).
+directly in your preferred plotting tool. The direct VASPBERRY commands above
+require no Python script; the INI `run` command additionally automates cache
+validation and numerical Hall integration. See the [MoS₂ curvature example](examples/features/kubo-curvature/).
 The [hands-on commands](docs/HANDS_ON.md) and
 [individual Kubo stages](docs/KUBO_TRANSPORT.md#native-pairs-to-charge-hall)
 remain available for users who need direct control of each stage.

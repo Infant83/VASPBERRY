@@ -94,7 +94,7 @@ inferred from charge residuals.
 
 The `plot` command reads these saved products and writes `character.*` and
 `character_hall.*` in PNG, PDF and SVG, plus `plots.json`. It does not run
-VASP or native Fortran. The CSVs and NPZs are also ordinary numerical inputs
+VASP or the VASPBERRY executable. The CSVs and NPZs are also ordinary numerical inputs
 for an independent plotting program; keep their JSON metadata beside them.
 
 ## Spin operators and insulating spin Hall tensors

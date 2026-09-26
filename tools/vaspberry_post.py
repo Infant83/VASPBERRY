@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Run native Kubo postprocessing from one commented settings file.
+"""Execute VASPBERRY and postprocess its results from one settings file.
 
   python3 tools/vaspberry_post.py check analysis.ini
   python3 tools/vaspberry_post.py run analysis.ini
   python3 tools/vaspberry_post.py plot results/run01
 
-The existing Fortran program and numerical tools perform all calculations.
-This front end prepares their inputs, records their commands and keeps their
-numerical tables available for independent analysis.
+The run command executes VASPBERRY (with MPI when configured), then uses
+Python for numerical Hall integration and optional PROCAR analysis. The plot
+command reads saved tables. This front end records the underlying commands
+and keeps the numerical data available for independent analysis.
 """
 from __future__ import annotations
 
@@ -215,7 +216,7 @@ def run_calculation(settings, reuse=None):
         else:
             shutil.copytree(cache, root / 'pairs')
             record['reused_pair_cache'] = str(cache)
-            print('Reusing saved pairs; native Fortran export is skipped.', flush=True)
+            print('Reusing saved pairs; VASPBERRY execution is skipped.', flush=True)
         region_args = ['--regions', str(root / 'regions.json')] if settings['regions']['regions'] else []
         difference_args = [item for row in settings['differences'] for item in ('--difference', ':'.join(row))]
         cap = settings['hall']['pair_band_max']
@@ -323,12 +324,12 @@ def parser():
     result.add_argument('--version', action='version', version='VASPBERRY ' + (ROOT / 'VERSION').read_text().strip())
     sub = result.add_subparsers(dest='command', required=True)
     for name, help_text in [('check', 'check settings and source paths without running calculations'),
-                            ('run', 'run Fortran pair export and requested numerical postprocessing')]:
+                            ('run', 'execute VASPBERRY, then perform the requested numerical postprocessing')]:
         command = sub.add_parser(name, help=help_text)
         command.add_argument('settings', type=Path, help='commented INI settings file')
         command.add_argument('--reuse', type=Path, metavar='PREVIOUS_RUN',
-                             help='reuse its validated pair cache for the same WAVECAR; no native export')
-    plots = sub.add_parser('plot', help='draw saved numerical tables; no VASP or native calculation')
+                             help='reuse its validated pair cache for the same WAVECAR; skip VASPBERRY execution')
+    plots = sub.add_parser('plot', help='draw saved numerical tables; do not execute VASP or VASPBERRY')
     plots.add_argument('result', type=Path, help='completed run directory')
     plots.add_argument('--output-dir', type=Path, help='new figure directory (default: RESULT/figures)')
     plots.add_argument('--temperature', type=float, help='draw one already calculated temperature (K)')

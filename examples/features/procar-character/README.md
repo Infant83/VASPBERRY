@@ -1,7 +1,7 @@
 # Atom, orbital and spin character of charge-Hall contributions
 
 This workflow combines noncollinear `LORBIT=11` PROCAR projections with the
-**same final WAVECAR** used for native Kubo pair export. Use the single-file
+**same final WAVECAR** used for VASPBERRY Kubo pair export. Use the single-file
 front end described in the [beginner guide](../../../docs/POSTPROCESSING.md#add-layer-and-spin-character)
 for routine work; the individual-stage commands below are an advanced reference.
 
@@ -13,8 +13,8 @@ orbital-current or spin-current operator.
 ## Start with one INI file
 
 First complete the [real Bi Hall walkthrough](../simple-postprocess/) to learn
-`run`, `plot` and `--reuse`. That input demonstrates the native calculation but
-does not include a matched PROCAR projection dataset. For your own SOC material,
+`run`, `plot` and `--reuse`. That input demonstrates VASPBERRY execution and
+Hall integration but does not include a matched PROCAR projection dataset. For your own SOC material,
 prepare the matching files described [below](#use-your-own-vasp-calculation),
 then add projection sections to your working Hall INI:
 
@@ -53,6 +53,8 @@ python3 tools/vaspberry_post.py run analysis.ini
 python3 tools/vaspberry_post.py plot results/my-sample
 ```
 
+`run` executes VASPBERRY to export `native/PAIRS.csv`, then performs the Hall
+integration and PROCAR analysis. `plot` reads those completed numerical tables.
 In addition to ordinary `hall/conductivity.csv`, this writes
 `character/character.csv` (charge and spin weights by state/group),
 `character-hall/character_hall.csv` (selected-band, group-weighted Hall response)
@@ -171,8 +173,9 @@ actual structure; a pair of magnetic atomic planes inside one monolayer is
 not automatically a bilayer. Orbital names must match the PROCAR header exactly.
 Groups may overlap; do not sum overlapping groups as a partition.
 
-First build the native executable with `make serial`. For your **full uniform
-2D mesh**, export and import the occupation-independent pair cache:
+First build VASPBERRY with `make serial`. For your **full uniform
+2D mesh**, run VASPBERRY to export `PAIRS.csv`, then import it into a reusable
+occupation-independent pair cache:
 
 ```sh
 mkdir -p results/my-sample-native
@@ -202,7 +205,7 @@ Replace the illustrative 24×24 mesh, bands, energy range and reference with
 your system's values. Add `--regions regions.json` for periodic valley circles
 or selected k IDs, using the same schema as
 [`kubo-hall`](../kubo-hall/README.md). `--plane-axes` on pair import selects a
-different reciprocal plane when needed. The native GNU build needs a compatible
+different reciprocal plane when needed. The GNU VASPBERRY build needs a compatible
 byte-RECL WAVECAR; see [native commands](../../../docs/NATIVE_COMMANDS.md).
 
 Within `procar_character.py`, only `project` reads the VASP files.
@@ -233,7 +236,7 @@ Change plots independently using the saved CSV/NPZ tables.
 - `character.*` and `character_hall.*` in the plot directory: PNG/PDF/SVG.
 
 The integration uses `−A_BZ/(2π) Σ_kn w_k f_n Omega_n·normal c_ng` in e²/h.
-The current native pair normalization already contains `−2 Im`; no legacy
+The VASPBERRY pair normalization already contains `−2 Im`; no legacy
 factor of one-half is applied. All stored source bands enter the virtual-state
 sum. `--bands` specifies the states whose character-weighted contributions are
 reported, not a declaration that omitted occupied bands have zero response.

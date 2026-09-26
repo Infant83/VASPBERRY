@@ -7,15 +7,18 @@ write JSON files or assemble the individual Python stages.
 | Command | What it does | What you get |
 |---|---|---|
 | `check analysis.ini` | Check settings, input files and mesh before running. | A summary or an actionable error; no calculation directory. |
-| `run analysis.ini` | Run Fortran, then calculate the requested Hall tables. | Numerical data in the INI's `output` directory. |
+| `run analysis.ini` | Execute VASPBERRY, with MPI when configured, then calculate the requested Hall tables. | Numerical data in the INI's `output` directory. |
 | `plot results/run01` | Read a completed result and draw it. | PNG, PDF and SVG figures; no new wavefunction calculation. |
 
-Prefix each command with `python3 tools/vaspberry_post.py`. `run` also
-performs the checks, so the separate `check` is useful when preparing an
-input. Numerical validity checks continue during `run`; this preliminary
+Prefix each command with `python3 tools/vaspberry_post.py`. `run` launches
+the compiled **VASPBERRY executable** named by `[run] binary`,
+then applies the requested numerical postprocessing to its output. `run`
+also performs the checks, so the separate `check` is useful when preparing
+an input. Numerical validity checks continue during `run`; this preliminary
 check does not establish convergence.
 
 **Choose a starting point:** [try the public example](#start-with-the-public-bi-example),
+[execute VASPBERRY directly](#execute-vaspberry-directly-for-a-curvature-table),
 [use your own data](#use-your-own-vasp-calculation),
 [add layer/spin analysis](#add-layer-and-spin-character), or
 [add a region](#add-a-k-space-region). Look up individual options in the
@@ -42,7 +45,8 @@ Replace the setup path with your installed oneAPI path or site modules.
 The supplied [`bi.ini`](../examples/features/simple-postprocess/bi.ini) already
 specifies this public input, the full 12×12 mesh, the energy scan and four
 Intel MPI ranks. Use an allocation permitting those ranks. **Run Python
-once**: `mpi_procs` launches the Fortran executable through MPI for you.
+once**: the helper launches VASPBERRY through MPI with the configured
+`mpi_procs` and `mpi_launcher`.
 GNU/serial substitutions are in the [example's build instructions](../examples/features/simple-postprocess/README.md#2-check-and-calculate)
 and the [build guide](BUILD.md). Use new result directories when repeating a run.
 
@@ -57,18 +61,19 @@ its reference values, inputs, outputs and limitations.
 ### What was calculated, and which file should I use?
 
 ```text
-WAVECAR → Fortran matrix calculation → native/PAIRS.csv
+WAVECAR → VASPBERRY execution (MPI when configured) → native/PAIRS.csv
         → Python occupation/energy-denominator/BZ integration → hall/conductivity.csv
         → plotting → figures/charge-hall/hall.png (also PDF and SVG)
 ```
 
-Python performs the numerical Hall integral after Fortran exports reusable
-matrix data. Plotting is a separate operation on the completed table.
+VASPBERRY calculates and exports the reusable interband matrix data.
+Python then performs the numerical Hall integral. Plotting is a separate
+operation on the completed table.
 Neither step reruns VASP.
 
 | Your purpose | File inside the result directory | Contents |
 |---|---|---|
-| Inspect the original Fortran output | `native/PAIRS.csv` | k points, paired bands and energies, and interband numerators in eV² Å²; occupations and energy denominators have not yet been applied. |
+| Inspect the original VASPBERRY output | `native/PAIRS.csv` | k points, paired bands and energies, and interband numerators in eV² Å²; occupations and energy denominators have not yet been applied. |
 | Plot or analyze Hall response in any program | `hall/conductivity.csv` or `.dat` | μ, temperature, region, sheet σ and reference-subtracted Δσ in e²/h, conductivity in siemens, and carrier counts. |
 | Reuse the expensive matrix calculation | `pairs/pairs.npz` **and** `pairs/pairs.json` | Validated pair arrays and their source, units and geometry. Keep both. |
 | Understand a failed stage or recover its command | `run.json`, `logs/`, `native/*.log` | Settings, source identity, stage commands, status and messages. |
@@ -76,8 +81,49 @@ Neither step reruns VASP.
 Use Origin, gnuplot or your own plotting program with the tables if preferred.
 The [output specification](OUTPUT_FORMAT.md) defines the columns. JSON files
 in a result are generated records; your editable input is the INI.
-A fresh native run writes `native/PAIRS.csv`; a reused run copies the pair
-cache and does not create another native output.
+A fresh `run` executes VASPBERRY and writes `native/PAIRS.csv`. A reused
+run copies the pair cache and does not execute VASPBERRY again.
+
+## Execute VASPBERRY directly for a curvature table
+
+For a Berry-curvature curve, a direct VASPBERRY command is enough. Load
+the Intel environment and compile with `make ifx-mpi` as described in the
+[build guide](BUILD.md). Then run this from the repository root in an
+allocation allowing four ranks:
+
+```bash
+repo_dir="$PWD"
+mkdir -p results
+mkdir results/mos2-direct-kubo && (
+  cd results/mos2-direct-kubo
+  mpiexec.hydra -n 4 "$repo_dir/build/vaspberry-ifx-mpi" \
+    --task kubo \
+    --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
+    --spinor 2 --bands 1:18 --bundle 1 \
+    --curvature-csv KUBO.csv > vaspberry.log
+)
+```
+
+This executes **VASPBERRY through MPI** without a Python helper. It reads
+the supplied SOC MoS₂ WAVECAR and creates
+`results/mos2-direct-kubo/KUBO.csv`, plus the execution log. The CSV has one
+occupied-bundle curvature row for bands 1–18 at each of the 48 stored path
+points: k-point index, fractional k coordinates, `omega_z_A2` in Å² and
+the minimum energy gap to excluded bands in eV.
+
+Import the CSV into Origin, gnuplot or another plotting program, skipping
+lines beginning with `#`. Use `k_index` as x and `omega_z_A2` as y to inspect the
+path curve. Python is not required for this calculation or for using its
+CSV. The [supplied-path example](../examples/features/kubo-curvature/README.md#supplied-32-band-path-example)
+explains this input and connects it to the full-mesh/map examples; the
+[output specification](OUTPUT_FORMAT.md#native-kubo-bundle-csv) defines all columns.
+
+A chemical-potential/temperature Hall scan requires additional occupation
+weighting and integration over a complete 2D mesh; this path CSV does not
+provide that integral. The INI `run` command above executes VASPBERRY's
+`--task kubo-pairs` calculation and then performs those numerical steps.
+If you prefer to execute each stage yourself, use the explicit VASPBERRY
+and postprocessing commands in the [hands-on guide](HANDS_ON.md).
 
 ## Use your own VASP calculation
 
@@ -129,8 +175,8 @@ The commands above assume it stays in the repository root.
 For ordinary total Hall curves, **this is the complete input**. No group,
 region, projection or plot section is required. All stored bands enter the
 pair sum by default; mesh and band convergence remain part of the material
-study. For point-curvature maps or symmetry-path curves directly from
-Fortran, follow the [native Kubo example](../examples/features/kubo-curvature/README.md).
+study. For point-curvature maps or symmetry-path curves calculated directly
+by VASPBERRY, follow the [Kubo example](../examples/features/kubo-curvature/README.md).
 
 ## Add layer and spin character
 
@@ -218,7 +264,7 @@ shows a physically specified K/K′ partition and its regional contrast.
 |---|---|
 | Only the figure: saved temperature, σ versus Δσ, or saved group/band to display | Use `plot` with an override and a new figure directory. |
 | μ range, temperature grid, region, or group definition/name | Edit the INI, choose a new `output`, then `run ... --reuse PREVIOUS_RESULT`; plot that new result. |
-| VASP electronic structure, geometry or WAVECAR | Use a new native `run` and new output directory. |
+| VASP electronic structure, geometry or WAVECAR | Execute VASPBERRY again with a fresh `run` and new output directory. |
 
 For a new numerical scan, copy `analysis.ini` to `analysis-next.ini` in the
 same directory, change the desired settings and set `output = results/run02`:
@@ -229,9 +275,9 @@ python3 tools/vaspberry_post.py run analysis-next.ini --reuse results/run01
 python3 tools/vaspberry_post.py plot results/run02
 ```
 
-`--reuse` skips Fortran, verifies the same WAVECAR/source conventions and
-recalculates the postprocessing. Keep WAVECAR available; projection also
-needs matching PROCAR/OUTCAR. Follow the
+`--reuse` skips VASPBERRY execution, verifies the same WAVECAR/source
+conventions and recalculates the postprocessing. Keep WAVECAR available;
+projection also needs matching PROCAR/OUTCAR. Follow the
 [ready-to-run Bi rescan](../examples/features/simple-postprocess/README.md#4-reuse-the-pairs-for-a-second-scan)
 for a complete example.
 
@@ -244,8 +290,9 @@ python3 tools/vaspberry_post.py plot results/run01 --temperature 300 --quantity 
 For an already calculated projection group, add `--group layer2` to a plot
 command. **Plotting uses the saved result's settings**, so editing your
 original INI does not change an existing result. `plot` needs only the
-completed result files, not VASP inputs, Fortran or MPI. Preserve the saved
-result and choose a new figure directory for another redraw.
+completed result files; it requires no VASP inputs, VASPBERRY executable
+or MPI launcher. Preserve the saved result and choose a new figure
+directory for another redraw.
 
 ## Find a setting or solve a problem
 

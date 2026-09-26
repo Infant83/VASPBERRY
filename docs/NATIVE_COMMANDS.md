@@ -1,8 +1,8 @@
-# Native Fortran command reference
+# VASPBERRY command reference
 
-The Fortran executable reads VASP WAVECAR and writes numerical results for
+The VASPBERRY executable reads VASP WAVECAR and writes numerical results for
 analysis and plotting. These examples use **Intel oneAPI Fortran and Intel MPI**;
-no Wannier input or Python is needed for the native calculation. The
+the commands below execute VASPBERRY directly, without a Python script. The
 [hands-on guide](HANDS_ON.md) follows the saved files through transport and plots.
 
 ## A runnable first command
@@ -135,7 +135,7 @@ The main charge-Hall workflow is:
 
 ```text
 VASP full-mesh WAVECAR
-  -> Fortran --task kubo-pairs --pairs-csv PAIRS.csv
+  -> VASPBERRY --task kubo-pairs --pairs-csv PAIRS.csv
   -> Python import-pairs: validation/cache -> pairs.npz + pairs.json
   -> Python pair-hall: transport integration -> conductivity.csv / .dat / .npz + .json
   -> plot_hall.py or your preferred plotting program
@@ -146,11 +146,11 @@ k-dependent metallic/smeared occupations therefore need no manual `-ne`
 override. Postprocessing supplies μ, temperature, spin multiplicity and
 regions. Its complete, uniform 2D mesh and degeneracy checks still apply.
 Once the cache exists, varying μ, temperature, regions or the retained
-intermediate-band cutoff does not require another native calculation.
+intermediate-band cutoff does not require another VASPBERRY execution.
 `import-pairs` checks and reorganizes the native output. `pair-hall` performs
 the occupation-weighted transport integral. `plot_hall.py` only reads the
 finished conductivity table and draws figures. The optional `wavecar-hall`
-command orchestrates native export, cache import and integration in one call;
+command executes VASPBERRY, then imports its pair data and integrates in one call;
 it records the same intermediate files.
 See the [three-stage commands](KUBO_TRANSPORT.md#native-pairs-to-charge-hall)
 and [actual MoS₂ Hall example](../examples/features/kubo-hall/).
@@ -160,7 +160,7 @@ SOC `PROCAR` and `OUTCAR` as well. The separate
 [PROCAR workflow](../examples/features/procar-character/) accepts user-defined
 groups, combines their projections with the saved canonical pair cache for
 selected isolated bands, and writes charge-attribution tables and plots.
-No additional native export or Wannier model is needed.
+The saved VASPBERRY pair data can be reused for these projections.
 
 Native WAVECAR Kubo uses canonical momentum of pseudo-wavefunctions. It
 does not supply missing PAW/nonlocal/SOC velocity terms. These outputs support

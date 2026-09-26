@@ -430,7 +430,7 @@ VASPBERRY_RESULT_DIR="$PWD/examples/Bi_Z2/results-z2-mpi" \
 If `VASPBERRY_BIN` is omitted in this mode, the runner builds `vaspberry.f`
 with `mpifort -DMPI_USE`; `VASPBERRY_MPIEXEC` may select a site-specific MPI
 launcher. Serial and MPI runs must not share a result directory because the
-Fortran output names are fixed during each run.
+VASPBERRY output names are fixed during each run.
 
 ## WAVECAR record length and numerical-library ABI
 

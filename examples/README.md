@@ -1,6 +1,6 @@
 # Examples: calculate directly from VASP wavefunctions
 
-VASPBERRY reads **VASP WAVECAR files directly**. Its native Fortran program
+VASPBERRY reads **VASP WAVECAR files directly**. The compiled VASPBERRY executable
 calculates Fukui curvature and Chern numbers, Z₂, Kubo curvature, circular
 optical transitions and real-space wavefunctions. Use the resulting numerical files in your own analysis
 or the supplied Python plotting tools.
@@ -9,7 +9,7 @@ Build with `make serial` and run `build/vaspberry --help` for the native CLI.
 The older executable name `build/vaspberry-gfortran` and short flags remain
 supported; the guides use descriptive task and option names.
 
-The core guides follow the same sequence: **VASP input → native command →
+The core guides follow the same sequence: **VASP input → VASPBERRY execution →
 output file → postprocessing and figure**. The [technical report](../docs/TECHNICAL_REPORT.md)
 explains the methods and material results ([PDF](../docs/TECHNICAL_REPORT.pdf)).
 The [report reproduction table](REPORT_REPRODUCTION.md) maps every report
@@ -25,7 +25,7 @@ Start with the first row; later rows add an optional task. The
 
 | What you want to learn | Example and input | Result |
 |---|---|---|
-| Run Fortran, integrate Hall response and draw a first figure | [Bi walkthrough](features/simple-postprocess/) and [`bi.ini`](features/simple-postprocess/bi.ini); fetched real SOC `WAVECAR` | `PAIRS.csv` → `conductivity.csv` → σ(μ) figure |
+| Run VASPBERRY, integrate Hall response and draw a first figure | [Bi walkthrough](features/simple-postprocess/) and [`bi.ini`](features/simple-postprocess/bi.ini); fetched real SOC `WAVECAR` | `PAIRS.csv` → `conductivity.csv` → σ(μ) figure |
 | Change μ/T without recalculating matrix elements | [`bi-rescan.ini`](features/simple-postprocess/bi-rescan.ini); same Bi input and saved pair cache | A new Hall table and figure |
 | Give a k-space subset your own name | [`bi-regions.ini`](features/simple-postprocess/bi-regions.ini); same Bi pair cache | Total, selected-point and remaining-mesh contributions |
 | Add layer/orbital/spin character | [PROCAR tutorial](features/procar-character/); matching `WAVECAR`, `PROCAR` and `OUTCAR` from your own SOC calculation | State-character maps and selected-band/group charge-Hall curves |
@@ -57,7 +57,7 @@ stages explicitly. Python plotting reads the completed numerical outputs.
 ## First calculation: the supplied Bi wavefunctions
 
 Run from the repository root. Download the actual Bi WAVECAR once, then
-calculate the occupied-subspace Chern number with native Fortran:
+run VASPBERRY to calculate the occupied-subspace Chern number:
 
 ```bash
 make serial
@@ -97,7 +97,7 @@ Cartesian reciprocal coordinates; the other panels show a matching VASP
 band structure and an interpolated cut through the plaquette field.
 
 The [Fukui guide](features/fukui-berry-curvature/) supplies the executed
-VASP preparation, direct Fortran command, numerical references and plotting
+VASP preparation, direct VASPBERRY command, numerical references and plotting
 commands. Generate its complete 12×12 WAVECAR once from the public SCF density;
 the file is about 149 MB. The matching path has 49 points and 26 bands.
 The separately supplied historical 48-point, 32-band path is used by the
@@ -111,7 +111,7 @@ band selection and k mesh to match your VASP output. Start from
 the [output conventions](../docs/OUTPUT_FORMAT.md). Verify the relevant gaps,
 occupations and convergence before interpreting a material result.
 
-Native calculations support MPI:
+VASPBERRY supports MPI execution:
 
 ```bash
 make mpi
@@ -126,7 +126,7 @@ mkdir -p results/mos2-kubo-mpi
 
 The mesh and band choices still come from the supplied WAVECAR. See the
 [build guide](../docs/BUILD.md) for compiler and MPI instructions. Python
-integration and plotting run separately from the native MPI calculation.
+integration and plotting run separately from VASPBERRY execution through MPI.
 
 ## Material studies and optional extensions
 
@@ -152,11 +152,11 @@ VASPBERRY MPI support. See the [material catalogue](materials/),
 
 Each tutorial may provide a `run.py` helper that combines calculation,
 checks and plots using its fixed reference settings. The native-feature helpers launch
-the Fortran executable and are optional conveniences for repeating examples.
+the VASPBERRY executable and are optional conveniences for repeating examples.
 The supplementary Bi gap-Hall helper instead evaluates Fukui overlaps in
 Python as an independent transport check.
 Their `--postprocess-only` or `--plot-only` modes, where documented, read
-completed outputs without rerunning Fortran.
+completed outputs without rerunning VASPBERRY.
 
 The six examples with supplied WAVECAR inputs can be repeated together:
 

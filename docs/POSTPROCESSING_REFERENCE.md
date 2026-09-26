@@ -29,7 +29,7 @@ Both `[run]` and `[hall]` are required, including when using `--reuse`.
 | Section / key | Value and meaning |
 |---|---|
 | `[run] wavecar` | Path to the source WAVECAR. Its k points must form a complete uniform 2D mesh, not an irreducible mesh or band path. |
-| `[run] binary` | Path to the compiled native VASPBERRY executable; a path, not a command with arguments. Required in the file even for `--reuse`, where the executable is not used. |
+| `[run] binary` | Path to the compiled VASPBERRY executable; a path, not a command with arguments. Required in the file even for `--reuse`, where the executable is not used. |
 | `[run] output` | New result directory. An existing directory is rejected, including an empty one. |
 | `[run] mesh` | `NX NY`, two integers at least 2. Their product equals the source k-point count; coordinates must match that uniform grid. |
 | `[run] spin_mode` | One of the four modes below, matching the source VASP calculation. |
@@ -69,16 +69,18 @@ Changing `energy_reference` text alone does not perform an energy conversion.
 
 ## Common optional settings
 
-### Running with MPI
+### Executing VASPBERRY with MPI
 
 | `[run]` key | Default | Meaning |
 |---|---|---|
-| `mpi_procs` | `1` | Positive integer. Values greater than 1 launch the native executable with `MPI_LAUNCHER -n N`; 1 runs it directly. |
+| `mpi_procs` | `1` | Positive integer. Values greater than 1 execute VASPBERRY with `MPI_LAUNCHER -n N`; 1 runs it directly. |
 | `mpi_launcher` | `mpiexec` | One launcher executable name on `PATH`, or a path. No launcher options in this value. For Intel MPI, e.g. `mpiexec.hydra`. |
 
-Run Python once; `mpi_procs` applies to the Fortran stage. Use a matching
-MPI build and launcher within an allocation allowing those ranks. See
-[native build and runtime requirements](BUILD.md).
+Run the Python helper once. Its `run` command executes the VASPBERRY
+binary selected in `[run] binary`; `mpi_procs` applies to that VASPBERRY
+calculation. The subsequent Python postprocessing runs once. Use a matching
+VASPBERRY MPI build and launcher within an allocation allowing those ranks.
+See [build and runtime requirements](BUILD.md).
 
 ### Atom, layer, orbital and spin character
 
@@ -177,7 +179,7 @@ the Hall reference; the accompanying Hall curves do.
 | Section / key | Default | Meaning |
 |---|---|---|
 | `[run] plane_axes` | `0 1` | Two distinct reciprocal-basis indices from `0 1 2`. `mesh` sizes follow this order; the remaining fractional coordinate is fixed. The ordered cross product sets the oriented integration normal. |
-| `[hall] pair_band_max` | All stored bands | Integer from 2 through the source band count. Both endpoints of retained pairs lie in bands `1..pair_band_max`. Does not reduce the native export or the virtual-state sum in character-weighted Hall. |
+| `[hall] pair_band_max` | All stored bands | Integer from 2 through the source band count. Both endpoints of retained pairs lie in bands `1..pair_band_max`. Does not reduce the VASPBERRY pair export or the virtual-state sum in character-weighted Hall. |
 
 The compact front end uses the strict numerical defaults of the underlying
 tools. In total Hall, pairs with gaps at or below 10⁻⁷ eV must have equal
@@ -190,19 +192,25 @@ band acceptance are not INI keys; see [advanced Kubo commands](KUBO_TRANSPORT.md
 
 ## Commands, saved results and reuse
 
+These commands use the prefix `python3 tools/vaspberry_post.py`. For direct
+VASPBERRY commands that produce a curvature table without this helper, see
+[direct execution](POSTPROCESSING.md#execute-vaspberry-directly-for-a-curvature-table)
+and the [hands-on guide](HANDS_ON.md).
+
 | Command | Input dependencies and action |
 |---|---|
 | `check analysis.ini` | Parses settings, checks a new output path, WAVECAR/header/grid, executable and (for multiple ranks) launcher availability. With projection, also checks PROCAR/OUTCAR existence and band ranges. Does not execute numerical stages. |
-| `run analysis.ini` | Same preflight, then native pair export, pair import, total Hall and optional character/Hall stages. Saves settings, logs and table checksums. |
+| `run analysis.ini` | Same preflight, then executes VASPBERRY to write `native/PAIRS.csv`, with MPI when configured. Imports that output and computes total Hall and optional character/Hall tables. Saves settings, logs and table checksums. |
 | `check analysis-next.ini --reuse results/run01` | Requires a completed previous front-end run, its intact pair cache and the same WAVECAR. Checks compatibility without calculating. Executable and launcher availability are not needed. |
 | `run analysis-next.ini --reuse results/run01` | Copies the verified pair cache into a new output directory and recalculates the requested postprocessing. Requires source PROCAR/OUTCAR again if projection is enabled. |
-| `plot results/run01` | Uses a completed `run.json` and its intact saved Hall tables; with projection, also the saved character and character-Hall data. Requires no source WAVECAR, PROCAR, OUTCAR, native executable or MPI launcher. |
+| `plot results/run01` | Uses a completed `run.json` and its intact saved Hall tables; with projection, also the saved character and character-Hall data. Requires no source WAVECAR, PROCAR, OUTCAR, VASPBERRY executable or MPI launcher. |
 
 `--reuse` requires an identical WAVECAR hash and unchanged mesh, plane axes,
 spin convention and `energy_reference` text. Paths may change if the file
 content is identical. Scan values, groups, regions and projection selections
-can change; these are recalculated. Reuse skips Fortran export, not the
-numerical occupation integral. The original result remains unchanged.
+can change; these are recalculated. Reuse skips VASPBERRY execution and
+recomputes the numerical occupation integral. The original result remains
+unchanged.
 
 For plotting, optional command-line overrides are:
 
