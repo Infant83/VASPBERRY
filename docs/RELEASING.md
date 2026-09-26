@@ -6,7 +6,7 @@
 source. Clone it with `git clone https://github.com/Infant83/VASPBERRY.git`.
 Update a clean checkout with `git pull --ff-only`.
 
-A release tag, such as `v1.4.0`, stays fixed. Use the tag when reproducing a
+A release tag, such as `v1.4.1`, stays fixed. Use the tag when reproducing a
 published calculation, and record the version plus `git rev-parse HEAD` in
 the calculation record. `git describe --tags --always --dirty` also identifies
 changes after a release. A development branch is not the default download.
@@ -57,3 +57,10 @@ the previous tag remains unchanged, and refuses to move a conflicting tag
 or edit an existing release. Its publication artifact and release body record
 the source commit and successful checks. Follow publication with a fresh
 version-pinned checkout and the public hands-on/example commands.
+
+The `publish-v1.4.1.yml` workflow additionally requires both actual
+Intel MPI jobs (`Intel MPI (ifx)` and `Intel MPI (ifort)`) on its exact commit.
+All eleven validation jobs must pass before publication. The v1.4.0 tag and
+its publication workflow remain unchanged. The v1.4.0 technical report is
+the retained method edition; current build and command instructions are in
+the v1.4.1 guides.

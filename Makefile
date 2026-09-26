@@ -20,6 +20,7 @@ IFX = ifx
 MPIIFX = mpiifx
 IFORT = ifort
 MPIIFORT = mpiifort
+INTEL_MPIEXEC = mpiexec.hydra
 
 GNU_FLAGS ?= -cpp -O2 -ffixed-line-length-none -fallow-argument-mismatch
 GNU_LIBS ?= -llapack -lblas
@@ -27,6 +28,7 @@ INTEL_FLAGS ?= -fpp -O2 -extend-source -assume byterecl
 IFX_MKL_FLAGS ?= -qmkl=sequential
 IFORT_MKL_FLAGS ?= -mkl=sequential
 MPIEXEC_FLAGS ?=
+INTEL_MPIEXEC_FLAGS ?=
 
 SERIAL_SOURCE := vaspberry.f
 # Historical no-Kubo source is available explicitly via
@@ -39,7 +41,7 @@ MPI_RUNTIME_TEST := $(BUILD_DIR)/test-mpi-runtime
 
 .PHONY: all gnu serial mpi check check-gnu check-serial-help \
 	check-mpi-help check-mpi-runtime check-build-dir ifx ifx-mpi \
-	ifort ifort-mpi clean force-serial-compat
+	ifort ifort-mpi check-ifx-mpi check-ifort-mpi clean force-serial-compat
 
 all: gnu
 
@@ -89,9 +91,8 @@ check-mpi-help: $(GNU_MPI_BIN)
 	$(MPIEXEC) $(MPIEXEC_FLAGS) -n 2 $< -h > $(BUILD_DIR)/help-mpi.txt
 	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-mpi.txt
 
-# Intel MPI and oneMKL recipes remain opt-in site targets. CI provisions the
-# serial compilers separately and overrides the link flags with system LP64
-# BLAS/LAPACK.
+# Load the Intel compiler, MPI SDK and oneMKL environment before these targets.
+# The dedicated Intel MPI workflow exercises the default oneMKL link flags.
 ifx: | $(BUILD_DIR)
 	$(IFX) $(INTEL_FLAGS) -o $(BUILD_DIR)/vaspberry-ifx \
 	  $(SERIAL_SOURCE) $(IFX_MKL_FLAGS)
@@ -108,6 +109,18 @@ ifort-mpi: | $(BUILD_DIR)
 	$(MPIIFORT) $(INTEL_FLAGS) -DMPI_USE \
 	  -o $(BUILD_DIR)/vaspberry-ifort-mpi \
 	  $(MPI_SOURCE) $(IFORT_MKL_FLAGS)
+
+check-ifx-mpi: ifx-mpi
+	$(MPIIFX) -O2 -o $(BUILD_DIR)/test-ifx-mpi-runtime tests/fortran/test_mpi_runtime.f90
+	$(INTEL_MPIEXEC) $(INTEL_MPIEXEC_FLAGS) -n 2 $(BUILD_DIR)/test-ifx-mpi-runtime
+	$(INTEL_MPIEXEC) $(INTEL_MPIEXEC_FLAGS) -n 2 $(BUILD_DIR)/vaspberry-ifx-mpi --help > $(BUILD_DIR)/help-ifx-mpi.txt
+	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-ifx-mpi.txt
+
+check-ifort-mpi: ifort-mpi
+	$(MPIIFORT) -O2 -o $(BUILD_DIR)/test-ifort-mpi-runtime tests/fortran/test_mpi_runtime.f90
+	$(INTEL_MPIEXEC) $(INTEL_MPIEXEC_FLAGS) -n 2 $(BUILD_DIR)/test-ifort-mpi-runtime
+	$(INTEL_MPIEXEC) $(INTEL_MPIEXEC_FLAGS) -n 2 $(BUILD_DIR)/vaspberry-ifort-mpi --help > $(BUILD_DIR)/help-ifort-mpi.txt
+	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-ifort-mpi.txt
 
 clean: check-build-dir
 	rm -rf -- "$(SAFE_BUILD_DIR)"

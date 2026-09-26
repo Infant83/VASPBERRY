@@ -4,6 +4,29 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-09-26
+
+### Build and validation
+
+- Add Intel MPI runtime/help checks for `mpiifx` and `mpiifort`, retaining
+  byte-based WAVECAR records and sequential LP64 oneMKL defaults.
+- Validate actual MoS₂ curvature and pair export in Intel serial and
+  two-rank MPI builds. Release publication requires these jobs in addition
+  to the existing full CI and actual Bi serial/MPI checks on the same commit.
+
+### Documentation
+
+- Lead installation and native commands with Intel oneAPI + MPI; retain
+  Intel Classic and GNU alternatives and matching-launcher instructions.
+- Specify inputs, filenames, numerical columns/units and possible figures
+  for native curvature, reusable pairs, Hall integration and PROCAR analysis.
+- Explain why Python cache import, occupation-weighted integration and
+  plotting are distinct, and document the existing `wavecar-hall` shortcut
+  with saved intermediates and cache reuse.
+- Preserve the v1.4.0 scientific report, examples and reference data.
+  This compatible patch changes build checks and instructions, not the
+  numerical kernels or output schemas; no scientific-result migration is needed.
+
 ## [1.4.0] - 2026-09-25
 
 ### Added

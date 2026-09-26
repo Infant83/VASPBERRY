@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.4.0 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.4.1 (f77) for VASP
 ! Written by Hyun-Jung Kim
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -75,7 +75,7 @@
       nprocs=1
       myrank=0
 
-      ver_tag="# VASPBERRY (Ver 1.4.0), by Hyun-Jung Kim."//
+      ver_tag="# VASPBERRY (Ver 1.4.1), by Hyun-Jung Kim."//
      &        " 2026. Sep. 19."
       pi=4.*atan(1.)
       berrymax=0d0
@@ -1034,7 +1034,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.4.0'
+      write(94,'(A)')'# vaspberry_version=1.4.1'
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
@@ -1234,7 +1234,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.4.0'
+      write(94,'(A)')'# vaspberry_version=1.4.1'
       if(fieldok)then
        write(94,'(A)')'# result_status=PASS'
       else

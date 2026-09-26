@@ -1,19 +1,20 @@
 # Build and compiler portability
 
-VASPBERRY is a Linux/Unix fixed-form Fortran program. The supported public
-build paths are GNU Fortran in serial mode and GNU Fortran with Open MPI. CI
-also compile- and help-tests the Intel serial source with provisioned `ifx` and
-retained `ifort`; Intel MPI and numerical validation remain manual.
+VASPBERRY is a Linux/Unix fixed-form Fortran program. The main walkthrough
+uses **Intel oneAPI Fortran (`ifx`), Intel MPI and sequential LP64 oneMKL**.
+Existing Classic installations can use `ifort`; GNU serial and Open MPI
+recipes remain available. The table separates available build recipes from
+the compiler and numerical checks actually performed.
 
 ## Support matrix
 
 | Build | Source | Command | Validation status |
 |---|---|---|---|
-| GNU serial | `vaspberry.f` without `MPI_USE` | `make serial` | 1.3.0 local numerical regression and GNU 11/13 CI pass on Ubuntu 22.04/24.04 |
-| GNU + Open MPI | `vaspberry.f` | `make mpi` | CI builds it and exercises two-rank help, `MPI_DOUBLE_PRECISION` reduction, and result-status broadcast |
-| Intel `ifx` serial | `vaspberry.f` without `MPI_USE` | `make ifx` | 1.3.0 CI compile/help passes with `ifx` 2025.0 and system LP64 BLAS/LAPACK; numerical validation remains manual |
-| Intel `ifx` + Intel MPI | `vaspberry.f` | `make ifx-mpi` | Build recipe reviewed; manual test required on a oneAPI host |
-| Intel Classic `ifort` | `vaspberry.f`, optionally with `MPI_USE` | `make ifort` or `make ifort-mpi` | Local serial build and CI compile/help pass with `ifort` 2021.10; Intel numerical/MPI validation remains manual |
+| Intel `ifx` serial | `vaspberry.f` without `MPI_USE` | `make ifx` | Serial portability CI; matching serial reference in the Intel MPI numerical job |
+| Intel `ifx` + Intel MPI | `vaspberry.f` | `make ifx-mpi` | `make check-ifx-mpi` and the required actual-input Intel MPI CI job |
+| Intel Classic `ifort` | `vaspberry.f`, optionally with `MPI_USE` | `make ifort` or `make ifort-mpi` | Serial portability CI; `make check-ifort-mpi` and a separate required Intel MPI numerical job |
+| GNU serial | `vaspberry.f` without `MPI_USE` | `make serial` | Local numerical regression and GNU 11/13 CI pass on Ubuntu 22.04/24.04 |
+| GNU + Open MPI | `vaspberry.f` | `make mpi` | CI builds it and checks help, MPI collectives, native serial/MPI calculations and the separate Bi Z₂ case |
 
 Starting with 1.3.0, default serial and MPI builds share the current source,
 including the Kubo commands. To reproduce the historical reduced serial
@@ -23,14 +24,88 @@ implementation explicitly (it has no Kubo mode), use a separate build directory:
 make serial SERIAL_SOURCE=vaspberry_gfortran_serial.f BUILD_DIR=build-legacy
 ```
 
-The [1.3.0 release notes](releases/v1.3.0.md) link the validation runs and
-distinguish compiler smoke tests from actual numerical and MPI comparisons.
+The [1.4.1 validation record](VALIDATION_1.4.1.md) links publication checks
+and separates compiler smoke tests from actual numerical comparisons.
 
 Intel discontinued `ifort` in the oneAPI 2025 release and recommends `ifx` for
 continued support. Retaining an `ifort` recipe helps older clusters, but new
 installations should use `ifx`. See Intel's
 [ifort-to-ifx porting guide](https://www.intel.com/content/www/us/en/developer/articles/guide/porting-guide-for-ifort-to-ifx.html)
 and [Intel MPI compiler-wrapper list](https://www.intel.com/content/www/us/en/docs/mpi-library/developer-reference-linux/2021-16/compiler-commands.html).
+
+## Intel oneAPI build
+
+First load the oneAPI compiler, oneMKL, and Intel MPI environment provided by
+the local installation. In Bash, a common system-wide setup is:
+
+```bash
+source /opt/intel/oneapi/setvars.sh
+```
+
+For a unified-layout installation, source its versioned `oneapi-vars.sh`
+instead; cluster modules can supply the same environment. Use the actual
+installation path. Intel documents both
+[environment setup layouts](https://www.intel.com/content/www/us/en/docs/oneapi/programming-guide/2024-2/use-the-setvars-and-oneapi-vars-scripts-with-linux.html).
+
+Build the MPI executable and inspect its arguments:
+
+```bash
+make ifx-mpi
+make check-ifx-mpi
+mpiexec -n 4 build/vaspberry-ifx-mpi --help
+```
+
+The executable is `build/vaspberry-ifx-mpi`. Four ranks means four MPI
+processes; choose a count permitted by the scheduler allocation. Use the
+Intel MPI launcher from the same environment as `mpiifx`. A minimal real
+calculation from the repository root is:
+
+```bash
+repo_dir="$PWD"
+mkdir results-intel-kubo-01
+(
+  cd results-intel-kubo-01
+  mpiexec -n 4 "$repo_dir/build/vaspberry-ifx-mpi" --task kubo \
+    --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
+    --spinor 2 --bands 1:18 --bundle 1 --curvature-csv KUBO.csv \
+    > vaspberry.log 2> vaspberry.err
+)
+```
+
+This writes the supplied 48-point path's bundle curvature to `KUBO.csv`.
+The [hands-on guide](HANDS_ON.md) explains the columns and direct plotting,
+then the separate pair-export and occupation-integration workflow.
+Python is not required to compile or run this native calculation.
+
+For a retained Classic installation, use its environment and substitute:
+
+```bash
+make ifort-mpi
+make check-ifort-mpi
+mpiexec -n 4 build/vaspberry-ifort-mpi --help
+```
+
+For serial operation, `make ifx` creates `build/vaspberry-ifx`; run it without
+`mpiexec`. The corresponding Classic serial target is `make ifort`.
+
+The Intel targets use preprocessing, extended fixed-form source lines,
+byte-based direct-access records, and sequential LP64 oneMKL. Intel documents
+`-qmkl=sequential` as the sequential oneMKL link option. The MPI targets use
+`mpiifx` or the retained `mpiifort` wrapper and define `MPI_USE`.
+
+`check-ifx-mpi` and `check-ifort-mpi` build the corresponding executable,
+compile an MPI runtime probe, check its two-rank reduction/broadcast and
+validate native help on two ranks. These check targets use
+`INTEL_MPIEXEC=mpiexec.hydra`; override that Make variable and
+`INTEL_MPIEXEC_FLAGS` only when the site requires another Intel MPI launcher.
+
+The existing serial portability CI uses `ifx` 2025.0 and retained `ifort`
+2021.10 against system LP64 BLAS/LAPACK. The separate
+[Intel MPI validation workflow](../.github/workflows/intel-mpi-validation.yml)
+provisions Intel MPI and oneMKL, exercises the default build/check targets,
+then compares actual MoS₂ serial and two-rank MPI bundle curvature and pair
+exports. Its ifx and ifort jobs are required publication checks for 1.4.1;
+the release validation record identifies the successful source commit.
 
 ## GNU build
 
@@ -149,44 +224,6 @@ If `VASPBERRY_BIN` is omitted in this mode, the runner builds `vaspberry.f`
 with `mpifort -DMPI_USE`; `VASPBERRY_MPIEXEC` may select a site-specific MPI
 launcher. Serial and MPI runs must not share a result directory because the
 Fortran output names are fixed during each run.
-
-## Intel oneAPI build
-
-First load the oneAPI compiler, oneMKL, and Intel MPI environment provided by
-the local installation. A common system-wide setup is:
-
-```bash
-source /opt/intel/oneapi/setvars.sh
-```
-
-Then build and check each executable available at the site:
-
-```bash
-make ifx
-build/vaspberry-ifx -h
-
-make ifx-mpi
-mpiexec -n 2 build/vaspberry-ifx-mpi -h
-```
-
-For a retained Classic installation, substitute:
-
-```bash
-make ifort
-make ifort-mpi
-```
-
-The Intel targets use preprocessing, extended fixed-form source lines,
-byte-based direct-access records, and sequential LP64 oneMKL. Intel documents
-`-qmkl=sequential` as the sequential oneMKL link option. The MPI targets use
-`mpiifx` or the retained `mpiifort` wrapper and define `MPI_USE`.
-
-Public CI provisions `ifx` 2025.0 and retained `ifort` 2021.10 through
-`fortran-lang/setup-fortran`, links the serial executable against Ubuntu's
-system LP64 BLAS/LAPACK, and checks `-h`. This verifies the fixed-form source
-and serial link path without assuming oneMKL is installed on the runner. Intel
-MPI wrappers are not provisioned there, so `ifx-mpi`/`ifort-mpi`, the oneMKL
-recipes, and numerical comparisons remain explicitly manual checks.
 
 ## WAVECAR record length and numerical-library ABI
 

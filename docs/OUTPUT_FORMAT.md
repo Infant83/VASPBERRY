@@ -5,6 +5,36 @@ Version 1.3.0 introduces `vaspberry.band-curvature` schema version **1** and
 contracts and are independent of the software version. These formats do not
 replace the existing Fukui plaquette or `VASPBERRY_Z2_FIELD` formats.
 
+## Read the file that matches your question
+
+The Intel and GNU executables write the same numerical formats. The
+[Intel MPI hands-on guide](HANDS_ON.md) gives the producing commands.
+
+| File | Contains | Calculation still needed? | Typical plot |
+|---|---|---|---|
+| Native bundle `KUBO.csv` | k coordinates and computed Ωxy in `omega_z_A2` (Å²), selected-bundle gap (eV) | None for a curvature plot | Ω versus path samples; a full-mesh Ω map with the matching lattice |
+| Native `PAIRS.csv` | Undivided interband products `numerator_*_eV2_A2`, two band energies and gap | Yes: occupations, squared-gap denominators and BZ integration | Intermediate pair analysis; it is not a conductivity table |
+| `pairs.npz` + `pairs.json` | Validated typed cache of those same pairs, mesh and provenance | Yes: `pair-hall` calculates transport | Reusable input for μ/T/region scans |
+| `conductivity.csv`, `.dat` or `.npz` + `.json` | σ, Δσ, μ, T, region and represented carrier count | None for plotting existing rows | Hall versus μ, temperature comparison, regional contrast or Hall versus carrier count |
+| `character.csv/npz/json` | State/group raw charge and spin projections | `procar_character.py hall` for Hall attribution | Atom/layer/orbital/spin character of states |
+| `character_hall.csv/npz/json` | Completed selected-band charge-Hall attributions | None for plotting existing rows | Group/spin-projection contribution versus μ |
+
+**Import, integrate and plot are different operations.** `import-pairs`
+validates/repackages the native data; `pair-hall` performs a physical
+occupation-weighted Kubo calculation; `plot_hall.py` only plots the completed
+conductivity table. `wavecar-hall` orchestrates the first two together with
+the native executable and retains their intermediate files. Similarly,
+PROCAR `project` reads state projections, `hall` calculates attribution,
+and `plot` draws figures.
+
+Native CSVs have comment lines beginning `#`, followed by named comma-separated
+columns. Skip those comments when importing into Origin, a spreadsheet, R or
+another plotter. For the bundle file, select `spin=1` and plot `k_index`
+against `omega_z_A2`. Python is optional for that native-result plot. A
+Cartesian BZ map additionally needs the matching reciprocal lattice; a line
+path does not become a full-zone map by interpolation. Keep the comments or
+JSON sidecars with any exported table.
+
 ## PROCAR character and charge-Hall attribution
 
 The [PROCAR workflow](../examples/features/procar-character/) uses
@@ -147,6 +177,12 @@ multiplicity or denominator is included in the numerators. Only a final
 The importer additionally verifies every selected-spin row against WAVECAR;
 a partial export is not an integration input.
 
+The three real pair numerators are not the full complex velocity matrices.
+For an isolated band, curvature includes `Nab/(E_n-E_m)^2`; occupation-weighted
+pair transport additionally uses `f_n-f_m` and the k/BZ weights. The separate
+native `--task kubo --curvature-csv KUBO.csv` mode has already performed the
+curvature sum, which is why its Å² column is directly plottable.
+
 `import-pairs` writes `pairs.npz` and `pairs.json`, schema
 `vaspberry.kubo-pairs` version 1. For K k points, B stored bands and
 P=B(B−1)/2 pairs, the arrays are:
@@ -164,6 +200,9 @@ Numerical floating arrays are float64. JSON records full-mesh geometry,
 energy reference, multiplicity, source operator and the matching NPZ checksum.
 Load NPZ with `allow_pickle=False`. A full uniform 2D mesh is required for
 Hall integration; line paths and irreducible meshes are not accepted.
+This import/cache step does not evaluate Fermi occupations or output a Hall
+coefficient. The subsequent `pair-hall` stage writes the completed transport
+tables described under [Hall directory](#hall-directory).
 
 `--pair-band-max M` selects a finite pair space from the complete cache without
 changing its source arrays. Hall metadata keeps `source_nbands`, records

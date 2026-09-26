@@ -63,6 +63,79 @@ The setup is SOC, `ICHARG=11`, `ISYM=-1`, 400 eV, with 18 occupied spinor bands.
 Use a complete two-dimensional mesh; the supplied line-path `WAVECAR` cannot
 replace it.
 
+## Shortcut: calculate the Hall table, then draw the curves
+
+Once the full-mesh VASP calculation is complete, the general `wavecar-hall`
+command runs native Fortran, validates its pair output and integrates the Hall
+scan. Python is the launcher and postprocessor; the wavefunction matrix
+calculation still runs in the Fortran executable. The first calculation needs
+one numerical command and one plot command.
+
+Choose the build once. For GNU serial:
+
+```bash
+make serial
+binary=build/vaspberry
+ranks=1
+```
+
+For Intel MPI, load the site's oneAPI/Intel MPI/oneMKL environment and use
+`make ifx-mpi`, `binary=build/vaspberry-ifx-mpi`, `ranks=4` instead. The GNU MPI
+choice is `make mpi`, `binary=build/vaspberry-mpi`, `ranks=4`. Use the matching
+`mpiexec` on `PATH`; see [compiler and MPI setup](../../../docs/BUILD.md).
+Do not start the Python command with `mpiexec`: `--mpi-procs` launches only
+the native calculation on that many ranks.
+
+```bash
+python3 tools/vaspberry_kubo.py wavecar-hall \
+  --binary "$binary" --mpi-procs "$ranks" --mpi-launcher mpiexec \
+  --wavecar results/mos2-24-b60-vasp/WAVECAR \
+  --spinor-components 2 --spin-multiplicity 1 --mesh 24 24 \
+  --energy-reference 'unchanged VASP eigenvalue zero' --pair-band-max 40 \
+  --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 61 \
+  --mu-reference -0.43809870 --temperatures 0 300 \
+  --regions examples/features/kubo-hall/regions.json --difference valley:K:Kprime \
+  --degeneracy-policy coalesce --degeneracy-threshold-eV 1e-7 \
+  --output-dir results/mos2-24-wrapped
+
+python3 tools/plot_hall.py results/mos2-24-wrapped/hall/conductivity.csv \
+  --regions total K Kprime valley --temperatures 300 \
+  --quantity delta-sigma --energy-origin-eV -1.27487388 \
+  --energy-label 'mu - Ev (eV)' --output-dir results/mos2-24-wrapped-plot
+```
+
+The numerical command writes the following inside `results/mos2-24-wrapped/`:
+
+| Output | Contents |
+|---|---|
+| `native/PAIRS.csv`, `native/stdout.log`, `native/stderr.log` | Raw Fortran interband numerators and its execution logs |
+| `pairs/pairs.npz`, `pairs/pairs.json` | Reusable source energies, k mesh, lattice and matrix products |
+| `hall/conductivity.csv`, `.dat`, `.npz`, `.json` | 610 rows: 61 μ × 2 T × 5 regions, with σ, Δσ, carriers and metadata |
+| `workflow.json` | Native command, source/binary hashes and completion status |
+
+The plot command creates `hall.png`, `hall.pdf`, `hall.svg` and `plot.json` in
+`results/mos2-24-wrapped-plot/`. It draws total, K, K′ and K−K′ **Δσ at 300 K**
+against μ−Ev. These are conductivity curves; k-space maps and band plots use
+their own data and commands. All energy values here are specific to this MoS₂
+reference. Both output directories must be new.
+
+For another temperature, reuse the saved pairs:
+
+```bash
+python3 tools/vaspberry_kubo.py pair-hall \
+  --pairs-dir results/mos2-24-wrapped/pairs --pair-band-max 40 \
+  --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 61 \
+  --mu-reference -0.43809870 --temperatures 100 \
+  --regions examples/features/kubo-hall/regions.json --difference valley:K:Kprime \
+  --degeneracy-policy coalesce --degeneracy-threshold-eV 1e-7 \
+  --output-dir results/mos2-24-100K
+```
+
+No WAVECAR or Fortran calculation is repeated in this scan. Plot
+`results/mos2-24-100K/conductivity.csv` with `--temperatures 100` to show the new
+curves. For explicit control over the raw Fortran export and import, follow
+[step2](#2-export-matrix-element-pairs-with-native-fortran) and step3 below.
+
 ## 2. Export matrix-element pairs with native Fortran
 
 ```bash
@@ -154,9 +227,11 @@ python3 examples/features/kubo-hall/run.py \
   --mesh 24 --pair-band-max 40 --output-dir results/mos2-24-checked
 ```
 
-The general `wavecar-hall` command also combines these stages; see the
-[Kubo/Hall guide](../../../docs/KUBO_TRANSPORT.md). The separate native and
-integration commands above expose each output for reuse with another material.
+The general `wavecar-hall` shortcut above combines native export and numerical
+integration; `plot_hall.py` reads the resulting table separately. See the
+[Kubo/Hall guide](../../../docs/KUBO_TRANSPORT.md) for the full output mapping.
+The explicit native and integration commands expose each output for reuse
+with another material.
 
 ## 4. Check k sampling and the intermediate-band window
 

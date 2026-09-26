@@ -37,6 +37,94 @@ insulating gap. Bi's unresolved Kramers pairs prevent treating its individual
 bands as isolated point-Kubo input. Its zero charge Hall plateau is an actual
 material sanity check, not a nonzero valley-Hall demonstration.
 
+## WAVECAR to charge Hall in one command
+
+For a first calculation, `wavecar-hall` combines the native export, cache
+validation and numerical Hall integration. **Python launches the existing
+Fortran executable**, then reads its saved interband pairs. It performs no
+VASP calculation. Plotting remains a separate command so the same numerical
+results can be displayed in several ways.
+
+First choose the executable and native rank count. From the repository root,
+with the Python dependencies installed, a serial GNU build uses:
+
+```bash
+make serial
+binary=build/vaspberry
+ranks=1
+```
+
+For Intel MPI, load the site's oneAPI compiler, Intel MPI and oneMKL environment
+as described in [BUILD.md](BUILD.md#intel-oneapi-build), then use:
+
+```bash
+make ifx-mpi
+binary=build/vaspberry-ifx-mpi
+ranks=4
+```
+
+`mpiexec` must belong to the MPI implementation linked into the executable.
+The GNU MPI alternative is `make mpi`, `binary=build/vaspberry-mpi`, and the
+desired `ranks`; use its matching launcher. These build choices do not change
+the Python scan or plotting commands. The launcher is used only when
+`--mpi-procs` exceeds one; do not launch the Python script with `mpiexec`.
+
+After preparing the actual MoS₂ input described below, run:
+
+```bash
+python3 tools/vaspberry_kubo.py wavecar-hall \
+  --binary "$binary" --mpi-procs "$ranks" --mpi-launcher mpiexec \
+  --wavecar results/mos2-24-b60-vasp/WAVECAR \
+  --spinor-components 2 --spin-multiplicity 1 --mesh 24 24 \
+  --energy-reference 'unchanged VASP eigenvalue zero' --pair-band-max 40 \
+  --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 121 \
+  --mu-reference -0.43809870 --temperatures 0 300 \
+  --regions examples/features/kubo-hall/regions.json --difference valley:K:Kprime \
+  --degeneracy-policy coalesce --degeneracy-threshold-eV 1e-7 \
+  --output-dir results/mos2-hall-wrapped
+
+python3 tools/plot_hall.py results/mos2-hall-wrapped/hall/conductivity.csv \
+  --regions total K Kprime valley --temperatures 300 --quantity delta-sigma \
+  --energy-origin-eV -1.27487388 --energy-label 'mu - Ev (eV)' \
+  --output-dir results/mos2-hall-wrapped-plot
+```
+
+Use a new `--output-dir` that does not already exist. The energy range, reference,
+regions and explicit numerical-degeneracy approximation above belong to this
+MoS₂ example; replace them for another material.
+
+| File under `results/mos2-hall-wrapped/` | What it contains | Next use |
+|---|---|---|
+| `native/PAIRS.csv` | Fortran k/band-pair energies, coordinates and undivided Cartesian matrix-product numerators | Import or inspect the raw electronic response data |
+| `native/stdout.log`, `native/stderr.log` | Native calculation diagnostics | Check that the export completed |
+| `pairs/pairs.npz`, `pairs/pairs.json` | Validated full source pair cache, energies, mesh, lattice and provenance | Reuse for a different μ/T/region/window scan or PROCAR attribution |
+| `hall/conductivity.csv`, `.dat`, `.npz` | Equivalent tables of absolute σ, reference-subtracted Δσ, carrier counts, μ, T and region | Plot in VASPBERRY, NumPy or another analysis tool |
+| `hall/conductivity.json` | Units, operator, retained/source bands, region definitions and diagnostics | Interpret the numerical table |
+| `workflow.json` | Native command, hashes, completion status and failure information | Inspect the complete run |
+
+The separate plot directory contains `hall.png`, `hall.pdf`, `hall.svg` and
+`plot.json`. This example draws the **300 K Δσ versus μ−Ev** curves for total,
+K, K′ and K−K′. It does not draw a band structure or a k-resolved curvature map;
+those use the [native curvature examples](../examples/features/kubo-curvature/).
+
+For the next scan, reuse the pair cache directly. For example, retain the
+same μ range and bands while calculating 100 K only:
+
+```bash
+python3 tools/vaspberry_kubo.py pair-hall \
+  --pairs-dir results/mos2-hall-wrapped/pairs --pair-band-max 40 \
+  --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 121 \
+  --mu-reference -0.43809870 --temperatures 100 \
+  --regions examples/features/kubo-hall/regions.json --difference valley:K:Kprime \
+  --degeneracy-policy coalesce --degeneracy-threshold-eV 1e-7 \
+  --output-dir results/mos2-hall-100K
+```
+
+This command reads `pairs/`, so neither Fortran nor WAVECAR is rerun. Its
+`conductivity.*` files are directly under `results/mos2-hall-100K/`; pass that
+CSV, DAT or NPZ to the same plotter. For the explicit native-first procedure,
+see [Native pairs to charge Hall](#native-pairs-to-charge-hall) below.
+
 ## Native pairs to charge Hall
 
 The main workflow has three explicit stages: native Fortran export, numerical
@@ -157,28 +245,6 @@ projections also do not create independent up/down eigenvalue channels.
 Exactly degenerate states cannot generally be assigned a unique individual
 projection-weighted curvature; use the documented isolation checks rather
 than interpreting an arbitrary eigensolver basis as a physical decomposition.
-
-## WAVECAR to charge Hall in one command
-
-The optional `wavecar-hall` wrapper executes and records the same native export,
-cache import and occupation-weighted integration. It is convenient for batch
-work; the separate commands above expose each stage directly:
-
-```bash
-python3 tools/vaspberry_kubo.py wavecar-hall \
-  --wavecar results/mos2-24-b60-vasp/WAVECAR --binary build/vaspberry \
-  --spinor-components 2 --spin-multiplicity 1 --mesh 24 24 \
-  --pair-band-max 40 \
-  --energy-reference 'unchanged VASP eigenvalue zero' \
-  --mu-min -1.47487388 --mu-max -1.17487388 --mu-num 121 \
-  --mu-reference -0.43809870 --temperatures 0 300 \
-  --degeneracy-policy coalesce --degeneracy-threshold-eV 1e-7 \
-  --formats csv dat npz --output-dir results/mos2-hall-wrapped
-```
-
-The result contains `native/PAIRS.csv`, native execution logs, `pairs/`,
-`hall/` and `workflow.json` with overall status and any error. Supply an MPI
-binary with `--mpi-procs N` to parallelize the native stage.
 
 ### Occupations and degeneracies
 

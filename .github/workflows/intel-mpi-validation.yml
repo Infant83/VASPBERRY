@@ -1,0 +1,93 @@
+name: Intel MPI validation
+
+on:
+  push:
+    branches: [master, "feature/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Intel MPI (${{ matrix.target }})
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: intel
+            version: "2025.0"
+            target: ifx
+            wrapper: mpiifx
+          - compiler: intel-classic
+            version: "2021.10"
+            target: ifort
+            wrapper: mpiifort
+    env:
+      OMP_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      I_MPI_FABRICS: shm
+      I_MPI_PIN: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: fortran-lang/setup-fortran@be037f0a45b1160f139d4ccd0b96f9e9bfd6a682
+        with:
+          compiler: ${{ matrix.compiler }}
+          version: ${{ matrix.version }}
+      - name: Install pinned Intel MPI SDK and oneMKL from Intel's APT repository
+        shell: bash
+        run: |
+          mkdir -p results/intel-mpi-${{ matrix.target }}
+          curl --fail --silent --show-error --location \
+            https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+            | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg >/dev/null
+          # Replace the setup action's entry, avoiding duplicate Signed-By values.
+          echo 'deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main' \
+            | sudo tee /etc/apt/sources.list.d/oneAPI.list
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            intel-oneapi-mpi-2021.13=2021.13.1-767 \
+            intel-oneapi-mpi-devel-2021.13=2021.13.1-767 \
+            intel-oneapi-mkl-classic-devel-2025.0=2025.0.1-14
+      - name: Build default Intel serial and MPI binaries; check two-rank runtime and help
+        shell: bash
+        run: |
+          source /opt/intel/oneapi/mpi/2021.13/env/vars.sh
+          source /opt/intel/oneapi/mkl/2025.0/env/vars.sh
+          {
+            ${{ matrix.target }} --version
+            ${{ matrix.wrapper }} -show
+            mpiexec.hydra -version
+            dpkg-query -W 'intel-oneapi-mpi*' 'intel-oneapi-mkl*'
+          } > results/intel-mpi-${{ matrix.target }}/versions.log 2>&1
+          make ${{ matrix.target }} check-${{ matrix.target }}-mpi \
+            2>&1 | tee results/intel-mpi-${{ matrix.target }}/build-runtime.log
+          ldd build/vaspberry-${{ matrix.target }}-mpi \
+            | tee results/intel-mpi-${{ matrix.target }}/linked-libraries.log
+          grep -E 'libmpi[^ ]* => /opt/intel/oneapi/mpi/2021.13/' \
+            results/intel-mpi-${{ matrix.target }}/linked-libraries.log
+      - name: Compare real MoS2 serial and two-rank MPI Kubo exports
+        shell: bash
+        run: |
+          source /opt/intel/oneapi/mpi/2021.13/env/vars.sh
+          source /opt/intel/oneapi/mkl/2025.0/env/vars.sh
+          python tests/run_intel_mpi_validation.py \
+            --serial build/vaspberry-${{ matrix.target }} \
+            --mpi build/vaspberry-${{ matrix.target }}-mpi \
+            --output-dir results/intel-mpi-${{ matrix.target }}/numerics
+      - name: Retain commands, checksums, numerical exports and failure logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intel-mpi-${{ matrix.target }}-validation
+          path: |
+            results/intel-mpi-${{ matrix.target }}/
+            build/help-${{ matrix.target }}-mpi.txt
+          if-no-files-found: warn
+          retention-days: 14

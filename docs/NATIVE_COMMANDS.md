@@ -1,20 +1,24 @@
 # Native Fortran command reference
 
-`build/vaspberry` reads VASP WAVECAR and writes numerical results for subsequent
-analysis and plotting. It does not require Wannierization. Start with
-`make serial`, then `build/vaspberry --help`; see [build details](BUILD.md).
-The [hands-on guide](HANDS_ON.md) provides complete material workflows.
+The Fortran executable reads VASP WAVECAR and writes numerical results for
+analysis and plotting. These examples use **Intel oneAPI Fortran and Intel MPI**;
+no Wannier input or Python is needed for the native calculation. The
+[hands-on guide](HANDS_ON.md) follows the saved files through transport and plots.
 
 ## A runnable first command
 
-From the repository root, use the included MoS₂ path WAVECAR:
+In Bash on a Linux oneAPI host, start at the repository root and use the
+included MoS₂ path WAVECAR. Replace the setup path with your site's setup or
+module environment when needed:
 
 ```bash
-make serial
+source /opt/intel/oneapi/setvars.sh
+make ifx-mpi
 VB_ROOT="$PWD"
+VB_BIN="$VB_ROOT/build/vaspberry-ifx-mpi"
 mkdir results-native-path-01
 cd results-native-path-01
-"$VB_ROOT/build/vaspberry" --task kubo \
+mpiexec -n 4 "$VB_BIN" --task kubo \
   --wavecar "$VB_ROOT/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
   --spinor 2 --bands 1:18 --bundle 1 --curvature-csv KUBO.csv
 cd "$VB_ROOT"
@@ -25,6 +29,16 @@ stored empty band as an intermediate state; it does not integrate a path.
 The [curvature example](../examples/features/kubo-curvature/) supplies the
 matched full-mesh calculation and figure commands. To repeat this command,
 choose another fresh directory.
+
+For Intel Classic already installed at the site, use `make ifort-mpi` and
+`build/vaspberry-ifort-mpi`. For serial Intel execution use `make ifx` and
+`build/vaspberry-ifx` without `mpiexec`. [Build details](BUILD.md) retain GNU
+alternatives and distinguish compiler smoke tests from numerical validation.
+
+`mpiexec -n 4` launches four MPI ranks; the remaining arguments select the
+scientific task and its files. All ranks read the same WAVECAR, and the native
+program assembles the output. Use the same Intel MPI environment at build and
+run time and a rank count consistent with the scheduler allocation.
 
 ## Choose the result
 
@@ -69,7 +83,7 @@ Every option takes a separate value: use `--mesh 12,12`, not
 legacy flags can be mixed where needed; optical energy-grid controls above
 retain their short names. There is no need to learn every historical flag.
 
-GNU native builds expect ordinary byte-record, single-precision complex
+The supplied Intel and GNU targets expect byte-record, single-precision complex
 WAVECAR coefficients (`RTAG=45200`). Older files whose RECL is in compiler
 words are not automatically converted by the native reader. Retain the VASP
 producer/compiler provenance and verify compatibility before a large run.
@@ -96,6 +110,25 @@ and interchange route for Kubo results; legacy DAT tables have fewer printed
 digits. [Output schemas](OUTPUT_FORMAT.md) define units, columns, index bases,
 operator assumptions, and the NPZ/JSON caches used by postprocessing.
 
+## Which file can be plotted immediately?
+
+| Native output | Contents | Next use |
+|---|---|---|
+| `KUBO.csv` with `--bundle 1` | `spin,k_index,kx_frac,ky_frac,kz_frac,omega_z_A2,min_external_gap_eV` | Plot the computed Ωxy in Å² against k index/path position, or use the lattice for a BZ map |
+| Individual-band curvature CSV | k/band IDs, fractional k, band energy, gap and `omega_z_A2` | Plot energy and curvature for the selected isolated band |
+| `PAIRS.csv` | k/spin and n/m IDs, two energies, gap and three `numerator_*_eV2_A2` columns | Integrate occupations and squared energy denominators to obtain Hall response |
+
+Native CSV files start with `#` metadata lines and then the named column
+header. To plot bundle curvature in Origin, a spreadsheet or another CSV tool,
+skip the comments, select `spin=1`, and use `k_index` and `omega_z_A2` as x/y.
+This does not need Python. Preserve the metadata when exporting a table.
+
+The pair numerators are `Nab=-2 Im(Da,nm Db,mn)` in eV² Å² for n<m. They are
+not complex velocity matrices, curvature or conductivity: the squared gap
+division and occupation weighting have not yet been applied. The
+[output specification](OUTPUT_FORMAT.md#native-kubo-pair-export-and-reusable-cache)
+lists their exact columns and units.
+
 ## Charge transport and reusable figures
 
 The main charge-Hall workflow is:
@@ -103,8 +136,8 @@ The main charge-Hall workflow is:
 ```text
 VASP full-mesh WAVECAR
   -> Fortran --task kubo-pairs --pairs-csv PAIRS.csv
-  -> Python import-pairs -> pairs.npz + pairs.json
-  -> Python pair-hall -> conductivity.csv / .dat / .npz + .json
+  -> Python import-pairs: validation/cache -> pairs.npz + pairs.json
+  -> Python pair-hall: transport integration -> conductivity.csv / .dat / .npz + .json
   -> plot_hall.py or your preferred plotting program
 ```
 
@@ -114,6 +147,11 @@ override. Postprocessing supplies μ, temperature, spin multiplicity and
 regions. Its complete, uniform 2D mesh and degeneracy checks still apply.
 Once the cache exists, varying μ, temperature, regions or the retained
 intermediate-band cutoff does not require another native calculation.
+`import-pairs` checks and reorganizes the native output. `pair-hall` performs
+the occupation-weighted transport integral. `plot_hall.py` only reads the
+finished conductivity table and draws figures. The optional `wavecar-hall`
+command orchestrates native export, cache import and integration in one call;
+it records the same intermediate files.
 See the [three-stage commands](KUBO_TRANSPORT.md#native-pairs-to-charge-hall)
 and [actual MoS₂ Hall example](../examples/features/kubo-hall/).
 
@@ -137,5 +175,5 @@ extrema used an invalid k index. Rounded legacy zero values cannot be repaired
 afterward. The corrected diagnostic prints scientific-notation m/s values and
 still represents only canonical momentum, not the full material velocity.
 
-For MPI, run `make mpi` and replace the executable with
-`mpiexec -n 4 "$VB_ROOT/build/vaspberry-mpi"`; calculation arguments stay the same.
+The task arguments are identical for Intel serial/MPI and GNU builds; choose
+the executable and launcher shown in the [build guide](BUILD.md).

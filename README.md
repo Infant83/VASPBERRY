@@ -18,24 +18,30 @@ band plots provide context for the calculated topology and response.
 [Hands-on commands](docs/HANDS_ON.md) · [Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
 [Output formats](docs/OUTPUT_FORMAT.md)
 
-**Latest release: [1.4.0](https://github.com/Infant83/VASPBERRY/releases/tag/v1.4.0).**
-The commands below are available in the fixed `v1.4.0` source. The original
-short options remain supported. See the [release notes](docs/releases/v1.4.0.md),
+**Latest release: [1.4.1](https://github.com/Infant83/VASPBERRY/releases/tag/v1.4.1).**
+The commands below are available in the fixed `v1.4.1` source. The original
+short options remain supported. See the [release notes](docs/releases/v1.4.1.md),
 [changelog](CHANGELOG.md), [version policy](docs/RELEASING.md)
 and [migration notes](docs/MIGRATION.md).
 
 ## Download and compile
 
 ```bash
-git clone --branch v1.4.0 --single-branch https://github.com/Infant83/VASPBERRY.git VASPBERRY-1.4.0
-cd VASPBERRY-1.4.0
-make serial
-./build/vaspberry --help
+git clone --branch v1.4.1 --single-branch https://github.com/Infant83/VASPBERRY.git VASPBERRY-1.4.1
+cd VASPBERRY-1.4.1
+# Activate Intel oneAPI (or the equivalent compiler/MPI modules on your cluster).
+source /opt/intel/oneapi/setvars.sh
+make ifx-mpi
+make check-ifx-mpi
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --help
 ```
 
-The serial executable is `build/vaspberry`; `build/vaspberry-gfortran` remains
-a compatibility name. For MPI, run `make mpi` and use `build/vaspberry-mpi`.
-See the [build guide](docs/BUILD.md) for GNU/Intel compilers and MPI checks.
+The executable is `build/vaspberry-ifx-mpi`, built with Intel `mpiifx`,
+Intel MPI and sequential LP64 oneMKL. Use the `mpiexec` from that same Intel
+MPI installation. For Intel Classic, use `make ifort-mpi`,
+`make check-ifort-mpi` and `build/vaspberry-ifort-mpi`. The
+[build guide](docs/BUILD.md) also covers GNU/OpenMPI (`make gnu`) and
+compiler-specific serial builds.
 Python is needed for the supplied postprocessing and plotting tools:
 
 ```bash
@@ -90,12 +96,16 @@ the occupied bands 1–18 at its supplied k points:
 
 ```bash
 mkdir -p results/mos2-path
-./build/vaspberry --task kubo \
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo \
   --wavecar examples/1H-MoS2/KPATH/2.band/WAVECAR --spinor 2 --bands 1:18 --bundle 1 \
   --curvature-csv results/mos2-path/KUBO.csv
 ```
 
-The CSV contains numerical point curvatures. The
+`KUBO.csv` contains one row per k point/spin channel, with fractional
+k coordinates, `omega_z_A2` (Ωxy in Å²) and `min_external_gap_eV`.
+The occupied-bundle sum is already evaluated by Fortran: plot `omega_z_A2`
+against the ordered `k_index` for this path. For a mesh map, convert the
+fractional coordinates with the reciprocal lattice. The
 [MoS₂ tutorial](examples/features/kubo-curvature/) separately provides a
 matching full-BZ/path dataset and commands for the reference panels. A line
 path alone cannot supply a BZ integral. Use a fresh output
@@ -109,19 +119,19 @@ directory; the band indices are examples, not universal occupied counts.
 
 ```bash
 # Fukui flux and Chern number: full 12 × 12 mesh, bands 1–18.
-./build/vaspberry --task chern --wavecar WAVECAR \
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --task chern --wavecar WAVECAR \
   --mesh 12,12 --spinor 2 --bands 1:18 --output BERRYCURV
 
 # Bi example: full even mesh, occupied spinor bands 1–10.
-./build/vaspberry --task z2 --wavecar WAVECAR \
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --task z2 --wavecar WAVECAR \
   --mesh 12,12 --spinor 2 --bands 1:10 --output NFIELD
 
 # Occupied-bundle point curvature, excluding internal transitions.
-./build/vaspberry --task kubo --wavecar WAVECAR --spinor 2 \
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo --wavecar WAVECAR --spinor 2 \
   --bands 1:18 --bundle 1 --curvature-csv KUBO_BUNDLE.csv
 
 # Reusable all-band pair numerators for charge Hall postprocessing.
-./build/vaspberry --task kubo-pairs --wavecar WAVECAR --spinor 2 \
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo-pairs --wavecar WAVECAR --spinor 2 \
   --pairs-csv PAIRS.csv
 ```
 
@@ -129,10 +139,10 @@ The native syntax groups a mesh as `NX,NY` and a band range as `FIRST:LAST`.
 Specialized legacy options can still be used; for example, `--task kubo` is
 `-kubo 2`, and `--bands 1:18` is `-ii 1 -if 18`. The optional
 `--task kubo-integral` (`-kubo 1`) additionally evaluates the mesh integral.
-Use `./build/vaspberry --help` or the [native command reference](docs/NATIVE_COMMANDS.md) for the full list. MPI uses the same arguments:
+Use `mpiexec -n 4 ./build/vaspberry-ifx-mpi --help` or the [native command reference](docs/NATIVE_COMMANDS.md) for the full list. For example:
 
 ```bash
-mpiexec -n 4 ./build/vaspberry-mpi --task chern --wavecar WAVECAR \
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --task chern --wavecar WAVECAR \
   --mesh 12,12 --spinor 2 --bands 1:18 --output BERRYCURV
 ```
 
@@ -144,24 +154,35 @@ unshifted, even `Nx × Ny × 1` mesh with `Nx,Ny >= 4`, generated with
 
 ### Postprocess and plot saved results
 
-The native program writes Berry-flux maps, point-curvature CSVs, pair data
-and task-specific outputs. The supplied Python tools read those results:
+Fortran produces the numerical outputs. Python has separate calculation
+and plotting roles; neither stage requires a new VASP run when reusing the
+same saved electronic structure.
 
-- **Curvature maps and paths:** plot the computed samples, with optional
-  interpolation for display; the [MoS₂ example](examples/features/kubo-curvature/)
-  shows both maps and symmetry-path panels alongside the material's bands.
-- **Charge Hall:** `import-pairs` checks and caches native pairs; `pair-hall`
-  applies occupations, temperature and BZ/region integration. Reuse the cache
-  for new scans. This is numerical postprocessing, in addition to plotting.
-  See the [explicit three-stage workflow](docs/KUBO_TRANSPORT.md#native-pairs-to-charge-hall).
-- **Figures and tables:** Hall output supports CSV, DAT and NPZ with JSON
-  metadata; `tools/plot_hall.py` produces PNG, PDF and SVG. JSON records
-  conditions and units, rather than replacing VASP input files.
+| Stage | Input → output | What the output means / possible figure |
+|---|---|---|
+| Native `--task kubo` | `WAVECAR` → `KUBO.csv` | Gap-divided point curvature (Å²); plot Ω(k) maps or symmetry-path curves directly. |
+| Native `--task kubo-pairs` | `WAVECAR` → `PAIRS.csv` | Energies, k coordinates and three interband pair numerators (eV² Å²). These are reusable intermediate matrix data, not yet a Hall conductivity. |
+| Python `import-pairs` | `PAIRS.csv` + matching `WAVECAR` → `pairs.npz`, `pairs.json` | Checks normalization/mesh/spin metadata and caches arrays; no Hall integration. |
+| Python `pair-hall` | Pair cache + μ/T/region choices → `conductivity.csv`, `.dat`, `.npz`, `.json` | Applies occupations, energy denominators and BZ/region integration; sheet σ and Δσ in e²/h, plus carriers per cell. |
+| Python `plot_hall.py` | `conductivity.csv` → PNG/PDF/SVG | Draws σ(μ) or Δσ(μ) for selected temperatures and total/valley regions; no wavefunction calculation. |
+| Python `procar_character.py` | Matching `PROCAR`, `WAVECAR`, `OUTCAR`, atom/orbital groups and spin axis → character tables; optional pair cache → projected Hall tables | Plots state-character maps and selected-band/group charge-Hall contributions. |
 
-Example `run.py` scripts and `wavecar-hall` remain optional convenience
-wrappers that execute and record these stages. They are not needed to run
-the Fortran program. For your own material, start with the
-[transfer guide](examples/APPLY_TO_YOUR_SYSTEM.md).
+The [hands-on guide](docs/HANDS_ON.md) gives each stage's command, filenames,
+and independent Matplotlib examples. The [output specification](docs/OUTPUT_FORMAT.md)
+defines columns, units and metadata for reading the same files in Python,
+Origin, gnuplot or other analysis tools. Follow the
+[MoS₂ curvature](examples/features/kubo-curvature/),
+[Hall](examples/features/kubo-hall/) and
+[PROCAR](examples/features/procar-character/) examples for concrete figures.
+
+For a shorter repeatable workflow, the existing `wavecar-hall` command runs
+native Fortran pair export, cache import and Hall integration together. It
+keeps `native/PAIRS.csv`, `pairs/pairs.npz` and `hall/conductivity.csv` under a
+fresh output directory; plotting is a separate command. The
+[Kubo tutorial](docs/KUBO_TRANSPORT.md#native-pairs-to-charge-hall) shows both
+the shortcut and the explicit stages. Reuse the cache with `pair-hall` to
+scan new μ/T values without repeating Fortran. For a new material, start with
+the [transfer guide](examples/APPLY_TO_YOUR_SYSTEM.md).
 
 ## Optional extensions and supporting checks
 
