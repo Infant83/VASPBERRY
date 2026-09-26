@@ -5,6 +5,7 @@ on:
     branches: [master]
     paths:
       - '.github/workflows/publish-v1.4.2.yml'
+      - '.github/workflows/installation-validation.yml'
       - '.github/scripts/publish_v142.py'
       - 'docs/releases/v1.4.2.md'
   workflow_dispatch:

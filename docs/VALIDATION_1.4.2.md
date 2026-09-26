@@ -17,7 +17,7 @@ The new [installation workflow](../.github/workflows/installation-validation.yml
 adds two jobs. Each extracts a fresh archive of the exact source commit
 and builds without the checkout's generated files or Git metadata:
 
-- Ubuntu24.04, GNU Fortran + MPICH + LP64 system BLAS/LAPACK.
+- Ubuntu22.04, GNU Fortran + MPICH + LP64 system BLAS/LAPACK.
 - macOS15 ARM64, Homebrew GNU Fortran + Open MPI + LP64 OpenBLAS.
 
 These jobs check serial help, two-rank communication/help, a known-value
@@ -41,6 +41,13 @@ Intel Mac GNU/OpenMPI stack; that does not establish a fresh current Homebrew
 installation on Intel Macs. Native Windows is unsupported; WSL2 is a Linux
 installation recipe, not a separately executed hosted test. Other compiler,
 MPI or OS combinations need site validation. See the [build guide](BUILD.md).
+
+An initial Ubuntu24.04 MPICH archive job failed the independent two-rank
+communication check: the distribution's MPICH 4.2.0-5build3 package launched
+two singleton ranks. The [upstream diagnosis](https://github.com/pmodels/mpich/issues/7064#issuecomment-2301026290)
+identifies incompatible PMIx/Hydra packaging. The MPICH job therefore uses
+Ubuntu22.04; Ubuntu24.04 remains covered by the Open MPI jobs. The build guide
+records the affected package and the required runtime check.
 
 Software installation checks do not replace material-specific mesh, source
 band and physical-operator convergence.

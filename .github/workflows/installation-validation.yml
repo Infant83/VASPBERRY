@@ -23,7 +23,9 @@ jobs:
             id: macos-arm64-openmpi
             architecture: arm64
           - label: Linux, GNU/MPICH
-            os: ubuntu-24.04
+            # Noble's MPICH 4.2.0-5build3 has a PMIx/Hydra packaging mismatch:
+            # https://github.com/pmodels/mpich/issues/7064
+            os: ubuntu-22.04
             id: linux-mpich
             architecture: x86_64
     env:

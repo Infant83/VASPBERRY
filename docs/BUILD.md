@@ -71,7 +71,7 @@ small MoS₂ input used below is included directly in the source tree.
 | Ubuntu 22.04, Intel `ifx` 2025.0 and Intel MPI | `make ifx-mpi` | Serial and two-rank MPI runtime/help plus actual MoS₂ curvature and pair-export comparisons, using oneMKL |
 | Ubuntu 22.04, retained Intel Classic `ifort` 2021.10 and Intel MPI | `make ifort-mpi` | Separate serial and MPI numerical comparison using oneMKL |
 | Ubuntu 22.04/24.04, GNU 11/13 and Open MPI | `make gnu` | Compile/link, serial and MPI runtime/help; additional GNU numerical regression and Bi Z₂ validation |
-| Ubuntu 24.04, GNU and MPICH | `make gnu MPIFC=mpifort.mpich` | Clean source-archive installation job checks serial and MPI native MoS₂ results |
+| Ubuntu 22.04, GNU and MPICH | `make gnu MPIFC=mpifort.mpich` | Clean source-archive installation job checks serial and MPI native MoS₂ results |
 | macOS 15 ARM64, Homebrew GNU/Open MPI/OpenBLAS | Explicit Homebrew paths below | Clean source-archive installation job checks the GNU build and serial/MPI native MoS₂ results |
 | macOS Intel, existing GNU 15.1/Open MPI 5.0.7 and system LP64 BLAS/LAPACK | Existing compiler/MPI paths with `-llapack -lblas` | Local clean source-archive check using Apple system libraries; no claim of a newly provisioned Homebrew Intel environment |
 | Debian, compatible GNU and Open MPI | Ubuntu/Debian package recipe below | Package recipe; Debian itself is not a separate CI runner |
@@ -195,9 +195,9 @@ slots, a local Open MPI smoke check can use
 `make check-gnu MPIEXEC_FLAGS=--oversubscribe`. Do not add that option to
 scheduler jobs unless the site explicitly permits oversubscription.
 
-For MPICH instead of Open MPI on Ubuntu/Debian, use the package-specific
-wrapper and launcher so the system's MPI alternatives cannot select the
-wrong implementation:
+The MPICH release installation check uses **Ubuntu 22.04**. For that route,
+use the package-specific wrapper and launcher so the system's MPI alternatives
+cannot select the wrong implementation:
 
 ```bash
 sudo apt-get install mpich libmpich-dev
@@ -206,6 +206,22 @@ make check-gnu BUILD_DIR=build-mpich MPIFC=mpifort.mpich \
   MPIEXEC=mpiexec.mpich
 mpiexec.mpich -n 4 build-mpich/vaspberry-mpi --help
 ```
+
+`make check-gnu` checks actual MPI communication, not just whether the
+executable starts. Its runtime probe requires at least two ranks in the same
+`MPI_COMM_WORLD` and then checks reduction and broadcast. If two processes
+both report rank 0 in a one-process world, the check fails; a successful
+`--help` invocation alone would not detect that broken parallel launch.
+
+The release-preparation run on Ubuntu 24.04 with its packaged
+**MPICH 4.2.0-5build3** encountered that failure with `mpiexec.mpich`: its
+PMIx configuration was incompatible with the packaged Hydra launch path.
+The problem is documented in the
+[upstream MPICH issue](https://github.com/pmodels/mpich/issues/7064#issuecomment-2301026290).
+For Ubuntu 24.04, use the Open MPI route above, or a corrected site-provided
+MPICH compiler/runtime/launcher combination that passes `make check-gnu`.
+Do not mix an MPICH executable with another MPI implementation's launcher as
+an installation workaround.
 
 Other distributions may name those commands differently. Use `mpifort` and
 `mpiexec` from the same loaded MPI installation rather than copying an MPI

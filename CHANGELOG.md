@@ -29,6 +29,9 @@ All notable changes to VASPBERRY are recorded here.
   WSL2 recipe scope, cluster modules, release archives and troubleshooting.
 - Numerical kernels, output schemas and scientific reference data are
   unchanged. Rebuild after updating to use the corrected build behavior.
+- Document the observed Ubuntu24.04 MPICH 4.2.0-5build3 PMIx/Hydra
+  launcher incompatibility; validate MPICH on Ubuntu22.04 and retain
+  Open MPI checks on Ubuntu24.04.
 
 ## [1.4.1] - 2026-09-26
 
