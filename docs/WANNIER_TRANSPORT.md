@@ -1,12 +1,12 @@
 # Optional Wannier calculations for supporting validation
 
-The main VASPBERRY workflow is [WAVECAR → native Fortran → postprocessing](../README.md#usage),
+The main VASPBERRY workflow is [WAVECAR → VASPBERRY → postprocessing](../README.md#usage),
 which requires no Wannier interpolation. This optional guide retains the
 `wannier-import`, `wannier-bands` and `wannier-hall` calculations used for
 supporting validation in the technical report. They operate on a separately
 prepared VASP-derived Wannier model. The bundled Python/NumPy backend performs the Fourier sums, diagonalization,
 Berry-curvature evaluation and Hall integration; these are not calculations
-performed by the WAVECAR Fortran executable.
+performed by the VASPBERRY executable.
 Wannier90 prepares the localized electronic model; its `postw90` response is
 used only as an independent comparison in the material example.
 The band dispersion is the material's VASP-derived electronic structure;

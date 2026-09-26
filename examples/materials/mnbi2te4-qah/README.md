@@ -1,7 +1,7 @@
 # MnBi₂Te₄: a magnetic Chern-insulator example
 
 This example computes the complete occupied-bundle Fukui invariant directly
-from an actual VASP WAVECAR with the native Fortran executable. It gives
+from an actual VASP WAVECAR with the VASPBERRY executable. It gives
 **C = −1 for occupied bands 1–123**. A separate standard-WAVEDER integral
 illustrates why an integer invariant does not establish convergence of a
 pointwise Hall integral.
@@ -267,7 +267,7 @@ exported band/projection counts.
 
 ## Reference data
 
-- [Native Fortran occupied-bundle Fukui output and comparison](reference/native-fukui/).
+- [VASPBERRY occupied-bundle Fukui output and comparison](reference/native-fukui/).
 - [VASP-derived Wannier bands, VASPBERRY Hall response and all five convergence runs](reference/vaspberry-wannier/README.md).
 - [Occupied-bundle Fukui map](reference/fukui/fukui_occupied.csv) and
   [link diagnostics](reference/fukui/diagnostics.json).

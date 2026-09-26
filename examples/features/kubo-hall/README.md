@@ -1,6 +1,6 @@
 # MoS₂: intrinsic charge and regional valley Hall response
 
-This example starts from an actual VASP spinor `WAVECAR`. The native Fortran program
+This example starts from an actual VASP spinor `WAVECAR`. The VASPBERRY program
 exports interband matrix-element pairs directly from those wavefunctions.
 The bundled Python integration tool applies occupations and integrates the
 Kubo response while scanning the chemical potential. No Wannierization is needed. The calculation uses the
@@ -66,9 +66,9 @@ replace it.
 ## Shortcut: calculate the Hall table, then draw the curves
 
 Once the full-mesh VASP calculation is complete, the general `wavecar-hall`
-command runs native Fortran, validates its pair output and integrates the Hall
+command runs VASPBERRY, validates its pair output and integrates the Hall
 scan. Python is the launcher and postprocessor; the wavefunction matrix
-calculation still runs in the Fortran executable. The first calculation needs
+calculation runs in the VASPBERRY executable. The first calculation needs
 one numerical command and one plot command.
 
 Choose the build once. For GNU serial:
@@ -108,7 +108,7 @@ The numerical command writes the following inside `results/mos2-24-wrapped/`:
 
 | Output | Contents |
 |---|---|
-| `native/PAIRS.csv`, `native/stdout.log`, `native/stderr.log` | Raw Fortran interband numerators and its execution logs |
+| `native/PAIRS.csv`, `native/stdout.log`, `native/stderr.log` | Raw VASPBERRY interband numerators and execution logs |
 | `pairs/pairs.npz`, `pairs/pairs.json` | Reusable source energies, k mesh, lattice and matrix products |
 | `hall/conductivity.csv`, `.dat`, `.npz`, `.json` | 610 rows: 61 μ × 2 T × 5 regions, with σ, Δσ, carriers and metadata |
 | `workflow.json` | Native command, source/binary hashes and completion status |
@@ -131,12 +131,14 @@ python3 tools/vaspberry_kubo.py pair-hall \
   --output-dir results/mos2-24-100K
 ```
 
-No WAVECAR or Fortran calculation is repeated in this scan. Plot
+No VASPBERRY execution is repeated in this scan. Plot
 `results/mos2-24-100K/conductivity.csv` with `--temperatures 100` to show the new
-curves. For explicit control over the raw Fortran export and import, follow
-[step2](#2-export-matrix-element-pairs-with-native-fortran) and step3 below.
+curves. For explicit control over the raw VASPBERRY export and import, follow
+[step2](#2-export-matrix-element-pairs-with-vaspberry) and step3 below.
 
-## 2. Export matrix-element pairs with native Fortran
+<a id="2-export-matrix-element-pairs-with-native-fortran"></a>
+
+## 2. Export matrix-element pairs with VASPBERRY
 
 ```bash
 make serial

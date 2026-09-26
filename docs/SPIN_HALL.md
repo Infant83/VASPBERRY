@@ -203,8 +203,8 @@ not justify keeping only one partner.
 `--k-chunk` bounds the temporary spin-current matrices. The default memory
 estimate limit is 2048 MiB; `--time-limit` is checked between chunks. These
 are preflight and cooperative checks, not operating-system resource caps.
-The command is serial NumPy; it does not acquire MPI support from the native
-Fortran executable. Independent VASP mesh chunks can be calculated separately. `spin-merge`
+The command is serial NumPy; it does not acquire MPI support from the VASPBERRY
+executable. Independent VASP mesh chunks can be calculated separately. `spin-merge`
 checks their full mesh, common fixed density, potentials, physical settings
 and per-k gauge association before assembly:
 

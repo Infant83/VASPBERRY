@@ -81,7 +81,7 @@ python3 examples/features/hall-valley/run.py \
 ```
 
 This Python WAVECAR calculation requires NumPy and Matplotlib and produces
-both PNG and PDF figures. A Fortran executable is not needed for this route.
+both PNG and PDF figures. The VASPBERRY executable is not needed for this route.
 
 ## Results
 

@@ -45,7 +45,7 @@ python3 examples/features/wavefunction/run.py \
 real-space sampling along the cell vectors, and `--imaginary 1` includes imaginary
 amplitudes. The postprocessor reads these amplitude grids, combines the two
 spinor components and checks the result against the stored WAVECAR coefficients.
-`--postprocess-only` does not rerun Fortran.
+`--postprocess-only` does not rerun VASPBERRY.
 
 ## Optional reproduction helper
 

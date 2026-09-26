@@ -25,7 +25,7 @@ def main() -> int:
     parser.add_argument("--all", action="store_true", help="Recalculate every tutorial; requires all three VASP datasets")
     parser.add_argument("--output-dir", type=Path, help="New directory for all generated files and logs")
     parser.add_argument("--binary", type=Path, default=ROOT / "build/vaspberry-gfortran",
-                        help="Current Fortran executable")
+                        help="VASPBERRY executable")
     parser.add_argument("--bi-wavecar", type=Path, default=EXAMPLES / "Bi_Z2/WAVECAR",
                         help="Full public Bi LFS WAVECAR for Fukui, Z2 and gap Hall")
     parser.add_argument("--mos2-wavecar", type=Path, default=EXAMPLES / "1H-MoS2/KPATH/2.band/WAVECAR",
@@ -55,7 +55,7 @@ def main() -> int:
             parser.error("install requirements-transport.txt in this Python environment")
     binary = args.binary.resolve()
     if any(features[key]["requires_fortran"] for key in selected) and not binary.is_file():
-        parser.error(f"missing Fortran binary: {binary}; run make serial or pass --binary")
+        parser.error(f"missing VASPBERRY binary: {binary}; run make serial or pass --binary")
     inputs = {"bi": args.bi_wavecar.resolve(), "mos2": args.mos2_wavecar.resolve(),
               "mos2-mesh": args.mos2_mesh_wavecar.resolve()}
     for dataset in {features[key]["dataset"] for key in selected}:

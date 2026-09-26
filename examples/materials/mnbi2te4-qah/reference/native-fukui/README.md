@@ -1,6 +1,6 @@
 # Native occupied-bundle Fukui reference
 
-The native Fortran executable reads the actual 6×6 MnBi₂Te₄ VASP WAVECAR
+The VASPBERRY executable reads the actual 6×6 MnBi₂Te₄ VASP WAVECAR
 and evaluates the complete occupied bands 1–123 (192 stored spinor bands).
 It reports **Chern Number = −1.000000**. No Wannier model or Kubo integral
 enters this result.
@@ -19,7 +19,7 @@ four-decimal map printing precision. The largest map flux difference is
 comparison; no curvature value is altered. The integral reconstructed from
 the printed map is -1.000003324824.
 
-The comparison retains the native Fortran reciprocal-area normalization
+The comparison retains the VASPBERRY reciprocal-area normalization
 when reconstructing flux from curvature. The map's extrema are independently
 checked against its numerical rows and recorded in `result.json`.
 

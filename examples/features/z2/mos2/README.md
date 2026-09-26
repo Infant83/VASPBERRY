@@ -47,7 +47,7 @@ mkdir results/mos2-z2
 These task aliases refer to the current repository. For an MPI build, use
 `make mpi` and `mpiexec -n 4 "$repo_dir/build/vaspberry-mpi"` with the same
 arguments. All numerical links and the integer field are calculated by the
-Fortran executable; Python is only needed for the figure and row checks.
+VASPBERRY executable; Python is only needed for the figure and row checks.
 
 | Native reference quantity | Result |
 |---|---:|

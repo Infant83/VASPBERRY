@@ -52,7 +52,7 @@ The photon-energy range is 1–3 eV with 201 samples. The 48 stored path points
 are selected by `--mesh 48,1`; these options do not generate new k points.
 
 `--postprocess-only` reads the native spectra, forms the polarization ratio
-and plots them; it does not rerun Fortran or recalculate matrix elements.
+and plots them; it does not rerun VASPBERRY or recalculate matrix elements.
 
 ## Optional reproduction helper
 
