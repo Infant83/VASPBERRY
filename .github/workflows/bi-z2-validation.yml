@@ -5,6 +5,12 @@ on:
     branches: [master, "feature/**"]
     paths:
       - ".github/workflows/bi-z2-validation.yml"
+      # Release publication requires this check on the exact final commit,
+      # including follow-up installation fixes and release documentation.
+      - ".github/workflows/installation-validation.yml"
+      - ".github/workflows/publish-*.yml"
+      - ".github/scripts/publish_v*.py"
+      - "docs/releases/**"
       - "Makefile"
       - "examples/Bi_Z2/**"
       - "tests/compare_z2_fields.py"

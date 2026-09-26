@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/publish-v1.4.2.yml'
       - '.github/workflows/installation-validation.yml'
+      - '.github/workflows/bi-z2-validation.yml'
       - '.github/scripts/publish_v142.py'
       - 'docs/releases/v1.4.2.md'
   workflow_dispatch:
@@ -15,7 +16,8 @@ permissions:
 
 concurrency:
   group: publish-vaspberry-v1.4.2
-  cancel-in-progress: false
+  # Superseded candidates must not block the current exact-source validation.
+  cancel-in-progress: true
 
 jobs:
   publish:
