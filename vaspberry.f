@@ -5969,11 +5969,24 @@
 
       subroutine help(ver_tag)
       character*256 ver_tag
+      logical print_help
 #ifdef MPI_USE
       include 'mpif.h'
-      integer ierr
+      integer ierr,help_rank
       logical mpi_is_initialized,mpi_is_finalized
 #endif
+      print_help=.true.
+#ifdef MPI_USE
+      call MPI_INITIALIZED(mpi_is_initialized,ierr)
+      if(mpi_is_initialized)then
+       call MPI_FINALIZED(mpi_is_finalized,ierr)
+       if(.not.mpi_is_finalized)then
+        call MPI_COMM_RANK(MPI_COMM_WORLD,help_rank,ierr)
+        print_help=help_rank.eq.0
+       endif
+      endif
+#endif
+      if(print_help)then
       write(6,*)"          **** PROGRAM INSTRUCTION ***"
       write(6,*)" "
       write(6,*)ver_tag
@@ -6276,6 +6289,7 @@
       write(6,*)" A VASPBERRY built without '-assume byterecl' may"
       write(6,*)" read such a legacy WAVECAR, but use it only for"
       write(6,*)" files written with that same RECL convention."
+      endif
 #ifdef MPI_USE
       call MPI_INITIALIZED(mpi_is_initialized,ierr)
       if(mpi_is_initialized)then

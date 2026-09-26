@@ -9,6 +9,13 @@ fi
 help_output=$1
 version=$(tr -d '[:space:]' < VERSION)
 
+# Concurrent MPI writers can splice help text mid-line. Require one writer.
+banner_count=$(grep -F -o -- 'PROGRAM INSTRUCTION' "$help_output" | wc -l | tr -d '[:space:]')
+if [ "$banner_count" -ne 1 ]; then
+  echo "expected exactly one help banner, found $banner_count" >&2
+  exit 1
+fi
+
 for required in \
   "Ver $version" \
   "build/vaspberry --task chern --wavecar WAVECAR" \

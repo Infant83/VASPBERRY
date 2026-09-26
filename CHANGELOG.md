@@ -4,6 +4,9 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+- Native MPI help now prints once from rank zero while all ranks finalize,
+  preventing interleaved help text and intermittent multi-rank help checks.
+
 - CI retries the checksum-pinned public Bi input fetch up to three times
   and retains each attempt's download/verification record, including failures
   before the numerical examples start. Persistent failures still fail CI.
