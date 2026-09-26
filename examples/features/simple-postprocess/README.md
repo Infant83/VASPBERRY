@@ -13,6 +13,21 @@ demonstration with a real VASP input, not a convergence study.
 Its Kubo pair integral is distinct from the occupied-subspace Fukui result
 shown in the [insulating Hall example](../hall-valley/README.md).
 
+## Choose how far to go
+
+Start with steps 1–3 for the first figure. The remaining steps each change
+one thing; no group, region or plot section is required for the first run.
+
+| Input file | What changes | Result directory |
+|---|---|---|
+| [`bi.ini`](bi.ini) | First run: native pairs and a total Hall scan | `results/simple-bi` |
+| [`bi-rescan.ini`](bi-rescan.ini) | A different μ scan, reusing the first run | `results/simple-bi-rescan` |
+| [`bi-regions.ini`](bi-regions.ini) | A named subset of two k points, reusing the first run | `results/simple-bi-regions` |
+
+Read the [beginner guide](../../../docs/POSTPROCESSING.md) when adapting this
+example to your material. Keep the [settings reference](../../../docs/POSTPROCESSING_REFERENCE.md)
+for looking up a key rather than reading all options before starting.
+
 ## 1. Build and obtain the input
 
 Run from the repository root. Load Intel Fortran, Intel MPI and oneMKL using
@@ -94,16 +109,55 @@ python3 tools/vaspberry_post.py plot results/simple-bi-rescan
 
 This skips native Fortran export, copies the validated pair cache, and
 calculates the new occupation-weighted table. Keep the same WAVECAR available
-for the source-identity check. If you selected GNU for the first run, make
-the corresponding executable settings consistent in `bi-rescan.ini` too.
-For another plot destination, use:
+for the source-identity check. The native executable and MPI launcher are not used with `--reuse`.
+For a later fresh calculation, set them to match the compiler/MPI environment.
+
+## 5. Name a k-space subset
+
+[`bi-regions.ini`](bi-regions.ini) adds just these sections to the first
+example and changes `[run] output` to `../../../results/simple-bi-regions`:
+
+```ini
+[region sampled_k]
+k_ids = 1 2
+
+[plot]
+hall_regions = total sampled_k rest
+```
+
+`sampled_k` is an arbitrary label. `k_ids` selects the **1-based k-point
+indices** in the WAVECAR/native output. Here it selects the first two of the
+144 saved points to demonstrate the interface. It is not a definition of a
+physical valley or M point. A symmetry-point label such as `M` also needs
+actual coordinates and a radius, as explained in the
+[region guide](../../../docs/POSTPROCESSING.md#add-a-k-space-region).
+
+```bash
+python3 tools/vaspberry_post.py check examples/features/simple-postprocess/bi-regions.ini --reuse results/simple-bi
+python3 tools/vaspberry_post.py run examples/features/simple-postprocess/bi-regions.ini --reuse results/simple-bi
+python3 tools/vaspberry_post.py plot results/simple-bi-regions
+```
+
+This does not rerun Fortran. `results/simple-bi-regions/hall/conductivity.csv`
+has 27 rows: 9 μ values for each of `total`, `sampled_k` and `rest`. Each subset
+keeps its original full-BZ integration weights; `rest` is the complement of
+the selected points, so `sampled_k + rest = total` at each μ and temperature.
+The three curves are drawn together in
+`results/simple-bi-regions/figures/charge-hall/hall.png` (also PDF/SVG).
+They illustrate partitioning; their magnitudes are not a valley-convergence result.
+
+## 6. Redraw a completed table
+
+For a new plot of Δσ rather than absolute σ, use:
 
 ```bash
 python3 tools/vaspberry_post.py plot results/simple-bi --temperature 0 --quantity delta-sigma --output-dir results/simple-bi-redraw
 ```
 
-This redraws Δσ from the existing table without using WAVECAR or starting
-MPI. All numerical and figure output directories must be new.
+This reads the existing Hall table without using WAVECAR, starting MPI or
+repeating integration. All numerical and figure output directories must be
+new. Plot choices stored in an edited INI do not modify an earlier run;
+`plot` reads that run's saved settings, with supported command-line overrides.
 
 ## Scope and the next calculation
 
@@ -126,7 +180,11 @@ before division in the pair integral.
 For your own material, replace the input, mesh, spin mode, energy range and
 reference. A full periodic mesh is required; the supplied MoS₂ band-path
 WAVECAR is not a Hall-integration input. The
-[settings guide](../../../docs/POSTPROCESSING.md) shows optional atom/layer/
-orbital/spin groups and k-space regions in the same INI, explains every
-output stage, and separates native calculation, occupation integration and
-plotting.
+[beginner guide](../../../docs/POSTPROCESSING.md#use-your-own-vasp-calculation)
+shows which settings to change first. Layer/orbital/spin character additionally
+needs matching SOC `PROCAR` and `OUTCAR` files; they are not supplied as a
+matched projection dataset for this Bi walkthrough. Follow the
+[PROCAR tutorial](../procar-character/) for those inputs and its separate,
+explicitly analytic fixture. The [technical report](../../../docs/TECHNICAL_REPORT.md)
+and [report reproduction table](../../REPORT_REPRODUCTION.md) connect the
+feature-specific physical examples to reference figures.

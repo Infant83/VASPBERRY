@@ -16,8 +16,24 @@ The [report reproduction table](REPORT_REPRODUCTION.md) maps every report
 figure to its calculation, numerical files and input-regeneration requirements.
 Start with the [hands-on commands](../docs/HANDS_ON.md); use the compact
 [native command reference](../docs/NATIVE_COMMANDS.md) when changing task options.
-For a short Hall workflow, the [single-settings-file Bi example](features/simple-postprocess/)
-uses one command to run Fortran plus integration, and one to draw the saved results.
+
+## Learn the postprocessing workflow
+
+Start with the first row; later rows add an optional task. The
+[beginner guide](../docs/POSTPROCESSING.md) explains what to edit, and the
+[settings reference](../docs/POSTPROCESSING_REFERENCE.md) lists every key.
+
+| What you want to learn | Example and input | Result |
+|---|---|---|
+| Run Fortran, integrate Hall response and draw a first figure | [Bi walkthrough](features/simple-postprocess/) and [`bi.ini`](features/simple-postprocess/bi.ini); fetched real SOC `WAVECAR` | `PAIRS.csv` → `conductivity.csv` → σ(μ) figure |
+| Change μ/T without recalculating matrix elements | [`bi-rescan.ini`](features/simple-postprocess/bi-rescan.ini); same Bi input and saved pair cache | A new Hall table and figure |
+| Give a k-space subset your own name | [`bi-regions.ini`](features/simple-postprocess/bi-regions.ini); same Bi pair cache | Total, selected-point and remaining-mesh contributions |
+| Add layer/orbital/spin character | [PROCAR tutorial](features/procar-character/); matching `WAVECAR`, `PROCAR` and `OUTCAR` from your own SOC calculation | State-character maps and selected-band/group charge-Hall curves |
+| Check projection arithmetic without a VASP calculation | [Analytic PROCAR fixture](features/procar-character/#run-the-small-analytic-example) | Known projection and Hall values; this is synthetic input, separate from real Bi |
+
+The Bi examples demonstrate a fixed-input insulating workflow. Material
+convergence and the report figures use the feature-specific guides below;
+[the reproduction table](REPORT_REPRODUCTION.md) identifies their exact inputs.
 
 ## Choose a calculation
 

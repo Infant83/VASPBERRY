@@ -1,16 +1,85 @@
 # Atom, orbital and spin character of charge-Hall contributions
 
-This v1.4.0 workflow combines noncollinear `LORBIT=11` PROCAR projections with
-the **same final WAVECAR** used for native Kubo pair export. It supports arbitrary
-named atom groups, optional orbital selectors, a Cartesian spin-analysis axis,
-chemical-potential/temperature scans and the existing region JSON format.
+This workflow combines noncollinear `LORBIT=11` PROCAR projections with the
+**same final WAVECAR** used for native Kubo pair export. Use the single-file
+front end described in the [beginner guide](../../../docs/POSTPROCESSING.md#add-layer-and-spin-character)
+for routine work; the individual-stage commands below are an advanced reference.
 
 The result is a **selected-band, character-weighted charge-Hall attribution**.
-It is useful for comparing which layer, atomic plane, orbital or spin projection
-contributes to a canonical-momentum Hall trend. It does not compute an independent
-layer-current, orbital-current or spin-current operator. Wannier is unnecessary.
+It helps compare layer, atomic-plane, orbital and spin character in a
+canonical-momentum Hall trend. It does not evaluate a separate layer-current,
+orbital-current or spin-current operator.
+
+## Start with one INI file
+
+First complete the [real Bi Hall walkthrough](../simple-postprocess/) to learn
+`run`, `plot` and `--reuse`. That input demonstrates the native calculation but
+does not include a matched PROCAR projection dataset. For your own SOC material,
+prepare the matching files described [below](#use-your-own-vasp-calculation),
+then add projection sections to your working Hall INI:
+
+```ini
+# Add to your existing [run]/[hall] settings, adapting these example IDs.
+[projection]
+bands = 19 20
+axis = 0 0 1
+
+[group layer1]
+ions = 1 3
+
+[group layer2]
+ions = 2 4
+
+[plot]
+character_group = layer1
+map_band = 19
+```
+
+This is an addition to a complete INI, not a standalone input. `PROCAR` and
+`OUTCAR` default to the WAVECAR directory; use explicit `procar` and `outcar`
+paths in `[projection]` if needed. The example bands and atom IDs must be
+replaced with your material's choices. Atom IDs are 1-based POSCAR/PROCAR
+indices; `layer1` and `layer2` are your labels, not automatically detected layers.
+`axis = 0 0 1` means Cartesian +z. The INI passes these definitions to the
+same numerical engines as the commands below, so no hand-written JSON is needed.
+If `[plot]` already exists, merge the new keys into it. Each selected Hall
+band must be isolated from every other stored band at every sampled k point.
+
+For an INI saved as `analysis.ini` in the repository root and with
+`[run] output = results/my-sample`, the commands remain:
+
+```bash
+python3 tools/vaspberry_post.py run analysis.ini
+python3 tools/vaspberry_post.py plot results/my-sample
+```
+
+In addition to ordinary `hall/conductivity.csv`, this writes
+`character/character.csv` (charge and spin weights by state/group),
+`character-hall/character_hall.csv` (selected-band, group-weighted Hall response)
+and the corresponding `figures/character/character.*` maps and
+`character_hall.*` curves. The [output explanation](#outputs-and-interpretation)
+below defines these quantities. See the
+[settings reference](../../../docs/POSTPROCESSING_REFERENCE.md) for orbital
+selection, region selection, plot choices and their defaults.
 
 ## Run the small analytic example
+
+This is a **synthetic format and arithmetic check**, separate from the real Bi
+WAVECAR example. Run it from the repository root in your usual Python environment:
+
+```bash
+python3 examples/features/procar-character/run_example.py --output-dir results/procar-demo-checked
+```
+
+The helper creates the fixture, runs projection and integration, draws the
+figures and checks the expected values below. It writes input files under
+`input/`, the numerical outputs under `character/`, `pairs/` and `hall/`,
+plots under `figures/`, and its verification record in the chosen directory.
+Use a new output directory. Plotting uses Matplotlib; dependency details are
+in [`requirements-transport.txt`](../../../requirements-transport.txt).
+
+<details>
+<summary>Individual commands for the analytic fixture</summary>
 
 Run from the repository root, using a Python environment with
 [`requirements-transport.txt`](../../../requirements-transport.txt). Choose fresh
@@ -47,6 +116,8 @@ python tools/procar_character.py plot \
   --output-dir results/procar-demo/figures
 ```
 
+</details>
+
 The fixture has two atoms, two orbitals, two bands and a 2×2 mesh. Its OUTCAR
 rotation maps the spin-frame z axis to Cartesian +x. The lower atom has raw
 charge 0.2 and +x character; the upper atom has charge 0.6 and −x character.
@@ -66,15 +137,6 @@ At `T=0`, `mu=0`, band 1 gives:
 | All-ion projected charge | −1.6π |
 | Charge projection residual | −0.4π |
 
-[`run_example.py`](run_example.py) runs the same CLI stages, verifies those
-numbers, checks joint-spin and residual closure, then saves a verification JSON.
-For CI or a one-command check:
-
-```sh
-python examples/features/procar-character/run_example.py \
-  --output-dir results/procar-demo-checked
-```
-
 ## Use your own VASP calculation
 
 Keep `PROCAR`, `WAVECAR` and `OUTCAR` from one completed static, noncollinear
@@ -83,6 +145,14 @@ charge/m₁/m₂/m₃ format used by VASP 5.4.4; unsupported phase/collinear for
 fail explicitly. The `project` command checks every k point, band energy,
 occupation, OUTCAR lattice and final-state table. It reads the actual printed
 SAXIS-to-Cartesian matrix; `--axis 0 0 1` always means **Cartesian** +z.
+
+Use the INI route above for routine work. Groups may overlap, but overlapping
+groups must not be summed as a partition. Orbital names must match the PROCAR
+header exactly. A pair of magnetic atomic planes inside one monolayer is not
+automatically a bilayer.
+
+<details>
+<summary>Individual commands and JSON inputs for advanced control</summary>
 
 For a layer/orbital definition, create `groups.json`, for example:
 
@@ -140,6 +210,8 @@ Once both caches exist, rerun `hall`
 with a new output directory to change selected bands, mu, temperature or
 regions; rerun `project` to change atom/orbital groups or the spin-analysis axis.
 Change plots independently using the saved CSV/NPZ tables.
+
+</details>
 
 ## Outputs and interpretation
 

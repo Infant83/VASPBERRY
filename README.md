@@ -215,44 +215,42 @@ unshifted, even `Nx × Ny × 1` mesh with `Nx,Ny >= 4`, generated with
 
 ### Postprocess and plot saved results
 
-Fortran produces the numerical outputs. Python has separate calculation
-and plotting roles; neither stage requires a new VASP run when reusing the
-same saved electronic structure.
-
-| Stage | Input → output | What the output means / possible figure |
-|---|---|---|
-| Native `--task kubo` | `WAVECAR` → `KUBO.csv` | Gap-divided point curvature (Å²); plot Ω(k) maps or symmetry-path curves directly. |
-| Native `--task kubo-pairs` | `WAVECAR` → `PAIRS.csv` | Energies, k coordinates and three interband pair numerators (eV² Å²). These are reusable intermediate matrix data, not yet a Hall conductivity. |
-| Python `import-pairs` | `PAIRS.csv` + matching `WAVECAR` → `pairs.npz`, `pairs.json` | Checks normalization/mesh/spin metadata and caches arrays; no Hall integration. |
-| Python `pair-hall` | Pair cache + μ/T/region choices → `conductivity.csv`, `.dat`, `.npz`, `.json` | Applies occupations, energy denominators and BZ/region integration; sheet σ and Δσ in e²/h, plus carriers per cell. |
-| Python `plot_hall.py` | `conductivity.csv` → PNG/PDF/SVG | Draws σ(μ) or Δσ(μ) for selected temperatures and total/valley regions; no wavefunction calculation. |
-| Python `procar_character.py` | Matching `PROCAR`, `WAVECAR`, `OUTCAR`, atom/orbital groups and spin axis → character tables; optional pair cache → projected Hall tables | Plots state-character maps and selected-band/group charge-Hall contributions. |
-
-The [hands-on guide](docs/HANDS_ON.md) gives each stage's command, filenames,
-and independent Matplotlib examples. The [output specification](docs/OUTPUT_FORMAT.md)
-defines columns, units and metadata for reading the same files in Python,
-Origin, gnuplot or other analysis tools. Follow the
-[MoS₂ curvature](examples/features/kubo-curvature/),
-[Hall](examples/features/kubo-hall/) and
-[PROCAR](examples/features/procar-character/) examples for concrete figures.
-
-For repeated Hall and PROCAR analysis, keep the input paths, μ/T scan and
-optional atom groups or regions in **one commented settings file**:
+Start with the [public Bi walkthrough](examples/features/simple-postprocess/).
+Its [`bi.ini`](examples/features/simple-postprocess/bi.ini) needs only `[run]`
+(input, native executable, mesh and output) and `[hall]` (μ, reference and
+temperature). After its build/input step, run from the repository root:
 
 ```bash
-python3 tools/vaspberry_post.py run analysis.ini
-python3 tools/vaspberry_post.py plot results/run01
+python3 tools/vaspberry_post.py run examples/features/simple-postprocess/bi.ini
+python3 tools/vaspberry_post.py plot results/simple-bi
 ```
 
-The first command launches the compiled Fortran executable and the requested
-numerical postprocessing. The second draws the saved tables. `analysis.ini`
-specifies `results/run01` relative to that file; it also sets the executable
-and MPI rank count. No user-written JSON is needed. Start with the
-[complete public Bi example](examples/features/simple-postprocess/) and
-[settings guide](docs/POSTPROCESSING.md). Reuse a previous run's pair cache
-with `run analysis-next.ini --reuse results/run01` when changing μ/T, without
-repeating Fortran. The individual [Kubo commands](docs/KUBO_TRANSPORT.md#native-pairs-to-charge-hall)
-and `procar_character.py` remain available for advanced controls.
+The first command runs Fortran and numerical integration; the second draws
+the completed table. You edit one INI file, and the tool records the underlying
+commands. The files remain usable in Python, Origin, gnuplot or other software:
+
+| Stage | File under `results/simple-bi/` | Contents and use |
+|---|---|---|
+| Fortran calculation from `WAVECAR` | `native/PAIRS.csv` | Energies, k coordinates and three interband pair numerators in eV² Å²; reusable matrix data before occupations and Hall integration. |
+| Numerical postprocessing | `hall/conductivity.csv` and `.dat` | Sheet σ and reference-subtracted Δσ in e²/h, as functions of μ, temperature and region, plus represented carrier counts. |
+| Plotting | `figures/charge-hall/hall.png`, `.pdf`, `.svg` | Total charge-Hall conductivity versus μ−reference. |
+
+Use the [beginner guide](docs/POSTPROCESSING.md) to add one feature at a time:
+change the μ/T scan, reuse saved pairs, select a k-space region, then add
+PROCAR groups when needed. The [Bi rescan and region examples](examples/features/simple-postprocess/)
+are runnable extensions of the first calculation. The
+[PROCAR tutorial](examples/features/procar-character/) explains the matching
+extra inputs and has a separate analytic fixture; it is not part of the Bi input.
+Consult the [settings reference](docs/POSTPROCESSING_REFERENCE.md) for all keys
+and defaults, or the [output specification](docs/OUTPUT_FORMAT.md) for columns
+and units.
+
+For a curvature map or symmetry-path curve, native `--task kubo` already
+writes gap-divided `omega_z_A2` in `KUBO.csv`; that result can be plotted
+directly without a Hall scan. See the [MoS₂ curvature example](examples/features/kubo-curvature/).
+The [hands-on commands](docs/HANDS_ON.md) and
+[individual Kubo stages](docs/KUBO_TRANSPORT.md#native-pairs-to-charge-hall)
+remain available for users who need direct control of each stage.
 
 ## Optional extensions and supporting checks
 

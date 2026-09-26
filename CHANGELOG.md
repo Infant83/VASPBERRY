@@ -4,6 +4,10 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+- Postprocessing documentation now separates a first-run guide from the complete
+  INI reference, with linked Bi rescan/region exercises, user-defined group and
+  region names, and explicit numerical-output versus plotting instructions.
+
 - Native MPI help now prints once from rank zero while all ranks finalize,
   preventing interleaved help text and intermittent multi-rank help checks.
 

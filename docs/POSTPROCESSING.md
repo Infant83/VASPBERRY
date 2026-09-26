@@ -1,57 +1,94 @@
-# Postprocessing from one settings file
+# Postprocessing: from a VASP file to a figure
 
-Keep input paths, the chemical-potential range, temperatures and optional
-atom groups in one commented INI file. VASPBERRY still performs the
-wavefunction matrix calculation in Fortran; the Python front end runs that
-executable and the numerical postprocessing stages in order.
+Start with **one settings file and three commands**. Add layer/spin or
+k-space regions only when your question needs them. You do not need to
+write JSON files or assemble the individual Python stages.
 
-```bash
-python3 tools/vaspberry_post.py check analysis.ini
-python3 tools/vaspberry_post.py run analysis.ini
-python3 tools/vaspberry_post.py plot results/run01
-```
+| Command | What it does | What you get |
+|---|---|---|
+| `check analysis.ini` | Check settings, input files and mesh before running. | A summary or an actionable error; no calculation directory. |
+| `run analysis.ini` | Run Fortran, then calculate the requested Hall tables. | Numerical data in the INI's `output` directory. |
+| `plot results/run01` | Read a completed result and draw it. | PNG, PDF and SVG figures; no new wavefunction calculation. |
 
-`check` checks the settings and source files without starting a calculation.
-`run` exports native pairs, creates a reusable cache, and calculates Hall
-tables. `plot` reads completed tables and draws figures. Numerical validity
-checks also run during the calculation; passing `check` alone is not a
-convergence result.
+Prefix each command with `python3 tools/vaspberry_post.py`. `run` also
+performs the checks, so the separate `check` is useful when preparing an
+input. Numerical validity checks continue during `run`; this preliminary
+check does not establish convergence.
 
-For a complete public example, start with the
-[Bi settings and commands](../examples/features/simple-postprocess/README.md).
-It uses an actual full-mesh VASP WAVECAR and no manually written JSON.
+**Choose a starting point:** [try the public example](#start-with-the-public-bi-example),
+[use your own data](#use-your-own-vasp-calculation),
+[add layer/spin analysis](#add-layer-and-spin-character), or
+[add a region](#add-a-k-space-region). Look up individual options in the
+[settings reference](POSTPROCESSING_REFERENCE.md).
 
-## Set up the native executable once
+## Start with the public Bi example
 
-Load your site's Intel Fortran, Intel MPI and oneMKL environment. For a common
-Linux installation, the commands are:
+Run commands from the repository directory containing `Makefile` and
+`tools/`. Load Intel Fortran, Intel MPI and oneMKL with your site's modules
+or, for a common Linux installation, the setup script below. Use your usual
+Python environment; the supplied figures use Matplotlib.
 
 ```bash
 source /opt/intel/oneapi/setvars.sh
 make ifx-mpi
 make check-ifx-mpi
+python3 examples/fetch_inputs.py bi --output-dir results/simple-bi-input
+python3 tools/vaspberry_post.py check examples/features/simple-postprocess/bi.ini
+python3 tools/vaspberry_post.py run examples/features/simple-postprocess/bi.ini
+python3 tools/vaspberry_post.py plot results/simple-bi
 ```
 
-Use the actual installation path or equivalent cluster modules. The
-[build guide](BUILD.md) also covers retained Intel Classic and GNU builds.
-Run the Python command once, without `mpiexec` in front of it. The
-`mpi_procs` setting launches the **Fortran executable** on that many ranks
-using the matching MPI launcher. Run within an allocation permitting those
-ranks. Keep the compiler/library environment loaded.
+Replace the setup path with your installed oneAPI path or site modules.
+The supplied [`bi.ini`](../examples/features/simple-postprocess/bi.ini) already
+specifies this public input, the full 12×12 mesh, the energy scan and four
+Intel MPI ranks. Use an allocation permitting those ranks. **Run Python
+once**: `mpi_procs` launches the Fortran executable through MPI for you.
+GNU/serial substitutions are in the [example's build instructions](../examples/features/simple-postprocess/README.md#2-check-and-calculate)
+and the [build guide](BUILD.md). Use new result directories when repeating a run.
 
-Use your usual Python environment. The supplied plotting commands use
-Matplotlib; the native Fortran calculation does not require Python.
+Open **`results/simple-bi/figures/charge-hall/hall.png`**. It shows sheet Hall
+conductivity versus chemical potential relative to the reference. For this
+particular insulating Bi input, expect a nearly flat, near-zero result
+(about −6.28×10⁻⁶ e²/h). That is the documented finite-input residual, not
+a missing plot or an established anomalous Hall signal. The
+[complete example](../examples/features/simple-postprocess/README.md) lists
+its reference values, inputs, outputs and limitations.
 
-## Describe your calculation
+### What was calculated, and which file should I use?
 
-Put `analysis.ini` beside your own full-mesh `WAVECAR`. Here is the structure
-of a minimal SOC study; replace the executable path, mesh and energy values
-with those for your calculation:
+```text
+WAVECAR → Fortran matrix calculation → native/PAIRS.csv
+        → Python occupation/energy-denominator/BZ integration → hall/conductivity.csv
+        → plotting → figures/charge-hall/hall.png (also PDF and SVG)
+```
+
+Python performs the numerical Hall integral after Fortran exports reusable
+matrix data. Plotting is a separate operation on the completed table.
+Neither step reruns VASP.
+
+| Your purpose | File inside the result directory | Contents |
+|---|---|---|
+| Inspect the original Fortran output | `native/PAIRS.csv` | k points, paired bands and energies, and interband numerators in eV² Å²; occupations and energy denominators have not yet been applied. |
+| Plot or analyze Hall response in any program | `hall/conductivity.csv` or `.dat` | μ, temperature, region, sheet σ and reference-subtracted Δσ in e²/h, conductivity in siemens, and carrier counts. |
+| Reuse the expensive matrix calculation | `pairs/pairs.npz` **and** `pairs/pairs.json` | Validated pair arrays and their source, units and geometry. Keep both. |
+| Understand a failed stage or recover its command | `run.json`, `logs/`, `native/*.log` | Settings, source identity, stage commands, status and messages. |
+
+Use Origin, gnuplot or your own plotting program with the tables if preferred.
+The [output specification](OUTPUT_FORMAT.md) defines the columns. JSON files
+in a result are generated records; your editable input is the INI.
+A fresh native run writes `native/PAIRS.csv`; a reused run copies the pair
+cache and does not create another native output.
+
+## Use your own VASP calculation
+
+Create `analysis.ini` in the **repository root**. Use your own complete,
+uniform two-dimensional mesh WAVECAR; a symmetry-reduced mesh or band path
+cannot provide this Hall integral. Here is an illustrative SOC calculation:
 
 ```ini
 [run]
-wavecar = WAVECAR
-binary = /path/to/VASPBERRY/build/vaspberry-ifx-mpi
+wavecar = /path/to/your/vasp-calculation/WAVECAR
+binary = build/vaspberry-ifx-mpi
 output = results/run01
 mesh = 24 24
 spin_mode = soc
@@ -60,75 +97,131 @@ mpi_procs = 4
 mpi_launcher = mpiexec.hydra
 
 [hall]
-# Chemical potentials in eV: MIN MAX NUMBER_OF_POINTS.
-mu = -0.5 0.5 101
-reference = 0.0
-# Temperatures in kelvin, separated by spaces.
+# Example only: reference energy is 5.2 eV in this WAVECAR's energy zero.
+# Scan from 0.2 eV below to 0.2 eV above it, at 101 points.
+mu = 5.0 5.4 101
+reference = 5.2
 temperatures = 0 100 300
 ```
 
-Paths are relative to the **INI file's directory**. Absolute paths and `~`
-are accepted; shell variables and shell commands are not expanded. If you
-move a settings file, update its relative paths. Section names and keys are
-case-sensitive; lists use spaces rather than commas. Use `#` or `;` for
-comments. Each `output` must name a new directory.
+Set `wavecar` and `mesh` from your input; choose `mu`, `reference` and
+`temperatures` for your research question. Set the executable/launcher once
+for your installation. `spin_mode = soc` is for two-component spinors;
+other spin conventions are in the [reference](POSTPROCESSING_REFERENCE.md).
 
-`mesh` describes all points stored in WAVECAR. A symmetry-reduced mesh or a
-band path cannot replace the complete uniform two-dimensional mesh needed
-for Hall integration. `spin_mode = soc` selects two-component spinors and
-counts each stored spinor state once. The other explicit choices are
-`scalar-degenerate`, `collinear-up`, and `collinear-down`; select the mode
-matching the actual VASP input. A collinear channel is one channel's
-response, not the sum of both spin channels.
+**Energy numbers must use the WAVECAR eigenvalue zero.** In this example the
+plot spans −0.2 to +0.2 eV because its x coordinate is `mu - reference`.
+The tool does not read a Fermi energy automatically. The text
+`energy_reference` documents the convention; it does not shift energies.
+`reference` also defines Δσ(μ,T) = σ(μ,T) − σ(reference,T).
 
-`mu` and `reference` use the **same energy zero as the WAVECAR eigenvalues**.
-The `energy_reference` text records that convention; it does not shift the
-energies. `reference` defines Δσ(μ) = σ(μ) − σ(reference). The figures use
-μ−reference on their horizontal axis. Choose these values from your own
-band energies rather than copying a different material's example.
+```bash
+python3 tools/vaspberry_post.py check analysis.ini
+python3 tools/vaspberry_post.py run analysis.ini
+python3 tools/vaspberry_post.py plot results/run01
+```
 
-All stored bands enter the pair sum by default. If a convergence study
-requires a smaller retained window, add `pair_band_max = 40` under `[hall]`,
-for example. This retains bands 1–40 in the total charge-Hall integration;
-it does not change what native Fortran exports. The source needs at least
-that many stored bands. The retained window and number of stored bands
-remain distinct quantities to converge.
+Paths **inside the INI** are relative to its directory. Paths on the command
+line, such as `results/run01` or `--reuse results/run01`, are relative to your
+shell's current directory. Moving an INI may require changing its paths.
+The commands above assume it stays in the repository root.
 
-## What is saved
+For ordinary total Hall curves, **this is the complete input**. No group,
+region, projection or plot section is required. All stored bands enter the
+pair sum by default; mesh and band convergence remain part of the material
+study. For point-curvature maps or symmetry-path curves directly from
+Fortran, follow the [native Kubo example](../examples/features/kubo-curvature/README.md).
 
-With `output = results/run01`, the result directory contains:
+## Add layer and spin character
 
-| File | Contents and use |
+Use this extension with your own SOC calculation's matching `WAVECAR`,
+`PROCAR` and `OUTCAR`. PROCAR must contain the supported noncollinear
+`LORBIT=11` charge/spin blocks. Add the following to the same INI **before
+running**, replacing the illustrative atom and band IDs:
+
+```ini
+[projection]
+bands = 1
+axis = 0 0 1
+
+[group layer1]
+ions = 1
+
+[group layer2]
+ions = 2
+
+[plot]
+character_group = layer1
+```
+
+`layer1` and `layer2` are names you choose. **`ions` selects the actual
+1-based POSCAR/PROCAR atom numbers**; for several atoms use, for example,
+`ions = 1 3 5`. Naming a group does not discover a layer. Optional
+`orbitals` selects actual PROCAR orbital labels. The axis is Cartesian +z
+here; the OUTCAR supplies the source spin-frame rotation. PROCAR and OUTCAR
+default to the WAVECAR directory.
+
+`bands` selects the bands included in the character-weighted Hall sum.
+Each selected band must be isolated from every other stored band; the public Bi input's
+Kramers partners are unsuitable for this individual-band example. To learn
+what the projection data mean without your own files, use the
+[small analytic PROCAR example](../examples/features/procar-character/README.md).
+It checks assigned analytic data; it is separate from the real Bi run.
+
+Run the same `check`, `run`, `plot` commands. In addition to total Hall data,
+you get `character/character.csv` (state/group charge and spin weights),
+`character-hall/character_hall.csv` (selected-band, group/spin-weighted
+charge-Hall contributions), and `figures/character/character.png` plus
+`character_hall.png` (also PDF/SVG). These figures show where the states have
+a given character and how that character contributes to charge Hall.
+The [reference](POSTPROCESSING_REFERENCE.md) explains overlapping groups,
+projection residuals and the distinction from a spin-current conductivity.
+
+## Add a k-space region
+
+A region selects k points for an additional Hall curve. Its name is also
+yours to choose: `K`, `M`, `m` and `pocket1` are labels. The tool uses the
+coordinates or IDs you supply, not the label, to choose points.
+
+For example, **if the desired M point is (1/2, 0, 0) in your input's
+reciprocal basis**, add:
+
+```ini
+[region M]
+center = 1/2 0 0
+radius = 0.10
+
+[plot]
+hall_regions = total M
+```
+
+`center` uses fractional reciprocal coordinates; `radius` is in Å⁻¹. This
+selects a periodic disk **around** M. Verify the coordinate in your cell and
+choose a radius containing sampled k points. Distinct regions must not
+overlap. `total` covers the full mesh and `rest` covers points outside all
+your regions; these two names are reserved.
+
+If you already have `[plot]`, add the new key there; do not create a second
+`[plot]` section. Names are case-sensitive and start with an English letter;
+then letters, digits, `_`, `.` and `-` are allowed. When renaming a group or
+region, update the corresponding plot and difference references too.
+
+Try the [public Bi region exercise](../examples/features/simple-postprocess/README.md)
+with [`bi-regions.ini`](../examples/features/simple-postprocess/bi-regions.ini).
+It selects known k-point IDs and reuses the first run. The
+[MoS₂ regional Hall tutorial](../examples/features/kubo-hall/README.md)
+shows a physically specified K/K′ partition and its regional contrast.
+
+## Change a calculation or redraw a figure
+
+| What changed? | What to do |
 |---|---|
-| `native/PAIRS.csv` | Raw Fortran output: each k point/spin and unordered pair n<m, the two energies, fractional k coordinates, gap, and three antisymmetric matrix products in eV² Å². These numerators have no occupation factors or energy denominators yet. |
-| `native/stdout.log`, `native/stderr.log` | The native calculation's messages. |
-| `pairs/pairs.npz`, `pairs/pairs.json` | Validated pair arrays and their geometry, units and source identity; keep both files together for rescans. |
-| `hall/conductivity.csv`, `.dat`, `.npz` | The completed numerical table: μ, T, region, sheet σ in e²/h and siemens, reference-subtracted Δσ in e²/h, and represented electron/carrier counts. |
-| `hall/conductivity.json` | Units, operator, band-window and integration diagnostics for that table. |
-| `settings.ini`, `run.json`, `logs/` | A settings snapshot, resolved paths/source hashes/stage status, and postprocessing logs. Edit your original INI for the next study. |
-| `groups.json`, `regions.json` | Automatically generated definitions from optional sections of your INI. You do not need to create or edit these JSON files. |
+| Only the figure: saved temperature, σ versus Δσ, or saved group/band to display | Use `plot` with an override and a new figure directory. |
+| μ range, temperature grid, region, or group definition/name | Edit the INI, choose a new `output`, then `run ... --reuse PREVIOUS_RESULT`; plot that new result. |
+| VASP electronic structure, geometry or WAVECAR | Use a new native `run` and new output directory. |
 
-The import stage checks and stores the native values. The Hall stage performs
-a calculation: it divides by squared energy differences, applies Fermi
-occupations, and integrates over the Brillouin zone or selected regions.
-It does not rerun VASP or change the self-consistent electronic structure.
-
-After `plot`, the default `figures/charge-hall/` directory contains
-`hall.png`, `hall.pdf`, and `hall.svg`. These plot sheet σ or Δσ against
-chemical potential at the saved temperatures. You can also load the CSV in
-Origin, gnuplot, a spreadsheet, or your own Python plotting program. The
-[output specification](OUTPUT_FORMAT.md) defines individual columns and
-conventions.
-
-For a directly calculated curvature map or band-path curve, native
-`--task kubo` already writes `KUBO.csv` in Å². Those commands and plotting
-examples are in the [hands-on guide](HANDS_ON.md); the Hall INI workflow
-above uses the more general pair output to scan occupations.
-
-## Change the scan without repeating Fortran
-
-Keep the same WAVECAR and source settings. Change `[hall]` and the output
-name in your INI, then point `--reuse` to the completed previous run:
+For a new numerical scan, copy `analysis.ini` to `analysis-next.ini` in the
+same directory, change the desired settings and set `output = results/run02`:
 
 ```bash
 python3 tools/vaspberry_post.py check analysis-next.ini --reuse results/run01
@@ -136,133 +229,37 @@ python3 tools/vaspberry_post.py run analysis-next.ini --reuse results/run01
 python3 tools/vaspberry_post.py plot results/run02
 ```
 
-Here `analysis-next.ini` must specify `output = .../run02` using its own
-relative path convention. `--reuse` reads a completed result from this
-front end, verifies the same WAVECAR and mesh/spin/energy conventions, and
-copies the validated pair cache into the new result. It skips native pair
-export and recalculates the requested occupation integral. Keep the WAVECAR
-available for this identity check. A changed Hamiltonian, geometry or VASP
-calculation requires a new native run.
+`--reuse` skips Fortran, verifies the same WAVECAR/source conventions and
+recalculates the postprocessing. Keep WAVECAR available; projection also
+needs matching PROCAR/OUTCAR. Follow the
+[ready-to-run Bi rescan](../examples/features/simple-postprocess/README.md#4-reuse-the-pairs-for-a-second-scan)
+for a complete example.
 
-To draw one saved temperature and the reference-subtracted response into
-another folder:
+To draw an already calculated temperature and Δσ in a different folder:
 
 ```bash
-python3 tools/vaspberry_post.py plot results/run01 --temperature 300 --quantity delta-sigma --output-dir results/run01-figures
+python3 tools/vaspberry_post.py plot results/run01 --temperature 300 --quantity delta-sigma --output-dir results/run01-redraw
 ```
 
-The plot command does not require the original WAVECAR, native executable
-or MPI launcher. It uses the completed tables and, by default, the plot
-choices saved when that run was created. `--temperature` selects a temperature
-already calculated; `--quantity` chooses `sigma` or `delta-sigma`. Editing
-the original INI does not change an existing result. The result and figure
-directories are preserved; choose new names when rerunning.
+For an already calculated projection group, add `--group layer2` to a plot
+command. **Plotting uses the saved result's settings**, so editing your
+original INI does not change an existing result. `plot` needs only the
+completed result files, not VASP inputs, Fortran or MPI. Preserve the saved
+result and choose a new figure directory for another redraw.
 
-## Optional atom, layer, orbital and spin character
+## Find a setting or solve a problem
 
-For your own SOC calculation, keep matching `PROCAR`, `OUTCAR` and
-`WAVECAR` from the same final static calculation. Add `[projection]` and
-named groups to the same INI. The following illustrates the syntax for
-atoms 1 and 2 and isolated band 1; replace the IDs with those of your actual
-structure and the bands you intend to analyze:
+- [Settings reference](POSTPROCESSING_REFERENCE.md): every INI key, defaults,
+  units, naming rules, input requirements and common errors.
+- [Public Bi example](../examples/features/simple-postprocess/README.md): first
+  run, expected table/figure, rescan and region exercise.
+- [PROCAR example](../examples/features/procar-character/README.md): analytic
+  projection check and applying atom/orbital/spin groups to your own data.
+- [Output formats](OUTPUT_FORMAT.md): exact columns for your plotting tools.
+- [Technical report](TECHNICAL_REPORT.md): scientific definitions and scope;
+  [example/report map](../examples/REPORT_REPRODUCTION.md) connects its figures
+  to the relevant example and data.
 
-```ini
-[projection]
-bands = 1
-axis = 0 0 1
-
-[group lower]
-ions = 1
-
-[group upper]
-ions = 2
-```
-
-`PROCAR` and `OUTCAR` default to the WAVECAR directory. Set `procar` and
-`outcar` under `[projection]` if their paths differ. `axis` is a Cartesian
-unit vector. Atom and band IDs are 1-based; layer names are your definitions
-from the actual structure. Add an optional `orbitals = dxy dyz dz2 dxz x2-y2`
-line to a group only when those labels occur in its PROCAR header. Projection
-uses the Hall scan by default; its own `mu`, `reference`, and `temperatures`
-can be specified under `[projection]`. Its virtual-state sum uses all stored
-pair bands, regardless of `[hall] pair_band_max`; that setting limits only
-the total charge-Hall table.
-
-This adds `character/character.csv` and `.npz` for raw charge/spin character,
-and `character-hall/character_hall.csv` and `.npz` for the selected-band,
-character-weighted charge-Hall contributions. Projection diagnostics and
-JSON metadata accompany both. The joint spin weights use
-`plus=(q+m_axis)/2` and `minus=(q-m_axis)/2`; the raw local projections are
-not normalized to sum to one.
-
-With projection enabled, `plot` also creates state-character maps and
-selected-group Hall curves under `figures/character/`. Set default plot
-choices before `run`, for example:
-
-```ini
-[plot]
-character_group = lower
-map_band = 1
-character_temperature = 0
-character_region = total
-character_delta = false
-```
-
-You can redraw another saved group's character and Hall curves without
-reintegrating:
-
-```bash
-python3 tools/vaspberry_post.py plot results/run01 --group upper --band 1 --temperature 0 --output-dir results/run01-upper
-```
-
-`--band` selects the state-character map; it does not change the bands
-included in the saved projected Hall sum. Changing that sum requires a new
-`run` with `--reuse` and a different `[projection] bands` selection.
-
-Selected bands must be isolated from every other stored band; unresolved
-degeneracies are rejected. The public Bi example has Kramers-degenerate
-states and deliberately omits this band-resolved projection. These are
-character-weighted **charge-Hall contributions**; independent spin-, layer-
-and orbital-current responses are different observables. The
-[projection guide](../examples/features/procar-character/README.md) supplies
-an explicitly analytic fixture and the detailed matching checks.
-
-## Optional regional curves in the same file
-
-Define periodic disks with fractional reciprocal coordinates and radii in
-Å⁻¹. This example is the **MoS₂ reciprocal basis** used by the
-[regional Hall tutorial](../examples/features/kubo-hall/README.md); it is not
-a transferable valley definition for the Bi demonstration or another cell:
-
-```ini
-[region K]
-center = 1/3 2/3 0
-radius = 0.35
-
-[region Kprime]
-center = -1/3 -2/3 0
-radius = 0.35
-
-[differences]
-valley = K Kprime
-
-[plot]
-hall_regions = total K Kprime valley
-hall_temperatures = 300
-hall_quantity = delta-sigma
-```
-
-Include 300 K in your `[hall] temperatures` for this plot selection.
-If your INI already has a `[plot]` section, merge these keys into that section;
-do not add a second `[plot]` header.
-Alternatively, a region can use `k_ids = 1 2 3` to select known 1-based
-k-point IDs. Regions must form a valid disjoint partition; `rest` covers the
-remaining points. The `valley` difference above is K−K′ without a factor of
-one half, and is a regional charge response defined by your partition.
-Differences apply to the total Hall table; projected Hall keeps the named
-regions themselves.
-
-This compact front end uses the existing strict numerical defaults. For an
-explicit numerical-degeneracy treatment or other advanced controls, use the
-individual [Kubo commands](KUBO_TRANSPORT.md). Source-band, k-mesh and
-operator accuracy still need to be assessed for the material under study.
+Keep explicit band/mesh/operator convergence choices when adapting the
+example. Advanced degeneracy controls and individual pipeline stages remain
+in the [Kubo reference](KUBO_TRANSPORT.md).
