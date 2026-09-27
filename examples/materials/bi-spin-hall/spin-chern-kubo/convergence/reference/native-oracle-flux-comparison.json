@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "cases": [
+    {
+      "selection": "occupied",
+      "maximum_flux_difference_rad": 9.545127223766217e-09,
+      "native_spin_chern": 1.0000000000000009,
+      "oracle_spin_chern": 1,
+      "comparison": "Original converged assembled source vs actual fullmesh warm restart; independent NumPy links vs native links."
+    },
+    {
+      "selection": "pair",
+      "maximum_flux_difference_rad": 3.0046239052339274e-08,
+      "native_spin_chern": 2.0,
+      "oracle_spin_chern": 2,
+      "comparison": "Original converged assembled source vs actual fullmesh warm restart; independent NumPy links vs native links."
+    }
+  ]
+}

@@ -6,7 +6,7 @@
 source. Clone it with `git clone https://github.com/Infant83/VASPBERRY.git`.
 Update a clean checkout with `git pull --ff-only`.
 
-An active release tag, such as `v1.5.1`, stays fixed. Use the tag when reproducing a
+The current release tag is `v1.6.1`. Use the fixed tag when reproducing a
 published calculation, and record the version plus `git rev-parse HEAD` in
 the calculation record. `git describe --tags --always --dirty` also identifies
 changes after a release. A development branch is not the default download.
@@ -20,13 +20,12 @@ Git LFS inputs may need the [input-fetch procedure](../examples/INPUTS.md).
 - Patch releases, for example 1.5.1, contain compatible fixes, including input
   detection and simpler use of existing commands. Numerical bug fixes must
   describe changed results and any migration needed.
-- Minor releases, for example 1.4.0, add compatible features and commands.
+- Minor releases, for example 1.6.1, add compatible features and commands.
 - Major releases change public command or data contracts incompatibly.
 
 Agree on the version with the maintainer before publishing. Do not create an
-additional release merely to renumber the same update. Version 1.6.0 was
-withdrawn and must not be reused; a future 1.6 minor release must use 1.6.1
-or later.
+additional release merely to renumber the same update, or reuse a version
+number that has already identified another release.
 
 `VERSION` is the authoritative software version. CLI/Fortran version labels,
 `CITATION.cff`, release notes and the changelog must agree. A release records
@@ -34,16 +33,11 @@ its date and a fixed tag; development work remains under an Unreleased
 changelog entry until publication. The CFF format version is separate from
 the software version. A historical DOI must not be reused as a new version DOI.
 
-The automatic-spinor update uses **1.5.1**. At the maintainer's explicit
-request, the duplicate 1.6.0 release and tag were withdrawn. Its
-[source commit](https://github.com/Infant83/VASPBERRY/commit/eb0b468aa0674f5ec579e75a014fe4591ec4cdfe)
-and [withdrawal record](releases/v1.6.0.md) preserve provenance.
-
-Ordinarily, published tags remain fixed: correct numerical results in a new
-release without moving the old tag. An explicit maintainer-requested withdrawal
-is an exception, recorded with the reason and original commit; do not reuse its
-version number or recreate its release/tag. The active 1.5.1 release and tag
-are unchanged. Software validation and material convergence remain separate.
+Published tags remain fixed: correct numerical results in a new release
+without moving the old tag. Preserve historical input/output metadata when
+updating instructions. Software validation and material convergence remain
+separate. Version 1.6.1 adds compatible native spin-sector tasks and the
+intermediate-band sum control; see its [release notes](releases/v1.6.1.md).
 
 ## Publication checks
 
@@ -88,9 +82,11 @@ It also requires the postprocessing command, guide and example files, and
 preserves the immutable v1.4.2 tag. The scientific report remains the
 retained method edition; new command instructions are in the current guides.
 
-The former 1.6.0 and 1.5.1 publishers each required thirteen successful jobs
-on their exact release commit, including Bi, both Intel MPI builds and
-Linux/macOS archive installations. They have been retired so an old workflow
-cannot recreate the withdrawn tag or require it for future publication.
-Current downloads use 1.5.1; its original source and validation record remain
-unchanged. The withdrawal creates no new software version.
+The 1.6.1 publisher validates the version and required feature files, then
+waits for the complete CI, actual Bi, Intel MPI and source-archive installation
+checks on its exact source commit. New spin-Chern/spin-Kubo checks must pass
+alongside the existing tasks. It preserves prior active release tags and
+refuses a conflicting tag or an advanced default branch. Current downloads
+use 1.6.1; the [validation record](VALIDATION_1.6.1.md) describes the required
+checks and their physical scope. After publication, verify the actual
+version-pinned archive against the checked source and replay the public examples.

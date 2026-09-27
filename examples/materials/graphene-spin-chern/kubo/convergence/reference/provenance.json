@@ -1,0 +1,255 @@
+{
+  "date": "2026-09-27",
+  "scope": "Actual ordinary graphene SOC VASP radial calculations, native canonical projected-spin curvature, independent local WAVECAR overlap diagnostics, no full-BZ integral claimed",
+  "native_execution": "GNU serial on macOS; public commands show the supported Intel MPI route",
+  "archive_exclusions": "Licensed POTCAR, CHGCAR, WAVECAR, VASP and native binaries are not bundled",
+  "records": [
+    {
+      "started_at_utc": "2026-09-27T09:36:15.563078+00:00",
+      "command": [
+        "vasp_ncl"
+      ],
+      "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+      "threads": 1,
+      "timeout_seconds": 1800.0,
+      "input_sha256": {
+        "POSCAR": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+        "INCAR": "e614f85142330b068d526b4ccae56ae372c1e24195557189b651e864063ee790",
+        "KPOINTS": "1cb2e133571453ebaf3c543db77514f3d92012ff3f54d523d36941c7c447bc3d",
+        "POTCAR": "253f7b50bb8d59471dbedb8285d89021f4a42ed1a2c5d38a03a736e69125dd95",
+        "CHGCAR": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+      },
+      "scope": "Real fixed-geometry graphene VASP calculation; no SOC scaling or model substitution.",
+      "returncode": 0,
+      "wall_seconds": 787.004739159951,
+      "converged": true,
+      "normal_footer": true,
+      "final_toten_eV": -16.77737293,
+      "peak_rss_bytes_macos": 681963520.0,
+      "outputs": {
+        "OUTCAR": {
+          "bytes": 200582,
+          "sha256": "e89f86baba1acca424b74b8ffdd34732d7e4bac583ced4e4ba38430e8499b2b0"
+        },
+        "OSZICAR": {
+          "bytes": 1792,
+          "sha256": "a2eb29709f8317b781c1b3a62da194e1e36ca898df97edf5a9c0fe2004589ac6"
+        },
+        "WAVECAR": {
+          "bytes": 110408832,
+          "sha256": "88f82577e1fcf39e9cef3d01a987cd049127296a975722d2daa9a39b661e64b5"
+        },
+        "CHGCAR": {
+          "bytes": 28313727,
+          "sha256": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+        },
+        "EIGENVAL": {
+          "bytes": 86479,
+          "sha256": "a9168cd41a195d3a3b8d2a9f8d2d35e9530a1907bb6ef07d819830a275c22573"
+        },
+        "vasprun.xml": {
+          "bytes": 189373,
+          "sha256": "936640e95f7a311e2d5c42b8fe980ce14b03ec8a4ddb939c116ad50672efc46d"
+        },
+        "stdout.log": {
+          "bytes": 2543,
+          "sha256": "202d12663514373090bfbf557c0342b4e191cec778b26793b0cbd312a9f1446b"
+        },
+        "stderr.log": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "status": "PASS",
+      "finished_at_utc": "2026-09-27T09:49:22.933588+00:00",
+      "case": "radial-ediff9"
+    },
+    {
+      "started_at_utc": "2026-09-27T09:49:24.325329+00:00",
+      "command": [
+        "vasp_ncl"
+      ],
+      "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+      "threads": 1,
+      "timeout_seconds": 1800.0,
+      "input_sha256": {
+        "POSCAR": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+        "INCAR": "0b41af0a1bad9d12e06d44b8cb4d7adb7c440f63a67c75d2299a78c538d4f637",
+        "KPOINTS": "72745745bdf02b783611e0c3f8d18a763d6ee12c7ad2c79028752b336b61c558",
+        "POTCAR": "253f7b50bb8d59471dbedb8285d89021f4a42ed1a2c5d38a03a736e69125dd95",
+        "CHGCAR": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+      },
+      "scope": "Real fixed-geometry graphene VASP calculation; no SOC scaling or model substitution.",
+      "returncode": 0,
+      "wall_seconds": 421.3155049250927,
+      "converged": true,
+      "normal_footer": true,
+      "final_toten_eV": -16.77737253,
+      "peak_rss_bytes_macos": 519892992.0,
+      "outputs": {
+        "OUTCAR": {
+          "bytes": 163937,
+          "sha256": "10bae4956d4aa54ba6f10ac7b847609002de4bd99c7c38b6985afec52831ba62"
+        },
+        "OSZICAR": {
+          "bytes": 3952,
+          "sha256": "23f4d875fb06a1f68adc29133e8763a68af1949e316681c364ffe88acb0aa5ee"
+        },
+        "WAVECAR": {
+          "bytes": 37869696,
+          "sha256": "fa549fba2375192cb483e5bd4a838757652e9f54912334c54589e17a805b81ed"
+        },
+        "CHGCAR": {
+          "bytes": 28313727,
+          "sha256": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+        },
+        "EIGENVAL": {
+          "bytes": 29743,
+          "sha256": "6ac0f9b332394b35b81b80780cae9c32f146eda619406a7529f7c940effff81d"
+        },
+        "vasprun.xml": {
+          "bytes": 128438,
+          "sha256": "854409059081f60167b93136ec73a239fdebef7986514507cc99af4eb264b565"
+        },
+        "stdout.log": {
+          "bytes": 4703,
+          "sha256": "c3a5917e91f337df73b22c0e41fa3e5e53b172e8b45f90ed357dd2b5ed29906b"
+        },
+        "stderr.log": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "status": "PASS",
+      "finished_at_utc": "2026-09-27T09:56:25.871290+00:00",
+      "case": "radial-ediff11"
+    },
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-kubo",
+        "--bands",
+        "1:8"
+      ],
+      "start_unix": 1790502564.3245351,
+      "inputs": {
+        "vaspberry": "0d45aff53101924dcaf7eae84d655cc6f91c65cab0cba0d218c64157c2770526",
+        "WAVECAR": "88f82577e1fcf39e9cef3d01a987cd049127296a975722d2daa9a39b661e64b5",
+        "OUTCAR": "e89f86baba1acca424b74b8ffdd34732d7e4bac583ced4e4ba38430e8499b2b0"
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "exit": 0,
+      "end_unix": 1790502566.682613,
+      "logs": {
+        "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout.log": "01a867a884ff985dc078617357c1f51ba699bee4eb1591a9642f2fa806d55510"
+      },
+      "case": "native-ediff9"
+    },
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-kubo",
+        "--bands",
+        "1:8",
+        "--sum-bands",
+        "10",
+        "--output",
+        "SUM10"
+      ],
+      "start_unix": 1790502594.7695382,
+      "inputs": {
+        "vaspberry": "0d45aff53101924dcaf7eae84d655cc6f91c65cab0cba0d218c64157c2770526",
+        "WAVECAR": "88f82577e1fcf39e9cef3d01a987cd049127296a975722d2daa9a39b661e64b5",
+        "OUTCAR": "e89f86baba1acca424b74b8ffdd34732d7e4bac583ced4e4ba38430e8499b2b0"
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "exit": 0,
+      "end_unix": 1790502597.272852,
+      "logs": {
+        "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout.log": "01a867a884ff985dc078617357c1f51ba699bee4eb1591a9642f2fa806d55510"
+      },
+      "case": "native-sum10"
+    },
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-kubo",
+        "--bands",
+        "1:8",
+        "--sum-bands",
+        "12",
+        "--output",
+        "SUM12"
+      ],
+      "start_unix": 1790502597.336569,
+      "inputs": {
+        "vaspberry": "0d45aff53101924dcaf7eae84d655cc6f91c65cab0cba0d218c64157c2770526",
+        "WAVECAR": "88f82577e1fcf39e9cef3d01a987cd049127296a975722d2daa9a39b661e64b5",
+        "OUTCAR": "e89f86baba1acca424b74b8ffdd34732d7e4bac583ced4e4ba38430e8499b2b0"
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "exit": 0,
+      "end_unix": 1790502600.2782772,
+      "logs": {
+        "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout.log": "01a867a884ff985dc078617357c1f51ba699bee4eb1591a9642f2fa806d55510"
+      },
+      "case": "native-sum12"
+    },
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-kubo",
+        "--bands",
+        "1:8"
+      ],
+      "start_unix": 1790502985.919562,
+      "inputs": {
+        "vaspberry": "0d45aff53101924dcaf7eae84d655cc6f91c65cab0cba0d218c64157c2770526",
+        "WAVECAR": "fa549fba2375192cb483e5bd4a838757652e9f54912334c54589e17a805b81ed",
+        "OUTCAR": "10bae4956d4aa54ba6f10ac7b847609002de4bd99c7c38b6985afec52831ba62"
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "exit": 0,
+      "end_unix": 1790502986.518873,
+      "logs": {
+        "stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout.log": "01a867a884ff985dc078617357c1f51ba699bee4eb1591a9642f2fa806d55510"
+      },
+      "case": "native-ediff11"
+    }
+  ],
+  "scripts_sha256": {
+    "plot.py": "efda107b5236bc2cf142cd7914c7da1fc9f73ee3c4e4cc0454b987bc5adf0a30",
+    "prepare.py": "949872d0f22247c7239ba5543a949b076a8585cf2acab61d8da4f93904484a49",
+    "analyze.py": "bd4705aab6aa57f530539fdc14863431b3b9b922420ee028424e39b19283f7cb"
+  },
+  "expected_rejection": {
+    "command": "vaspberry --task spin-kubo --bands 1:8 --sum-bands 9 --output CUTPAIR",
+    "exit": 1,
+    "reason": "Cutoff splits an unresolved external degeneracy at k=1",
+    "output_csv_created": false
+  }
+}

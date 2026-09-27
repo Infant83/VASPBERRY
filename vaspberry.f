@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.5.1 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.6.1 (f77) for VASP
 ! Written by Hyun-Jung Kim
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -55,6 +55,7 @@
 ! version 1.6.0 automatic WAVECAR spinor layout with checked -s
 !               : 2026. Sep. 27. H.-J. Kim
 ! release 1.5.1 patch numbering correction; calculation unchanged
+! version 1.6.1 projected-spin Chern, Kubo sectors and sum cutoff
 !               : 2026. Sep. 27. H.-J. Kim
 ! last update and bug fixes : 2026. Sep. 27.
 
@@ -121,6 +122,14 @@
       integer :: myrank, nprocs, ierr, mpierr
       integer :: imaxberry,iminberry
       integer ::  mpi_comm_earth
+      integer spinchern_task,spinchern_mesh_seen,spinkubo_sum_max
+      real*8 spinchern_axis(3),spinchern_etol,spinchern_stol
+      character*256 spinchern_outcar
+      common /spinchern_reals/ spinchern_axis,spinchern_etol,
+     &                        spinchern_stol
+      common /spinchern_ints/ spinchern_task,spinchern_mesh_seen,
+     &                       spinkubo_sum_max
+      common /spinchern_chars/ spinchern_outcar
 #ifdef MPI_USE
       include 'mpif.h'
       INTEGER         status(MPI_STATUS_SIZE)
@@ -140,7 +149,7 @@
       mpi_comm_earth = 0
 #endif
 
-      ver_tag="# VASPBERRY (Ver 1.5.1), by Hyun-Jung Kim."//
+      ver_tag="# VASPBERRY (Ver 1.6.1), by Hyun-Jung Kim."//
      &        " 2026. Sep. 27."
       pi=4.*atan(1.)
       berrymax=0d0
@@ -179,6 +188,25 @@
 #ifdef MPI_USE
       call MPI_BCAST(ispinor,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 #endif
+      if(spinchern_task.gt.0)then
+       if(spinchern_task.eq.1)then
+        call spinchern_run(filename,spinchern_outcar,foname,
+     &    nkx,nky,nini,nmax,ispin,ispinor,nk,nband,ecut,
+     &    a1,a2,a3,spinchern_axis,spinchern_etol,spinchern_stol,
+     &    myrank,nprocs)
+       else
+        call spinkubo_run(filename,spinchern_outcar,foname,
+     &    nkx,nky,spinchern_mesh_seen,spinkubo_sum_max,
+     &    nini,nmax,ispin,ispinor,
+     &    nk,nband,ecut,a1,a2,a3,spinchern_axis,
+     &    spinchern_etol,spinchern_stol,myrank,nprocs)
+       endif
+       close(10)
+#ifdef MPI_USE
+       call MPI_FINALIZE(ierr)
+#endif
+       stop
+      endif
       if(iz .eq. 1)then
        if(ihf .ne. 0)then
         write(0,*) '*** error - Z2 n-field needs a full k mesh'
@@ -1634,7 +1662,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.5.1'
+      write(94,'(A)')'# vaspberry_version=1.6.1'
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
@@ -1834,7 +1862,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.5.1'
+      write(94,'(A)')'# vaspberry_version=1.6.1'
       if(fieldok)then
        write(94,'(A)')'# result_status=PASS'
       else
@@ -3994,7 +4022,7 @@
       implicit none
       integer iunit
       write(iunit,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_V2'
-      write(iunit,'(A)')'# vaspberry_version=1.5.1'
+      write(iunit,'(A)')'# vaspberry_version=1.6.1'
       write(iunit,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
       write(iunit,'(A)')'# operator='//
      & 'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
@@ -4196,7 +4224,7 @@
       endif
       if(isp.eq.1)then
        write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1'
-       write(96,'(A)')'# vaspberry_version=1.5.1'
+       write(96,'(A)')'# vaspberry_version=1.6.1'
        write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
        write(96,'(A)')'# operator='//
      &  'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
@@ -4410,7 +4438,7 @@
        endif
        if(isp.eq.1)then
         write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_PAIRS_V1'
-        write(96,'(A)')'# vaspberry_version=1.5.1'
+        write(96,'(A)')'# vaspberry_version=1.6.1'
         write(96,'(A)')'# result_kind=UNORDERED_INTERBAND_NUMERATORS'
         write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
         write(96,'(A)')'# operator='//
@@ -5436,6 +5464,23 @@
       real*8    init_e, fina_e
       real*8    theta, phi
       logical   flag_atom_project,pair_band_selection
+      integer spinchern_task,spinchern_mesh_seen,spinkubo_sum_max
+      real*8 spinchern_axis(3),spinchern_etol,spinchern_stol
+      character*256 spinchern_outcar
+      common /spinchern_reals/ spinchern_axis,spinchern_etol,
+     &                        spinchern_stol
+      common /spinchern_ints/ spinchern_task,spinchern_mesh_seen,
+     &                       spinkubo_sum_max
+      common /spinchern_chars/ spinchern_outcar
+      logical spinchern_option
+      spinchern_task=0
+      spinchern_mesh_seen=0
+      spinkubo_sum_max=0
+      spinchern_axis=(/0d0,0d0,1d0/)
+      spinchern_etol=1d-8
+      spinchern_stol=1d-6
+      spinchern_outcar='OUTCAR'
+      spinchern_option=.false.
       nini=1;it=0;iskp=0;ine=0;icd=0;ixt=0;ivel=0;iz=0;ihf=0
       iwf=0;ikwf=1;ng=0;imag=0;rs=0.;ikubo=0;nn=0;nediv=1000
       init_e =  0.0d0;fina_e=10.0d0;sigma=0.01
@@ -5483,6 +5528,55 @@
 ! Long options normalize to the same legacy parser and dispatch below.
 ! Keep this routine self-contained for standalone parser regression builds.
          select case(trim(option))
+         case('--sum-bands')
+          do cli_j=1,len_trim(value)
+           if(index('0123456789',value(cli_j:cli_j)).eq.0)goto 910
+          enddo
+          read(value,*,iostat=cli_ios)spinkubo_sum_max
+          if(cli_ios.ne.0.or.spinkubo_sum_max.lt.1)goto 910
+          cycle
+         case('--outcar')
+          spinchern_outcar=trim(value)
+          spinchern_option=.true.
+          cycle
+         case('--spin-axis')
+          spinchern_option=.true.
+          select case(trim(value))
+          case('x')
+           spinchern_axis=(/1d0,0d0,0d0/)
+          case('y')
+           spinchern_axis=(/0d0,1d0,0d0/)
+          case('z')
+           spinchern_axis=(/0d0,0d0,1d0/)
+          case default
+           if(count([(value(cli_j:cli_j).eq.',',
+     &                cli_j=1,len_trim(value))]).ne.2)goto 910
+           do cli_j=1,len_trim(value)
+            if(index('0123456789+-.eEdD,',value(cli_j:cli_j))
+     &         .eq.0)goto 910
+            if(value(cli_j:cli_j).eq.',')then
+             if(cli_j.eq.1.or.cli_j.eq.len_trim(value))goto 910
+             if(value(cli_j-1:cli_j-1).eq.',')goto 910
+            endif
+           enddo
+           read(value,*,iostat=cli_ios)spinchern_axis
+           if(cli_ios.ne.0)goto 910
+          end select
+          if(.not.all(ieee_is_finite(spinchern_axis)))goto 910
+          if(abs(sum(spinchern_axis**2)-1d0).gt.1d-8)goto 910
+          cycle
+         case('--energy-gap-tol','--spin-gap-tol')
+          spinchern_option=.true.
+          do cli_j=1,len_trim(value)
+           if(index('0123456789+-.eEdD',value(cli_j:cli_j))
+     &        .eq.0)goto 910
+          enddo
+          read(value,*,iostat=cli_ios)x
+          if(cli_ios.ne.0)goto 910
+          if(.not.ieee_is_finite(x).or.x.le.0d0)goto 910
+          if(option.eq.'--energy-gap-tol')spinchern_etol=x
+          if(option.eq.'--spin-gap-tol')spinchern_stol=x
+          cycle
          case('--task')
           if(task_seen)then
            write(0,*)'*** error - specify --task only once'
@@ -5513,6 +5607,7 @@
            read(number_string,*,iostat=cli_ios)cli_values(1:2)
            if(cli_ios.ne.0.or.any(cli_values(1:2).lt.1))goto 910
            nkx=cli_values(1);nky=cli_values(2)
+           spinchern_mesh_seen=1
           case('--real-grid')
            if(cli_delim.ne.2)goto 910
            read(number_string,*,iostat=cli_ios)cli_values
@@ -5687,6 +5782,10 @@
        task_kubo=0;task_cd=0;task_vel=0;task_z2=0
        select case(trim(task))
        case('chern')
+       case('spin-chern')
+        spinchern_task=1
+       case('spin-kubo')
+        spinchern_task=2
        case('z2')
         task_z2=1
        case('kubo','kubo-line','kubo-pairs')
@@ -5722,6 +5821,23 @@
        ikubo=task_kubo;icd=task_cd;ivel=task_vel;iz=task_z2
        if(task.eq.'kubo-pairs'.and.len_trim(kubo_pairs).eq.0)then
         write(0,*)'*** error - kubo-pairs task needs --pairs-csv PATH'
+        call vaspberry_fail
+       endif
+      endif
+      if(spinkubo_sum_max.gt.0.and.spinchern_task.ne.2)then
+       write(0,*)'*** error - --sum-bands is only for --task spin-kubo'
+       call vaspberry_fail
+      endif
+      if(spinchern_option.and.spinchern_task.eq.0)then
+       write(0,*)'*** error - spin-sector options need spin-chern/spin-kubo'
+       call vaspberry_fail
+      endif
+      if(spinchern_task.gt.0)then
+       if(nmax.eq.999999.or.ihf.ne.0.or.
+     &    ikubo_bundle.ne.0.or.len_trim(kubo_csv).ne.0.or.
+     &    len_trim(kubo_pairs).ne.0)then
+        write(0,*)'*** error - spin-sector task needs --bands FIRST:LAST',
+     &            '; no legacy Kubo output options'
         call vaspberry_fail
        endif
       endif
@@ -5825,6 +5941,10 @@
        endif
       endif
 
+      if(spinchern_task.gt.0)then
+       foname=foname_base
+       if(trim(foname).eq.'BERRYCURV')foname='SPIN'
+      endif
       return
  910  write(0,*)'*** error - invalid value for ',trim(raw_option),
      &         ': ',trim(value)
@@ -6176,6 +6296,16 @@
       write(6,*)" "
       write(6,*)"*Tasks (--task NAME; default: chern / Fukui):"
       write(6,*)"  chern          Fukui links on a full periodic 2D mesh"
+      write(6,*)"  spin-kubo      approximate spin-sector local curvature"
+      write(6,*)"    --bands 1:N; arbitrary k list/path by default"
+      write(6,*)"    --sum-bands N: sum within source bands 1:N (default all)"
+      write(6,*)"    Explicit --mesh NX,NY additionally estimates integrals"
+      write(6,*)"    Writes SPIN_KUBO.csv and SPIN_KUBO_SPECTRUM.csv"
+      write(6,*)"  spin-chern     projected-spin sectors, native links"
+      write(6,*)"    --bands 1:N --mesh NX,NY --spin-axis z"
+      write(6,*)"    --outcar OUTCAR (default); --spin-axis x|y|z|a,b,c"
+      write(6,*)"    --energy-gap-tol 1e-8 (eV); --spin-gap-tol 1e-6"
+      write(6,*)"    Writes SPIN_CHERN/BERRY/SPECTRUM.csv; pseudo metric"
       write(6,*)"  z2             native n-field Z2 (-z2 1; limits below)"
       write(6,*)"  kubo           point curvature on supplied k points"
       write(6,*)"                 (-kubo 2; kubo-line is a synonym)"
@@ -6481,3 +6611,7 @@
 #endif
       stop 1
       end subroutine vaspberry_fail
+
+#include "vaspberry_spin_chern.inc"
+
+#include "vaspberry_spin_kubo.inc"

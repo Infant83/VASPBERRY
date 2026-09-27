@@ -1,14 +1,8 @@
 name: Publish VASPBERRY 1.4.2
 
 on:
-  push:
-    branches: [master]
-    paths:
-      - '.github/workflows/publish-v1.4.2.yml'
-      - '.github/workflows/installation-validation.yml'
-      - '.github/workflows/bi-z2-validation.yml'
-      - '.github/scripts/publish_v142.py'
-      - 'docs/releases/v1.4.2.md'
+  # Publication is complete; retain this workflow as a historical reference.
+  # Later installation/validation changes must not restart an old publisher.
   workflow_dispatch:
 
 permissions:

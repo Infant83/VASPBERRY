@@ -1,0 +1,27 @@
+{
+  "scope": "Actual local points: native canonical-momentum curvature plus independent Gram-normalized projected-spin WAVECAR overlap loops; neither is a full BZ integral",
+  "ediff_eV": 1e-11,
+  "nelmin": 40,
+  "points": 50,
+  "angles": 8,
+  "radius_Ainv": [
+    3e-08,
+    1e-07,
+    3e-07
+  ],
+  "native_producer": "VASPBERRY --task spin-kubo --bands 1:8; source approximation headers retained separately",
+  "loop_producer": "Independent Python validation from actual WAVECAR; no Hamiltonian model and no native spin-chern task claimed",
+  "source_sha256": {
+    "WAVECAR": "fa549fba2375192cb483e5bd4a838757652e9f54912334c54589e17a805b81ed",
+    "OUTCAR": "10bae4956d4aa54ba6f10ac7b847609002de4bd99c7c38b6985afec52831ba62",
+    "SPIN_KUBO.csv": "502288a92e28a0946e3db849755a8155ae5322db876db8d78500367aea5bc6f9",
+    "input_manifest.json": "50dce3a1d627f019d1ae9675a354876dc4321ac1a07c0adf77b182f533a3983e",
+    "points.csv": "12fe0667ebe2fbe89606d2dff3c482015efb4626a30b2bb301897e0554a77c00"
+  },
+  "analysis_sha256": "bd4705aab6aa57f530539fdc14863431b3b9b922420ee028424e39b19283f7cb",
+  "triangle_phase_guard_rad": 1.5707963267948966,
+  "sign_branch_scope": "Sampled triangle phases must stay below pi/2; this guard does not certify unsampled spatial resolution",
+  "minimum_loop_singular": 0.7319107117976236,
+  "K_gap_eV": 9.120167838716497e-07,
+  "K_omega_plus_A2": 68215681194825.086
+}

@@ -2,19 +2,25 @@
 
 [Download the PDF report](TECHNICAL_REPORT.pdf).
 
+Software edition: VASPBERRY 1.6.1. Saved reference tables retain the producer
+identities and input checksums of their original calculation; software validation
+and material convergence are recorded separately.
+
 ## Abstract
 
 VASPBERRY calculates Berry curvature, topological indices and response
 properties directly from VASP wavefunctions. Its main workflow reads a
 WAVECAR with the native Fortran executable and writes numerical results for
-post-processing and plotting, without constructing a Wannier model. The
-examples pair Fukui occupied-bundle Chern and Z₂ calculations with Kubo
-curvature on Brillouin-zone meshes and symmetry paths. Native interband
+post-processing and plotting. The
+examples pair Fukui occupied-bundle Chern, projected-spin Chern and Z₂ with Kubo
+curvature on Brillouin-zone meshes and symmetry paths. A native projected-spin
+Kubo task also resolves the two spin sectors, including the change of their
+basis with k; its canonical-momentum approximation remains explicit. Native interband
 matrix elements also support chemical-potential and temperature scans through
 Python occupation weighting and integration. Circular optical selection and
 real-space spinor densities complete the direct-wavefunction demonstrations.
 
-Monolayer and bilayer MoS₂, a Bi bilayer and a three-septuple-layer MnBi₂Te₄
+Monolayer and bilayer MoS₂, graphene, a Bi bilayer and a three-septuple-layer MnBi₂Te₄
 film illustrate these capabilities and their numerical limits. VASP supplies
 the electronic structure; its band energies provide context for VASPBERRY's
 topology and response results. Fukui integer invariants and pointwise Kubo
@@ -57,6 +63,34 @@ The link construction supplies the lattice Chern invariant; the Kubo
 integral is not rounded or adjusted to reproduce that integer. An integer
 lattice Chern result also needs a sufficiently resolved mesh and
 a physically appropriate isolated band group.
+
+#### 1.1.1 Projected-spin sectors
+
+For an isolated selected band space, the native `spin-chern` task
+constructs the matrix of $`\sigma_{\hat a}`$ along a chosen Cartesian axis.
+It retains all off-diagonal band elements. Its positive and negative
+eigenspaces define sector links and Chern numbers, following
+[Prodan](https://doi.org/10.1103/PhysRevB.80.125327):
+
+```math
+C_{\rm charge}=C_++C_-,\qquad
+\Delta C=C_+-C_-,\qquad C_{\rm spin}=\frac{C_+-C_-}{2}.
+```
+
+Both the occupied-to-excluded energy separation and the projected-spin
+gap about zero must remain open; internal degeneracies within either
+subspace are allowed. Reversing the spin axis exchanges the sector labels.
+The WAVECAR-only calculation uses its full Gram matrix $`O`$ and solves
+$`\Sigma_{\hat a}v=\lambda Ov`$, with $`v^\dagger Ov=1`$, to form sector
+links in one consistent pseudo metric. It therefore declares a pseudo-wavefunction
+geometric representation, without PAW augmentation. The matching OUTCAR
+provides the spin-frame transformation; the wavefunctions and automatic
+component detection come from WAVECAR. The [native guide](SPIN_CHERN.md)
+specifies inputs, diagnostics and output tables. These geometric invariants
+are distinct from PROCAR-weighted charge attribution and the conventional
+spin-current response in Appendix A.2. A full occupied space describes the
+insulating system; an isolated subset describes only that subset. Their
+Chern numbers need not coincide.
 
 ### 1.2 Native Kubo curvature and Hall post-processing
 
@@ -125,6 +159,93 @@ remains fixed. Regional contributions integrate the same charge response over
 specified parts of the BZ, with a K−K′ difference defined without a factor of
 one-half. Such a partition is not a separately conserved valley-current operator.
 
+#### 1.2.1 Kubo curvature of projected-spin sectors
+
+The native `spin-kubo` task evaluates the positive/negative sectors of
+Section 1.1.1 at each supplied k point. Simply rotating ordinary band Kubo
+curvatures into a spin basis misses the k dependence of that basis. The
+native calculation instead differentiates the projected-spin split within
+a declared local tangent approximation.
+
+Let $`C`$ contain the selected raw pseudo-wavefunctions, $`O=C^\dagger C`$,
+and $`\Sigma=C^\dagger\sigma_{\hat a}C`$. Solve
+$`\Sigma X=OX\Lambda`$, $`X^\dagger OX=I`$, and form $`U=CX`$.
+The source WAVECAR supplies canonical-momentum matrix elements and the
+following approximate tangent, using retained states outside the group:
+
+```math
+D^a_{mn}=\frac{\hbar^2}{m_e}\langle\widetilde u_m|k_a+G_a|\widetilde u_n\rangle,
+\qquad
+\widetilde{\partial_a C_n}
+=\sum_{m\notin P}\widetilde C_m\frac{D^a_{mn}}{E_n-E_m}.
+```
+
+By default all stored source bands contribute. `--sum-bands N` retains
+bands 1 through N outside the `--bands` interval, testing the response
+cutoff on unchanged VASP eigenstates. The cap must contain the selected
+interval and at least one external state; cutting an unresolved external
+degeneracy is an error. Parent isolation still checks all stored bands.
+Metadata records the source count, actual cap and boundary gap; states
+absent from WAVECAR remain untested.
+
+No energy denominator between selected states is used. Define the horizontal
+tangent and the projected-spin derivative in the spin eigenframe:
+
+```math
+B_a=(I-UU^\dagger)\widetilde{\partial_a C}\,X,\qquad
+K_a=B_a^\dagger\sigma_{\hat a}U+U^\dagger\sigma_{\hat a}B_a.
+```
+
+For either sign sector $`s`$, its trace curvature is
+
+```math
+\Omega^s_{ab}=-2\operatorname{Im}\sum_{\alpha\in s}
+\left[(B_a^\dagger B_b)_{\alpha\alpha}
++\sum_{\beta\in\text{opposite sector}}
+\frac{(K_a)_{\beta\alpha}^*(K_b)_{\beta\alpha}}
+{(\lambda_\alpha-\lambda_\beta)^2}\right].
+```
+
+The first and second contributions are exported separately. The second
+uses only opposite-sign spin eigenvalues; degeneracies within a sector
+remain allowed. It cancels between the two sector traces, whose sum equals
+the parent tangent curvature. A selected group that cuts an unresolved
+energy degeneracy is rejected. Closing of the projected-spin gap, invalid
+metric conditioning and nonfinite results are also errors.
+
+The geometric kernel is exact for a correct supplied tangent. Its production
+canonical tangent is not the exact derivative of the stored pseudo projector:
+raw pseudo states are not a complete orthonormal physical PAW basis, and
+nonlocal/SOC velocity terms, PAW augmentation, basis derivatives and missing
+source bands are not restored by selected-space Gram orthonormalization.
+The output explicitly records these limits. This is a geometric spin-sector
+curvature approximation, not conventional spin-current Hall conductivity.
+
+`SPIN_KUBO.csv` contains Cartesian $`yz,zx,xy`$ curvature in Å², source k
+coordinates, path distance, both contributions and gap/metric diagnostics.
+`SPIN_KUBO_SPECTRUM.csv` retains the projected-Pauli spectrum. Only an explicit
+`--mesh NX,NY` adds `SPIN_KUBO_INTEGRAL.csv`, with raw dimensionless integrals
+
+```math
+C_s^{\rm est}=\frac{1}{2\pi N_xN_y}
+\sum_{\mathbf k}(\Omega^s_{yz},\Omega^s_{zx},\Omega^s_{xy})
+\mathbin{\cdot}(\mathbf b_1\times\mathbf b_2).
+```
+
+The signed area preserves the orientation for tilted cells. No path
+integration or integer rounding is performed. For a Chern assignment, run
+`spin-chern` separately on a complete mesh using the same band range and
+axis. The [native guide](SPIN_KUBO.md), [output contract](OUTPUT_FORMAT.md#native-projected-spin-kubo-curvature)
+and Sections 3.8–3.10 provide commands and real material comparisons.
+
+Independent four-state tests with exact derivatives agree with small
+geometric sector loops within $`6.94\times10^{-9}`$ in model units for all
+three components. Nonorthogonal selected-frame changes and axis reversal
+preserve the expected geometry. The exact-model positive-sector integral
+approaches Fukui +1: 1.015414722 at 8×8 and 1.000000169 at 24×24.
+The mixing term reaches 0.05207, so its omission is detectable. These tests
+validate the geometric kernel separately from material approximations.
+
 ### 1.3 From a WAVECAR to reusable results
 
 The direct-wavefunction workflow has four steps:
@@ -149,6 +270,8 @@ The current repository build provides the following `--task` selectors:
 |---|---|
 | `chern` | Fukui occupied-bundle flux, curvature and Chern number |
 | `z2` | Fukui–Hatsugai integer field and half-zone parity |
+| `spin-chern` | Projected-spin Fukui sector fluxes and Chern numbers (available in v1.6.1) |
+| `spin-kubo` | Projected-spin sector point curvature and optional raw mesh integrals (available in v1.6.1) |
 | `kubo` | Pointwise band or bundle curvature on a mesh or path |
 | `kubo-pairs` | Interband-pair data for Python charge-Hall integration |
 | `optical` / `spectrum` | Circular transition selectivity / broadened spectra |
@@ -157,13 +280,16 @@ The current repository build provides the following `--task` selectors:
 For example, `build/vaspberry --task kubo` selects the native pointwise
 calculation; supply the WAVECAR and band options listed in the
 [usage guide](../README.md#usage) and [worked examples](../examples/README.md).
-The task aliases are included in the fixed v1.4.0 release; the earlier
-v1.3.0 release uses the retained legacy flags. The
+The two projected-spin tasks are available in v1.6.1. Other task aliases
+are available in v1.4.0 and
+later releases; legacy short flags remain supported. The
 [hands-on guide](HANDS_ON.md) and [report-to-example map](../examples/REPORT_REPRODUCTION.md)
 give the input files, commands and expected outputs for each example.
 
-These stages require no Wannier localization. Python prepares inputs,
-normalizes outputs and performs the stated post-processing. Optional
+Python prepares inputs, normalizes outputs and performs the stated
+post-processing. For `spin-chern` and `spin-kubo`, the native executable
+already writes the computed values; the example Python plotter only draws
+them. Optional
 standard-WAVEDER, supplied physical-matrix and Wannier interfaces use
 additional Python numerical backends with input requirements described in
 [Appendix A](#appendix-a-optional-physical-operator-extensions) and
@@ -224,6 +350,9 @@ calculation or a material-convergence benchmark.
 | Monolayer MoS₂, supplied path | SOC; 48 K–Γ–K′ points; 32 bands; 400 eV | Γ-point state density; original optical tutorial |
 | Buckled Bi bilayer | Two atoms; PBE+SOC; 400 eV; fresh 12×12 SCF density; full 6×6, 12×12 and 18×18 meshes; occupied bands 1–10 | Native Z₂ n-field; optional PAW spin response in Appendix A |
 | MnBi₂Te₄, three septuple layers | SOC+U; 21 atoms; full 6×6 VASP mesh; 192 bands; occupied bands 1–123; 270 eV | Occupied WAVECAR Fukui invariant; coarse optical-integral diagnostic |
+| Planar graphene | Two C atoms; PBE+SOC; 520 eV; 16 bands; occupied bands 1–8; full 6×6, 9×9 and 12×12 meshes | Native projected-spin sectors and Chern numbers; separate no-SOC gap control |
+| Graphene spin-sector Kubo | Same fixed density; 49 Γ–K–M–Γ points and 12×12 mesh; 16 bands | Bands 1–8 and 7–8 local curvature; occupied Chern comparison; rejected pair link |
+| Bi spin-sector Kubo | Same fresh Bi fixed density; 49 Γ–K–M–Γ points and 6×6 mesh; 48 bands; 400 eV | Bands 1–10 and 9–10 local curvature; different occupied/pair Chern numbers |
 
 The [input guide](../examples/INPUTS.md) links the structures and VASP files.
 The MoS₂ maps and their matching path use the same public SCF charge density,
@@ -538,6 +667,315 @@ checks the expected Hall value within a supplied finite model; it is not
 needed to perform the direct-wavefunction workflows above and does not
 establish convergence of this coarse VASP optical integral.
 
+### 3.7 Graphene: projected-spin Chern sectors
+
+The [graphene example](../examples/materials/graphene-spin-chern/) uses actual
+VASP spinor wavefunctions for a planar two-atom cell with $`a=2.46`$ Å and
+a 20 Å cell height, PBE+SOC, a 520 eV cutoff and 16 stored bands. The selected
+space comprises bands 1–8. With Cartesian +z as the analysis axis, the native
+6×6, 9×9 and 12×12 calculations give **$`C_+=+1`$, $`C_-=-1`$, $`C_{\rm charge}=0`$ and
+$`C_{\rm spin}=1`$**, within floating-point precision. Each sector has rank
+four; the minimum absolute projected-Pauli eigenvalue is 0.99999947.
+
+| Full mesh | Minimum direct gap (µeV) | $`C_+`$ | $`C_-`$ | $`C_{\rm spin}`$ |
+|---|---:|---:|---:|---:|
+| 6×6 | 0.9120148 | +1 | −1 | 1 |
+| 9×9 | 0.9119943 | +1 | −1 | 1 |
+| 12×12 | 0.9120028 | +1 | −1 | 1 |
+
+The sampled direct gap is only **0.9120 µeV**. A separate K/K′ no-SOC control
+gives splittings below 0.00023 µeV. Tightening the fixed-density eigensolver's
+`EDIFF` from 1e-9 to 1e-10 eV changes the 6×6 minimum gap by approximately
+5.4e-12 eV. These checks distinguish the resolved gap from that numerical
+floor; they do not establish convergence with respect to every DFT setting.
+The full no-SOC 6×6 input is rejected by the native energy-isolation check:
+its minimum gap is $`1.94\times10^{-10}`$ eV, below the default $`10^{-8}`$ eV
+threshold, and no spin-Chern CSV is produced.
+
+Reproducing this tiny gap requires the exact generating geometry in the
+CHGCAR header. The preparation script restores that header from the matching
+POSCAR while preserving the density and augmentation payload byte for byte;
+the example records both hashes. Rounded coordinates in the fixed-density
+input can otherwise introduce a spurious splitting. VASP's finite smearing
+gives fractional occupations near K. The Chern calculation uses the gapped
+eight-band geometric projector; the source occupations are reported separately.
+
+The Chern numbers use the WAVECAR pseudo metric and projected-spin links of
+Section 1.1.1. They are not a conventional spin Hall conductivity. The
+example supplies VASP preparation, native CSVs and optional plotting commands;
+the CSVs are also directly usable in other plotting tools. GNU serial/MPI
+CSVs agree byte for byte on all three meshes. Intel and GNU sector fluxes
+agree with the independent NumPy evaluation within $`1.5\times10^{-14}`$ rad.
+
+![Graphene projected-spin sector fluxes, VASP band structure and projected-spin spectrum](../examples/materials/graphene-spin-chern/reference/figure.png)
+
+**Figure 9.** (a,b) Native positive- and negative-spin-sector plaquette fluxes
+on the 12×12 mesh, shown without interpolation. The sectors carry opposite
+Chern numbers while the charge sum vanishes. (c) Actual VASP bands on
+Γ–K–M–Γ; the inset resolves the 0.912 µeV K-point gap using full-precision
+WAVECAR energies. (d) The projected-Pauli spectrum remains separated from
+zero. Mesh agreement establishes the integer result for this fixed input;
+the maps do not resolve the microscopic width or peak height of the Dirac
+curvature. [Saved data and drawing commands](../examples/materials/graphene-spin-chern/)
+reproduce all four panels.
+
+### 3.8 Graphene: spin-sector Kubo curves and a tiny-gap limit
+
+The [spin-Kubo example](../examples/materials/graphene-spin-chern/kubo/)
+uses the same graphene Hamiltonian as Section 3.7, with a 49-point
+Γ–K–M–Γ path and a separate 12×12 mesh. Execute VASPBERRY in each directory
+containing its matching WAVECAR and OUTCAR:
+
+```bash
+# In the path directory: local curvature, no Chern assignment.
+mpiexec -n 4 "$VB" --task spin-kubo --bands 1:8
+# In the separate full 12x12 mesh directory:
+mpiexec -n 4 "$VB" --task spin-kubo --bands 1:8 --mesh 12,12
+mpiexec -n 4 "$VB" --task spin-chern --bands 1:8 --mesh 12,12
+```
+
+Here `VB` is the native executable built as described in the
+[Intel MPI walkthrough](HANDS_ON.md). OUTCAR supplies the actual source spin
+frame; spinor coefficients and energies come from WAVECAR. Neither a PROCAR
+spin weight nor a manual spinor-count option is used.
+
+For the complete occupied 1–8 space, the geometric result remains
+$`C_+=1,C_-=-1`$. However, the raw 12×12 point-curvature estimate gives
+$`C_{\rm spin}^{\rm est}=1.135906684114\times10^{12}`$. It is **not a Chern
+number**. The roughly micro-eV gap creates an extremely narrow structure,
+and the present sampling does not resolve its integral. Finite source bands
+and the canonical/pseudo operator approximation also remain. These data
+do not isolate the contribution of each error. Even the charge cancellation
+has an absolute residual near $`1.44\times10^4`$ against sector magnitudes
+near $`10^{12}`$; it is not evidence for a large physical charge response.
+
+The tiny gap also conditions numerical reproducibility. GNU serial and MPI
+path tables are identical in the checked run. Intel Classic reproduces the
+dominant K-point sector peaks to about $`4\times10^{-15}`$ relative accuracy,
+but cancellation-sensitive parent and transverse entries do not meet a
+uniform $`10^{-9}`$ relative tolerance. Such agreement of the dominant peaks
+does not imply accuracy of their much smaller difference.
+
+Selecting the top pair with `--bands 7:8` produces local sector curvature
+where the sampled energy and spin gaps pass. A separate full-mesh Fukui
+calculation rejects that pair: an adjacent-sector overlap has minimum
+singular value $`2.35\times10^{-10}`$, below the link threshold. Consequently
+the example retains the rejection and assigns **no pair Chern number**.
+Pointwise gap checks alone do not certify globally resolved connectivity;
+the exact cause of this pair-link failure is not established here.
+
+![Graphene spin-sector Kubo paths and full-zone comparison](../examples/materials/graphene-spin-chern/kubo/reference/figure.png)
+
+**Figure 10.** (a) Positive/negative occupied-sector Kubo curvature along
+Γ–K–M–Γ. (b) Local curvature of the 7–8 pair, without a global Chern
+assignment. (c) Raw occupied positive-sector point curvature on the 12×12
+mesh. (d) Independent positive-sector Fukui plaquette flux. Signed-log
+display exposes both signs and the very large peaks; it does not modify
+the stored data or repair the mesh integral. The example plotter reads
+native CSVs, changes no wavefunctions and performs no additional curvature
+calculation. Reference data and input/output hashes accompany the figure.
+
+### 3.9 Bi: occupied sectors and an isolated top pair
+
+The [Bi spin-sector example](../examples/materials/bi-spin-hall/spin-chern-kubo/)
+uses the fresh fixed density of Section 3.4, 48 stored bands, a 400 eV cutoff,
+a complete 6×6 mesh and a separately calculated 49-point Γ–K–M–Γ path.
+For this positive-60° lattice convention, fractional K is $`(1/3,2/3,0)`$
+and M is $`(0,1/2,0)`$. The guide supplies ordinary VASP path preparation and
+the exact native execution commands. At shared path/mesh points, occupied
+energies agree within $`5.2\times10^{-11}`$ eV. The highest stored empty band
+differs by up to $`4.73\times10^{-4}`$ eV; total-energy convergence alone
+does not establish convergence of every intermediate state in the Kubo sum.
+
+The occupied bands 1–10 split into rank-five sectors with sampled
+$`C_+=1,C_-=-1`$, consistent with the independently evaluated 2D Bi-bilayer Z₂=1.
+The isolated top pair 9–10 instead splits into rank-one sectors with sampled
+$`C_+=2,C_-=-2`$. These are different projectors: a pair invariant does not
+replace the full occupied-system Z₂. For the pair, the minimum sampled
+external energy gap is 0.0474281 eV and the projected-spin gap is 0.3348024.
+Its maximum plaquette flux is 2.89067 rad and minimum sector-link singular
+value is 0.04317. These diagnostics belong to the initial 6×6 reference.
+Section 3.10 follows the same Hamiltonian through 12×12 and 18×18 meshes;
+it separates the stable discrete invariant from the slowly resolved Kubo
+quadrature.
+
+| Bi subspace | Sector ranks | Fukui $`C_+,C_-`$ | Raw $`C_{\rm spin}^{\rm est}`$ |
+|---|---|---|---:|
+| Occupied bands 1–10 | 5 + 5 | +1, −1 | 1.999774784 |
+| Top pair 9–10 | 1 + 1 | +2, −2 | −118.7661327 |
+
+The Kubo estimates disagree strongly with the geometric results. Rounding
+1.99977 to 2 would even assign the wrong occupied-sector invariant. Keep
+the geometric Chern and local canonical approximation separate; refine
+sampling and source bands, then examine the missing physical-operator
+terms before using the Kubo integral quantitatively.
+
+Use `--bands 1:10` for the occupied result or `--bands 9:10` for the pair,
+on both the path and the full mesh. The spin axis must also match. Positive
+and negative labels refer to the projected-Pauli eigenvalue; for generic
+SOC they do not identify two independent collinear energy channels.
+
+![Bi occupied and top-pair spin-sector curvature with a full-zone comparison](../examples/materials/bi-spin-hall/spin-chern-kubo/reference/figure.png)
+
+**Figure 11.** (a,b) Actual 49-point occupied and pair-sector path curves.
+(c) Occupied positive-sector point curvature on the 6×6 mesh. (d) The
+same occupied space's independent positive-sector Fukui flux. All panels
+use native outputs. Straight segments connect path samples only; no
+interpolated Hamiltonian supplies extra samples. The saved decomposition
+columns permit additional plots of the parent contribution and the
+projected-spin mixing correction.
+
+### 3.10 Follow-up convergence tests
+
+#### 3.10.1 Bi: separate mesh, response cutoff and source-state quality
+
+The [convergence example](../examples/materials/bi-spin-hall/spin-chern-kubo/convergence/)
+holds the structure, PAW potential, fixed SCF density and physical Hamiltonian
+constant. Three controls answer different questions: vary the mesh with source
+`NBANDS=64` and `--sum-bands 48`; vary the sum cutoff on one unchanged
+80-band WAVECAR; and compare source64/source80 at the same retained cutoff.
+The example supplies ordinary VASP preparation, native MPI commands and
+portable full-point tables, with separate source and output checksums.
+
+| Mesh, source64 / cutoff48 | Occupied raw spin integral | Pair raw spin integral | Fukui occupied / pair |
+|---|---:|---:|---:|
+| 6×6 | 1.9997800132 | −118.76612842 | 1 / 2 |
+| 12×12 | 1.0382696725 | −29.02711625 | 1 / 2 |
+| 18×18 | 1.0268699256 | −12.25375432 | 1 / 2 |
+
+The occupied proxy moves toward the discrete value but still changes by
+0.01140 between the last two meshes and differs from 1 by 0.02687. The pair
+proxy is plainly unconverged. Its Γ sample alone contributes −118.5620,
+−29.6405 and −13.1736 under the shrinking uniform-cell weights. These are
+single-point quadrature contributions, not integrals over a resolved Γ
+region. The actual pair path changes from about −11331.8 Å² at Γ to
++138.5 Å² only 0.05965 Å⁻¹ away; that path does not resolve a 2D peak.
+
+The independent full-mesh overlap calculation gives occupied
+$`C_+=1,C_-=-1`$ and pair $`C_+=2,C_-=-2`$ on all three meshes.
+At 18×18 the pair's minimum link singular value rises to 0.35449 and its
+maximum plaquette flux falls to 0.94453 rad, compared with Section 3.9.
+This supports stable sampled sector topology; it does not make the pair
+proxy integral quantized or turn its invariant into the occupied Z₂.
+
+At fixed 6×6 and cutoff48, source64→source80 changes the occupied integral
+by $`1.6\times10^{-8}`$ and the pair by $`1.1\times10^{-6}`$.
+Common-point curvatures agree within $`2.2\times10^{-8}`$ of the shared
+peak across the source64 meshes. The first 48 eigenvalues in the source64
+and source80 controls agree within $`6.5\times10^{-11}`$ eV, while bands
+49–64 can differ by about 0.12 eV. Total-energy stopping criteria do not
+certify those high empty states. Increasing the sum to include them mixes
+response truncation with a source-state error.
+
+The same-source80 cutoff sweep changes the occupied result by about
+$`6.4\times10^{-4}`$ and the pair by −0.0040 from cutoff32 to cutoff48.
+That is a band-window check at fixed coarse sampling; it cannot repair
+the much larger pair mesh error. Extending the window requires adequately
+converged empty eigenstates as well as enough stored bands.
+
+The archived sources partitioned each complete mesh. Native `spin-kubo`
+processed each partition with its original matching OUTCAR; post-processing
+validated the assembled periodic grid and applied the signed area weights
+of Section 1.2.1. The table is therefore labelled as an aggregate of native
+point curvature, separately from native full-mesh integral output. The
+independent Fukui validation uses actual assembled WAVECAR coefficients and
+the common verified spin frame. Source headers were not altered.
+
+An additional ordinary VASP 12×12/source64 restart produced a genuine matching
+full-mesh WAVECAR/OUTCAR pair. Native `spin-chern` independently recovered
+occupied spin Chern 1 and pair spin Chern 2. Native cutoff48 integrals differ
+from the partition aggregate by only $`8.19\times10^{-9}`$ (occupied) and
+$`2.98\times10^{-7}`$ (pair). This checks the assembly and quadrature route;
+it does not certify the physical convergence of those values.
+
+![Bi spin-sector mesh, cutoff and source-state controls](../examples/materials/bi-spin-hall/spin-chern-kubo/convergence/reference/figure.png)
+
+**Figure 12.** Bi mesh and intermediate-state controls using the same
+Hamiltonian. The figure retains noninteger and negative raw estimates;
+Fukui values are shown as independent geometric references. The cutoff
+sweep uses an unchanged source80 WAVECAR. The associated source-padding
+table holds the retained cutoff fixed. Full point data permit alternative plots
+without rerunning the native curvature calculation.
+
+#### 3.10.2 Graphene: actual local sampling around the SOC gap
+
+The [local graphene example](../examples/materials/graphene-spin-chern/kubo/convergence/)
+adds 146 actual VASP points around K and K′ to the same fixed-density,
+520 eV, 16-band calculation. Each valley has its center and nine radii
+from $`10^{-9}`$ to $`10^{-5}`$ Å⁻¹, with eight angles per ring.
+`spin-kubo --bands 1:8` writes the local Cartesian curvature directly;
+no mesh option is used because these points do not form a full BZ mesh.
+An independent diagnostic reads the same WAVECAR and constructs small
+projected-spin polygon loops, retaining the full selected Gram matrix.
+
+The measured center gap is about 0.9120 µeV. Fitting only the measured
+energy dispersion to $`E(q)^2=m^2+v^2q^2`$, where $`E(q)`$ is half
+the band 9–8 separation and $`m`$ its value at the valley center,
+gives $`v\simeq5.479`$ eV Å and a characteristic radius
+$`q_0=m/v\simeq8.323\times10^{-8}`$ Å⁻¹. This is the scale that a local
+curvature quadrature must resolve. The dashed massive-Dirac curves in
+Figure 13 are diagnostics fitted to these energies. Their positive sign
+is chosen to match the measured sector; energies alone do not determine
+chirality. No curvature amplitude or target Chern integer is fitted.
+
+At radius $`10^{-5}`$ Å⁻¹, the actual eight-vertex polygon spin flux divided
+by $`2\pi`$ is about 0.49561 in each valley, with a two-valley sum of
+0.99122. The polygons occupy only local regions and are not the full BZ.
+Four- versus eight-vertex polygons change the enclosed region and its
+straight edges; agreement cannot by itself certify circular integration.
+Every sampled fan-triangle phase stays below the explicit $`\pi/2`$
+guard, and the minimum overlap singular value is 0.70713. These checks
+avoid an unresolved sampled branch crossing without certifying unsampled
+spatial structure.
+
+Native curvature at the valley center is about
+$`6.8216\times10^{13}`$ Å². An independent small-polygon flux divided by
+its actual polygon area at radius $`10^{-9}`$ Å⁻¹ gives approximately
+$`7.2175\times10^{13}`$ Å². The native value is about 5.5% smaller.
+It is also 0.94507 times the energy-fit Dirac center curvature. Reducing
+the native intermediate-state cutoff from 16 to 10 on the unchanged
+WAVECAR changes the sector curvature by at most $`1.13\times10^{-10}`$
+relative to the sector magnitude. This particular cutoff check does not
+explain the residual difference, nor does it exclude contributions from
+states not present in the 16-band source or missing physical-operator terms.
+
+A stricter 50-point repeat at the same coordinates changes EDIFF from
+$`10^{-9}`$ to $`10^{-11}`$ eV and NELMIN from 20 to 40; it reaches the
+stated stopping criterion after 47 Davidson steps. The maximum gap change
+is $`7.56\times10^{-11}`$ eV and the maximum relative native spin-curvature
+change is $`1.56\times10^{-4}`$ (0.0156%). Local geometric spin flux divided
+by $`2\pi`$ changes by at most $`1.52\times10^{-9}`$.
+This solver sensitivity is much smaller than the approximately 5.5%
+curvature difference; it does not test the fixed SCF density or PAW model.
+
+The Python diagnostic integrates the native point table using the angular
+average and a trapezoid rule in log radius. This is distinct from the native
+full-mesh integral output. Keeping five versus nine radial nodes changes the
+per-valley result from about 0.52084 to 0.47021. These raw values demonstrate
+remaining radial quadrature error; neither is a converged Chern number.
+The energy-fit model's local disk result, actual polygon flux and native
+point quadrature are saved in distinct columns and labelled separately.
+The large uniform-grid estimate in Section 3.8 is therefore principally a
+sampling warning, while even resolved point values retain the declared
+canonical/pseudo derivative approximation.
+
+A full-BZ adaptive calculation would need finer actual points near the
+peak width, disjoint valley and outer-BZ regions, correct area weights,
+and separate checks of radial, angular, electronic and retained-state
+convergence. Interpolating a plot or replacing an integral by the fitted
+Dirac value does not supply this calculation. For the occupied topological
+assignment, use the complete-mesh `spin-chern` result of Section 3.7.
+
+![Actual graphene local SOC gap, spin-sector curvature and polygon flux](../examples/materials/graphene-spin-chern/kubo/convergence/reference/figure.png)
+
+**Figure 13.** (a) Actual local VASP gap and an energy-only dispersion fit.
+(b) Native spin-sector curvature and the diagnostic Dirac shape.
+(c) Independent actual-WAVECAR polygon flux for different vertex counts,
+with the model's circular-disk flux labelled separately. (d) Local native
+point quadrature using coarse and full radial subsets. No panel presents
+a local or fitted quantity as a full-BZ invariant. Portable tables and
+ordinary VASP/native commands accompany the example.
+
 ## 4. Practical use
 
 Begin with the [example guide](../examples/README.md), reproduce the chosen
@@ -690,7 +1128,7 @@ gives the operator contract and reproduction commands.
 
 ![Bi PAW spin Berry curvature and response convergence](../examples/materials/bi-spin-hall/reference/figures/bi-spin-hall.png)
 
-**Figure 9.** (a) Occupied-bundle spin Berry curvature $`\Omega^z_{xy}`$ from
+**Figure 14.** (a) Occupied-bundle spin Berry curvature $`\Omega^z_{xy}`$ from
 PAW spin and full velocity matrices on the 12×12 VASP mesh, shown in the
 Cartesian first BZ. Periodic bilinear interpolation is used only for the
 color map. (b) Mesh refinement retaining 48 bands from 64-band VASP sources.
@@ -774,7 +1212,7 @@ Finite strips of 20 and 40 cells test the width dependence.
 
 ![Bi bulk dispersion and ideal-edge spectrum](../examples/materials/bi-spin-hall/reference/figures/bi-bulk-edge.png)
 
-**Figure 10.** (a) Bi band structure from a VASP-derived 16-orbital Wannier
+**Figure 15.** (a) Bi band structure from a VASP-derived 16-orbital Wannier
 Hamiltonian along Γ–M–K–Γ. Circles show direct VASP energies on the independent
 12×12 mesh; all ten occupied bands are retained in the model. (b) Spectral
 weight in the first two cells of a 40-cell strip, periodic along the first
@@ -806,7 +1244,7 @@ corresponding Hall expectation with a VASP-derived Wannier representation.
 
 ![Optional VASP-derived MnBi2Te4 Wannier bands and model Hall integration](../examples/materials/mnbi2te4-qah/reference/figures/mnbi2te4-qah.png)
 
-**Figure 11.** (a) VASP-derived Wannier band structure along Γ–M–K–Γ, with direct
+**Figure 16.** (a) VASP-derived Wannier band structure along Γ–M–K–Γ, with direct
 VASP checks; the inset resolves the K–Γ–M gap near Γ. (b) VASPBERRY
 full-connection sheet Hall response at three chemical potentials inside the
 gap, at zero temperature; open markers show the independent `postw90`
@@ -885,3 +1323,5 @@ from a WAVECAR alone.
     Spin-Orbit Coupling*, [Phys. Rev. Lett. **97**, 236805 (2006)](https://doi.org/10.1103/PhysRevLett.97.236805).
 14. T. H. Yang et al., *Stacking-induced direct band gap in CVD-grown 1H MoS₂
     bilayers*, [Nature (2026)](https://doi.org/10.1038/s41586-026-11069-3).
+15. E. Prodan, *Robustness of the spin-Chern number*,
+    [Phys. Rev. B **80**, 125327 (2009)](https://doi.org/10.1103/PhysRevB.80.125327).

@@ -1,0 +1,36 @@
+# schema=VASPBERRY_SPIN_CHERN_V1
+# producer=VASPBERRY 1.5.1
+# build_status=UNRELEASED_SPIN_CHERN
+# representation=WAVECAR_PSEUDO_GRAM
+# physical_paw_validated=false
+# scope=selected_subspace
+# source_occupations_match_integer_projector=T
+# method=PROJECTED_PAULI_GENERALIZED_EIGEN_FUKUI
+# spin_convention=C_spin=(C_plus-C_minus)/2
+# spin_basis=Cartesian; local frame from OUTCAR
+# flux_convention=-Arg(Ux Uy_next conj(Ux_next) conj(Uy))
+# mesh_convergence=NOT_ESTABLISHED_BY_ONE_MESH
+# wavecar=WAVECAR
+# outcar=OUTCAR
+# spin_axis_cartesian=  0.0000000000000000E+00  0.0000000000000000E+00  1.0000000000000000E+00
+# spin_frame_row_1=  1.0000000000000000E+00  0.0000000000000000E+00  0.0000000000000000E+00
+# spin_frame_row_2=  0.0000000000000000E+00  1.0000000000000000E+00  0.0000000000000000E+00
+# spin_frame_row_3=  0.0000000000000000E+00  0.0000000000000000E+00  1.0000000000000000E+00
+# selected_bands=1:10
+# mesh=12,12
+# energy_gap_threshold_eV=  1.0000000000000000E-08
+# spin_gap_threshold_dimensionless=  9.9999999999999995E-07
+# link_min_singular_threshold=1e-6
+# min_external_energy_gap_eV=  5.3502837475731302E-01
+# global_indirect_gap_eV=  4.9727140628264399E-01
+# has_global_energy_gap=T
+# min_abs_spin_eigenvalue=  5.9369766975644178E-01
+# min_gram_eigenvalue=  1.1063870239080991E+00
+# max_gram_condition=  1.5692536669057635E+00
+# min_link_singular_value=  6.4169806882093883E-01
+# min_G_coverage_fraction=  9.8373983739837401E-01
+# max_abs_plaquette_flux_rad=  1.4074852175382910E+00
+# periodic_sewing=INTEGER_G_SHIFT_VALIDATED
+C_plus,C_minus,C_charge,delta_C,C_spin,C_parent,rank_plus,rank_minus
+ 1.0000000000000007E+000,-1.0000000000000009E+000,-2.2204460492503131E-016, 2.0000000000000018E+000, 1.0000000000000009E+000, 1.4853632119305370E-016,5,5
+# result_status=PASS

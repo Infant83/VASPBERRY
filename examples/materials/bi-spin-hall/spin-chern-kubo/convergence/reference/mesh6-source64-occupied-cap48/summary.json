@@ -1,0 +1,34 @@
+{
+  "case": "mesh6-source64-occupied-cap48",
+  "mesh": 6,
+  "source_nbands": 64,
+  "retained_band_max": 48,
+  "bands": "1:10",
+  "aggregation": "POSTPROCESS_SUM_OF_NATIVE_POINT_CURVATURE",
+  "C_est_plus": 1.9997800150308815,
+  "C_est_minus": -1.9997800113547948,
+  "C_est_spin": 1.9997800131928383,
+  "C_est_charge": 3.6760867683227616e-09,
+  "C_est_parent": 3.676087175954971e-09,
+  "min_energy_gap_eV": 0.535028374756481,
+  "min_abs_spin": 0.5936976751648982,
+  "npoints": 36,
+  "oriented_cell_area_Aminus2": [
+    -0.0,
+    0.0,
+    0.06573954287771883
+  ],
+  "source_chunks": [
+    {
+      "WAVECAR": "7df45537f471bdb30c8fdd720b24e88c2fc7f1b0c9dde8bb27f6f4169e1d1a44",
+      "OUTCAR": "76448dd037dec17a100dd3e6988540df1d188f1756f92e8a6534332269c46e21"
+    },
+    {
+      "WAVECAR": "db1e235997f330596e584109fa1e64f078fad74013fdb3f37dd60d94fc11f06b",
+      "OUTCAR": "69230f0b87296a02413ba491e5f38a63c4b1eac479160d012b63284952b3707e"
+    }
+  ],
+  "native_binary_sha256": "0d45aff53101924dcaf7eae84d655cc6f91c65cab0cba0d218c64157c2770526",
+  "quantized": false,
+  "status": "PASS"
+}

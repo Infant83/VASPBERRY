@@ -1,0 +1,10 @@
+{
+  "input_sha256": "ebfe97e64337f27fad32409f02f770cbd6aa5f7b49b822fc6578b4bc7972e012",
+  "script_sha256": "4f5e4d197f47badcdc37a07586d4ed3dd6a5f65f945e8c6f8dde2656288c45f3",
+  "outputs": {
+    "figure.svg": "10888d6b371a4ac4cb04e550c3dc7915df15a7211fbc4560cc94f895af7c1d56",
+    "figure.pdf": "7a8e109d2a0276f55d966166f92243617e503cfe2f5159ed9b30c5b215e7b7e1",
+    "figure.png": "44716a212bfb264e2cf42768a52dbb5ca0e804704cab9906b63c17156a478834"
+  },
+  "scope": "Display of saved tables; straight segments connect actual mesh/cutoff tests. No interpolation model or new physical calculation."
+}

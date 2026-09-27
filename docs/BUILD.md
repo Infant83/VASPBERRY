@@ -9,6 +9,9 @@ VASP `WAVECAR`; Python tools are optional for subsequent analysis and plotting.
 The main route below uses **Intel oneAPI Fortran (`ifx`), Intel MPI, and
 sequential oneMKL on Linux**. Choose the GNU route if those packages are not
 available. All commands run from the source directory containing `Makefile`.
+Keep `vaspberry_spin_chern.inc` and `vaspberry_spin_kubo.inc` beside
+`vaspberry.f` when copying the updated source; both belong to the native
+executable and are included by the Makefile.
 Extract or clone into a writable path without spaces; the Makefile rejects
 whitespace in the absolute repository/build path.
 Use the target for your chosen compiler; bare `make` builds both GNU serial
@@ -44,15 +47,15 @@ make help
 ```
 
 To install the fixed release instead, download **Source code (tar.gz)** or
-**Source code (zip)** from the [v1.4.2 release page](https://github.com/Infant83/VASPBERRY/releases/tag/v1.4.2),
-extract it, and enter `VASPBERRY-1.4.2`. The same Makefile commands work without
+**Source code (zip)** from the [v1.6.1 release page](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.1),
+extract it, and enter `VASPBERRY-1.6.1`. The same Makefile commands work without
 Git metadata. For example:
 
 ```bash
-curl -fL https://github.com/Infant83/VASPBERRY/archive/refs/tags/v1.4.2.tar.gz \
-  -o VASPBERRY-1.4.2.tar.gz
-tar -xzf VASPBERRY-1.4.2.tar.gz
-cd VASPBERRY-1.4.2
+curl -fL https://github.com/Infant83/VASPBERRY/archive/refs/tags/v1.6.1.tar.gz \
+  -o VASPBERRY-1.6.1.tar.gz
+tar -xzf VASPBERRY-1.6.1.tar.gz
+cd VASPBERRY-1.6.1
 make help
 ```
 

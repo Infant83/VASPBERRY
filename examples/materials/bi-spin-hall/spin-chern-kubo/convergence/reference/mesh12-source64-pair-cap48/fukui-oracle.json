@@ -1,0 +1,39 @@
+{
+  "plus": {
+    "chern": 2.0,
+    "min_link_sv": 0.18228450879856248,
+    "max_abs_flux_rad": 1.1483861026102056
+  },
+  "minus": {
+    "chern": -2.0,
+    "min_link_sv": 0.18228450808828436,
+    "max_abs_flux_rad": 1.148386099526494
+  },
+  "parent": {
+    "chern": 8.168322225027007e-17,
+    "min_link_sv": 0.2325181024893958,
+    "max_abs_flux_rad": 1.2653011462860834e-08
+  },
+  "mesh": [
+    12,
+    12
+  ],
+  "bands": [
+    9,
+    10
+  ],
+  "axis_spinor": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "energy_direct_gap_eV": 0.047428112147666734,
+  "min_abs_projected_spin": 0.33480239961254604,
+  "min_gram_eigenvalue": 1.134263732885466,
+  "charge_chern_sector_sum": 0.0,
+  "spin_chern_half_difference": 2.0,
+  "metric": "wavecar-pseudo",
+  "implementation": "Independent NumPy validation oracle; original chunk OUTCAR used only for common audited spin frame. No claim of native fullmesh OUTCAR.",
+  "wavecar_sha256": "ae9eae52502043bba1d4d22e753897e4dc32cb2cea4057d2466458fe9d0e43d7",
+  "outcar_sha256": "a2c3ef47e5a05368211a485c8cfacf31d2312ab5b403a9e458a578f30357cd60"
+}

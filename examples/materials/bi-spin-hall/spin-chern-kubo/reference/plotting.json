@@ -1,0 +1,90 @@
+{
+  "status": "PASS",
+  "source": "completed_native_CSV_only",
+  "method": "no_Chern_or_proxy_recalculation",
+  "comparison": [
+    {
+      "subspace": "occupied",
+      "bands": "1:10",
+      "C_est_plus": 1.9997764925840833,
+      "C_est_minus": -1.9997730745314561,
+      "C_est_spin": 1.9997747835577697,
+      "C_Fukui_plus": 1.0,
+      "C_Fukui_minus": -1.0,
+      "C_Fukui_spin": 1.0,
+      "fukui_status": "PASS"
+    },
+    {
+      "subspace": "pair",
+      "bands": "9:10",
+      "C_est_plus": -118.76613275512184,
+      "C_est_minus": 118.76613271004702,
+      "C_est_spin": -118.76613273258442,
+      "C_Fukui_plus": 1.9999999999999998,
+      "C_Fukui_minus": -1.9999999999999993,
+      "C_Fukui_spin": 1.9999999999999996,
+      "fukui_status": "PASS"
+    }
+  ],
+  "input_sha256": {
+    "occupied-mesh/SPIN_KUBO.csv": "3657dfd27eba2a05c75a69540720d0cdcff5d05a7bd52e1b71805abef4ab36f8",
+    "occupied-path/SPIN_KUBO.csv": "0ffe227c478987bce82253b015b610da96e7b2190662c1ad040b7e5de83755bd",
+    "occupied-mesh/SPIN_KUBO_INTEGRAL.csv": "365f36f5194841e60b9079e9120cccb286a1252985f6359d00b030fe01db32d9",
+    "occupied-fukui/SPIN_CHERN.csv": "7280ef76dc890bdb3b5c361edbb9d4f83e720e0efc04fe844b78ca3fc492c34d",
+    "occupied-fukui/SPIN_BERRY.csv": "f74f235e35db6ca57d98593eb52b4c01c191666e7a9d075b356337013348fb18",
+    "pair-path/SPIN_KUBO.csv": "33f71eea52f5942d44184047db08943043092a18022b5f1a198a6765cfb75534",
+    "pair-mesh/SPIN_KUBO_INTEGRAL.csv": "507fb4716ac1bd898b66e400d15784210e9d918d8593dad2f2acfa13739afad9",
+    "pair-fukui/SPIN_CHERN.csv": "fe7f4dd893dd4c1971e8c9c6a05331b294881ae0fe38f64acdc5e78407c689d7"
+  },
+  "poscar_sha256": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+  "plot_script_sha256": "7e383e84e23fed34d5e264395399734f547b8b920b737f70b5dca8ce87908606",
+  "maps": {
+    "proxy": {
+      "mesh": [
+        6,
+        6
+      ],
+      "first_bz_area_inv_A2": 2.3666235435978775,
+      "rendering": "constant_native_plaquette_values_clipped_to_first_BZ",
+      "interpolation": "none",
+      "axes": "Cartesian kx, ky in Angstrom^-1",
+      "K_fractional": [
+        0.3333333333333333,
+        0.6666666666666666
+      ],
+      "Kprime_fractional": [
+        -0.3333333333333333,
+        -0.6666666666666666
+      ],
+      "color_min": -167.82533965234637,
+      "color_max": 167.82533965234637,
+      "sample_location": "native_k_node; constant centered display cell"
+    },
+    "fukui": {
+      "mesh": [
+        6,
+        6
+      ],
+      "first_bz_area_inv_A2": 2.3666235435978775,
+      "rendering": "constant_native_plaquette_values_clipped_to_first_BZ",
+      "interpolation": "none",
+      "axes": "Cartesian kx, ky in Angstrom^-1",
+      "K_fractional": [
+        0.3333333333333333,
+        0.6666666666666666
+      ],
+      "Kprime_fractional": [
+        -0.3333333333333333,
+        -0.6666666666666666
+      ],
+      "color_min": -2.0748614913186323,
+      "color_max": 2.0748614913186323
+    }
+  },
+  "outputs_sha256": {
+    "figure.png": "7b136924f9b24df6d59dc20d0d6a01bc1dab8df753a3dea0f70c25ff369cd1d3",
+    "figure.pdf": "eb66b13164bdd4f9f77ff242a2b130c33c6482a87ee7fc26ae9b4810610e8c6c",
+    "figure.svg": "4985c3f9cb58b30ee17df78b4268d38d57d7c3a6093b3fada5311a22118c372a",
+    "comparison.csv": "4ae63c674f513c3c3b974a6c2d71be519f9cd422f214d5c4c9d1578a911ac596"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "status": "REJECTED_LINK_GUARD",
+  "bands": [
+    7,
+    8
+  ],
+  "chern_assigned": false,
+  "min_link_singular_value": 2.3487390513682706e-10,
+  "k_index_1based": 4,
+  "interpretation": "Sampled energy/spin gaps passed; link/sampling/global isolation unresolved. No physical crossing mechanism established."
+}

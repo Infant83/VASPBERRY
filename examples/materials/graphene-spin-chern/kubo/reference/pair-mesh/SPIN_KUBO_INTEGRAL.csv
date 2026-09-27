@@ -1,0 +1,39 @@
+# schema=VASPBERRY_SPIN_SECTOR_KUBO_V1
+# producer=VASPBERRY 1.5.1
+# build_status=UNRELEASED_SPIN_KUBO
+# derivative=CANONICAL_MOMENTUM_DERIVATIVE_PROXY
+# representation=PSEUDO_GRAM
+# physical_paw_validated=false
+# exact_pseudo_projector_derivative=false
+# observable=PROJECTED_SPIN_SECTOR_GEOMETRIC_CURVATURE_PROXY
+# conventional_spin_current_hall=false
+# scope=selected_subspace
+# source_occupations=NOT_USED_FIXED_RANK_PROJECTOR
+# source_band_sum=FINITE_RETAINED_WAVECAR_BANDS
+# missing_terms=PAW_AUGMENTATION_NONLOCAL_SOC_VERTEX_AND_BASIS_DERIVATIVE
+# geometric_integer_certified=false
+# integer_rounding_applied=false
+# spin_convention=C_spin=(C_plus-C_minus)/2
+# curvature_convention=-2Im(inner_product_of_derivatives)
+# decomposition=parent_projected_plus_spin_mixing
+# spin_mixing_includes_projected_spin_derivative=true
+# tensor_components=yz,zx,xy; Cartesian derivatives
+# wavecar=WAVECAR
+# outcar=OUTCAR
+# source_encut_eV=  5.2000000000000000E+02
+# source_nbands=16
+# selected_bands=7:8
+# spin_axis_cartesian=  0.0000000000000000E+00  0.0000000000000000E+00  1.0000000000000000E+00
+# spin_frame_row_1=  1.0000000000000000E+00  0.0000000000000000E+00  0.0000000000000000E+00
+# spin_frame_row_2=  0.0000000000000000E+00  1.0000000000000000E+00  0.0000000000000000E+00
+# spin_frame_row_3=  0.0000000000000000E+00  0.0000000000000000E+00  1.0000000000000000E+00
+# energy_gap_threshold_eV=  1.0000000000000000E-08
+# spin_gap_threshold_dimensionless=  9.9999999999999995E-07
+# min_external_energy_gap_eV=  9.1200277907432792E-07
+# min_abs_spin_eigenvalue=  9.9999515004966177E-01
+# integration=EXPLICIT_UNIFORM_FULL_2D_MESH_ESTIMATE
+# mesh=12,12
+# oriented_cell_area_A-2=  0.0000000000000000E+00 -0.0000000000000000E+00  5.2311406696521540E-02
+C_est_plus,C_est_minus,C_est_charge,delta_C_est,C_est_spin,C_est_parent,rank_plus,rank_minus
+ 1.1359065937202168E+012,-1.1359065793186335E+012, 1.4401583251953125E+004, 2.2718131730388506E+012, 1.1359065865194253E+012, 1.4401583275946676E+004,1,1
+# result_status=PASS

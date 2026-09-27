@@ -1,0 +1,565 @@
+{
+  "date": "2026-09-27",
+  "purpose": "Actual ordinary VASP calculations followed by native Fortran projected-spin topology; no SOC scaling or model substitution",
+  "vasp_license": "VASP executable/source, POTCAR, CHGCAR and WAVECAR are not bundled; licensed users regenerate from the public inputs",
+  "records": [
+    {
+      "started_at_utc": "2026-09-27T06:16:08.760464+00:00",
+      "command": [
+        "vasp_ncl"
+      ],
+      "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+      "threads": 1,
+      "timeout_seconds": 1200.0,
+      "input_sha256": {
+        "POSCAR": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+        "INCAR": "026b97699b5d6e786d4da7cd5c49346c815f610a6bac6148071b5af5568eaf45",
+        "KPOINTS": "d9db8ec0d94ee1b0a427952adb9688140f87b33637d5872d15486d7ba6dcfcac",
+        "POTCAR": "253f7b50bb8d59471dbedb8285d89021f4a42ed1a2c5d38a03a736e69125dd95"
+      },
+      "scope": "Real fixed-geometry graphene VASP calculation; no SOC scaling or model substitution.",
+      "returncode": 0,
+      "wall_seconds": 201.57907734508626,
+      "converged": true,
+      "normal_footer": true,
+      "final_toten_eV": -18.43314906,
+      "peak_rss_bytes_macos": 575627264.0,
+      "outputs": {
+        "OUTCAR": {
+          "bytes": 208593,
+          "sha256": "e97453d9509bb82de0273da059a821246b89a9eef706920410a9be70ee32f3d3"
+        },
+        "OSZICAR": {
+          "bytes": 6265,
+          "sha256": "818edf210f60c14a0d36cac9418b4ee0b6e345abe0454e3691dfc7066e1ba384"
+        },
+        "WAVECAR": {
+          "bytes": 9413376,
+          "sha256": "5e1ea584c1541b20513b9eba2f60503b9b704d340af34024a6565b6ed053f2e2"
+        },
+        "CHGCAR": {
+          "bytes": 28313787,
+          "sha256": "86c92281b9609285a61be17b26ab06f3c863ea2ee7141d9064b32bf87fd9c1cb"
+        },
+        "EIGENVAL": {
+          "bytes": 7285,
+          "sha256": "a6a39a44feac89d0666d05f592189997a15e99529c515038798e7c36dd29def4"
+        },
+        "vasprun.xml": {
+          "bytes": 107160,
+          "sha256": "3f64866599c614a44c539dcd85c247abaf2640f1ba57185632a9acada0a0662a"
+        },
+        "stdout.log": {
+          "bytes": 6607,
+          "sha256": "b285d18b4efa73f174244f66bf6c44392c796a7c64e03a26a06345d45f7dd04f"
+        },
+        "stderr.log": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "status": "PASS",
+      "finished_at_utc": "2026-09-27T06:19:30.462540+00:00",
+      "case": "scf-9x9-520"
+    },
+    {
+      "started_at_utc": "2026-09-27T06:26:30.689265+00:00",
+      "command": [
+        "vasp_ncl"
+      ],
+      "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+      "threads": 1,
+      "timeout_seconds": 1200.0,
+      "input_sha256": {
+        "POSCAR": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+        "INCAR": "e614f85142330b068d526b4ccae56ae372c1e24195557189b651e864063ee790",
+        "KPOINTS": "38cb9ae5ea8ceb9bd8d9d5d6890e640b7a9ebae30c9b37573d40c151369e83bd",
+        "POTCAR": "253f7b50bb8d59471dbedb8285d89021f4a42ed1a2c5d38a03a736e69125dd95",
+        "CHGCAR": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+      },
+      "scope": "Real fixed-geometry graphene VASP calculation; no SOC scaling or model substitution.",
+      "returncode": 0,
+      "wall_seconds": 265.40775243286043,
+      "converged": true,
+      "normal_footer": true,
+      "final_toten_eV": -18.39283766,
+      "peak_rss_bytes_macos": 494821376.0,
+      "outputs": {
+        "OUTCAR": {
+          "bytes": 113022,
+          "sha256": "f4a2b0478c2fa3dcd38e039f7a8030654445c85fd773a16a0fe6bcdf8128db68"
+        },
+        "OSZICAR": {
+          "bytes": 1792,
+          "sha256": "d18746926edf6cbbfb7fc9796d54b2cac66cefc22f9d66bae210e021917c63a2"
+        },
+        "WAVECAR": {
+          "bytes": 28135936,
+          "sha256": "cb246638d0223503f7f5ce7b362540b9078cd4e55074ebf28198b9b01eb0e3a2"
+        },
+        "CHGCAR": {
+          "bytes": 28313727,
+          "sha256": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+        },
+        "EIGENVAL": {
+          "bytes": 21469,
+          "sha256": "da6c0725cb7013504bc9c8bd5de335151ff63124b1cb47ba62ce9106f9cc3c2a"
+        },
+        "vasprun.xml": {
+          "bytes": 110896,
+          "sha256": "e1933b50b3aa9917fd09a77f9c52d635448b54ba55d26830e8949238f55b15b3"
+        },
+        "stdout.log": {
+          "bytes": 2543,
+          "sha256": "fe68ad28500e8a9957658267b2c3eaa48e2c2c3910f1a88936310c9d589307f8"
+        },
+        "stderr.log": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "status": "PASS",
+      "finished_at_utc": "2026-09-27T06:30:56.335935+00:00",
+      "case": "mesh-6x6-exact-520"
+    },
+    {
+      "started_at_utc": "2026-09-27T06:26:30.964196+00:00",
+      "command": [
+        "vasp_ncl"
+      ],
+      "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+      "threads": 1,
+      "timeout_seconds": 1200.0,
+      "input_sha256": {
+        "POSCAR": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+        "INCAR": "e614f85142330b068d526b4ccae56ae372c1e24195557189b651e864063ee790",
+        "KPOINTS": "7abadf55e30fdd85b803f502e83fd75427211c5020a4c0e13797c52761986bb6",
+        "POTCAR": "253f7b50bb8d59471dbedb8285d89021f4a42ed1a2c5d38a03a736e69125dd95",
+        "CHGCAR": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+      },
+      "scope": "Real fixed-geometry graphene VASP calculation; no SOC scaling or model substitution.",
+      "returncode": 0,
+      "wall_seconds": 468.68805264192633,
+      "converged": true,
+      "normal_footer": true,
+      "final_toten_eV": -18.43314913,
+      "peak_rss_bytes_macos": 550817792.0,
+      "outputs": {
+        "OUTCAR": {
+          "bytes": 148842,
+          "sha256": "68a20ad412068867b4f9f6bd4dc765a1844cfad34fcb1b0c2e528b631178f53a"
+        },
+        "OSZICAR": {
+          "bytes": 1792,
+          "sha256": "f02099afce35e7f45f91493d3526a48fafe8b40b6003f31c501f650eb3406171"
+        },
+        "WAVECAR": {
+          "bytes": 63014784,
+          "sha256": "9c9779a8fc003e47bdeaab7b5978f525a00952a05aaf0df38d5590187fdb24fa"
+        },
+        "CHGCAR": {
+          "bytes": 28313727,
+          "sha256": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+        },
+        "EIGENVAL": {
+          "bytes": 48064,
+          "sha256": "fc9aa1566d09123aca0a39b1443a809ed631ea295f2384cc42f2d5b266a2cdda"
+        },
+        "vasprun.xml": {
+          "bytes": 142981,
+          "sha256": "498ea366037fb89483b558fb63f14a126cc79753334c46986e49c5d403314fe7"
+        },
+        "stdout.log": {
+          "bytes": 2543,
+          "sha256": "bb4f8d2b5ccd00549baa5d4b7b3e26443a90d9ca93ecad674681ee54482b6d1b"
+        },
+        "stderr.log": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "status": "PASS",
+      "finished_at_utc": "2026-09-27T06:34:19.933245+00:00",
+      "case": "mesh-9x9-exact-520"
+    },
+    {
+      "started_at_utc": "2026-09-27T06:26:30.388026+00:00",
+      "command": [
+        "vasp_ncl"
+      ],
+      "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+      "threads": 1,
+      "timeout_seconds": 1200.0,
+      "input_sha256": {
+        "POSCAR": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+        "INCAR": "e614f85142330b068d526b4ccae56ae372c1e24195557189b651e864063ee790",
+        "KPOINTS": "121514561eb2996c7c42098c63fca4f1edb9a694a8baf4b598c7a6b91098d302",
+        "POTCAR": "253f7b50bb8d59471dbedb8285d89021f4a42ed1a2c5d38a03a736e69125dd95",
+        "CHGCAR": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+      },
+      "scope": "Real fixed-geometry graphene VASP calculation; no SOC scaling or model substitution.",
+      "returncode": 0,
+      "wall_seconds": 772.1300361170433,
+      "converged": true,
+      "normal_footer": true,
+      "final_toten_eV": -18.44303003,
+      "peak_rss_bytes_macos": 675835904.0,
+      "outputs": {
+        "OUTCAR": {
+          "bytes": 198990,
+          "sha256": "6dd0c65bfa2cbf2de3202c81c8d22c87316512d563833a81b32a43d395e85c07"
+        },
+        "OSZICAR": {
+          "bytes": 1792,
+          "sha256": "b088dbb32f84118fcf8357cc6d022c7fac13795850105e7da3911d020ba4b06a"
+        },
+        "WAVECAR": {
+          "bytes": 112268800,
+          "sha256": "f245d3cc4ee7d911c17bc35629556f6374ecc975dbac21b4cab072234c179a64"
+        },
+        "CHGCAR": {
+          "bytes": 28313727,
+          "sha256": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+        },
+        "EIGENVAL": {
+          "bytes": 85297,
+          "sha256": "b822a4b28cff37329c5e8b158e5e16240fe6d08af9ea0a025f9cf635e4cec647"
+        },
+        "vasprun.xml": {
+          "bytes": 187945,
+          "sha256": "1fd99f9c67962bb179e5fcb7663f3e77049329dc5050584d624b7006e70c5710"
+        },
+        "stdout.log": {
+          "bytes": 2543,
+          "sha256": "75f30436abd70cfd8f5efb43feebbe32f152b39706039b814ee18cfaae48a577"
+        },
+        "stderr.log": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "status": "PASS",
+      "finished_at_utc": "2026-09-27T06:39:22.873452+00:00",
+      "case": "mesh-12x12-exact-520"
+    },
+    {
+      "started_at_utc": "2026-09-27T06:27:26.249142+00:00",
+      "command": [
+        "vasp_ncl"
+      ],
+      "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+      "threads": 1,
+      "timeout_seconds": 1200.0,
+      "input_sha256": {
+        "POSCAR": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+        "INCAR": "3e383b0042dc792261333a5e01f410218775653148a04f3ce4c702fe4ebb45cd",
+        "KPOINTS": "38cb9ae5ea8ceb9bd8d9d5d6890e640b7a9ebae30c9b37573d40c151369e83bd",
+        "POTCAR": "253f7b50bb8d59471dbedb8285d89021f4a42ed1a2c5d38a03a736e69125dd95",
+        "CHGCAR": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+      },
+      "scope": "Real fixed-geometry graphene VASP calculation; no SOC scaling or model substitution.",
+      "returncode": 0,
+      "wall_seconds": 270.87103488482535,
+      "converged": true,
+      "normal_footer": true,
+      "final_toten_eV": -18.39283766,
+      "peak_rss_bytes_macos": 450658304.0,
+      "outputs": {
+        "OUTCAR": {
+          "bytes": 114495,
+          "sha256": "5247f85c705fa40902d54522300d4fd8653fb97e5754d53b548770de9b7fb74f"
+        },
+        "OSZICAR": {
+          "bytes": 1872,
+          "sha256": "6ecd1d363daff852e9d5b948f37e5e1a4c112793309dd9b04121aa973556cd4b"
+        },
+        "WAVECAR": {
+          "bytes": 28135936,
+          "sha256": "be372c2f4c576bab958a999769348fcb1a8199de82a695ff6883c451e4af23a5"
+        },
+        "CHGCAR": {
+          "bytes": 28313727,
+          "sha256": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+        },
+        "EIGENVAL": {
+          "bytes": 21469,
+          "sha256": "da6c0725cb7013504bc9c8bd5de335151ff63124b1cb47ba62ce9106f9cc3c2a"
+        },
+        "vasprun.xml": {
+          "bytes": 111176,
+          "sha256": "86299d4828599144bdd8b43c93923cbe048412c7165607619e000f6a67495393"
+        },
+        "stdout.log": {
+          "bytes": 2623,
+          "sha256": "c545aae2b1685c2b40659ca87b1ed4605c7e40e99658dac9f811cb46060e696c"
+        },
+        "stderr.log": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "status": "PASS",
+      "finished_at_utc": "2026-09-27T06:31:57.374712+00:00",
+      "case": "mesh-6x6-exact-strict-520"
+    },
+    {
+      "started_at_utc": "2026-09-27T06:34:55.207802+00:00",
+      "command": [
+        "vasp_ncl"
+      ],
+      "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+      "threads": 1,
+      "timeout_seconds": 1200.0,
+      "input_sha256": {
+        "POSCAR": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+        "INCAR": "ff14096105dba1247379719791deae4df08bbcbfaaa5f5fdbbdf9cc496402e73",
+        "KPOINTS": "38cb9ae5ea8ceb9bd8d9d5d6890e640b7a9ebae30c9b37573d40c151369e83bd",
+        "POTCAR": "253f7b50bb8d59471dbedb8285d89021f4a42ed1a2c5d38a03a736e69125dd95",
+        "CHGCAR": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+      },
+      "scope": "Real fixed-geometry graphene VASP calculation; no SOC scaling or model substitution.",
+      "returncode": 0,
+      "wall_seconds": 197.31218917900696,
+      "converged": true,
+      "normal_footer": true,
+      "final_toten_eV": -18.39282309,
+      "peak_rss_bytes_macos": 477421568.0,
+      "outputs": {
+        "OUTCAR": {
+          "bytes": 110512,
+          "sha256": "fc13fda21ad7e9034b48c6e07b5cf295f0f681844b6c515e23f90c217811393a"
+        },
+        "OSZICAR": {
+          "bytes": 1792,
+          "sha256": "91e0c51505ad8b570d385ae68b53a9235a43b1b5ae9eed7993631bd4937f61fe"
+        },
+        "WAVECAR": {
+          "bytes": 28135936,
+          "sha256": "bb31183ba2febe616fe26347a2325094a3d4396eb47301a56489f36cd263b3a8"
+        },
+        "CHGCAR": {
+          "bytes": 28313727,
+          "sha256": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+        },
+        "EIGENVAL": {
+          "bytes": 21469,
+          "sha256": "a7c8bd2afa7bc1febe2e05dc4f8370ce34fda5b38834673e4ce06ca25a248d6a"
+        },
+        "vasprun.xml": {
+          "bytes": 110946,
+          "sha256": "eed7ac9fde780c2938ec79160107d1de18a7d11ac52bc55cbdc54f9374bb6b8e"
+        },
+        "stdout.log": {
+          "bytes": 2543,
+          "sha256": "06d356a7aec82214a3f9d5d86503c2141345ea7fbf270bd289f2789b9d0f14f8"
+        },
+        "stderr.log": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "status": "PASS",
+      "finished_at_utc": "2026-09-27T06:38:12.740236+00:00",
+      "case": "mesh-6x6-nosoc-exact-520"
+    },
+    {
+      "started_at_utc": "2026-09-27T06:34:57.186102+00:00",
+      "command": [
+        "vasp_ncl"
+      ],
+      "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+      "threads": 1,
+      "timeout_seconds": 1200.0,
+      "input_sha256": {
+        "POSCAR": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+        "INCAR": "e614f85142330b068d526b4ccae56ae372c1e24195557189b651e864063ee790",
+        "KPOINTS": "c09309a8d316ecd86fe8110b0b0e79c0b173b3f3efe43a36047d1bbfe127c342",
+        "POTCAR": "253f7b50bb8d59471dbedb8285d89021f4a42ed1a2c5d38a03a736e69125dd95",
+        "CHGCAR": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+      },
+      "scope": "Real fixed-geometry graphene VASP calculation; no SOC scaling or model substitution.",
+      "returncode": 0,
+      "wall_seconds": 259.97165173408575,
+      "converged": true,
+      "normal_footer": true,
+      "final_toten_eV": -17.26698306,
+      "peak_rss_bytes_macos": 520806400.0,
+      "outputs": {
+        "OUTCAR": {
+          "bytes": 123370,
+          "sha256": "1773b5c29911ffd6c996938d644ed0668af9c315350e1174dda86a20e0e8cdb0"
+        },
+        "OSZICAR": {
+          "bytes": 1792,
+          "sha256": "4f2b5c4a733f985bf4b47585c1a59d70eed81e9756932ed8b97cbbcfe3892d55"
+        },
+        "WAVECAR": {
+          "bytes": 38289760,
+          "sha256": "9cb0f9396a9b4def6996832858fd7372003751ca6d0b40341f487be4ce89ee8b"
+        },
+        "CHGCAR": {
+          "bytes": 28313727,
+          "sha256": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+        },
+        "EIGENVAL": {
+          "bytes": 29152,
+          "sha256": "a4e8ce09f00074fb5544ba1f3db6510c909107a8c055a4c58a5ee3ffbe41cec4"
+        },
+        "vasprun.xml": {
+          "bytes": 120165,
+          "sha256": "c2cef6aec538c6d58d1ac565e3d86c8f3d391c65c618789c340b56a84d999bf9"
+        },
+        "stdout.log": {
+          "bytes": 2543,
+          "sha256": "c551a6a162f6202f81c025d6480f3b427440ca8ee75cd93e146518f2deb912fc"
+        },
+        "stderr.log": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "status": "PASS",
+      "finished_at_utc": "2026-09-27T06:39:17.411021+00:00",
+      "case": "path-exact-520"
+    },
+    {
+      "started_at_utc": "2026-09-27T06:24:35.420397+00:00",
+      "command": [
+        "vasp_ncl"
+      ],
+      "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+      "threads": 1,
+      "timeout_seconds": 600.0,
+      "input_sha256": {
+        "POSCAR": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+        "INCAR": "b2d7f4ebc398676b290b7eebef1be821b36fdc437f3ee0f0eef8ad5e616d8370",
+        "KPOINTS": "c9f5b359b9eaeff73cb4611a28f85849aec5d5df7b6837f1cef0e8eb76176565",
+        "POTCAR": "253f7b50bb8d59471dbedb8285d89021f4a42ed1a2c5d38a03a736e69125dd95",
+        "CHGCAR": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+      },
+      "scope": "Real fixed-geometry graphene VASP calculation; no SOC scaling or model substitution.",
+      "returncode": 0,
+      "wall_seconds": 30.299735159846023,
+      "converged": true,
+      "normal_footer": true,
+      "final_toten_eV": -15.09500929,
+      "peak_rss_bytes_macos": 427532288.0,
+      "outputs": {
+        "OUTCAR": {
+          "bytes": 101484,
+          "sha256": "d1fcbe0d9cc51c6ba8326811ffacd701867eae110cd199e671852b1ae77c98a2"
+        },
+        "OSZICAR": {
+          "bytes": 2592,
+          "sha256": "be4e442911c626002243a021aa949f92675bec5fe889e427f13ef3485aeb8e42"
+        },
+        "WAVECAR": {
+          "bytes": 2409168,
+          "sha256": "ed033567e72eb850faa84b2bc7c14bb92c926ae05f645aacec3f63b96aee2c8f"
+        },
+        "CHGCAR": {
+          "bytes": 28313727,
+          "sha256": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+        },
+        "EIGENVAL": {
+          "bytes": 1966,
+          "sha256": "404bcf810af8a18acaf8f70a7891fa96fae48b891f96482e9280e4f7e608ce2e"
+        },
+        "vasprun.xml": {
+          "bytes": 90173,
+          "sha256": "286ab855cd179164db6fe045c9e8945ed33206e48ac0b662a9287180e8127bed"
+        },
+        "stdout.log": {
+          "bytes": 3343,
+          "sha256": "6420020f0f42c39218a45b58c290c8df2895d6a0558f95803ea8a0845474ce09"
+        },
+        "stderr.log": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "status": "PASS",
+      "finished_at_utc": "2026-09-27T06:25:05.917781+00:00",
+      "case": "gap-soc-exact-header-520"
+    },
+    {
+      "started_at_utc": "2026-09-27T06:24:35.059556+00:00",
+      "command": [
+        "vasp_ncl"
+      ],
+      "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+      "threads": 1,
+      "timeout_seconds": 600.0,
+      "input_sha256": {
+        "POSCAR": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+        "INCAR": "19365525b02a5f29c1013d549c24962978a043c5807a8f9ed8913f334de129e3",
+        "KPOINTS": "c9f5b359b9eaeff73cb4611a28f85849aec5d5df7b6837f1cef0e8eb76176565",
+        "POTCAR": "253f7b50bb8d59471dbedb8285d89021f4a42ed1a2c5d38a03a736e69125dd95",
+        "CHGCAR": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+      },
+      "scope": "Real fixed-geometry graphene VASP calculation; no SOC scaling or model substitution.",
+      "returncode": 0,
+      "wall_seconds": 45.06406314414926,
+      "converged": true,
+      "normal_footer": true,
+      "final_toten_eV": -15.09499517,
+      "peak_rss_bytes_macos": 441532416.0,
+      "outputs": {
+        "OUTCAR": {
+          "bytes": 154948,
+          "sha256": "a1de8062febafca0552204ec5ccc900ceee3b9253654004a08ae638233c9fd46"
+        },
+        "OSZICAR": {
+          "bytes": 5632,
+          "sha256": "0e70c718292814804760b9a1114f30d4aca3b936c1e9178c33500e7a99e0b8d7"
+        },
+        "WAVECAR": {
+          "bytes": 2409168,
+          "sha256": "cc03ebfe70dccb16271476fec264705d89130b0916dd95dcfc97d6b98bc89bb6"
+        },
+        "CHGCAR": {
+          "bytes": 28313727,
+          "sha256": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849"
+        },
+        "EIGENVAL": {
+          "bytes": 1966,
+          "sha256": "f3f28af372e68e2274172315c33febb9fede67b983db2d6226951423fef02099"
+        },
+        "vasprun.xml": {
+          "bytes": 100863,
+          "sha256": "561075b980ce95a1fbf024fce654d42ee4271f71503e50d779cae0afdea1bc09"
+        },
+        "stdout.log": {
+          "bytes": 6383,
+          "sha256": "16fbe7ab3376e924627b59e2bf098111ac31f087c920acc0243dc8e83075dea0"
+        },
+        "stderr.log": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "status": "PASS",
+      "finished_at_utc": "2026-09-27T06:25:20.284394+00:00",
+      "case": "gap-nosoc-exact-header-520"
+    }
+  ],
+  "native_source_sha256": {
+    "vaspberry.f": "e8fa50d84fc9ffdfaf1e98eea0043071a9efc93e1910f0693bec8581e4f27147",
+    "vaspberry_spin_chern.inc": "c8d1e6d435b4c1b0591e2147c9a96077fb0320fd3024cb78c1166c564a2b68b9"
+  },
+  "native_binary_sha256": "c638c651b255f41a1076c4130847d669bd54b97bfdecc73ac4b11e5b38311c21",
+  "preparation_script_sha256": "2192d9997463ad26b78ada0fbe841eae2a116297add2919c2f827affc9db1d6a",
+  "source_scf_validation": {
+    "record_file": "run.json",
+    "record_sha256": "e97927ea6c5d76353212f32ee714dfa11d3d60370ea840402ac595a2f2d2d482",
+    "files_sha256": {
+      "OUTCAR": "e97453d9509bb82de0273da059a821246b89a9eef706920410a9be70ee32f3d3",
+      "CHGCAR": "86c92281b9609285a61be17b26ab06f3c863ea2ee7141d9064b32bf87fd9c1cb",
+      "POTCAR": "253f7b50bb8d59471dbedb8285d89021f4a42ed1a2c5d38a03a736e69125dd95",
+      "POSCAR": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+      "INCAR": "026b97699b5d6e786d4da7cd5c49346c815f610a6bac6148071b5af5568eaf45",
+      "KPOINTS": "d9db8ec0d94ee1b0a427952adb9688140f87b33637d5872d15486d7ba6dcfcac"
+    }
+  },
+  "reference_source_note": "Saved raw native CSV files copied unchanged from GNU outputs. Input schemas record source WAVECAR and OUTCAR basenames; this manifest binds their actual hashes."
+}

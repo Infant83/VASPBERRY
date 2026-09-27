@@ -1,0 +1,42 @@
+{
+  "case": "mesh12-source64-occupied-cap48",
+  "mesh": 12,
+  "source_nbands": 64,
+  "retained_band_max": 48,
+  "bands": "1:10",
+  "aggregation": "POSTPROCESS_SUM_OF_NATIVE_POINT_CURVATURE",
+  "C_est_plus": 1.0382696706876444,
+  "C_est_minus": -1.0382696742482669,
+  "C_est_spin": 1.0382696724679557,
+  "C_est_charge": -3.5606224635387207e-09,
+  "C_est_parent": -3.560622543201635e-09,
+  "min_energy_gap_eV": 0.5350283747994766,
+  "min_abs_spin": 0.5936976709252871,
+  "npoints": 144,
+  "oriented_cell_area_Aminus2": [
+    -0.0,
+    0.0,
+    0.016434885719429707
+  ],
+  "source_chunks": [
+    {
+      "WAVECAR": "cefb2a6a9f8f90dabb7a6f3123d248d5ce2e011bb757a279f1c76fea7f0c9353",
+      "OUTCAR": "a2c3ef47e5a05368211a485c8cfacf31d2312ab5b403a9e458a578f30357cd60"
+    },
+    {
+      "WAVECAR": "c6f2f891a1dea14cab712c7cdfbfcc3d16549527e866693256187e3829f3ecf6",
+      "OUTCAR": "c8ded5d021bd96d878637eb1267e01b884b082585c9f79170dc96f663f575138"
+    },
+    {
+      "WAVECAR": "e1f84c0d57066ad5b8edeb953f1c312f85f9ba4286ccd88c5dd78d5f23ce62c6",
+      "OUTCAR": "c20f739491017a29c70afb1a78df9e45a8b7f82857f2eb97e00ec7b118ed0e52"
+    },
+    {
+      "WAVECAR": "c89310cb8182c506beae5bc10af76ba364d7ee286f0a73dd2d4f51e5df0b8fb8",
+      "OUTCAR": "7e305929baa33e54c2c9f7a4fde2e7e3b236849e8121d418f9711c24cec7cad7"
+    }
+  ],
+  "native_binary_sha256": "0d45aff53101924dcaf7eae84d655cc6f91c65cab0cba0d218c64157c2770526",
+  "quantized": false,
+  "status": "PASS"
+}

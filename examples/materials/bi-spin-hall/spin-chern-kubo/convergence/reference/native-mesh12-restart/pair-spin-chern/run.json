@@ -1,0 +1,24 @@
+{
+  "command": [
+    "vaspberry",
+    "--task",
+    "spin-chern",
+    "--bands",
+    "9:10",
+    "--mesh",
+    "12,12"
+  ],
+  "binary_sha256": "0d45aff53101924dcaf7eae84d655cc6f91c65cab0cba0d218c64157c2770526",
+  "input_sha256": {
+    "WAVECAR": "bd9ede89f709bc28964e9111fb1f8db76ee6aa7bd4003259df43eab727759e7f",
+    "OUTCAR": "4430bb0a1546f0c70a346b091f1a06e28025cc5ec127f36854355f02cf1e55c3"
+  },
+  "started_unix": 1790502800.8628328,
+  "exit": 0,
+  "finished_unix": 1790502801.0557299,
+  "output_sha256": {
+    "SPIN_SPECTRUM.csv": "508bb98f54cf8c41aa02b8fd601495bdc3fbad4d7ce5604db5b1ea26c1bb77f2",
+    "SPIN_CHERN.csv": "14bfa1c8271a561a940f33b8ecc34746ac7bc131466783891f5cb6b368779933",
+    "SPIN_BERRY.csv": "c614113d85f9711408e195d9704ea72a70973e4ba3f4a51f5ba8d639ee179646"
+  }
+}

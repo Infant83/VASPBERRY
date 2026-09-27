@@ -1,0 +1,61 @@
+{
+  "started_at_utc": "2026-09-27T09:36:39.018730+00:00",
+  "command": [
+    "vasp_ncl"
+  ],
+  "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+  "threads": 1,
+  "timeout_seconds": 3000.0,
+  "input_sha256": {
+    "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+    "INCAR": "120378d6c500c8815b006798c911ca8e8f75526e0ae7fe2a905e3295ccd97dda",
+    "KPOINTS": "bfd496cafb15d39a897910131fa6e54be5621e9fae60aed4faa93468a044905f",
+    "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489",
+    "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db",
+    "WAVECAR": "ae9eae52502043bba1d4d22e753897e4dc32cb2cea4057d2466458fe9d0e43d7"
+  },
+  "scope": "Real fixed-geometry Bi SOC full-mesh restart, matching archived fixed density and source WAVECAR; ordinary unmodified VASP.",
+  "returncode": 0,
+  "wall_seconds": 964.5270346479956,
+  "converged": true,
+  "normal_footer": true,
+  "final_toten_eV": -8.6495607,
+  "peak_rss_bytes_macos": 2007035904.0,
+  "outputs": {
+    "OUTCAR": {
+      "bytes": 416968,
+      "sha256": "4430bb0a1546f0c70a346b091f1a06e28025cc5ec127f36854355f02cf1e55c3"
+    },
+    "OSZICAR": {
+      "bytes": 512,
+      "sha256": "2f76c0e06d9ab48fffbebded451500398421b7a52ed07223748a475ab8d5738f"
+    },
+    "WAVECAR": {
+      "bytes": 685298400,
+      "sha256": "bd9ede89f709bc28964e9111fb1f8db76ee6aa7bd4003259df43eab727759e7f"
+    },
+    "CHGCAR": {
+      "bytes": 51387771,
+      "sha256": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db"
+    },
+    "EIGENVAL": {
+      "bytes": 313393,
+      "sha256": "e7e2bf7365b3d4c7c9ca1a7009e30ea0a6a84f78e324af6940fcb6cdba63d04a"
+    },
+    "vasprun.xml": {
+      "bytes": 9329733,
+      "sha256": "13886b07e2318b358b4b7aa5048f417cfb7616521c55b7171a3fd709b707a6bf"
+    },
+    "stdout.log": {
+      "bytes": 1337,
+      "sha256": "4d1fdefdea547110e81c49ae974c898d50d5908ad858dccdd8099469ec7f2fdd"
+    },
+    "stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "status": "PASS",
+  "finished_at_utc": "2026-09-27T09:52:46.413699+00:00",
+  "preparation": "Whole-mesh ordinary VASP restart of the archived assembled 12x12 source64. Only numerical stopping controls differ; fixed Hamiltonian hashes are unchanged."
+}

@@ -1,13 +1,15 @@
 # Examples: calculate directly from VASP wavefunctions
 
 VASPBERRY reads **VASP WAVECAR files directly**. The compiled VASPBERRY executable
-calculates Fukui curvature and Chern numbers, Z₂, Kubo curvature, circular
+calculates Fukui curvature and Chern numbers, projected-spin sectors, Z₂, Kubo curvature, circular
 optical transitions and real-space wavefunctions. Use the resulting numerical files in your own analysis
 or the supplied Python plotting tools.
 
 Build with `make serial` and run `build/vaspberry --help` for the native CLI.
 The older executable name `build/vaspberry-gfortran` and short flags remain
-supported; the guides use descriptive task and option names.
+supported; the guides use descriptive task and option names. Use VASPBERRY
+1.6.1 for the complete set of commands below, including `spin-chern`,
+`spin-kubo` and its optional `--sum-bands` control.
 
 The core guides follow the same sequence: **VASP input → VASPBERRY execution →
 output file → postprocessing and figure**. The [technical report](../docs/TECHNICAL_REPORT.md)
@@ -41,6 +43,8 @@ convergence and the report figures use the feature-specific guides below;
 |---|---|---|
 | [Fukui Berry curvature](features/fukui-berry-curvature/) | MoS₂, full 12×12 mesh | `BERRYCURV.dat`; opposite K/K′ curvature in a Cartesian BZ map |
 | [Occupied Chern number](features/fukui-chern/) | Bi, full 12×12 mesh | `BERRYCURV.dat`; C = 0 for bands 1–10 |
+| [Spin Chern numbers](materials/graphene-spin-chern/) | Graphene, intrinsic SOC, matching full-mesh `WAVECAR` and `OUTCAR` | `SPIN_CHERN.csv`, `SPIN_BERRY.csv`, `SPIN_SPECTRUM.csv`; spin-sector topology with energy/spin-gap diagnostics |
+| Spin-sector Kubo curves: [graphene](materials/graphene-spin-chern/kubo/), [Bi](materials/bi-spin-hall/spin-chern-kubo/) | Ordinary VASP path and full-mesh WAVECAR/OUTCAR | `SPIN_KUBO.csv`, spin spectra, optional raw mesh integral; compare the same projector with Fukui Chern |
 | [Z₂ invariant](features/z2/comparison/) | MoS₂ and Bi, full 12×12 SOC meshes | `Z2_FIELD.csv`; Z₂ = 0 and 1, with paired n-field maps and half-zone diagnostics |
 | [Kubo Berry curvature](features/kubo-curvature/) | MoS₂, full mesh and matching K–Γ–K′ path | Native Kubo CSV; occupied-bundle curvature and band panels |
 | [Single-band valley curvature](features/kubo-curvature/valleys/) | MoS₂, two 9×9 K/K′ patches | Native Kubo CSV; isolated band-18 maps and line cuts |

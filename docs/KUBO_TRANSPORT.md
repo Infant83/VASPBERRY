@@ -289,6 +289,19 @@ alone does not validate the physical magnitude of the approximate operator.
 A quantitative QAH plateau additionally requires an appropriate full velocity
 operator and convergence against an independent topological calculation.
 
+## Spin-sector curvature
+
+Use native [`--task spin-kubo`](SPIN_KUBO.md), available in 1.6.1, to resolve the
+positive/negative projected-spin sectors of an isolated SOC band group.
+The native executable writes point curvature and its spin-mixing correction
+directly on arbitrary k paths. An explicit full `--mesh` also produces raw
+approximation integrals. Use the separate [`spin-chern`](SPIN_CHERN.md)
+task for geometric sector Chern numbers. The [graphene](../examples/materials/graphene-spin-chern/kubo/)
+and [Bi](../examples/materials/bi-spin-hall/spin-chern-kubo/) examples show both
+results and their numerical limits. This fixed-rank geometric calculation
+is separate from occupation-weighted charge Hall and conventional spin-current
+Hall transport.
+
 ## Native curvature of a band bundle
 
 Select `-kubo_bundle 1` to calculate the trace curvature of a separated group

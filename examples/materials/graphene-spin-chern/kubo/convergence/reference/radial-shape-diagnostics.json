@@ -1,0 +1,182 @@
+[
+  {
+    "valley": "K",
+    "radius_Ainv": 0.0,
+    "native_mean_A2": 68216087140667.945,
+    "native_min_A2": 68216087140667.945,
+    "native_max_A2": 68216087140667.945,
+    "native_angular_relative_range": 0.0,
+    "native_over_dispersion_Dirac_mean": 0.9450674945485936
+  },
+  {
+    "valley": "K",
+    "radius_Ainv": 1e-09,
+    "native_mean_A2": 68202230815560.63,
+    "native_min_A2": 68195840631097.25,
+    "native_max_A2": 68207918396451.66,
+    "native_angular_relative_range": 0.00017708754112557057,
+    "native_over_dispersion_Dirac_mean": 0.9450801427268457
+  },
+  {
+    "valley": "K",
+    "radius_Ainv": 3e-09,
+    "native_mean_A2": 68084891444962.19,
+    "native_min_A2": 68078352554649.27,
+    "native_max_A2": 68091969236087.664,
+    "native_angular_relative_range": 0.00019999563999302175,
+    "native_over_dispersion_Dirac_mean": 0.9450887949188325
+  },
+  {
+    "valley": "K",
+    "radius_Ainv": 1e-08,
+    "native_mean_A2": 66766859033490.93,
+    "native_min_A2": 66755687272076.37,
+    "native_max_A2": 66773475738101.8,
+    "native_angular_relative_range": 0.0002664265817343124,
+    "native_over_dispersion_Dirac_mean": 0.9450920239897243
+  },
+  {
+    "valley": "K",
+    "radius_Ainv": 3e-08,
+    "native_mean_A2": 56794654542658.9,
+    "native_min_A2": 56780489464523.5,
+    "native_max_A2": 56807891485715.81,
+    "native_angular_relative_range": 0.0004824753564040192,
+    "native_over_dispersion_Dirac_mean": 0.9450582075892229
+  },
+  {
+    "valley": "K",
+    "radius_Ainv": 1e-07,
+    "native_mean_A2": 17858198842620.086,
+    "native_min_A2": 17851977635224.805,
+    "native_max_A2": 17864646078689.902,
+    "native_angular_relative_range": 0.0007093908840830776,
+    "native_over_dispersion_Dirac_mean": 0.9450725364246032
+  },
+  {
+    "valley": "K",
+    "radius_Ainv": 3e-07,
+    "native_mean_A2": 1303278927630.1978,
+    "native_min_A2": 1303048552799.9155,
+    "native_max_A2": 1303497027744.651,
+    "native_angular_relative_range": 0.0003441127875448971,
+    "native_over_dispersion_Dirac_mean": 0.9450648324902958
+  },
+  {
+    "valley": "K",
+    "radius_Ainv": 1e-06,
+    "native_mean_A2": 38922934676.06857,
+    "native_min_A2": 38920589131.52113,
+    "native_max_A2": 38925311410.97711,
+    "native_angular_relative_range": 0.00012132382861875638,
+    "native_over_dispersion_Dirac_mean": 0.9450603622814111
+  },
+  {
+    "valley": "K",
+    "radius_Ainv": 3e-06,
+    "native_mean_A2": 1454916702.38007,
+    "native_min_A2": 1454884927.5724711,
+    "native_max_A2": 1454949361.3901472,
+    "native_angular_relative_range": 4.428694616720072e-05,
+    "native_over_dispersion_Dirac_mean": 0.9450615142483398
+  },
+  {
+    "valley": "K",
+    "radius_Ainv": 1e-05,
+    "native_mean_A2": 39323979.54590565,
+    "native_min_A2": 39323207.53278738,
+    "native_max_A2": 39324764.911437295,
+    "native_angular_relative_range": 3.960379055977122e-05,
+    "native_over_dispersion_Dirac_mean": 0.945060405724502
+  },
+  {
+    "valley": "Kprime",
+    "radius_Ainv": 0.0,
+    "native_mean_A2": 68216509527491.016,
+    "native_min_A2": 68216509527491.016,
+    "native_max_A2": 68216509527491.016,
+    "native_angular_relative_range": 0.0,
+    "native_over_dispersion_Dirac_mean": 0.9450674431709726
+  },
+  {
+    "valley": "Kprime",
+    "radius_Ainv": 1e-09,
+    "native_mean_A2": 68202865361220.31,
+    "native_min_A2": 68197618634798.5,
+    "native_max_A2": 68207500376976.28,
+    "native_angular_relative_range": 0.0001448874930026025,
+    "native_over_dispersion_Dirac_mean": 0.9450830336878717
+  },
+  {
+    "valley": "Kprime",
+    "radius_Ainv": 3e-09,
+    "native_mean_A2": 68084660677875.97,
+    "native_min_A2": 68078952372786.41,
+    "native_max_A2": 68089402452141.22,
+    "native_angular_relative_range": 0.00015348654529181256,
+    "native_over_dispersion_Dirac_mean": 0.9450796999100672
+  },
+  {
+    "valley": "Kprime",
+    "radius_Ainv": 1e-08,
+    "native_mean_A2": 66764642199721.195,
+    "native_min_A2": 66756302300159.7,
+    "native_max_A2": 66771118281816.28,
+    "native_angular_relative_range": 0.0002219135933097234,
+    "native_over_dispersion_Dirac_mean": 0.9450548674220176
+  },
+  {
+    "valley": "Kprime",
+    "radius_Ainv": 3e-08,
+    "native_mean_A2": 56796200359002.7,
+    "native_min_A2": 56786416149443.41,
+    "native_max_A2": 56807121271846.49,
+    "native_angular_relative_range": 0.00036455118955513,
+    "native_over_dispersion_Dirac_mean": 0.9450790448212897
+  },
+  {
+    "valley": "Kprime",
+    "radius_Ainv": 1e-07,
+    "native_mean_A2": 17858158675607.188,
+    "native_min_A2": 17851578770486.164,
+    "native_max_A2": 17864285135149.47,
+    "native_angular_relative_range": 0.0007115159459670701,
+    "native_over_dispersion_Dirac_mean": 0.945069738728035
+  },
+  {
+    "valley": "Kprime",
+    "radius_Ainv": 3e-07,
+    "native_mean_A2": 1303272246803.7222,
+    "native_min_A2": 1303020857192.5068,
+    "native_max_A2": 1303495407539.4272,
+    "native_angular_relative_range": 0.0003641221917249031,
+    "native_over_dispersion_Dirac_mean": 0.9450623066637289
+  },
+  {
+    "valley": "Kprime",
+    "radius_Ainv": 1e-06,
+    "native_mean_A2": 38922960055.57608,
+    "native_min_A2": 38920693185.62114,
+    "native_max_A2": 38925421883.20917,
+    "native_angular_relative_range": 0.00012148864272594098,
+    "native_over_dispersion_Dirac_mean": 0.945063869132449
+  },
+  {
+    "valley": "Kprime",
+    "radius_Ainv": 3e-06,
+    "native_mean_A2": 1454918342.6493564,
+    "native_min_A2": 1454884883.332304,
+    "native_max_A2": 1454956114.501285,
+    "native_angular_relative_range": 4.895887754866419e-05,
+    "native_over_dispersion_Dirac_mean": 0.9450655244465149
+  },
+  {
+    "valley": "Kprime",
+    "radius_Ainv": 1e-05,
+    "native_mean_A2": 39324058.607791826,
+    "native_min_A2": 39323300.447659016,
+    "native_max_A2": 39324830.705649756,
+    "native_angular_relative_range": 3.891404002833594e-05,
+    "native_over_dispersion_Dirac_mean": 0.9450652567270947
+  }
+]

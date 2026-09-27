@@ -1,0 +1,31 @@
+{
+  "input_dir_label": "analysis-ediff9-v2",
+  "measured_data": "Native canonical curvature points; independently computed actual-WAVECAR polygon overlaps",
+  "model_data": "Dashed diagnostic massive-Dirac curves fitted only to measured energy dispersion",
+  "integration": "Finite local polar quadrature; no full-BZ estimate or integer rounding",
+  "nonpositive_native_samples": 0,
+  "native_curvature_scale": "log",
+  "model_chirality": "Positive sign chosen to match the observed sector; energy dispersion alone does not determine chirality",
+  "models": [
+    {
+      "valley": "K",
+      "gap_at_center_eV": 9.120140802565402e-07,
+      "energy_slope_eV_A": 5.478965110186689,
+      "q_width_Ainv": 8.322868113915262e-08,
+      "native_center_omega_spin_A2": 68216087140667.945,
+      "native_center_over_dispersion_Dirac_curvature": 0.9450674945485936,
+      "model_definition": "diagnostic only: sqrt(m^2+v^2*q^2), v fitted to outer measured rings; positive chirality chosen to match the observed sector, not inferred from energy",
+      "model_C_local_at_max_radius": 0.49583871006710145
+    },
+    {
+      "valley": "Kprime",
+      "gap_at_center_eV": 9.120112607341468e-07,
+      "energy_slope_eV_A": 5.478965283218387,
+      "q_width_Ainv": 8.322842120642388e-08,
+      "native_center_omega_spin_A2": 68216509527491.016,
+      "native_center_over_dispersion_Dirac_curvature": 0.9450674431709727,
+      "model_definition": "diagnostic only: sqrt(m^2+v^2*q^2), v fitted to outer measured rings; positive chirality chosen to match the observed sector, not inferred from energy",
+      "model_C_local_at_max_radius": 0.4958387230623876
+    }
+  ]
+}

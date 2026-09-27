@@ -1,0 +1,253 @@
+{
+  "date": "2026-09-27",
+  "files": {
+    "plot.py": {
+      "sha256": "e0f34c1af69e67f1403c2bf0afb0f7b3423963dbd9b2ec6bf1f9e1c72693092a",
+      "bytes": 8274
+    },
+    "prepare_vasp.py": {
+      "sha256": "2192d9997463ad26b78ada0fbe841eae2a116297add2919c2f827affc9db1d6a",
+      "bytes": 8205
+    },
+    "pseudopotential.json": {
+      "sha256": "5352ff1d7122e39366fa62e612208c543cddfc540f1dfc4e0fa676316d9df1f2",
+      "bytes": 297
+    },
+    "README.md": {
+      "sha256": "6e60c63c3f5eefa199355e2c4c1277a10e6c7e5d6b3b1d3c3cfadd9720e2510b",
+      "bytes": 9235
+    },
+    "reference/summary.json": {
+      "sha256": "2a348129de88d29cbe7a90ef58e4c123b233cb88fa85eb093e9eeb165b7f3fd8",
+      "bytes": 13044
+    },
+    "reference/bands.csv": {
+      "sha256": "88c03fba950fe804159d63c2afe6196fca7640f9a8f287bb9cfa300dd681c6ac",
+      "bytes": 16462
+    },
+    "reference/provenance.json": {
+      "sha256": "2a05ee2c48f4444cb4f82d9afb41573e9db675ed43d6efc7a8b43d18f4e6ef2b",
+      "bytes": 22656
+    },
+    "reference/plotting.json": {
+      "sha256": "78f0864cf755327697e41e43cf87890f6bf71339a6e15669cb56838a0d9e2a1b",
+      "bytes": 2305
+    },
+    "reference/no-soc-native-rejection.txt": {
+      "sha256": "a8db78dad429dcc884bf1dbb4aa60484912eaff6220ee1a08f3c60e7574e3644",
+      "bytes": 178
+    },
+    "reference/figure.svg": {
+      "sha256": "22c7893b9de8327c534f4dd38bb323d86151633000c46c1e142ecfcfd151ab0e",
+      "bytes": 157132
+    },
+    "reference/figure.pdf": {
+      "sha256": "8c1ed3c5d4ecb7f96884f3602ba3a9dc4c1a707b14cf351ff4b3f854f8e1272d",
+      "bytes": 56181
+    },
+    "reference/figure.png": {
+      "sha256": "d6e2410fbe6645446f27c3ff941ad267fac2b8fd1dcfee7bbbb0eace024d0cca",
+      "bytes": 321216
+    },
+    "inputs/POSCAR": {
+      "sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+      "bytes": 202
+    },
+    "reference/native-9x9/SPIN_SPECTRUM.csv": {
+      "sha256": "85d1d2630fc2cc0a8b407920b327906c6d6277ae73d0174b00ddece91ef74f37",
+      "bytes": 120862
+    },
+    "reference/native-9x9/SPIN_CHERN.csv": {
+      "sha256": "888ff47b207a152c8a2fda6dab06467eb316718b9bbf46ca56747df9d9240033",
+      "bytes": 1785
+    },
+    "reference/native-9x9/SPIN_BERRY.csv": {
+      "sha256": "485866a78008002f609646a8457536403867205fd4ab72a601199a1b28f675b3",
+      "bytes": 20131
+    },
+    "reference/native-6x6-strict/SPIN_SPECTRUM.csv": {
+      "sha256": "6ce31733d54166fc857cd614231e05e18d4ea8ddae53cfa38a441f0121c947e7",
+      "bytes": 54622
+    },
+    "reference/native-6x6-strict/SPIN_CHERN.csv": {
+      "sha256": "eb6fd390850ab8083d6b1d2df016cffb3d2c3835ed89966df2f6bddb37430474",
+      "bytes": 1785
+    },
+    "reference/native-6x6-strict/SPIN_BERRY.csv": {
+      "sha256": "23b0a1ec4c0bb22a5f4351ef2ea2332230579f4eea6f21a1b766300e7de109b8",
+      "bytes": 9871
+    },
+    "reference/native-12x12/SPIN_SPECTRUM.csv": {
+      "sha256": "b5996938c453964f75547f506e94d13db46d7e1cb0e9353a5f171ddcc92e403a",
+      "bytes": 213960
+    },
+    "reference/native-12x12/SPIN_CHERN.csv": {
+      "sha256": "ce7ef3981ddfefb64b16a53bedc1b5d71c66bba7cbbd9a443b2d8c1b955fa09b",
+      "bytes": 1787
+    },
+    "reference/native-12x12/SPIN_BERRY.csv": {
+      "sha256": "38e51d50c61da03e205b6b72a028584cca9594784564901e71616cdfa4cf7e33",
+      "bytes": 34542
+    },
+    "reference/native-6x6/SPIN_SPECTRUM.csv": {
+      "sha256": "961ea1beb5c83849679b89429c5abc784817d1c6e26bde5154bbe84e772b28c9",
+      "bytes": 54622
+    },
+    "reference/native-6x6/SPIN_CHERN.csv": {
+      "sha256": "ffb790adb528682723ee9b6f0d4148270ed1818443f8c21c44eae3cae6799b76",
+      "bytes": 1785
+    },
+    "reference/native-6x6/SPIN_BERRY.csv": {
+      "sha256": "0c3ed387a3e88ea28902a61de73e79e1b23fbec4ef54d28ef97581378b30c512",
+      "bytes": 9871
+    },
+    "reference/vasp-inputs/mesh-9x9-exact-520/INCAR": {
+      "sha256": "e614f85142330b068d526b4ccae56ae372c1e24195557189b651e864063ee790",
+      "bytes": 382
+    },
+    "reference/vasp-inputs/mesh-9x9-exact-520/POSCAR": {
+      "sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+      "bytes": 202
+    },
+    "reference/vasp-inputs/mesh-9x9-exact-520/KPOINTS": {
+      "sha256": "7abadf55e30fdd85b803f502e83fd75427211c5020a4c0e13797c52761986bb6",
+      "bytes": 5007
+    },
+    "reference/vasp-inputs/mesh-9x9-exact-520/charge-header-repair.json": {
+      "sha256": "7e483947a9e13d6e31cc1eca8651eaed7bbd4d3ff322e2035a04b0d0fe16d50f",
+      "bytes": 485
+    },
+    "reference/vasp-inputs/mesh-12x12-exact-520/INCAR": {
+      "sha256": "e614f85142330b068d526b4ccae56ae372c1e24195557189b651e864063ee790",
+      "bytes": 382
+    },
+    "reference/vasp-inputs/mesh-12x12-exact-520/POSCAR": {
+      "sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+      "bytes": 202
+    },
+    "reference/vasp-inputs/mesh-12x12-exact-520/KPOINTS": {
+      "sha256": "121514561eb2996c7c42098c63fca4f1edb9a694a8baf4b598c7a6b91098d302",
+      "bytes": 8851
+    },
+    "reference/vasp-inputs/mesh-12x12-exact-520/charge-header-repair.json": {
+      "sha256": "7e483947a9e13d6e31cc1eca8651eaed7bbd4d3ff322e2035a04b0d0fe16d50f",
+      "bytes": 485
+    },
+    "reference/vasp-inputs/gap-soc-exact-header-520/INCAR": {
+      "sha256": "b2d7f4ebc398676b290b7eebef1be821b36fdc437f3ee0f0eef8ad5e616d8370",
+      "bytes": 382
+    },
+    "reference/vasp-inputs/gap-soc-exact-header-520/POSCAR": {
+      "sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+      "bytes": 202
+    },
+    "reference/vasp-inputs/gap-soc-exact-header-520/KPOINTS": {
+      "sha256": "c9f5b359b9eaeff73cb4611a28f85849aec5d5df7b6837f1cef0e8eb76176565",
+      "bytes": 249
+    },
+    "reference/vasp-inputs/gap-soc-exact-header-520/charge-header-repair.json": {
+      "sha256": "ab3e8ea3ad6d86102c01d3e94d2a894610c638396a79dc1429d2f1baf6632d92",
+      "bytes": 527
+    },
+    "reference/vasp-inputs/scf-9x9-520/INCAR": {
+      "sha256": "026b97699b5d6e786d4da7cd5c49346c815f610a6bac6148071b5af5568eaf45",
+      "bytes": 379
+    },
+    "reference/vasp-inputs/scf-9x9-520/POSCAR": {
+      "sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+      "bytes": 202
+    },
+    "reference/vasp-inputs/scf-9x9-520/KPOINTS": {
+      "sha256": "d9db8ec0d94ee1b0a427952adb9688140f87b33637d5872d15486d7ba6dcfcac",
+      "bytes": 57
+    },
+    "reference/vasp-inputs/mesh-6x6-exact-520/INCAR": {
+      "sha256": "e614f85142330b068d526b4ccae56ae372c1e24195557189b651e864063ee790",
+      "bytes": 382
+    },
+    "reference/vasp-inputs/mesh-6x6-exact-520/POSCAR": {
+      "sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+      "bytes": 202
+    },
+    "reference/vasp-inputs/mesh-6x6-exact-520/KPOINTS": {
+      "sha256": "38cb9ae5ea8ceb9bd8d9d5d6890e640b7a9ebae30c9b37573d40c151369e83bd",
+      "bytes": 2262
+    },
+    "reference/vasp-inputs/mesh-6x6-exact-520/charge-header-repair.json": {
+      "sha256": "7e483947a9e13d6e31cc1eca8651eaed7bbd4d3ff322e2035a04b0d0fe16d50f",
+      "bytes": 485
+    },
+    "reference/vasp-inputs/mesh-6x6-nosoc-exact-520/INCAR": {
+      "sha256": "ff14096105dba1247379719791deae4df08bbcbfaaa5f5fdbbdf9cc496402e73",
+      "bytes": 406
+    },
+    "reference/vasp-inputs/mesh-6x6-nosoc-exact-520/POSCAR": {
+      "sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+      "bytes": 202
+    },
+    "reference/vasp-inputs/mesh-6x6-nosoc-exact-520/KPOINTS": {
+      "sha256": "38cb9ae5ea8ceb9bd8d9d5d6890e640b7a9ebae30c9b37573d40c151369e83bd",
+      "bytes": 2262
+    },
+    "reference/vasp-inputs/mesh-6x6-nosoc-exact-520/charge-header-repair.json": {
+      "sha256": "7e483947a9e13d6e31cc1eca8651eaed7bbd4d3ff322e2035a04b0d0fe16d50f",
+      "bytes": 485
+    },
+    "reference/vasp-inputs/mesh-6x6-exact-strict-520/INCAR": {
+      "sha256": "3e383b0042dc792261333a5e01f410218775653148a04f3ce4c702fe4ebb45cd",
+      "bytes": 382
+    },
+    "reference/vasp-inputs/mesh-6x6-exact-strict-520/POSCAR": {
+      "sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+      "bytes": 202
+    },
+    "reference/vasp-inputs/mesh-6x6-exact-strict-520/KPOINTS": {
+      "sha256": "38cb9ae5ea8ceb9bd8d9d5d6890e640b7a9ebae30c9b37573d40c151369e83bd",
+      "bytes": 2262
+    },
+    "reference/vasp-inputs/mesh-6x6-exact-strict-520/charge-header-repair.json": {
+      "sha256": "7e483947a9e13d6e31cc1eca8651eaed7bbd4d3ff322e2035a04b0d0fe16d50f",
+      "bytes": 485
+    },
+    "reference/vasp-inputs/gap-nosoc-exact-header-520/INCAR": {
+      "sha256": "19365525b02a5f29c1013d549c24962978a043c5807a8f9ed8913f334de129e3",
+      "bytes": 406
+    },
+    "reference/vasp-inputs/gap-nosoc-exact-header-520/POSCAR": {
+      "sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+      "bytes": 202
+    },
+    "reference/vasp-inputs/gap-nosoc-exact-header-520/KPOINTS": {
+      "sha256": "c9f5b359b9eaeff73cb4611a28f85849aec5d5df7b6837f1cef0e8eb76176565",
+      "bytes": 249
+    },
+    "reference/vasp-inputs/gap-nosoc-exact-header-520/charge-header-repair.json": {
+      "sha256": "ab3e8ea3ad6d86102c01d3e94d2a894610c638396a79dc1429d2f1baf6632d92",
+      "bytes": 527
+    },
+    "reference/vasp-inputs/path-exact-520/INCAR": {
+      "sha256": "e614f85142330b068d526b4ccae56ae372c1e24195557189b651e864063ee790",
+      "bytes": 382
+    },
+    "reference/vasp-inputs/path-exact-520/POSCAR": {
+      "sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+      "bytes": 202
+    },
+    "reference/vasp-inputs/path-exact-520/KPOINTS": {
+      "sha256": "c09309a8d316ecd86fe8110b0b0e79c0b173b3f3efe43a36047d1bbfe127c342",
+      "bytes": 3055
+    },
+    "reference/vasp-inputs/path-exact-520/charge-header-repair.json": {
+      "sha256": "7e483947a9e13d6e31cc1eca8651eaed7bbd4d3ff322e2035a04b0d0fe16d50f",
+      "bytes": 485
+    },
+    "inputs/scf/INCAR": {
+      "sha256": "026b97699b5d6e786d4da7cd5c49346c815f610a6bac6148071b5af5568eaf45",
+      "bytes": 379
+    },
+    "inputs/scf/KPOINTS": {
+      "sha256": "d9db8ec0d94ee1b0a427952adb9688140f87b33637d5872d15486d7ba6dcfcac",
+      "bytes": 57
+    }
+  }
+}

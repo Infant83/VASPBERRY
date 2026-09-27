@@ -23,6 +23,8 @@ sampling and interpolation errors are reported explicitly.
 | `spin-hall` | Audited full PAW spin/velocity export → occupied-bundle spin-curvature tensor and intrinsic 2D sheet response |
 | `wannier-edge` | VASP-derived Wannier Hamiltonian → ideal finite-strip spectrum and boundary probabilities |
 | Native Fukui–Hatsugai Z₂ | Occupied VASP spinor wavefunctions → integer n-field and half-zone parity |
+| Native `spin-chern` | WAVECAR and matching OUTCAR → projected-spin sector Chern numbers and flux maps; [spin-Chern guide](SPIN_CHERN.md) |
+| Native `spin-kubo` | WAVECAR and OUTCAR → local projected-spin sector curvature proxy, including sector-basis variation; [path/mesh guide](SPIN_KUBO.md). This is not the conventional spin-current response. |
 
 The spin Hall command supports a full uniform 2D mesh, all occupied bands
 starting at band 1, and a chemical potential strictly inside the sampled
@@ -171,6 +173,11 @@ comes from physical spin $`\hbar/2`$ and the electron charge $`-e`$; no addition
 spin multiplicity or post hoc integer rounding is applied. The opposite
 sectors can cancel in charge Hall while adding in spin Hall. This is the
 conventional current response, not a spin Chern number.
+
+The separate native [projected-spin Chern calculation](SPIN_CHERN.md) uses
+geometric links of positive/negative occupied-space spin sectors. It needs
+an open projected-spin gap as well as an isolated occupied space, and does
+not use the velocity matrices required by the spin-current response here.
 
 ## Calculate and reproduce
 

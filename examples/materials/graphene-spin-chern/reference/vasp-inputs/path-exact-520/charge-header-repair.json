@@ -1,0 +1,7 @@
+{
+  "operation": "Restore exact generating POSCAR header; all density and augmentation bytes unchanged",
+  "original_sha256": "86c92281b9609285a61be17b26ab06f3c863ea2ee7141d9064b32bf87fd9c1cb",
+  "output_sha256": "0d26043067937387efccd56c8dab015b3842d7990fd4503ac02dc30cfdb14849",
+  "unchanged_density_payload_sha256": "a92306d46931553acfd87925fc471e7b49d7bdfb83431d18c5daf2348b79c8d9",
+  "source_structure_sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0"
+}

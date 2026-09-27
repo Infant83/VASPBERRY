@@ -1,0 +1,291 @@
+{
+  "date": "2026-09-27",
+  "material": "bi",
+  "scope": "Native canonical-momentum projected-spin derivative proxy; pseudo Gram metric. Raw integral estimates are not rounded and are not topological certificates.",
+  "physical_paw_validated": false,
+  "exact_pseudo_projector_derivative": false,
+  "conventional_spin_current_hall": false,
+  "records": [
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-kubo",
+        "--bands",
+        "1:10"
+      ],
+      "started_unix": 1790499958.099763,
+      "input_sha256": {
+        "WAVECAR": "ed672f374c9ef0f80b6393564587b42e62ae24262d5c6b4270070b81eb276d4d",
+        "OUTCAR": "ae3b3bd16c9fb33cd2e8897ad9cd8eb665059bce28f669c711ff37252cf03ae1"
+      },
+      "binary_sha256": "de3ddf068585cd4dc8906056305ff5b86ed3a2a1e29b1227eb8b0df9c7b98089",
+      "exit": 0,
+      "finished_unix": 1790499960.6783512,
+      "status": "PASS",
+      "outputs": {
+        "SPIN_KUBO_SPECTRUM.csv": "ef943ad2e52c5a32a15b036e29c3033f01c3b53dad066c8d6af2a7a3f7835ef2",
+        "SPIN_KUBO.csv": "0ffe227c478987bce82253b015b610da96e7b2190662c1ad040b7e5de83755bd"
+      },
+      "inputs_unchanged": {
+        "WAVECAR": true,
+        "OUTCAR": true
+      },
+      "case": "occupied-path"
+    },
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-kubo",
+        "--bands",
+        "1:10",
+        "--mesh",
+        "6,6"
+      ],
+      "started_unix": 1790499234.117408,
+      "input_sha256": {
+        "WAVECAR": "cbf9a383aac77877ba804c4d3280590171a287b7b3d7efec3d80e4880c1b0e72",
+        "OUTCAR": "37c4ad907858c11c7b99163d3934e991fbc774243f0a480f7a8a2828e7b3c05e"
+      },
+      "binary_sha256": "de3ddf068585cd4dc8906056305ff5b86ed3a2a1e29b1227eb8b0df9c7b98089",
+      "exit": 0,
+      "finished_unix": 1790499236.322484,
+      "status": "PASS",
+      "outputs": {
+        "SPIN_KUBO_SPECTRUM.csv": "6229f5857b086a87e4dd92bba483292037dff9eec8c9abe9db3c4eef9e886bf3",
+        "SPIN_KUBO_INTEGRAL.csv": "365f36f5194841e60b9079e9120cccb286a1252985f6359d00b030fe01db32d9",
+        "SPIN_KUBO.csv": "3657dfd27eba2a05c75a69540720d0cdcff5d05a7bd52e1b71805abef4ab36f8"
+      },
+      "inputs_unchanged": {
+        "WAVECAR": true,
+        "OUTCAR": true
+      },
+      "case": "occupied-mesh"
+    },
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-kubo",
+        "--bands",
+        "9:10"
+      ],
+      "started_unix": 1790499961.064755,
+      "input_sha256": {
+        "WAVECAR": "ed672f374c9ef0f80b6393564587b42e62ae24262d5c6b4270070b81eb276d4d",
+        "OUTCAR": "ae3b3bd16c9fb33cd2e8897ad9cd8eb665059bce28f669c711ff37252cf03ae1"
+      },
+      "binary_sha256": "de3ddf068585cd4dc8906056305ff5b86ed3a2a1e29b1227eb8b0df9c7b98089",
+      "exit": 0,
+      "finished_unix": 1790499962.46462,
+      "status": "PASS",
+      "outputs": {
+        "SPIN_KUBO_SPECTRUM.csv": "d0d643b232e27321810fb1a0d7419f94443e02199502dc8a7dab865a798dc98b",
+        "SPIN_KUBO.csv": "33f71eea52f5942d44184047db08943043092a18022b5f1a198a6765cfb75534"
+      },
+      "inputs_unchanged": {
+        "WAVECAR": true,
+        "OUTCAR": true
+      },
+      "case": "pair-path"
+    },
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-kubo",
+        "--bands",
+        "9:10",
+        "--mesh",
+        "6,6"
+      ],
+      "started_unix": 1790499236.617981,
+      "input_sha256": {
+        "WAVECAR": "cbf9a383aac77877ba804c4d3280590171a287b7b3d7efec3d80e4880c1b0e72",
+        "OUTCAR": "37c4ad907858c11c7b99163d3934e991fbc774243f0a480f7a8a2828e7b3c05e"
+      },
+      "binary_sha256": "de3ddf068585cd4dc8906056305ff5b86ed3a2a1e29b1227eb8b0df9c7b98089",
+      "exit": 0,
+      "finished_unix": 1790499237.802516,
+      "status": "PASS",
+      "outputs": {
+        "SPIN_KUBO_SPECTRUM.csv": "4a78a5037a60eb0535261e7b5115b80142f1e123824c5356f09ed9c128542aad",
+        "SPIN_KUBO_INTEGRAL.csv": "507fb4716ac1bd898b66e400d15784210e9d918d8593dad2f2acfa13739afad9",
+        "SPIN_KUBO.csv": "6c0d6d5219d2124781f401c019ba79f911cd8b1edb6fcc500097b39be0cec355"
+      },
+      "inputs_unchanged": {
+        "WAVECAR": true,
+        "OUTCAR": true
+      },
+      "case": "pair-mesh"
+    },
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-chern",
+        "--bands",
+        "1:10",
+        "--mesh",
+        "6,6"
+      ],
+      "started_unix": 1790498892.3073542,
+      "input_sha256": {
+        "WAVECAR": "cbf9a383aac77877ba804c4d3280590171a287b7b3d7efec3d80e4880c1b0e72",
+        "OUTCAR": "37c4ad907858c11c7b99163d3934e991fbc774243f0a480f7a8a2828e7b3c05e"
+      },
+      "binary_sha256": "c638c651b255f41a1076c4130847d669bd54b97bfdecc73ac4b11e5b38311c21",
+      "exit": 0,
+      "finished_unix": 1790498892.8936698,
+      "status": "PASS",
+      "outputs": {
+        "SPIN_SPECTRUM.csv": "ecf8d181c4849e9fe0b4e62d86afa369c37eac4ec8f8120347e12c8cf98a18ce",
+        "SPIN_CHERN.csv": "7280ef76dc890bdb3b5c361edbb9d4f83e720e0efc04fe844b78ca3fc492c34d",
+        "SPIN_BERRY.csv": "f74f235e35db6ca57d98593eb52b4c01c191666e7a9d075b356337013348fb18"
+      },
+      "case": "occupied-fukui"
+    },
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-chern",
+        "--bands",
+        "9:10",
+        "--mesh",
+        "6,6"
+      ],
+      "started_unix": 1790498891.9399948,
+      "input_sha256": {
+        "WAVECAR": "cbf9a383aac77877ba804c4d3280590171a287b7b3d7efec3d80e4880c1b0e72",
+        "OUTCAR": "37c4ad907858c11c7b99163d3934e991fbc774243f0a480f7a8a2828e7b3c05e"
+      },
+      "binary_sha256": "c638c651b255f41a1076c4130847d669bd54b97bfdecc73ac4b11e5b38311c21",
+      "exit": 0,
+      "finished_unix": 1790498892.306448,
+      "status": "PASS",
+      "outputs": {
+        "SPIN_SPECTRUM.csv": "20eb97ffcb1590eeab54ee102042688bfe674b70466b7df221850fc089e0df19",
+        "SPIN_CHERN.csv": "fe7f4dd893dd4c1971e8c9c6a05331b294881ae0fe38f64acdc5e78407c689d7",
+        "SPIN_BERRY.csv": "1b285d03c5dee1552a627d4e90129a988c33e3d13dc7f90b02c7113f81fe90f7"
+      },
+      "case": "pair-fukui"
+    }
+  ],
+  "source_note": "Input paths are omitted from this portable manifest. Each native raw CSV retains source basenames WAVECAR/OUTCAR; the run receipts bind actual SHA-256 hashes.",
+  "plot_script_sha256": "7e383e84e23fed34d5e264395399734f547b8b920b737f70b5dca8ce87908606",
+  "fullmesh_identity": {
+    "status": "PASS",
+    "aligned_max_energy_difference_eV": 0.0,
+    "source_counts": [
+      36,
+      36
+    ],
+    "bands": [
+      48,
+      48
+    ],
+    "scope": "Coordinate-aligned fullmesh unchanged energy test; matching complete OUTCAR is from same-density existing re-export",
+    "source_wavecar_sha256": "953e513ad73775ed4bbc28dcbd914247e708a861197c5632d72ac3f52281adbe",
+    "matching_outcar_wavecar_sha256": "cbf9a383aac77877ba804c4d3280590171a287b7b3d7efec3d80e4880c1b0e72"
+  },
+  "ordinary_path_preparation": {
+    "status": "PASS",
+    "purpose": "Confirm path preserves physical Hamiltonian; only optional export flags and descriptiveSYSTEM removed/changed",
+    "removed_flags": {
+      "LPEAD": ".FALSE.",
+      "LBERRY_EXPORT": ".TRUE.",
+      "LNABLA": ".FALSE.",
+      "LSPIN_EXPORT": ".TRUE.",
+      "LOPTICS": ".TRUE."
+    },
+    "changed_values": {
+      "SYSTEM": [
+        "BI FULL-MESH SOC PAW SPIN AND VELOCITY",
+        "BI FULL-MESH SOC WAVEFUNCTIONS"
+      ]
+    },
+    "same_input_bytes": {
+      "POSCAR": true,
+      "POTCAR": true,
+      "CHGCAR": true
+    },
+    "old_incar_sha256": "c1e8dbcb47a3ee04514475157c4907d31e54be8813e971e28d384249e7d0d241",
+    "new_incar_sha256": "aac225b295ea5ce783c0be6b0b0a7594d1959552e683c7aacda0b9f1510aad1c",
+    "kpoints_sha256": "a5fa9057a2303a547a676e03a9064004fdcb72e4f03271377b4242bcf95f1367",
+    "preparation_stdout_sha256": "040b3b7059d64586ef15ae44b85966e0c23024f1bd600904b8c6034371e3f473",
+    "preparation_script_sha256": "d4003a08ea0b159f56041b17e311c0ef3ae1b3fa48a32f92f7aca84a5047499e"
+  },
+  "public_charge_preparation_matches_actual_inputs": {
+    "status": "PASS",
+    "byte_identical_public_default_and_executed_inputs": {
+      "INCAR": true,
+      "KPOINTS": true,
+      "POSCAR": true,
+      "POTCAR": true,
+      "CHGCAR": true
+    }
+  },
+  "ordinary_VASP_path": {
+    "started_at_utc": "2026-09-27T08:46:50.930775+00:00",
+    "command": [
+      "vasp_ncl"
+    ],
+    "binary_sha256": "5a6fb3db4bcfe3c552d59e126f2e1906d40eee1f2bd4c93c4ead49d0db851c48",
+    "threads": 1,
+    "timeout_seconds": 2400.0,
+    "input_sha256": {
+      "POSCAR": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+      "INCAR": "aac225b295ea5ce783c0be6b0b0a7594d1959552e683c7aacda0b9f1510aad1c",
+      "KPOINTS": "a5fa9057a2303a547a676e03a9064004fdcb72e4f03271377b4242bcf95f1367",
+      "POTCAR": "d6b6753ed5db3f0e277fb15e6dbb6699c4bc829850a481068e9e7236faeca489",
+      "CHGCAR": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db"
+    },
+    "scope": "Real fixed-geometry Bi SOC path calculation, matching the parent Bi fixed density; ordinary unmodified VASP.",
+    "returncode": 0,
+    "wall_seconds": 1070.6982645879034,
+    "converged": true,
+    "normal_footer": true,
+    "final_toten_eV": -8.07302304,
+    "peak_rss_bytes_macos": 1080901632.0,
+    "outputs": {
+      "OUTCAR": {
+        "bytes": 187432,
+        "sha256": "ae3b3bd16c9fb33cd2e8897ad9cd8eb665059bce28f669c711ff37252cf03ae1"
+      },
+      "OSZICAR": {
+        "bytes": 1792,
+        "sha256": "3cfb30ed9221b158695f940f6c976e52fa47ca1ec81d793874bcb247c3ec4487"
+      },
+      "WAVECAR": {
+        "bytes": 176207184,
+        "sha256": "ed672f374c9ef0f80b6393564587b42e62ae24262d5c6b4270070b81eb276d4d"
+      },
+      "CHGCAR": {
+        "bytes": 51387771,
+        "sha256": "6f2a6c3c81c7896f2b6daf7054360df079a2af36926482405da05e69435fc7db"
+      },
+      "EIGENVAL": {
+        "bytes": 80896,
+        "sha256": "ca5f16cb80ce76f2681823eb9fdbd606fc76664f134f61f098cface966f59f90"
+      },
+      "vasprun.xml": {
+        "bytes": 2679005,
+        "sha256": "08b3945a04a8911f4c0e6c45381b8581fd17864ab39937756825319af0d84a08"
+      },
+      "stdout.log": {
+        "bytes": 2543,
+        "sha256": "01f84dd69525bd82b06d408d4eeaa53e62ec6716bb2037c834c13b85ed5e62a8"
+      },
+      "stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "status": "PASS",
+    "finished_at_utc": "2026-09-27T09:04:42.171633+00:00"
+  },
+  "path_mesh_eigenvalue_comparison": "empty-band-diagnostics.json",
+  "all48_strict_eigenvalue_comparison": "all48-energy-comparison.json"
+}

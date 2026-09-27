@@ -292,3 +292,10 @@ python3 examples/materials/bi-spin-hall/plot.py --output-dir results/bi/figures
 The [technical report](../../../docs/TECHNICAL_REPORT.md) explains how these
 calculations support the QSH interpretation and identifies the remaining
 mesh, empty-state and finite-band spin-current approximation limits.
+
+## Projected-spin geometry of occupied and selected subspaces
+
+The [native spin-sector Kubo/Fukui comparison](spin-chern-kubo/README.md) uses
+the occupied space and the top degenerate pair, with an ordinary-VASP symmetry
+path and full-BZ native outputs. These geometric sector quantities are distinct
+from the conventional spin-current Hall response above.

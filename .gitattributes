@@ -72,3 +72,16 @@ examples/materials/mos2-stacking-valley/reference/**/*.svg -whitespace
 examples/materials/mos2-stacking-valley/reference/**/EIGENVAL -whitespace
 examples/materials/mos2-stacking-valley/reference/**/OSZICAR -whitespace
 examples/materials/mos2-stacking-valley/reference/**/OUTCAR-excerpts.txt -whitespace
+
+# Preserve projected-spin numerical references and ordinary VASP input records.
+examples/materials/graphene-spin-chern/**/reference/**/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/materials/graphene-spin-chern/reference/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/materials/graphene-spin-chern/**/*.svg -whitespace
+examples/materials/graphene-spin-chern/**/POSCAR -whitespace
+examples/materials/graphene-spin-chern/**/INCAR -whitespace
+examples/materials/graphene-spin-chern/**/KPOINTS -whitespace
+examples/materials/bi-spin-hall/spin-chern-kubo/**/*.csv whitespace=trailing-space,space-before-tab,cr-at-eol
+examples/materials/bi-spin-hall/spin-chern-kubo/**/*.svg -whitespace
+examples/materials/bi-spin-hall/spin-chern-kubo/**/POSCAR -whitespace
+examples/materials/bi-spin-hall/spin-chern-kubo/**/INCAR -whitespace
+examples/materials/bi-spin-hall/spin-chern-kubo/**/KPOINTS -whitespace

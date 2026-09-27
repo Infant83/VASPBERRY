@@ -1,0 +1,9 @@
+{
+  "LEXCH": "PE",
+  "TITEL": "PAW_PBE C 08Apr2002",
+  "ZVAL": 4.0,
+  "ENMAX": 400.0,
+  "sha256": "253f7b50bb8d59471dbedb8285d89021f4a42ed1a2c5d38a03a736e69125dd95",
+  "bytes": 207211,
+  "license_note": "POTCAR is locally supplied under the user VASP licence; its contents are not distributed."
+}

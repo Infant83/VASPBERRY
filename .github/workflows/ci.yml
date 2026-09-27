@@ -119,7 +119,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ${{ matrix.gfortran }} libblas-dev \
-            liblapack-dev openmpi-bin libopenmpi-dev
+            liblapack-dev openmpi-bin libopenmpi-dev python3-numpy
       - name: Record GNU and MPI compiler versions
         run: |
           ${{ matrix.gfortran }} --version
@@ -131,6 +131,20 @@ jobs:
         run: >-
           make check-gnu FC=${{ matrix.gfortran }} MPIFC=mpifort
           MPIEXEC=mpiexec MPIEXEC_FLAGS=--oversubscribe
+      - name: Validate native spin Chern and spin Kubo with both GNU executables
+        run: >-
+          python3 .github/scripts/validate_native_spin.py
+          --serial build/vaspberry --mpi build/vaspberry-mpi
+          --mpiexec mpiexec --mpi-arg=--oversubscribe
+          --output-dir results/native-spin-${{ matrix.gfortran }}
+      - name: Retain native spin commands, numerical outputs and failure logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-spin-${{ matrix.gfortran }}
+          path: results/native-spin-${{ matrix.gfortran }}/
+          if-no-files-found: warn
+          retention-days: 14
 
   intel-serial-portability:
     runs-on: ubuntu-22.04

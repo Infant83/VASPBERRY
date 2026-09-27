@@ -1,0 +1,2 @@
+STOP 1
+ *** error - spin-kubo: sum-bands cuts an unresolved external degeneracy; k=           1

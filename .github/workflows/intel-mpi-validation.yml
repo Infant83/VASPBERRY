@@ -81,6 +81,18 @@ jobs:
             --serial build/vaspberry-${{ matrix.target }} \
             --mpi build/vaspberry-${{ matrix.target }}-mpi \
             --output-dir results/intel-mpi-${{ matrix.target }}/numerics
+      - name: Validate native spin Chern and spin Kubo using the Intel binaries
+        shell: bash
+        run: |
+          source /opt/intel/oneapi/mpi/2021.13/env/vars.sh
+          source /opt/intel/oneapi/mkl/2025.0/env/vars.sh
+          # NumPy supplies independent analytic validation, not Fortran execution.
+          python -m pip install numpy
+          python .github/scripts/validate_native_spin.py \
+            --serial build/vaspberry-${{ matrix.target }} \
+            --mpi build/vaspberry-${{ matrix.target }}-mpi \
+            --mpiexec mpiexec.hydra \
+            --output-dir results/intel-mpi-${{ matrix.target }}/native-spin
       - name: Retain commands, checksums, numerical exports and failure logs
         if: always()
         uses: actions/upload-artifact@v4

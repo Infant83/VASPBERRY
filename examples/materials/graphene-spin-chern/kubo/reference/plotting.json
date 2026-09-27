@@ -1,0 +1,89 @@
+{
+  "status": "PASS",
+  "source": "completed_native_CSV_only",
+  "method": "no_Chern_or_proxy_recalculation",
+  "comparison": [
+    {
+      "subspace": "occupied",
+      "bands": "1:8",
+      "C_est_plus": 1135906691315.087,
+      "C_est_minus": -1135906676913.3438,
+      "C_est_spin": 1135906684114.2153,
+      "C_Fukui_plus": 0.9999999999999996,
+      "C_Fukui_minus": -1.0000000000000002,
+      "C_Fukui_spin": 0.9999999999999999,
+      "fukui_status": "PASS"
+    },
+    {
+      "subspace": "pair",
+      "bands": "7:8",
+      "C_est_plus": 1135906593720.2168,
+      "C_est_minus": -1135906579318.6335,
+      "C_est_spin": 1135906586519.4253,
+      "C_Fukui_plus": null,
+      "C_Fukui_minus": null,
+      "C_Fukui_spin": null,
+      "fukui_status": "NO_COMPLETED_INVARIANT"
+    }
+  ],
+  "input_sha256": {
+    "occupied-mesh/SPIN_KUBO.csv": "25f1cb40483cf0899043774aa30343ffab0419758036ba4d3954e9874f81dcc8",
+    "occupied-path/SPIN_KUBO.csv": "42bc321d927db5fb243d9f1dcdf4a8da0386c89808ca54220a5315f84246aa4b",
+    "occupied-mesh/SPIN_KUBO_INTEGRAL.csv": "0e91d3333a05930b7d7fcf700d0fe736f41d473ad965a7fc603248db976e5b06",
+    "occupied-fukui/SPIN_CHERN.csv": "ce7ef3981ddfefb64b16a53bedc1b5d71c66bba7cbbd9a443b2d8c1b955fa09b",
+    "occupied-fukui/SPIN_BERRY.csv": "38e51d50c61da03e205b6b72a028584cca9594784564901e71616cdfa4cf7e33",
+    "pair-path/SPIN_KUBO.csv": "d4b14d3291102549b5dacc2ffde5ce679f0dc353f6de43e6913bbef2509401f2",
+    "pair-mesh/SPIN_KUBO_INTEGRAL.csv": "aac1295dc90411e9f4b44075b4c8bdc3547ba557ed6193cf8670c5afb9bdf0da"
+  },
+  "poscar_sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
+  "plot_script_sha256": "7e383e84e23fed34d5e264395399734f547b8b920b737f70b5dca8ce87908606",
+  "maps": {
+    "proxy": {
+      "mesh": [
+        12,
+        12
+      ],
+      "first_bz_area_inv_A2": 7.532842564299103,
+      "rendering": "constant_native_plaquette_values_clipped_to_first_BZ",
+      "interpolation": "none",
+      "axes": "Cartesian kx, ky in Angstrom^-1",
+      "K_fractional": [
+        0.3333333333333333,
+        0.3333333333333333
+      ],
+      "Kprime_fractional": [
+        -0.3333333333333333,
+        -0.3333333333333333
+      ],
+      "color_min": -68217778542998.66,
+      "color_max": 68217778542998.66,
+      "sample_location": "native_k_node; constant centered display cell"
+    },
+    "fukui": {
+      "mesh": [
+        12,
+        12
+      ],
+      "first_bz_area_inv_A2": 7.532842564299103,
+      "rendering": "constant_native_plaquette_values_clipped_to_first_BZ",
+      "interpolation": "none",
+      "axes": "Cartesian kx, ky in Angstrom^-1",
+      "K_fractional": [
+        0.3333333333333333,
+        0.3333333333333333
+      ],
+      "Kprime_fractional": [
+        -0.3333333333333333,
+        -0.3333333333333333
+      ],
+      "color_min": -1.047162966474659,
+      "color_max": 1.047162966474659
+    }
+  },
+  "outputs_sha256": {
+    "figure.png": "7f55a3da2f814254eb778d42908b67d5c668c1c130f3e98648e632a9585f4ed4",
+    "figure.pdf": "b75d0d1a7ac662efe12dbc3552cdde03751422e2ebfbbb96e43324bb4447bf17",
+    "figure.svg": "e381fef8fccc88a9e1fac3454d961920728404c080a12c4e54ecf3ae742bd488",
+    "comparison.csv": "b9a54832ef5637dad419d371242a916d26ffc61126358cc67058d0305ce642d0"
+  }
+}

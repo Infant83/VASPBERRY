@@ -2,36 +2,57 @@
 
 All notable changes to VASPBERRY are recorded here.
 
-## [Unreleased]
+## [1.6.1] - 2026-09-27
 
-### Release administration
+### Spin Chern numbers
 
-- Withdraw the duplicate 1.6.0 release and tag at the maintainer's request.
-  Keep 1.5.1 as the current release without moving its tag or changing its
-  scientific code. Archive the withdrawn source by commit and retire its
-  publication automation.
-- Agree on the version before publication. Do not reuse withdrawn 1.6.0;
-  any future 1.6 minor release starts at 1.6.1 or later.
+- Add native `--task spin-chern` for two-component WAVECARs. The selected
+  isolated band subspace is split by the full projected-spin operator;
+  positive and negative sectors use geometric determinant links. Report both
+  sector Chern numbers, their sum and their half-difference.
+- Use the complete pseudo-wavefunction Gram metric and the Cartesian spin
+  frame from matching `OUTCAR`. Check energy isolation, the projected-spin
+  gap, sector ranks and overlap conditioning before writing final results.
+- Default native inputs to `WAVECAR` and `OUTCAR` in the execution directory;
+  retain explicit file paths and independent energy/spin-gap tolerances.
+- Add an intrinsic-SOC graphene example, numerical outputs, optional plotting
+  and a technical-report discussion. This task is separate from
+  conventional spin-current Hall response and PROCAR character weighting.
+
+### Spin-sector Kubo curvature
+
+- Add native `--task spin-kubo` for arbitrary k lists and paths. Compute all
+  three Cartesian curvature components with the projected-spin derivative
+  and consistent pseudo Gram normalization.
+- Add `spin-kubo --sum-bands N` to test intermediate sums on unchanged VASP
+  eigenstates, recording source and summed band counts separately and rejecting
+  a cutoff through an unresolved external degeneracy.
+- An explicit `--mesh NX,NY` adds a validated full-mesh approximation integral;
+  retain its raw values and never round them to a Chern number. Report the
+  canonical-momentum derivative-proxy approximation in every output.
+- Save native point and spin-spectrum CSVs; keep Python optional for plotting.
+  Reject unresolved energy/spin gaps, invalid metrics, changing ranks and
+  nonfinite results. Preserve existing Kubo and Fukui task behavior.
+- Add analytic-model geometry tests and real graphene/Bi examples comparing
+  path curves, selected degenerate pairs and full-BZ Fukui invariants.
+- Add controlled Bi mesh/source/retained-band comparisons and actual local
+  graphene SOC sampling, with separate native curvature, geometric polygon
+  flux, electronic-convergence checks and clearly labelled diagnostic fits.
+
+### Compatibility and examples
+
+- Retain existing native tasks, automatic spinor detection and postprocessing
+  commands. The new tasks use matching WAVECAR/OUTCAR inputs and write separate
+  CSV schemas; historical reference outputs retain their original metadata.
+- Provide Intel Fortran/MPI commands, GNU alternatives, input preparation and
+  saved-table figure replay. Native Fortran computes the new spin-sector
+  results; the plotting scripts read completed numerical outputs.
+- Keep software checks, geometric invariants and material convergence distinct.
+  The graphene local-sampling controls do not establish a converged full-BZ
+  Kubo integral, and projected-spin sectors are not conventional spin-current
+  Hall conductivity or PROCAR-weighted charge attribution.
 
 ## [1.5.1] - 2026-09-27
-
-### Release numbering
-
-- Publish the automatic-spinor update as a patch release. Use 1.5.1 for new
-  installations; it supersedes the earlier 1.6.0 numbering with the same
-  functionality. The duplicate 1.6.0 release/tag was subsequently withdrawn;
-  its source remains archived by commit. Historical reference data are unchanged.
-- Retain automatic WAVECAR component detection, optional checked component
-  arguments, INI defaults and the execution/postprocessing documentation.
-  Scientific formulas and numerical results are unchanged.
-- Accept the reviewed 1.5.1 Z₂ producer explicitly; unreviewed versions remain
-  rejected. Publication requires the same thirteen exact-source validation jobs.
-
-## [1.6.0] - 2026-09-27
-
-Duplicate release withdrawn in favor of 1.5.1. Its
-[original source](https://github.com/Infant83/VASPBERRY/commit/eb0b468aa0674f5ec579e75a014fe4591ec4cdfe)
-is retained for provenance; this version number will not be reused.
 
 ### Automatic WAVECAR layout
 
@@ -48,6 +69,8 @@ is retained for provenance; this version number will not be reused.
   or inconsistent coefficient layouts fail before numerical work.
 - Direct commands, hands-on examples and settings files omit redundant spinor
   arguments. Numerical formulas and saved-result schemas are unchanged.
+- Accept the reviewed 1.5.1 Z₂ producer explicitly; unreviewed versions remain
+  rejected. Publication requires the same thirteen exact-source validation jobs.
 
 ### Additional fixes and documentation
 

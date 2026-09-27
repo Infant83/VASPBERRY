@@ -1,0 +1,85 @@
+{
+  "material": "bi",
+  "status": "PASS",
+  "source_nbands": 48,
+  "approximation": "CANONICAL_MOMENTUM_DERIVATIVE_PROXY",
+  "physical_paw_validated": false,
+  "exact_pseudo_projector_derivative": false,
+  "geometric_integer_certified": false,
+  "integer_rounding_applied": false,
+  "cases": {
+    "occupied": {
+      "bands": "1:10",
+      "mesh": "6,6",
+      "mesh_points": 36,
+      "path_points": 49,
+      "path_min_energy_gap_eV": 0.5239963735212819,
+      "path_min_abs_projected_pauli": 0.5936976675874522,
+      "mesh_min_energy_gap_eV": 0.5350283747424058,
+      "mesh_min_abs_projected_pauli": 0.5936976650286316,
+      "raw_native_integral": {
+        "C_est_plus": 1.9997764925840833,
+        "C_est_minus": -1.9997730745314561,
+        "C_est_charge": 3.418052627157664e-06,
+        "delta_C_est": 3.9995495671155394,
+        "C_est_spin": 1.9997747835577697,
+        "C_est_parent": 3.41805262801017e-06,
+        "rank_plus": 5.0,
+        "rank_minus": 5.0
+      },
+      "Fukui": {
+        "status": "PASS",
+        "values": {
+          "C_plus": 1.0,
+          "C_minus": -1.0,
+          "C_charge": 0.0,
+          "delta_C": 2.0,
+          "C_spin": 1.0,
+          "C_parent": 1.1043592670300521e-16,
+          "rank_plus": 5.0,
+          "rank_minus": 5.0
+        },
+        "min_link_singular_value": 0.46493045324037713,
+        "max_abs_flux_rad": 2.074861501434038,
+        "mesh_convergence": "NOT_ESTABLISHED_BY_ONE_MESH"
+      }
+    },
+    "pair": {
+      "bands": "9:10",
+      "mesh": "6,6",
+      "mesh_points": 36,
+      "path_points": 49,
+      "path_min_energy_gap_eV": 0.04742811210316722,
+      "path_min_abs_projected_pauli": 0.33217836178408977,
+      "mesh_min_energy_gap_eV": 0.04742811210316722,
+      "mesh_min_abs_projected_pauli": 0.3348023986361816,
+      "raw_native_integral": {
+        "C_est_plus": -118.76613275512184,
+        "C_est_minus": 118.76613271004702,
+        "C_est_charge": -4.507482742610591e-08,
+        "delta_C_est": -237.53226546516885,
+        "C_est_spin": -118.76613273258442,
+        "C_est_parent": -4.5074792848539116e-08,
+        "rank_plus": 1.0,
+        "rank_minus": 1.0
+      },
+      "Fukui": {
+        "status": "PASS",
+        "values": {
+          "C_plus": 1.9999999999999998,
+          "C_minus": -1.9999999999999993,
+          "C_charge": 4.440892098500626e-16,
+          "delta_C": 3.999999999999999,
+          "C_spin": 1.9999999999999996,
+          "C_parent": 3.622298360892362e-16,
+          "rank_plus": 1.0,
+          "rank_minus": 1.0
+        },
+        "min_link_singular_value": 0.04316562224660656,
+        "max_abs_flux_rad": 2.89066912093828,
+        "mesh_convergence": "NOT_ESTABLISHED_BY_ONE_MESH"
+      }
+    }
+  },
+  "high_empty_band_limit": "At common kpoints bands1-32 agree within5.95e-11eV; band48 can differ4.72536e-4eV. Totalenergy stopping does not establish all emptyband convergence."
+}

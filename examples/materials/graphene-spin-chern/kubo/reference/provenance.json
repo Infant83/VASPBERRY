@@ -1,0 +1,135 @@
+{
+  "date": "2026-09-27",
+  "material": "graphene",
+  "scope": "Native canonical-momentum projected-spin derivative proxy; pseudo Gram metric. Raw integral estimates are not rounded and are not topological certificates.",
+  "physical_paw_validated": false,
+  "exact_pseudo_projector_derivative": false,
+  "conventional_spin_current_hall": false,
+  "records": [
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-kubo",
+        "--bands",
+        "1:8"
+      ],
+      "started_unix": 1790499229.1754591,
+      "input_sha256": {
+        "WAVECAR": "9cb0f9396a9b4def6996832858fd7372003751ca6d0b40341f487be4ce89ee8b",
+        "OUTCAR": "1773b5c29911ffd6c996938d644ed0668af9c315350e1174dda86a20e0e8cdb0"
+      },
+      "binary_sha256": "de3ddf068585cd4dc8906056305ff5b86ed3a2a1e29b1227eb8b0df9c7b98089",
+      "exit": 0,
+      "finished_unix": 1790499230.146477,
+      "status": "PASS",
+      "outputs": {
+        "SPIN_KUBO_SPECTRUM.csv": "6cff8eff85bbc0cae7ba6242fff759f67c393348f622418077077b6083e18dd1",
+        "SPIN_KUBO.csv": "42bc321d927db5fb243d9f1dcdf4a8da0386c89808ca54220a5315f84246aa4b"
+      },
+      "inputs_unchanged": {
+        "WAVECAR": true,
+        "OUTCAR": true
+      },
+      "case": "occupied-path"
+    },
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-kubo",
+        "--bands",
+        "1:8",
+        "--mesh",
+        "12,12"
+      ],
+      "started_unix": 1790499230.27535,
+      "input_sha256": {
+        "WAVECAR": "f245d3cc4ee7d911c17bc35629556f6374ecc975dbac21b4cab072234c179a64",
+        "OUTCAR": "6dd0c65bfa2cbf2de3202c81c8d22c87316512d563833a81b32a43d395e85c07"
+      },
+      "binary_sha256": "de3ddf068585cd4dc8906056305ff5b86ed3a2a1e29b1227eb8b0df9c7b98089",
+      "exit": 0,
+      "finished_unix": 1790499232.36482,
+      "status": "PASS",
+      "outputs": {
+        "SPIN_KUBO_SPECTRUM.csv": "d63c57ff630cf93c7ba90ae8393bd30e43cf380ec8f91df62e15fb718fd31a54",
+        "SPIN_KUBO_INTEGRAL.csv": "0e91d3333a05930b7d7fcf700d0fe736f41d473ad965a7fc603248db976e5b06",
+        "SPIN_KUBO.csv": "25f1cb40483cf0899043774aa30343ffab0419758036ba4d3954e9874f81dcc8"
+      },
+      "inputs_unchanged": {
+        "WAVECAR": true,
+        "OUTCAR": true
+      },
+      "case": "occupied-mesh"
+    },
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-kubo",
+        "--bands",
+        "7:8"
+      ],
+      "started_unix": 1790499232.6325471,
+      "input_sha256": {
+        "WAVECAR": "9cb0f9396a9b4def6996832858fd7372003751ca6d0b40341f487be4ce89ee8b",
+        "OUTCAR": "1773b5c29911ffd6c996938d644ed0668af9c315350e1174dda86a20e0e8cdb0"
+      },
+      "binary_sha256": "de3ddf068585cd4dc8906056305ff5b86ed3a2a1e29b1227eb8b0df9c7b98089",
+      "exit": 0,
+      "finished_unix": 1790499232.931885,
+      "status": "PASS",
+      "outputs": {
+        "SPIN_KUBO_SPECTRUM.csv": "3726ea5e42e2e4f3cf207df3af0d28f596b4713a3ffbfda5fe902d6fe1a5efb4",
+        "SPIN_KUBO.csv": "d4b14d3291102549b5dacc2ffde5ce679f0dc353f6de43e6913bbef2509401f2"
+      },
+      "inputs_unchanged": {
+        "WAVECAR": true,
+        "OUTCAR": true
+      },
+      "case": "pair-path"
+    },
+    {
+      "command": [
+        "vaspberry",
+        "--task",
+        "spin-kubo",
+        "--bands",
+        "7:8",
+        "--mesh",
+        "12,12"
+      ],
+      "started_unix": 1790499233.0650969,
+      "input_sha256": {
+        "WAVECAR": "f245d3cc4ee7d911c17bc35629556f6374ecc975dbac21b4cab072234c179a64",
+        "OUTCAR": "6dd0c65bfa2cbf2de3202c81c8d22c87316512d563833a81b32a43d395e85c07"
+      },
+      "binary_sha256": "de3ddf068585cd4dc8906056305ff5b86ed3a2a1e29b1227eb8b0df9c7b98089",
+      "exit": 0,
+      "finished_unix": 1790499233.8418539,
+      "status": "PASS",
+      "outputs": {
+        "SPIN_KUBO_SPECTRUM.csv": "bb83d825f5226fb51cad26f5af208aec83e67f6bc00548777978721dedd0295b",
+        "SPIN_KUBO_INTEGRAL.csv": "aac1295dc90411e9f4b44075b4c8bdc3547ba557ed6193cf8670c5afb9bdf0da",
+        "SPIN_KUBO.csv": "e21b2328656a954ddf48e507e1829ace802da30e0e4fe7e8ee204a381c221095"
+      },
+      "inputs_unchanged": {
+        "WAVECAR": true,
+        "OUTCAR": true
+      },
+      "case": "pair-mesh"
+    }
+  ],
+  "source_note": "Input paths are omitted from this portable manifest. Each native raw CSV retains source basenames WAVECAR/OUTCAR; the run receipts bind actual SHA-256 hashes.",
+  "plot_script_sha256": "7e383e84e23fed34d5e264395399734f547b8b920b737f70b5dca8ce87908606",
+  "occupied_fukui_source": {
+    "input_wavecar_sha256": "f245d3cc4ee7d911c17bc35629556f6374ecc975dbac21b4cab072234c179a64",
+    "reference": "../../reference/provenance.json",
+    "mesh": [
+      12,
+      12
+    ]
+  },
+  "pair_fukui_status": "REJECTED_LINK_GUARD; see pair-fukui/status.json; no invariant assigned"
+}

@@ -1,0 +1,42 @@
+# schema=VASPBERRY_SPIN_SECTOR_KUBO_V1
+# producer=VASPBERRY 1.5.1
+# build_status=UNRELEASED_SPIN_KUBO
+# derivative=CANONICAL_MOMENTUM_DERIVATIVE_PROXY
+# representation=PSEUDO_GRAM
+# physical_paw_validated=false
+# exact_pseudo_projector_derivative=false
+# observable=PROJECTED_SPIN_SECTOR_GEOMETRIC_CURVATURE_PROXY
+# conventional_spin_current_hall=false
+# scope=selected_subspace
+# source_occupations=NOT_USED_FIXED_RANK_PROJECTOR
+# source_band_sum=FINITE_RETAINED_WAVECAR_BANDS
+# missing_terms=PAW_AUGMENTATION_NONLOCAL_SOC_VERTEX_AND_BASIS_DERIVATIVE
+# geometric_integer_certified=false
+# integer_rounding_applied=false
+# spin_convention=C_spin=(C_plus-C_minus)/2
+# curvature_convention=-2Im(inner_product_of_derivatives)
+# decomposition=parent_projected_plus_spin_mixing
+# spin_mixing_includes_projected_spin_derivative=true
+# tensor_components=yz,zx,xy; Cartesian derivatives
+# wavecar=WAVECAR
+# outcar=OUTCAR
+# source_encut_eV=  4.0000000000000000E+02
+# source_nbands=64
+# sum_band_max=64
+# summed_external_bands=62
+# parent_isolation_checked_against=ALL_STORED_SOURCE_BANDS
+# selected_bands=9:10
+# spin_axis_cartesian=  0.0000000000000000E+00  0.0000000000000000E+00  1.0000000000000000E+00
+# spin_frame_row_1=  1.0000000000000000E+00  0.0000000000000000E+00  0.0000000000000000E+00
+# spin_frame_row_2=  0.0000000000000000E+00  1.0000000000000000E+00  0.0000000000000000E+00
+# spin_frame_row_3=  0.0000000000000000E+00  0.0000000000000000E+00  1.0000000000000000E+00
+# energy_gap_threshold_eV=  1.0000000000000000E-08
+# spin_gap_threshold_dimensionless=  9.9999999999999995E-07
+# min_external_energy_gap_eV=  4.7428112127642308E-02
+# min_abs_spin_eigenvalue=  3.3480240271208545E-01
+# integration=EXPLICIT_UNIFORM_FULL_2D_MESH_ESTIMATE
+# mesh=12,12
+# oriented_cell_area_A-2= -0.0000000000000000E+00  0.0000000000000000E+00  1.6434885719429710E-02
+C_est_plus,C_est_minus,C_est_charge,delta_C_est,C_est_spin,C_est_parent,rank_plus,rank_minus
+-2.9023174800942048E+001, 2.9023260209670710E+001, 8.5408728661917621E-005,-5.8046435010612754E+001,-2.9023217505306377E+001, 8.5408728654160819E-005,1,1
+# result_status=PASS

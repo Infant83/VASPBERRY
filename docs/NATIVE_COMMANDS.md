@@ -43,12 +43,14 @@ run time and a rank count consistent with the scheduler allocation.
 ## Choose the result
 
 All commands accept `--wavecar PATH` and detect the spinor components
-automatically. The parameters below use the MoS₂ occupied rank 18 as an
-example, not a universal band count.
+automatically. The mesh sizes and band ranges below are example choices;
+use the values appropriate to your source calculation.
 
 | Task | Additional arguments | Numerical result and required sampling |
 |---|---|---|
 | `chern` | `--mesh 12,12 --bands 1:18` | Fukui occupied-subspace flux in `BERRYCURV.dat`; Chern number in its header. Full periodic 2D mesh. |
+| `spin-chern` | `--mesh 12,12 --bands 1:8 --spin-axis z` | Both projected-spin sector Chern numbers and flux/spectrum CSVs. Full periodic mesh and matching OUTCAR; [spin-Chern guide](SPIN_CHERN.md). Available in 1.6.1. |
+| `spin-kubo` | `--bands 1:10` | Projected-spin sector curvature proxy at every source k point; native CSVs, arbitrary path allowed. Explicit `--mesh NX,NY` adds a raw approximation integral. [Spin-sector Kubo guide](SPIN_KUBO.md); available in 1.6.1. |
 | `z2` | `--mesh 12,12 --bands 1:18` | `Z2_FIELD.csv` and `NFIELD.dat` after PASS. Full even Γ-centered mesh, SOC, time-reversal symmetry, occupied rank even and gap open; [full requirements](Z2_FUKUI_HATSUGAI.md). |
 | `kubo` | `--bands 1:18 --bundle 1 --curvature-csv KUBO.csv` | Bundle trace Ωxy in Å², one row per source k/spin. Mesh or path. External gaps must exceed 1e−5 eV. |
 | `kubo` | `--bands 18 --curvature-csv BAND18.csv` | Individual-band Ωxy, energy and minimum gap, plus legacy DAT companions. Inspect isolation before interpretation. |
@@ -72,12 +74,20 @@ so specify a single band.
 |---|---|
 | `--task NAME` | One calculation. Explicit task names reject conflicting legacy task flags. Default is Fukui `chern`. |
 | `--wavecar PATH` | Input WAVECAR, default `WAVECAR` in the working directory. Quote paths containing spaces. |
+| `--outcar PATH` | For `spin-chern` and `spin-kubo`, matching spin-frame metadata; default `OUTCAR` in the working directory. Wavefunctions and spinor detection still come from WAVECAR. |
+| `--sum-bands N` | `spin-kubo` only: use source bands 1:N outside the selected group in the intermediate sum; default all stored bands. This keeps the VASP eigenstates fixed for sum-convergence checks. |
+| `--spin-axis z` | Cartesian analysis axis for both spin-sector tasks: `x`, `y`, `z` or a comma-separated unit vector, e.g. `0,0,1`. Default z; OUTCAR defines the source spin frame. |
+| `--energy-gap-tol VALUE` / `--spin-gap-tol VALUE` | Both spin-sector tasks: default 1e-8 eV for the selected energy subspace and 1e-6 for the dimensionless projected-Pauli distance from zero. |
 | `--spinor auto` / `--spinor 1` / `--spinor 2` | Default `auto`: detect the component count from WAVECAR. Explicit `1` or `2` checks the file layout; it is not a spin-degeneracy factor. |
 | `--mesh NX,NY` | Mesh dimensions for mesh-based algorithms. It does not generate k points, interpolate, or convert a path into a mesh. |
 | `--bands FIRST:LAST` / `--bands N` | Inclusive one-based band range / one band. Explicit selection avoids guessing the occupied boundary. |
 | `--bundle 1` | Trace curvature of the selected group, allowing internal degeneracies; requires `--curvature-csv`. |
 | `--curvature-csv PATH` / `--pairs-csv PATH` | Exact CSV output filename. Parent directory must already exist. |
-| `--output LABEL` | Legacy output naming label; **not an output directory** and not a replacement for a CSV path. |
+| `--output LABEL` | Output naming label, not a directory. For `spin-chern`, default `SPIN` gives `SPIN_CHERN.csv`, `SPIN_BERRY.csv`, `SPIN_SPECTRUM.csv`; it does not replace explicit Kubo CSV paths. |
+
+For `spin-kubo`, the same default prefix gives `SPIN_KUBO.csv` and
+`SPIN_KUBO_SPECTRUM.csv`; an explicitly supplied full `--mesh` additionally
+gives `SPIN_KUBO_INTEGRAL.csv`. No integer invariant is assigned by this task.
 
 Every option takes a separate value: use `--mesh 12,12`, not
 `--mesh=12,12` or `--mesh 12 12`. Lists contain no spaces. Modern names and
@@ -96,9 +106,9 @@ producer/compiler provenance and verify compatibility before a large run.
 
 Use a fresh working directory per native calculation and an absolute WAVECAR
 path. Legacy DAT and wavefunction outputs can replace existing files. Kubo
-CSV exporters instead refuse an existing filename; they never append another
+and spin-Chern CSV exporters refuse an existing filename; they never append another
 calculation to it. A complete pair export ends with `result_status=PASS`;
-bundle and Z₂ validation status must also be checked before use.
+bundle, spin-Chern and Z₂ validation status must also be checked before use.
 
 Legacy labels are retained for compatibility: `--output sample` produces
 `BERRYCURV.sample.dat` for Fukui, `sample.dat` for optical selectivity,

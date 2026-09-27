@@ -19,6 +19,8 @@ class MakefileTests(unittest.TestCase):
         self.project = Path(self.temporary.name)
         shutil.copy2(ROOT / "Makefile", self.project / "Makefile")
         (self.project / "vaspberry.f").write_text("      end\n")
+        (self.project / "vaspberry_spin_chern.inc").write_text("! native spin sectors\n")
+        (self.project / "vaspberry_spin_kubo.inc").write_text("! native spin sectors\n")
         (self.project / "legacy.f").write_text("      end\n")
         os.utime(self.project / "legacy.f", (1, 1))
         (self.project / "tests/fortran").mkdir(parents=True)
@@ -111,6 +113,18 @@ class MakefileTests(unittest.TestCase):
         os.utime(makefile, (1, 1))
         self.make(*args)
         self.assertEqual(len(self.invocations()), 2)
+
+    def test_native_include_content_rebuilds_even_with_old_timestamp(self):
+        args = ("serial", "FC=" + self.compilers[0])
+        self.make(*args)
+        for count, name in enumerate(("vaspberry_spin_chern.inc", "vaspberry_spin_kubo.inc"), 2):
+            include = self.project / name
+            include.write_text("! changed projected-spin implementation\n")
+            os.utime(include, (1, 1))
+            self.make(*args)
+            self.assertEqual(len(self.invocations()), count)
+            self.make(*args)
+            self.assertEqual(len(self.invocations()), count)
 
     def test_parallel_gnu_build_and_runtime_probe_track_wrapper_changes(self):
         args = ["-j4", "gnu", "build/test-mpi-runtime", "FC=" + self.compilers[0],

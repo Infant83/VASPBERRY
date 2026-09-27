@@ -1,0 +1,3 @@
+ spin-chern link axis,sector,smin:           1           1   2.3487390513682706E-010
+ *** error - spin-chern: singular or poorly resolved link; k=           4
+STOP 1

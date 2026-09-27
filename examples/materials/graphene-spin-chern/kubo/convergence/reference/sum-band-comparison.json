@@ -1,0 +1,41 @@
+{
+  "scope": "Same actual 16-band WAVECAR and selected occupied subspace; only canonical empty-band sum cutoff changes; no high-NBANDS VASP convergence claim",
+  "comparisons": [
+    {
+      "sum_bands": 10,
+      "column": "omega_plus_xy_A2",
+      "max_absolute_difference": 0.4921875,
+      "max_relative_to_sector_scale": 1.120332392500405e-10
+    },
+    {
+      "sum_bands": 10,
+      "column": "omega_minus_xy_A2",
+      "max_absolute_difference": 0.4609375,
+      "max_relative_to_sector_scale": 1.072497424421427e-10
+    },
+    {
+      "sum_bands": 10,
+      "column": "omega_parent_xy_A2",
+      "max_absolute_difference": 0.421875,
+      "max_relative_to_sector_scale": 1.2255199591190943e-11
+    },
+    {
+      "sum_bands": 12,
+      "column": "omega_plus_xy_A2",
+      "max_absolute_difference": 0.53125,
+      "max_relative_to_sector_scale": 1.5025783299894157e-11
+    },
+    {
+      "sum_bands": 12,
+      "column": "omega_minus_xy_A2",
+      "max_absolute_difference": 0.515625,
+      "max_relative_to_sector_scale": 1.5020020342174956e-11
+    },
+    {
+      "sum_bands": 12,
+      "column": "omega_parent_xy_A2",
+      "max_absolute_difference": 0.2109375,
+      "max_relative_to_sector_scale": 1.0799741798462991e-14
+    }
+  ]
+}

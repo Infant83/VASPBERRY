@@ -1,0 +1,36 @@
+{
+  "scope": "Actual VASP electronic-solver sensitivity at the same fixed SCF density, matching Cartesian coordinates, 520 eV and 16 source bands; no cutoff/SCF-density/physical-operator convergence claimed",
+  "baseline": {
+    "ediff_eV": 1e-09,
+    "nelmin": 20
+  },
+  "repeat": {
+    "ediff_eV": 1e-11,
+    "nelmin": 40
+  },
+  "matching_points": 50,
+  "matching_polygon_loops": 12,
+  "metrics": [
+    {
+      "quantity": "gap_eV",
+      "maximum_absolute_difference": 7.564926463032862e-11,
+      "maximum_relative_difference": 7.803465299206232e-05
+    },
+    {
+      "quantity": "omega_plus_xy_A2",
+      "maximum_absolute_difference": 8863371929.28125,
+      "maximum_relative_difference": 0.00015605487311793722
+    },
+    {
+      "quantity": "omega_minus_xy_A2",
+      "maximum_absolute_difference": 8863273650.8125,
+      "maximum_relative_difference": 0.00015605325426346176
+    },
+    {
+      "quantity": "omega_spin_xy_A2",
+      "maximum_absolute_difference": 8863322790.046875,
+      "maximum_relative_difference": 0.00015605406369098866
+    }
+  ],
+  "maximum_local_loop_C_spin_absolute_difference": 1.5171432443672472e-09
+}

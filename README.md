@@ -4,7 +4,8 @@
 VASPBERRY reads `WAVECAR` and evaluates wavefunction overlaps and interband
 matrix elements in Fortran. Use Fukui methods for Chern numbers and the 2D Z₂
 invariant, and Kubo calculations for Berry-curvature maps, symmetry paths and
-intrinsic charge Hall response.
+intrinsic charge Hall response. Projected-spin Chern numbers and spin-sector
+Kubo curves use a matching `OUTCAR` to establish the Cartesian spin frame.
 
 ```text
 VASP calculation → WAVECAR → VASPBERRY → numerical output → analysis / plots
@@ -17,9 +18,11 @@ band plots provide context for the calculated topology and response.
 [Hands-on commands](docs/HANDS_ON.md) · [Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
 [Postprocessing guide](docs/POSTPROCESSING.md) · [Output formats](docs/OUTPUT_FORMAT.md)
 
-**Latest release: [1.5.1](https://github.com/Infant83/VASPBERRY/releases/tag/v1.5.1).**
-The commands below are available in the fixed `v1.5.1` source. The original
-short options remain supported. See the [release notes](docs/releases/v1.5.1.md),
+**VASPBERRY [1.6.1](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.1).**
+This release adds native [spin-Chern](docs/SPIN_CHERN.md) and
+[spin-sector Kubo](docs/SPIN_KUBO.md) workflows, with graphene and Bi examples
+and separate sampling/intermediate-band checks. Existing commands and original
+short options remain supported. See the [release notes](docs/releases/v1.6.1.md),
 [changelog](CHANGELOG.md), [version policy](docs/RELEASING.md)
 and [migration notes](docs/MIGRATION.md).
 
@@ -57,7 +60,7 @@ make help
 ```
 
 For a fixed release, download and extract the source archive from
-[v1.5.1](https://github.com/Infant83/VASPBERRY/releases/tag/v1.5.1), then run the
+[v1.6.1](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.1), then run the
 same build commands from the extracted directory containing `Makefile`.
 **Archive builds do not require Git or Python.** No precompiled executable or
 system-wide installation is needed; the build creates local files in `build/`.
@@ -123,6 +126,8 @@ Environment creation and package installation follow your site's usual practice.
 | Task | Native command | Actual VASP example and results |
 |---|---|---|
 | Fukui Berry flux and Chern number of an isolated band or bundle | `--task chern` | [MoS₂ BZ map](examples/features/fukui-berry-curvature/), [Bi occupied bundle](examples/features/fukui-chern/) |
+| Projected-spin sector Chern numbers | `--task spin-chern` | [Graphene with intrinsic SOC](examples/materials/graphene-spin-chern/); `SPIN_CHERN.csv`, plaquette flux and spin spectra |
+| Spin-sector Kubo curvature | `--task spin-kubo` | [Path and mesh guide](docs/SPIN_KUBO.md); native sector curvature CSVs and explicitly approximate mesh integrals |
 | 2D Fukui–Hatsugai Z₂ invariant and n-field | `--task z2` | [MoS₂ (Z₂ = 0) and Bi (Z₂ = 1)](examples/features/z2/comparison/) |
 | Kubo Berry curvature on a BZ mesh or symmetry path | `--task kubo` | [MoS₂ occupied bundle and isolated-band maps, paths and bands](examples/features/kubo-curvature/) |
 | Intrinsic charge Hall response versus chemical potential and temperature | `--task kubo-pairs`, then occupation-weighted postprocessing | [MoS₂ Hall and valley-region curves](examples/features/kubo-hall/) |
@@ -135,6 +140,12 @@ integral is not rounded to an integer; its k mesh and intermediate band
 window must be converged. Native Kubo uses canonical momentum of the stored
 pseudo-wavefunctions. Optional full-velocity comparisons assess the missing
 PAW/nonlocal/SOC terms; see [operator choices](docs/OPERATOR_ROUTES.md).
+For spin-sector convergence, use [`--sum-bands N`](docs/SPIN_KUBO.md#real-examples-and-interpretation)
+to vary the intermediate sum on unchanged wavefunctions. The
+[Bi comparisons](examples/materials/bi-spin-hall/spin-chern-kubo/convergence/)
+separate this from mesh and source-state changes; the
+[graphene controls](examples/materials/graphene-spin-chern/kubo/convergence/)
+resolve a local SOC peak without claiming a converged full-BZ Kubo integral.
 
 For **layer, atom, orbital and spin character**, combine a matching SOC
 `PROCAR` with the WAVECAR and actual spin frame from `OUTCAR` using

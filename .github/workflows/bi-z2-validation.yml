@@ -7,7 +7,10 @@ on:
       - ".github/workflows/bi-z2-validation.yml"
       # Release publication requires this check on the exact final commit,
       # including follow-up installation fixes and release documentation.
+      - ".github/workflows/ci.yml"
       - ".github/workflows/installation-validation.yml"
+      - ".github/workflows/intel-mpi-validation.yml"
+      - ".github/scripts/validate_native_spin.py"
       - ".github/workflows/publish-*.yml"
       - ".github/scripts/publish_v*.py"
       - "docs/releases/**"
@@ -17,6 +20,8 @@ on:
       - "VERSION"
       - "requirements-transport.txt"
       - "vaspberry.f"
+      - "vaspberry_spin_chern.inc"
+      - "vaspberry_spin_kubo.inc"
       - "vaspberry_gfortran_serial.f"
   workflow_dispatch:
 

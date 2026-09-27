@@ -1,0 +1,3 @@
+valley,gap_at_center_eV,energy_slope_eV_A,q_width_Ainv,native_center_omega_spin_A2,native_center_over_dispersion_Dirac_curvature,model_definition,model_C_local_at_max_radius
+K,9.120140802565402e-07,5.478965110186689,8.322868113915262e-08,68216087140667.945,0.9450674945485936,"diagnostic only: sqrt(m^2+v^2*q^2), v fitted to outer measured rings; positive chirality chosen to match the observed sector, not inferred from energy",0.49583871006710145
+Kprime,9.120112607341468e-07,5.478965283218387,8.322842120642388e-08,68216509527491.016,0.9450674431709727,"diagnostic only: sqrt(m^2+v^2*q^2), v fitted to outer measured rings; positive chirality chosen to match the observed sector, not inferred from energy",0.4958387230623876

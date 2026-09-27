@@ -1,0 +1,140 @@
+{
+  "files": {
+    "cutoff9-rejection.txt": {
+      "bytes": 96,
+      "sha256": "4a35aee9939c51b9ec879c7ef2bf668bee0dd5b6c6f22c9f58c7d95a40edb63e"
+    },
+    "figure.pdf": {
+      "bytes": 40444,
+      "sha256": "af4daf9abd7e1034eb5c2f8e72bb6d26b0cbfc383b511f06cfeb1e093c0a582e"
+    },
+    "figure.png": {
+      "bytes": 296485,
+      "sha256": "bd9562f9c2612820658ef7257a9dc6706e65c3dcb3347550f0c45bc4c6830771"
+    },
+    "figure.svg": {
+      "bytes": 209365,
+      "sha256": "d5792aedb9ce6c148ba8ae468d498defd24ade7ce451c81879bff734601702c6"
+    },
+    "integration_diagnostics.csv": {
+      "bytes": 3634,
+      "sha256": "f23e794da4fff69adb5bc96533eabe3fb03a012871f7c5aaf7306eb1923f9ead"
+    },
+    "loops.csv": {
+      "bytes": 7919,
+      "sha256": "b332b6ff56aa6b6cfd64ec9101f7b911b8e0dd43971d22f574cbf27b9f870ee1"
+    },
+    "model_diagnostics.csv": {
+      "bytes": 731,
+      "sha256": "2d4bcf6cb26dc6cade16e896d8bb9f1e34bbaf5d70250d02e0f1db54e319d16b"
+    },
+    "native/INCAR": {
+      "bytes": 382,
+      "sha256": "e614f85142330b068d526b4ccae56ae372c1e24195557189b651e864063ee790"
+    },
+    "native/KPOINTS": {
+      "bytes": 9127,
+      "sha256": "1cb2e133571453ebaf3c543db77514f3d92012ff3f54d523d36941c7c447bc3d"
+    },
+    "native/POSCAR": {
+      "bytes": 202,
+      "sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0"
+    },
+    "native/SPIN_KUBO.csv": {
+      "bytes": 127579,
+      "sha256": "b4995bdac42a409ec668f9d84b53f175f3e74c42f743407e8e3abe3eda35ecb2"
+    },
+    "native/SPIN_KUBO_SPECTRUM.csv": {
+      "bytes": 129441,
+      "sha256": "d650d8591e288ef75c4bf0710e006a000831310873aab51e88fdf6af1324acae"
+    },
+    "native/SUM10_KUBO.csv": {
+      "bytes": 127626,
+      "sha256": "ab9ea91cd7efed92ea0ff5478e5c3e88c29683f4130663b923f73cf578b69216"
+    },
+    "native/SUM10_KUBO_SPECTRUM.csv": {
+      "bytes": 129488,
+      "sha256": "f33a2508b61fba9fcdcba6e0ad0c2447f12009f9355bbb21687166811cf0af82"
+    },
+    "native/SUM12_KUBO.csv": {
+      "bytes": 127626,
+      "sha256": "0bd5f41a3c2ae6348ab2c07d94b24b631d37e2426f0bd4904719776c7b1280a5"
+    },
+    "native/SUM12_KUBO_SPECTRUM.csv": {
+      "bytes": 129488,
+      "sha256": "309a9e24125d637065d7f8724e9fcd0cdf219924fb6429b9cdd9138a686fe2e7"
+    },
+    "native/points.csv": {
+      "bytes": 16324,
+      "sha256": "073db6b3cbad14e4546ec673c854cfe454a65c355c04c5423c6b0d1178c2d30a"
+    },
+    "plotting.json": {
+      "bytes": 1655,
+      "sha256": "330dec3adbbd9d9014212163672833218af7ae070803aa8cc866b11eb3197ee9"
+    },
+    "provenance.json": {
+      "bytes": 9336,
+      "sha256": "b404f19ae6f18ec11cfdb60e6fd3333388a6d6afb48462ba6d6314369de0dbcb"
+    },
+    "radial-shape-diagnostics.json": {
+      "bytes": 5931,
+      "sha256": "3b48f5af78cef1968dafe9f00c7ce2043ea11745f3593bc299a342f3c362bda6"
+    },
+    "radial.csv": {
+      "bytes": 30525,
+      "sha256": "333a910eefad3669f0e9006364074296f548928c5a16fc25b9c39365afea61b0"
+    },
+    "solver-comparison.csv": {
+      "bytes": 21875,
+      "sha256": "236f07feee97797f7fe22d9f9253ff90ce9c95a16c3ed670afe4324dfd6e15c2"
+    },
+    "solver-comparison.json": {
+      "bytes": 1140,
+      "sha256": "d3ca7db6510907cd538bcb9f2f4443ae0f75b3ad860c37026ceb08a9f8e9d8d3"
+    },
+    "strict/INCAR": {
+      "bytes": 382,
+      "sha256": "0b41af0a1bad9d12e06d44b8cb4d7adb7c440f63a67c75d2299a78c538d4f637"
+    },
+    "strict/KPOINTS": {
+      "bytes": 3174,
+      "sha256": "72745745bdf02b783611e0c3f8d18a763d6ee12c7ad2c79028752b336b61c558"
+    },
+    "strict/POSCAR": {
+      "bytes": 202,
+      "sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0"
+    },
+    "strict/SPIN_KUBO.csv": {
+      "bytes": 45260,
+      "sha256": "502288a92e28a0946e3db849755a8155ae5322db876db8d78500367aea5bc6f9"
+    },
+    "strict/SPIN_KUBO_SPECTRUM.csv": {
+      "bytes": 45353,
+      "sha256": "a98259a2e8f1aff04f8729028c67e1f05f8db8bcca7500b0e7376f825b01a226"
+    },
+    "strict/loops.csv": {
+      "bytes": 2751,
+      "sha256": "a89364b3023231ee568b1c02f32e437c0779ab344676c3e636dbc92c7167df91"
+    },
+    "strict/points.csv": {
+      "bytes": 5569,
+      "sha256": "12fe0667ebe2fbe89606d2dff3c482015efb4626a30b2bb301897e0554a77c00"
+    },
+    "strict/radial.csv": {
+      "bytes": 10503,
+      "sha256": "0a0cd35983750fce987954f19eb77f6f6c58e08ae0545bed1115ab1526a385bb"
+    },
+    "strict/summary.json": {
+      "bytes": 1397,
+      "sha256": "8f415969d852cc63116dde0c3cb04e1206fc6dbac710e5fa01325cc8b76249c8"
+    },
+    "sum-band-comparison.json": {
+      "bytes": 1246,
+      "sha256": "c29e0280888a5d8340771075d6045cb4a0b3533ac8e9ec7c4a2fbd408e2eb665"
+    },
+    "summary.json": {
+      "bytes": 1463,
+      "sha256": "2bec006edf3e66922c23e6aa1078c1db6c67d8a11c397c3d5baf9d2b8d0c944f"
+    }
+  }
+}

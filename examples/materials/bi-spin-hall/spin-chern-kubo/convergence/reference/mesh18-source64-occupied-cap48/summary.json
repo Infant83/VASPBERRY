@@ -1,0 +1,62 @@
+{
+  "case": "mesh18-source64-occupied-cap48",
+  "mesh": 18,
+  "source_nbands": 64,
+  "retained_band_max": 48,
+  "bands": "1:10",
+  "aggregation": "POSTPROCESS_SUM_OF_NATIVE_POINT_CURVATURE",
+  "C_est_plus": 1.0268699095694789,
+  "C_est_minus": -1.0268699415358034,
+  "C_est_spin": 1.0268699255526412,
+  "C_est_charge": -3.196632447632908e-08,
+  "C_est_parent": -3.1966324525592964e-08,
+  "min_energy_gap_eV": 0.5350283748098648,
+  "min_abs_spin": 0.5936976656737831,
+  "npoints": 324,
+  "oriented_cell_area_Aminus2": [
+    -0.0,
+    0.0,
+    0.00730439365307987
+  ],
+  "source_chunks": [
+    {
+      "WAVECAR": "ba90587ee904c9fb4c3bbdbba57ff216f8f0be4fe615126ebbf8e58cb58de8c8",
+      "OUTCAR": "ecec3474ab16674125501ad41571cf81743988463aa160cde4b4e72e00a161ce"
+    },
+    {
+      "WAVECAR": "b735ad8ba6dc5eeb292f696a1fdc3bb3433f48e0f050e40c173804914f85a922",
+      "OUTCAR": "d0ad3574a7bd721d4e4701060c3f35cc049787da258c6084bef03c0107110f6d"
+    },
+    {
+      "WAVECAR": "865522c2f7d071a99021f59dda2c81a49c65ce7ca9a3f4c2384aa579b2f3771a",
+      "OUTCAR": "89f6b350030c7fe02f23cb0740e9d38d7833d30a2aba0cc4e718b9e6f2489f65"
+    },
+    {
+      "WAVECAR": "11e9df5ddf6c5103c51dfb5b13dc341bc035b7a212437a7aefba9e2628c62c52",
+      "OUTCAR": "c145ed1cf24b884ba7ad5b705816b925a3d0e16469ac799788cedc1a4a287c1b"
+    },
+    {
+      "WAVECAR": "3fda078df3d11f791fa697e9b8f582170dd367aa01bb6b7b990d3395921606f5",
+      "OUTCAR": "fe13151c19ef3c16ce0d32fff85f0c26659c37b48e74ffed9e52b9e30b3235f6"
+    },
+    {
+      "WAVECAR": "022b67b94ce256bb8ed986069938b53ba5349789e73808e05fdd77d7e31c2173",
+      "OUTCAR": "04de2ea3015a49d655ee29355e6cd66f3733289c88c60b8068a1ed0b3d4c4ceb"
+    },
+    {
+      "WAVECAR": "c6706b2a49ac0dd8f6698b20e1c7a199a365a4f440390e536dd28dfebf5aefbd",
+      "OUTCAR": "fba75ac6621bae550b2a5f7b1e3107dbadd9e5e8fd15b61e83ecd34a8899833a"
+    },
+    {
+      "WAVECAR": "e2ded524afaefbe52431985185ee638c63cf71b29a1efa5074b618a79df8bbcf",
+      "OUTCAR": "4915f99e03261a179b43641cbcc0d30de460c14f24c905b2c6bf0cfbec015c1c"
+    },
+    {
+      "WAVECAR": "2b60cf218edb3badb5615b36a532653a1655facab558e9665ab35430f7bb984b",
+      "OUTCAR": "ddef555577c284bf2857e8df26f3d669a733d38a10d08bc9dcb47c1ed903f0e6"
+    }
+  ],
+  "native_binary_sha256": "0d45aff53101924dcaf7eae84d655cc6f91c65cab0cba0d218c64157c2770526",
+  "quantized": false,
+  "status": "PASS"
+}

@@ -1,0 +1,261 @@
+{
+  "status": "PASS",
+  "files": {
+    "plot.py": {
+      "bytes": 3516,
+      "sha256": "4f5e4d197f47badcdc37a07586d4ed3dd6a5f65f945e8c6f8dde2656288c45f3"
+    },
+    "README.md": {
+      "bytes": 8301,
+      "sha256": "73fca5a129aeab51b0b78cf3fc7805c32f9114e77a2b72a87983f1c3f52e3f3c"
+    },
+    "reference/provenance.json": {
+      "bytes": 51647,
+      "sha256": "8055ad8fdb46629f739f0026bfbf96a554c7727541140ab6fb52983bc9b113dd"
+    },
+    "reference/plotting.json": {
+      "bytes": 596,
+      "sha256": "9ed2dc9b60c37378d4713cd56f2209e025f70d475406a9068336746a59e96758"
+    },
+    "reference/native-oracle-flux-comparison.json": {
+      "bytes": 648,
+      "sha256": "5654465ece3e73931bfb06c391b40b33de686585c0f1cd47795886b8a77051b0"
+    },
+    "reference/native-restart-comparison.json": {
+      "bytes": 4080,
+      "sha256": "c30cfe4f64982f88e2a058446ebc162d78c344aedd56b9709dcb9c9073813cbf"
+    },
+    "reference/convergence.csv": {
+      "bytes": 9693,
+      "sha256": "ebfe97e64337f27fad32409f02f770cbd6aa5f7b49b822fc6578b4bc7972e012"
+    },
+    "reference/source-quality.json": {
+      "bytes": 43434,
+      "sha256": "e52ec39a8dfea321e793cbcfdf4705b32d534663921dad4831b385fbb9212645"
+    },
+    "reference/figure.svg": {
+      "bytes": 123622,
+      "sha256": "10888d6b371a4ac4cb04e550c3dc7915df15a7211fbc4560cc94f895af7c1d56"
+    },
+    "reference/curvature-diagnostics.json": {
+      "bytes": 12995,
+      "sha256": "935a199a1a5b3c4bce586d1a18583f21d428904a6a6923683e95e1fa957fd173"
+    },
+    "reference/figure.pdf": {
+      "bytes": 28411,
+      "sha256": "7a8e109d2a0276f55d966166f92243617e503cfe2f5159ed9b30c5b215e7b7e1"
+    },
+    "reference/figure.png": {
+      "bytes": 259941,
+      "sha256": "44716a212bfb264e2cf42768a52dbb5ca0e804704cab9906b63c17156a478834"
+    },
+    "reference/mesh12-source64-occupied-cap48/summary.json": {
+      "bytes": 1454,
+      "sha256": "888175cfabc927f0d13710451eb854647240b1b931104e0df486ee8255269355"
+    },
+    "reference/mesh12-source64-occupied-cap48/fukui-oracle.json": {
+      "bytes": 1118,
+      "sha256": "f93e3c2bd87bcc8b70853a781e16599be1cfb59b5de5432065991febadf552b2"
+    },
+    "reference/mesh12-source64-occupied-cap48/POINT_CURVATURE.csv": {
+      "bytes": 124565,
+      "sha256": "fb4e9de0d766b7da777c2df0f394b2324b7df8d87a4f8d1c7b04c66d8203b2d8"
+    },
+    "reference/mesh12-source64-occupied-cap48/fukui-oracle.npz": {
+      "bytes": 21296,
+      "sha256": "c9a4c4a9dd37d5cb07b5fdb302f2a1901bc3ca0f751b34becf7a9629f12ec007"
+    },
+    "reference/mesh18-source64-pair-cap48/summary.json": {
+      "bytes": 2357,
+      "sha256": "95b7778a3b2562f9c3207dbf0de226164bf29d777cd0c0b15e578c873a6ff34b"
+    },
+    "reference/mesh18-source64-pair-cap48/fukui-oracle.json": {
+      "bytes": 1104,
+      "sha256": "abd0ea64286bc8f87ab97867bbb16f802dca3eacb1397258e318f6ddd5d0d752"
+    },
+    "reference/mesh18-source64-pair-cap48/POINT_CURVATURE.csv": {
+      "bytes": 279320,
+      "sha256": "4a6f939feffad23b7746b25f55cc344395b148a45119083e7fb64dbe51227fb5"
+    },
+    "reference/mesh18-source64-pair-cap48/fukui-oracle.npz": {
+      "bytes": 17454,
+      "sha256": "1f5fae645275a3bf6260f3284177cd0892276ecb3d5937cd0133cb49dd94b325"
+    },
+    "reference/mesh6-source64-occupied-cap48/summary.json": {
+      "bytes": 1085,
+      "sha256": "ca29197d66aba6353432824735d81257b7c1905e16f0e9f7c679582384c5d0f3"
+    },
+    "reference/mesh6-source64-occupied-cap48/fukui-oracle.json": {
+      "bytes": 1065,
+      "sha256": "7cba4e9c0abfb4789cc03cd3d3c94952fe501b347fa291558e4e59a157ff10e6"
+    },
+    "reference/mesh6-source64-occupied-cap48/POINT_CURVATURE.csv": {
+      "bytes": 31703,
+      "sha256": "7532ba8206f61204bdbf4f61508793295e91ce5a026e2234007c559c922cf083"
+    },
+    "reference/mesh6-source64-occupied-cap48/fukui-oracle.npz": {
+      "bytes": 6458,
+      "sha256": "3bb4e81f76d779b10bf62ae6a928642339d2426f67a8eedb762af6126280a4d3"
+    },
+    "reference/mesh12-source64-pair-cap48/summary.json": {
+      "bytes": 1451,
+      "sha256": "8df8c916df6eba19665f6e2a2046b75dd225e923d3cbb0fa84ebe18856c16ed5"
+    },
+    "reference/mesh12-source64-pair-cap48/fukui-oracle.json": {
+      "bytes": 1071,
+      "sha256": "5157a64c9fad869a00a1f0bd04e631f1ad59577096a42eeb2e384c3b6833573f"
+    },
+    "reference/mesh12-source64-pair-cap48/POINT_CURVATURE.csv": {
+      "bytes": 124565,
+      "sha256": "2e8557c6f563beec7fd35c40ca1b1c19feb8497141657e3921cd326442e1123d"
+    },
+    "reference/mesh12-source64-pair-cap48/fukui-oracle.npz": {
+      "bytes": 8706,
+      "sha256": "765ade21f38bbb26599579def734332ac1e3dee8eca0d136cdce70611ed4f6d5"
+    },
+    "reference/native-mesh12-restart/vasp-run.json": {
+      "bytes": 2372,
+      "sha256": "69921fef839f201180aced0a3cdfcdea196c8f998a8b9878c51039c31ffe4b8e"
+    },
+    "reference/mesh6-source64-pair-cap48/summary.json": {
+      "bytes": 1085,
+      "sha256": "a63ef4005720d0b90125b4a5e56a2c06e734fbd9cc050ac6213e4cd12c1d104b"
+    },
+    "reference/mesh6-source64-pair-cap48/fukui-oracle.json": {
+      "bytes": 1103,
+      "sha256": "f217915724d5d739ba017c487b72aa34654553958c0e5520e1e1c6b3dea76086"
+    },
+    "reference/mesh6-source64-pair-cap48/POINT_CURVATURE.csv": {
+      "bytes": 31703,
+      "sha256": "65beb00f37d567ae04c213355c056aa890e86d3b2cabf357f9c794a0bc961e99"
+    },
+    "reference/mesh6-source64-pair-cap48/fukui-oracle.npz": {
+      "bytes": 3349,
+      "sha256": "b827cc441101c6810e6a22e6fb41dd40643a6df3097cb0d3bc2f41cb70b0416d"
+    },
+    "reference/mesh18-source64-occupied-cap48/summary.json": {
+      "bytes": 2358,
+      "sha256": "2d2b8baed1e3847b6944084ffd29624335c6b307cd09479c760a63ff2aa9c0c1"
+    },
+    "reference/mesh18-source64-occupied-cap48/fukui-oracle.json": {
+      "bytes": 1117,
+      "sha256": "e27d8eb2a49f978faa99e7a7b85a94d9cdc357f3d85a1da5ea1bffca9978fcec"
+    },
+    "reference/mesh18-source64-occupied-cap48/POINT_CURVATURE.csv": {
+      "bytes": 279320,
+      "sha256": "e95d4bbdbf6eaee1ca519645da958a7b4acbf457d0cbe0d29b178a35f348f2d3"
+    },
+    "reference/mesh18-source64-occupied-cap48/fukui-oracle.npz": {
+      "bytes": 46357,
+      "sha256": "d1b240b1ee1cfba3c6e1f1e0367908a3cb3566cd56fee7846cb9a2eb13f9521d"
+    },
+    "reference/native-mesh12-restart/pair-spin-kubo-cap64/SPIN_KUBO_SPECTRUM.csv": {
+      "bytes": 33419,
+      "sha256": "779a48c6f5e7e9af2b591807b957f9814c1524a7a935837760b5b061a33ea589"
+    },
+    "reference/native-mesh12-restart/pair-spin-kubo-cap64/SPIN_KUBO_INTEGRAL.csv": {
+      "bytes": 2120,
+      "sha256": "da5dbec3f5fe3c62b578242907ab2ff356a3709952c6ae810bff737af5a236d9"
+    },
+    "reference/native-mesh12-restart/pair-spin-kubo-cap64/SPIN_KUBO.csv": {
+      "bytes": 125993,
+      "sha256": "6c4df6bb31e7d7ddbc590f951c63dd5f27fd7a8675df2bd3332932f19d18659d"
+    },
+    "reference/native-mesh12-restart/pair-spin-kubo-cap64/run.json": {
+      "bytes": 828,
+      "sha256": "0d1c171b43e25bdf5f585e05efe4d113ba11beb149772d282fe81a7c6d214654"
+    },
+    "reference/native-mesh12-restart/pair-spin-chern/SPIN_SPECTRUM.csv": {
+      "bytes": 54732,
+      "sha256": "508bb98f54cf8c41aa02b8fd601495bdc3fbad4d7ce5604db5b1ea26c1bb77f2"
+    },
+    "reference/native-mesh12-restart/pair-spin-chern/SPIN_CHERN.csv": {
+      "bytes": 1751,
+      "sha256": "14bfa1c8271a561a940f33b8ecc34746ac7bc131466783891f5cb6b368779933"
+    },
+    "reference/native-mesh12-restart/pair-spin-chern/SPIN_BERRY.csv": {
+      "bytes": 34506,
+      "sha256": "c614113d85f9711408e195d9704ea72a70973e4ba3f4a51f5ba8d639ee179646"
+    },
+    "reference/native-mesh12-restart/pair-spin-chern/run.json": {
+      "bytes": 789,
+      "sha256": "bb5f16877ed0944fd5446ee0a0c71aab8dffccc78a3753ef7a687a1c28555a32"
+    },
+    "reference/native-mesh12-restart/vasp-inputs/INCAR": {
+      "bytes": 394,
+      "sha256": "120378d6c500c8815b006798c911ca8e8f75526e0ae7fe2a905e3295ccd97dda"
+    },
+    "reference/native-mesh12-restart/vasp-inputs/POSCAR": {
+      "bytes": 554,
+      "sha256": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405"
+    },
+    "reference/native-mesh12-restart/vasp-inputs/KPOINTS": {
+      "bytes": 8970,
+      "sha256": "bfd496cafb15d39a897910131fa6e54be5621e9fae60aed4faa93468a044905f"
+    },
+    "reference/native-mesh12-restart/pair-spin-kubo-cap48/SPIN_KUBO_SPECTRUM.csv": {
+      "bytes": 33466,
+      "sha256": "df914d54380c554abc5341c2aeb663794381e78b69607aeaea5b2d155ed642f0"
+    },
+    "reference/native-mesh12-restart/pair-spin-kubo-cap48/SPIN_KUBO_INTEGRAL.csv": {
+      "bytes": 2167,
+      "sha256": "2a183b310911f5b6a7e1dab5c4129df4aab4b92e4ab06be0b015d53597cf1ac9"
+    },
+    "reference/native-mesh12-restart/pair-spin-kubo-cap48/SPIN_KUBO.csv": {
+      "bytes": 126040,
+      "sha256": "98d5f7af41bd038123f6205616bedc3c37db6ef6b778f044f7b9ecb014ed8341"
+    },
+    "reference/native-mesh12-restart/pair-spin-kubo-cap48/run.json": {
+      "bytes": 827,
+      "sha256": "28a5675e85fccfc208c764d512cf558b9d6fa77bca6d8760315b615cf7c097eb"
+    },
+    "reference/native-mesh12-restart/occupied-spin-kubo-cap48/SPIN_KUBO_SPECTRUM.csv": {
+      "bytes": 159466,
+      "sha256": "b731ad09f1824083cab5cc642ce7e73724c61983d69f9e0cca7a76ca336e3332"
+    },
+    "reference/native-mesh12-restart/occupied-spin-kubo-cap48/SPIN_KUBO_INTEGRAL.csv": {
+      "bytes": 2167,
+      "sha256": "a676ab40186d86f292e4ce23cd65468a2b0b885383cc6f20caf3ddd7d0d81c79"
+    },
+    "reference/native-mesh12-restart/occupied-spin-kubo-cap48/SPIN_KUBO.csv": {
+      "bytes": 126040,
+      "sha256": "847783d7cb0c99a1eb7d42acc0c100c87011d89b46f74f2447daa02686de4423"
+    },
+    "reference/native-mesh12-restart/occupied-spin-kubo-cap48/run.json": {
+      "bytes": 829,
+      "sha256": "17fa42c43c3a13131b6e79d7dcb2e5c7ff34fd00f096e3e2e3da2ba5cf4de7a0"
+    },
+    "reference/native-mesh12-restart/occupied-spin-chern/SPIN_SPECTRUM.csv": {
+      "bytes": 267169,
+      "sha256": "55eae20d16d54e981d361a129df068ca5ed0ff5e3c36e00d88daa54f6e1158b6"
+    },
+    "reference/native-mesh12-restart/occupied-spin-chern/SPIN_CHERN.csv": {
+      "bytes": 1788,
+      "sha256": "5c24581bbb90cd47674a7620401edaa47f67aad5c3eb30ac175255eadc53908a"
+    },
+    "reference/native-mesh12-restart/occupied-spin-chern/SPIN_BERRY.csv": {
+      "bytes": 34543,
+      "sha256": "189ba8abd5c9c3aeb98a8e2be1881bbae19ba6fe04592bb97ad74847c4169164"
+    },
+    "reference/native-mesh12-restart/occupied-spin-chern/run.json": {
+      "bytes": 788,
+      "sha256": "be01a20446250c054772318830c46740ccf7554bedb1842b3ee577da572e6619"
+    },
+    "reference/native-mesh12-restart/occupied-spin-kubo-cap64/SPIN_KUBO_SPECTRUM.csv": {
+      "bytes": 159419,
+      "sha256": "c2ecc565a01020f11e3ad08cbfbf381532df4a63908c08c9acf5a6cad430d03c"
+    },
+    "reference/native-mesh12-restart/occupied-spin-kubo-cap64/SPIN_KUBO_INTEGRAL.csv": {
+      "bytes": 2120,
+      "sha256": "e3fa662bdbd9ef9daa290e89b1c49da5d0614d810c942833146c9002cb080b00"
+    },
+    "reference/native-mesh12-restart/occupied-spin-kubo-cap64/SPIN_KUBO.csv": {
+      "bytes": 125993,
+      "sha256": "1af9135a8a64626413ea1f861878447625d01035a113dc0a857d5e536fff81b8"
+    },
+    "reference/native-mesh12-restart/occupied-spin-kubo-cap64/run.json": {
+      "bytes": 828,
+      "sha256": "64b26b6e09e3fc4bf828b1bc463e87d0a8b4bd64b6ac7b928b104a5cc470bd03"
+    }
+  }
+}

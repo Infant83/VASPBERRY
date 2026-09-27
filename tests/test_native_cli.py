@@ -145,6 +145,8 @@ class NativeCliTests(unittest.TestCase):
         project.mkdir()
         shutil.copy2(ROOT / "Makefile", project / "Makefile")
         (project / "vaspberry.f").write_text("      program fixture\n      end\n")
+        (project / "vaspberry_spin_chern.inc").write_text("! build prerequisite fixture\n")
+        (project / "vaspberry_spin_kubo.inc").write_text("! build prerequisite fixture\n")
         command = ["make", "serial", "FC=gfortran", "GNU_FLAGS=-O0", "GNU_LIBS="]
         for attempt in range(2):
             result = subprocess.run(command, cwd=project, capture_output=True, text=True)

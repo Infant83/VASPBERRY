@@ -13,6 +13,8 @@ The Intel and GNU executables write the same numerical formats. The
 | File | Contains | Calculation still needed? | Typical plot |
 |---|---|---|---|
 | Native bundle `KUBO.csv` | k coordinates and computed Ωxy in `omega_z_A2` (Å²), selected-bundle gap (eV) | None for a curvature plot | Ω versus path samples; a full-mesh Ω map with the matching lattice |
+| Native `SPIN_CHERN.csv`, `SPIN_BERRY.csv`, `SPIN_SPECTRUM.csv` | Projected-spin sector invariants, plaquette flux and spin spectrum | None for plotting | Sector flux maps, spin-gap maps and mesh comparisons; [spin-Chern guide](SPIN_CHERN.md) |
+| Native `SPIN_KUBO.csv`, `SPIN_KUBO_SPECTRUM.csv`, optional `SPIN_KUBO_INTEGRAL.csv` | Positive/negative/parent point curvature, its decomposition and raw explicit-mesh integrals | None for plotting; use separate `spin-chern` for geometric integers | Spin-sector curves on a k path and full-mesh maps; [spin-sector Kubo guide](SPIN_KUBO.md) |
 | Native `PAIRS.csv` | Undivided interband products `numerator_*_eV2_A2`, two band energies and gap | Yes: occupations, squared-gap denominators and BZ integration | Intermediate pair analysis; it is not a conductivity table |
 | `pairs.npz` + `pairs.json` | Validated typed cache of those same pairs, mesh and provenance | Yes: `pair-hall` calculates transport | Reusable input for μ/T/region scans |
 | `conductivity.csv`, `.dat` or `.npz` + `.json` | σ, Δσ, μ, T, region and represented carrier count | None for plotting existing rows | Hall versus μ, temperature comparison, regional contrast or Hall versus carrier count |
@@ -34,6 +36,85 @@ against `omega_z_A2`. Python is optional for that native-result plot. A
 Cartesian BZ map additionally needs the matching reciprocal lattice; a line
 path does not become a full-zone map by interpolation. Keep the comments or
 JSON sidecars with any exported table.
+
+## Native projected-spin Chern
+
+The native [`spin-chern` task](SPIN_CHERN.md), available in 1.6.1, writes three CSVs
+with schema `VASPBERRY_SPIN_CHERN_V1`. `--output NAME` changes the default
+`SPIN` filename prefix. Existing outputs are rejected. Each file has `#`
+comment metadata, named columns and a final `# result_status=PASS` on success.
+They are separate from the spin-current conductivity tensors below.
+
+| File | Data and interpretation |
+|---|---|
+| `SPIN_CHERN.csv` | One row: `C_plus,C_minus,C_charge,delta_C,C_spin,C_parent,rank_plus,rank_minus`; `C_charge=C_plus+C_minus`, `delta_C=C_plus-C_minus`, `C_spin=delta_C/2`. `C_parent` is evaluated independently from the parent links. |
+| `SPIN_BERRY.csv` | `k_index,k1,k2,k3,flux_plus_rad,flux_minus_rad,flux_parent_rad,plaquette_area_A-2,omega_plus_A2,omega_minus_A2`. Fractional coordinates are plaquette centers; `omega` is flux divided by area. |
+| `SPIN_SPECTRUM.csv` | `k_index,k1,k2,k3,spin_eigen_index,projected_pauli_eigenvalue,rank_plus,rank_minus,external_energy_gap_eV,min_gram_eigenvalue,gram_condition`. One row per selected-space spin eigenvalue at each source k point. |
+
+The projected-Pauli eigenvalues are dimensionless. Their distance from zero
+is distinct from the parent energy gap in eV. Metadata records
+`representation=WAVECAR_PSEUDO_GRAM`, `physical_paw_validated=false`,
+`scope=selected_subspace`, the axis/frame, thresholds and minimum gaps,
+Gram/link conditioning, plane-wave overlap coverage and maximum flux.
+For a selection starting at band 1, `global_indirect_gap_eV` and
+`has_global_energy_gap` are also given. The separate
+`source_occupations_match_integer_projector` checks whether the source
+occupations match the selected filled space. Finite VASP smearing can make
+that diagnostic false; it does not reject the geometric calculation of an
+isolated selected subspace.
+The two sectors are subspaces of the complete selected spinor space, not
+independent `ISPIN=2` channels or per-band PROCAR spin weights.
+
+## Native projected-spin Kubo curvature
+
+The native [`spin-kubo` task](SPIN_KUBO.md), available in 1.6.1, writes schema
+`VASPBERRY_SPIN_SECTOR_KUBO_V1`. It uses the same spin axis, band selection
+and pseudo Gram metric as `spin-chern`, with a canonical-momentum derivative
+approximation. It accepts an arbitrary k list by default. Only an explicit
+`--mesh NX,NY` requests a validated complete-mesh integral. The default
+prefix is `SPIN`; `--output NAME` changes it. Existing outputs are rejected.
+
+| File / column family | Meaning |
+|---|---|
+| `SPIN_KUBO.csv`: `k_index,k1,k2,k3` | One-based source index and fractional source k coordinates; these are points, not plaquette centers |
+| `kx_A-1,ky_A-1,kz_A-1,k_distance_A-1` | Cartesian coordinates and cumulative distance along the supplied order, in Å⁻¹ |
+| `omega_plus_*_A2,omega_minus_*_A2,omega_parent_*_A2` | Total sector and parent trace curvature; `*` is `yz`, `zx` or `xy`, in Å² |
+| `parent_projected_plus_*_A2,parent_projected_minus_*_A2` | The parent tangent contribution resolved in the spin eigenframe |
+| `spin_mixing_plus_*_A2,spin_mixing_minus_*_A2` | Contribution from the k dependence of the projected-spin sectors; adds to the preceding contribution and cancels in their sum |
+| `rank_plus,rank_minus` | Dimensions of the two spin sectors, not counts of independent collinear channels |
+| `external_energy_gap_eV,min_abs_spin_eigenvalue` | Sampled isolation from excluded bands (eV) and distance of the projected Pauli spectrum from zero (dimensionless) |
+| `min_gram_eigenvalue,gram_condition` | Selected pseudo-wavefunction metric conditioning |
+| `selected_energy_min_eV,selected_energy_max_eV` | Energy bounds of the selected source bands at that point |
+| `SPIN_KUBO_SPECTRUM.csv` | One row per selected spin eigenvalue: `k_index,k1,k2,k3,spin_eigen_index,projected_pauli_eigenvalue,rank_plus,rank_minus` |
+| `SPIN_KUBO_INTEGRAL.csv` | Explicit-mesh only: `C_est_plus,C_est_minus,C_est_charge,delta_C_est,C_est_spin,C_est_parent,rank_plus,rank_minus` |
+
+The dimensionless `C_est` columns integrate the point curvature with the
+**oriented** reciprocal plaquette area. `C_est_charge=C_est_plus+C_est_minus`,
+`delta_C_est=C_est_plus-C_est_minus` and `C_est_spin=delta_C_est/2`.
+They are raw estimates and are never rounded to integers. The integral file
+does not exist after an ordinary path calculation. A mesh's cumulative
+input-order distance is not a high-symmetry band-path coordinate.
+
+Metadata records the source filenames, spin frame, selected bands, numerical
+thresholds and the derivative/representation contract:
+`derivative=CANONICAL_MOMENTUM_DERIVATIVE_PROXY`,
+`representation=PSEUDO_GRAM`, `exact_pseudo_projector_derivative=false`,
+`physical_paw_validated=false`, `geometric_integer_certified=false` and
+`conventional_spin_current_hall=false`. `source_nbands` identifies the original
+WAVECAR band count; `sum_band_max` is the upper band included in the sum,
+and `summed_external_bands` counts its states outside the selected group.
+With `--sum-bands N`, a reduced sum also records `sum_boundary_gap_eV`.
+Parent isolation continues to use all source states. All retained bands
+outside the selected group enter the sum by default; fixed-rank projectors do not apply
+source occupations. A final `result_status=PASS` reports completed numerical
+checks, not operator completeness or k-mesh convergence.
+
+Plot `k_distance_A-1` against `omega_plus_xy_A2` and `omega_minus_xy_A2`
+for an xy-plane path, or the appropriate tensor component for another plane.
+The [graphene](../examples/materials/graphene-spin-chern/kubo/) and
+[Bi](../examples/materials/bi-spin-hall/spin-chern-kubo/) examples show these
+plots beside full-zone Fukui results, retaining failures and unconverged
+integrals rather than assigning unsupported Chern numbers.
 
 ## PROCAR character and charge-Hall attribution
 

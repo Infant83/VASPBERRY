@@ -1,0 +1,34 @@
+{
+  "status": "FAIL",
+  "matched_points": [
+    {
+      "path_index": 1,
+      "mesh_index": 1,
+      "max_energy_difference_eV": 0.0
+    },
+    {
+      "path_index": 9,
+      "mesh_index": 14,
+      "max_energy_difference_eV": 0.00047253590420659464
+    },
+    {
+      "path_index": 17,
+      "mesh_index": 27,
+      "max_energy_difference_eV": 4.149747212522925e-11
+    },
+    {
+      "path_index": 33,
+      "mesh_index": 19,
+      "max_energy_difference_eV": 6.840000852115224e-05
+    },
+    {
+      "path_index": 49,
+      "mesh_index": 1,
+      "max_energy_difference_eV": 6.284735007966447e-07
+    }
+  ],
+  "max_all48_bands_error_eV": 0.00047253590420659464,
+  "direct_path_occupied_gap_eV": 0.5239963735212819,
+  "global_path_occupied_gap_eV": 0.446893569587949,
+  "scope": "Unshifted all48source eigenvalues; same physicalHamiltonian at common kpoints"
+}

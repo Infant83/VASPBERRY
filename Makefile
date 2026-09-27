@@ -65,7 +65,7 @@ define build_if_changed
     $(call shell_quote,OMPI_FC=$(OMPI_FC)) $(call shell_quote,OMPI_FCFLAGS=$(OMPI_FCFLAGS)) \
     $(call shell_quote,OMPI_LDFLAGS=$(OMPI_LDFLAGS)) $(call shell_quote,OMPI_LIBS=$(OMPI_LIBS)) \
     $(call shell_quote,MPICH_FC=$(MPICH_FC)) > "$$tmp"; \
-  cksum $(call shell_quote,$<) $(foreach file,$(MAKEFILE_LIST),$(call shell_quote,$(file))) >> "$$tmp"; \
+  cksum $(call shell_quote,$<) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc $(foreach file,$(MAKEFILE_LIST),$(call shell_quote,$(file))) >> "$$tmp"; \
   if [ ! -f "$@" ] || [ -n $(call shell_quote,$(filter-out force-build-config,$?)) ] || \
       ! cmp -s "$$tmp" "$(2)"; then \
     printf '%s\n' $(call shell_quote,$(1)); \
@@ -117,7 +117,7 @@ $(BUILD_DIR): | check-build-dir
 
 force-build-config:
 
-$(GNU_SERIAL_BIN): $(SERIAL_SOURCE) $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
+$(GNU_SERIAL_BIN): $(SERIAL_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
 	$(call build_if_changed,$(SERIAL_COMMAND),$(SERIAL_CONFIG))
 
 # Keep the old compiler-specific name without a second compiled binary.
@@ -126,7 +126,7 @@ force-serial-compat:
 $(GNU_SERIAL_COMPAT_BIN): $(GNU_SERIAL_BIN) force-serial-compat
 	ln -sf vaspberry "$@"
 
-$(GNU_MPI_BIN): $(MPI_SOURCE) $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
+$(GNU_MPI_BIN): $(MPI_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
 	$(call build_if_changed,$(MPI_COMMAND),$(MPI_CONFIG))
 
 $(MPI_RUNTIME_TEST): tests/fortran/test_mpi_runtime.f90 $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)

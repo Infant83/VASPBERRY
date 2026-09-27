@@ -1,0 +1,26 @@
+{
+  "command": [
+    "vaspberry",
+    "--task",
+    "spin-kubo",
+    "--bands",
+    "9:10",
+    "--mesh",
+    "12,12",
+    "--sum-bands",
+    "48"
+  ],
+  "binary_sha256": "0d45aff53101924dcaf7eae84d655cc6f91c65cab0cba0d218c64157c2770526",
+  "input_sha256": {
+    "WAVECAR": "bd9ede89f709bc28964e9111fb1f8db76ee6aa7bd4003259df43eab727759e7f",
+    "OUTCAR": "4430bb0a1546f0c70a346b091f1a06e28025cc5ec127f36854355f02cf1e55c3"
+  },
+  "started_unix": 1790502790.674415,
+  "exit": 0,
+  "finished_unix": 1790502794.536374,
+  "output_sha256": {
+    "SPIN_KUBO_SPECTRUM.csv": "df914d54380c554abc5341c2aeb663794381e78b69607aeaea5b2d155ed642f0",
+    "SPIN_KUBO_INTEGRAL.csv": "2a183b310911f5b6a7e1dab5c4129df4aab4b92e4ab06be0b015d53597cf1ac9",
+    "SPIN_KUBO.csv": "98d5f7af41bd038123f6205616bedc3c37db6ef6b778f044f7b9ecb014ed8341"
+  }
+}

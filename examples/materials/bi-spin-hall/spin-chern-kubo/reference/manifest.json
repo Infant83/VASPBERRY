@@ -1,0 +1,130 @@
+{
+  "status": "PASS",
+  "date": "2026-09-27",
+  "files": {
+    "prepare_path.py": {
+      "sha256": "d4003a08ea0b159f56041b17e311c0ef3ae1b3fa48a32f92f7aca84a5047499e",
+      "bytes": 2488
+    },
+    "README.md": {
+      "sha256": "fb8d721db05e9995cce88415af690467f51940b70df142c02279c4acf4cca13e",
+      "bytes": 6083
+    },
+    "reference/summary.json": {
+      "sha256": "ca85d7489c4e15adc75ec4e7a25c39aa5163bcdd57ac0becd3d5472987094808",
+      "bytes": 2899
+    },
+    "reference/provenance.json": {
+      "sha256": "a6b13b5359037e019b33329a32fa0bd0c798a857fd3362a4fa8f18463a82bf2c",
+      "bytes": 10565
+    },
+    "reference/plotting.json": {
+      "sha256": "fbabf8cda6ea4ef06587fc80e1c6c66c86fa5f93ed8b02b48206db2466b34d91",
+      "bytes": 3346
+    },
+    "reference/all48-energy-comparison.json": {
+      "sha256": "c421dacb5fb5dac31fd0c6a0316429b2a8d1bfd2248c14ecb6f09f7b41ed5547",
+      "bytes": 864
+    },
+    "reference/empty-band-diagnostics.json": {
+      "sha256": "69261deb5a512ac53c39fe96f45bfede4d59bc0a86a9a32c237318e3c1884187",
+      "bytes": 8875
+    },
+    "reference/figure.svg": {
+      "sha256": "4985c3f9cb58b30ee17df78b4268d38d57d7c3a6093b3fada5311a22118c372a",
+      "bytes": 188484
+    },
+    "reference/comparison.csv": {
+      "sha256": "4ae63c674f513c3c3b974a6c2d71be519f9cd422f214d5c4c9d1578a911ac596",
+      "bytes": 327
+    },
+    "reference/figure.pdf": {
+      "sha256": "eb66b13164bdd4f9f77ff242a2b130c33c6482a87ee7fc26ae9b4810610e8c6c",
+      "bytes": 58467
+    },
+    "reference/figure.png": {
+      "sha256": "7b136924f9b24df6d59dc20d0d6a01bc1dab8df753a3dea0f70c25ff369cd1d3",
+      "bytes": 429726
+    },
+    "reference/pair-path/SPIN_KUBO_SPECTRUM.csv": {
+      "sha256": "d0d643b232e27321810fb1a0d7419f94443e02199502dc8a7dab865a798dc98b",
+      "bytes": 12387
+    },
+    "reference/pair-path/SPIN_KUBO.csv": {
+      "sha256": "33f71eea52f5942d44184047db08943043092a18022b5f1a198a6765cfb75534",
+      "bytes": 44301
+    },
+    "reference/occupied-path/SPIN_KUBO_SPECTRUM.csv": {
+      "sha256": "ef943ad2e52c5a32a15b036e29c3033f01c3b53dad066c8d6af2a7a3f7835ef2",
+      "bytes": 55092
+    },
+    "reference/occupied-path/SPIN_KUBO.csv": {
+      "sha256": "0ffe227c478987bce82253b015b610da96e7b2190662c1ad040b7e5de83755bd",
+      "bytes": 44301
+    },
+    "reference/pair-fukui/SPIN_SPECTRUM.csv": {
+      "sha256": "20eb97ffcb1590eeab54ee102042688bfe674b70466b7df221850fc089e0df19",
+      "bytes": 14896
+    },
+    "reference/pair-fukui/SPIN_CHERN.csv": {
+      "sha256": "fe7f4dd893dd4c1971e8c9c6a05331b294881ae0fe38f64acdc5e78407c689d7",
+      "bytes": 1749
+    },
+    "reference/pair-fukui/SPIN_BERRY.csv": {
+      "sha256": "1b285d03c5dee1552a627d4e90129a988c33e3d13dc7f90b02c7113f81fe90f7",
+      "bytes": 9835
+    },
+    "reference/pair-mesh/SPIN_KUBO_SPECTRUM.csv": {
+      "sha256": "4a78a5037a60eb0535261e7b5115b80142f1e123824c5356f09ed9c128542aad",
+      "bytes": 9679
+    },
+    "reference/pair-mesh/SPIN_KUBO_INTEGRAL.csv": {
+      "sha256": "507fb4716ac1bd898b66e400d15784210e9d918d8593dad2f2acfa13739afad9",
+      "bytes": 2014
+    },
+    "reference/pair-mesh/SPIN_KUBO.csv": {
+      "sha256": "6c0d6d5219d2124781f401c019ba79f911cd8b1edb6fcc500097b39be0cec355",
+      "bytes": 33286
+    },
+    "reference/occupied-mesh/SPIN_KUBO_SPECTRUM.csv": {
+      "sha256": "6229f5857b086a87e4dd92bba483292037dff9eec8c9abe9db3c4eef9e886bf3",
+      "bytes": 41035
+    },
+    "reference/occupied-mesh/SPIN_KUBO_INTEGRAL.csv": {
+      "sha256": "365f36f5194841e60b9079e9120cccb286a1252985f6359d00b030fe01db32d9",
+      "bytes": 2014
+    },
+    "reference/occupied-mesh/SPIN_KUBO.csv": {
+      "sha256": "3657dfd27eba2a05c75a69540720d0cdcff5d05a7bd52e1b71805abef4ab36f8",
+      "bytes": 33286
+    },
+    "reference/occupied-fukui/SPIN_SPECTRUM.csv": {
+      "sha256": "ecf8d181c4849e9fe0b4e62d86afa369c37eac4ec8f8120347e12c8cf98a18ce",
+      "bytes": 67889
+    },
+    "reference/occupied-fukui/SPIN_CHERN.csv": {
+      "sha256": "7280ef76dc890bdb3b5c361edbb9d4f83e720e0efc04fe844b78ca3fc492c34d",
+      "bytes": 1786
+    },
+    "reference/occupied-fukui/SPIN_BERRY.csv": {
+      "sha256": "f74f235e35db6ca57d98593eb52b4c01c191666e7a9d075b356337013348fb18",
+      "bytes": 9872
+    },
+    "reference/vasp-path-inputs/INCAR": {
+      "sha256": "aac225b295ea5ce783c0be6b0b0a7594d1959552e683c7aacda0b9f1510aad1c",
+      "bytes": 386
+    },
+    "reference/vasp-path-inputs/POSCAR": {
+      "sha256": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
+      "bytes": 554
+    },
+    "reference/vasp-path-inputs/KPOINTS": {
+      "sha256": "a5fa9057a2303a547a676e03a9064004fdcb72e4f03271377b4242bcf95f1367",
+      "bytes": 3070
+    }
+  },
+  "shared_plot_script": {
+    "path": "examples/materials/graphene-spin-chern/kubo/plot.py",
+    "sha256": "7e383e84e23fed34d5e264395399734f547b8b920b737f70b5dca8ce87908606"
+  }
+}

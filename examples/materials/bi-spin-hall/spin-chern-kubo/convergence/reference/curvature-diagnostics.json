@@ -1,0 +1,342 @@
+{
+  "status": "COMPLETE_DIAGNOSTIC",
+  "hotspot_point_contributions": [
+    {
+      "case": "mesh12-source48-occupied-all",
+      "C_est_spin": 1.038269070955533,
+      "Gamma_point_contribution": 0.4389796294293275,
+      "other_points_contribution": 0.5992894415262053,
+      "max_abs_spin_curvature_xy_A2": 167.82534450608884
+    },
+    {
+      "case": "mesh12-source48-occupied-cap48",
+      "C_est_spin": 1.038269070955533,
+      "Gamma_point_contribution": 0.4389796294293275,
+      "other_points_contribution": 0.5992894415262053,
+      "max_abs_spin_curvature_xy_A2": 167.82534450608884
+    },
+    {
+      "case": "mesh12-source48-pair-all",
+      "C_est_spin": -29.027117847583153,
+      "Gamma_point_contribution": -29.64050608934311,
+      "other_points_contribution": 0.6133882417599565,
+      "max_abs_spin_curvature_xy_A2": 11331.797223132144
+    },
+    {
+      "case": "mesh12-source48-pair-cap48",
+      "C_est_spin": -29.027117847583153,
+      "Gamma_point_contribution": -29.64050608934311,
+      "other_points_contribution": 0.6133882417599565,
+      "max_abs_spin_curvature_xy_A2": 11331.797223132144
+    },
+    {
+      "case": "mesh12-source64-occupied-all",
+      "C_est_spin": 1.0404503112080419,
+      "Gamma_point_contribution": 0.4389099376166127,
+      "other_points_contribution": 0.6015403735914292,
+      "max_abs_spin_curvature_xy_A2": 167.79870078120044
+    },
+    {
+      "case": "mesh12-source64-occupied-cap48",
+      "C_est_spin": 1.0382696724679557,
+      "Gamma_point_contribution": 0.43897960133744646,
+      "other_points_contribution": 0.5992900711305091,
+      "max_abs_spin_curvature_xy_A2": 167.82533376634308
+    },
+    {
+      "case": "mesh12-source64-pair-all",
+      "C_est_spin": -29.023212759940087,
+      "Gamma_point_contribution": -29.64024081873542,
+      "other_points_contribution": 0.6170280587953343,
+      "max_abs_spin_curvature_xy_A2": 11331.6958081048
+    },
+    {
+      "case": "mesh12-source64-pair-cap48",
+      "C_est_spin": -29.027116252848607,
+      "Gamma_point_contribution": -29.640506224864588,
+      "other_points_contribution": 0.6133899720159803,
+      "max_abs_spin_curvature_xy_A2": 11331.797274943065
+    },
+    {
+      "case": "mesh18-source64-occupied-all",
+      "C_est_spin": 1.028949530355716,
+      "Gamma_point_contribution": 0.19506634489587238,
+      "other_points_contribution": 0.8338831854598435,
+      "max_abs_spin_curvature_xy_A2": 167.7946247678184
+    },
+    {
+      "case": "mesh18-source64-occupied-cap48",
+      "C_est_spin": 1.0268699255526412,
+      "Gamma_point_contribution": 0.19510204192430958,
+      "other_points_contribution": 0.8317678836283317,
+      "max_abs_spin_curvature_xy_A2": 167.8253310872255
+    },
+    {
+      "case": "mesh18-source64-pair-all",
+      "C_est_spin": -12.249671705452368,
+      "Gamma_point_contribution": -13.173457425857064,
+      "other_points_contribution": 0.9237857204046964,
+      "max_abs_spin_curvature_xy_A2": 11331.710484688996
+    },
+    {
+      "case": "mesh18-source64-pair-cap48",
+      "C_est_spin": -12.253754318721063,
+      "Gamma_point_contribution": -13.173557840495187,
+      "other_points_contribution": 0.9198035217741243,
+      "max_abs_spin_curvature_xy_A2": 11331.796860616805
+    },
+    {
+      "case": "mesh6-source48-occupied-all",
+      "C_est_spin": 1.9997747907565255,
+      "Gamma_point_contribution": 1.7559184698605883,
+      "other_points_contribution": 0.24385632089593723,
+      "max_abs_spin_curvature_xy_A2": 167.8253399320891
+    },
+    {
+      "case": "mesh6-source48-occupied-cap48",
+      "C_est_spin": 1.9997747907565255,
+      "Gamma_point_contribution": 1.7559184698605883,
+      "other_points_contribution": 0.24385632089593723,
+      "max_abs_spin_curvature_xy_A2": 167.8253399320891
+    },
+    {
+      "case": "mesh6-source48-pair-all",
+      "C_est_spin": -118.76613255742325,
+      "Gamma_point_contribution": -118.56202314429765,
+      "other_points_contribution": -0.20410941312559316,
+      "max_abs_spin_curvature_xy_A2": 11331.79710719015
+    },
+    {
+      "case": "mesh6-source48-pair-cap48",
+      "C_est_spin": -118.76613255742325,
+      "Gamma_point_contribution": -118.56202314429765,
+      "other_points_contribution": -0.20410941312559316,
+      "max_abs_spin_curvature_xy_A2": 11331.79710719015
+    },
+    {
+      "case": "mesh6-source64-occupied-all",
+      "C_est_spin": 2.000906268655468,
+      "Gamma_point_contribution": 1.7556398810617992,
+      "other_points_contribution": 0.24526638759366892,
+      "max_abs_spin_curvature_xy_A2": 167.79871326310615
+    },
+    {
+      "case": "mesh6-source64-occupied-cap48",
+      "C_est_spin": 1.9997800131928383,
+      "Gamma_point_contribution": 1.755918405158539,
+      "other_points_contribution": 0.24386160803429924,
+      "max_abs_spin_curvature_xy_A2": 167.82533374806428
+    },
+    {
+      "case": "mesh6-source64-pair-all",
+      "C_est_spin": -118.76254469590114,
+      "Gamma_point_contribution": -118.56096133440633,
+      "other_points_contribution": -0.20158336149481215,
+      "max_abs_spin_curvature_xy_A2": 11331.695622634339
+    },
+    {
+      "case": "mesh6-source64-pair-cap48",
+      "C_est_spin": -118.76612842017185,
+      "Gamma_point_contribution": -118.5620223552667,
+      "other_points_contribution": -0.20410606490514738,
+      "max_abs_spin_curvature_xy_A2": 11331.797031776976
+    },
+    {
+      "case": "mesh6-source80-occupied-all",
+      "C_est_spin": 2.006335408080375,
+      "Gamma_point_contribution": 1.7555639185470604,
+      "other_points_contribution": 0.2507714895333144,
+      "max_abs_spin_curvature_xy_A2": 167.7914529972812
+    },
+    {
+      "case": "mesh6-source80-occupied-cap16",
+      "C_est_spin": 2.007934823877224,
+      "Gamma_point_contribution": 1.7692477273984468,
+      "other_points_contribution": 0.23868709647877706,
+      "max_abs_spin_curvature_xy_A2": 169.0993097750688
+    },
+    {
+      "case": "mesh6-source80-occupied-cap24",
+      "C_est_spin": 2.001800490337687,
+      "Gamma_point_contribution": 1.7612794939689762,
+      "other_points_contribution": 0.24052099636871094,
+      "max_abs_spin_curvature_xy_A2": 168.33773029007978
+    },
+    {
+      "case": "mesh6-source80-occupied-cap32",
+      "C_est_spin": 1.999141412066505,
+      "Gamma_point_contribution": 1.757595605247373,
+      "other_points_contribution": 0.24154580681913207,
+      "max_abs_spin_curvature_xy_A2": 167.98563542486423
+    },
+    {
+      "case": "mesh6-source80-occupied-cap48",
+      "C_est_spin": 1.9997800290835321,
+      "Gamma_point_contribution": 1.7559184158518601,
+      "other_points_contribution": 0.243861613231672,
+      "max_abs_spin_curvature_xy_A2": 167.82533477009935
+    },
+    {
+      "case": "mesh6-source80-occupied-cap64",
+      "C_est_spin": 2.000694809870655,
+      "Gamma_point_contribution": 1.7555102233410627,
+      "other_points_contribution": 0.24518458652959252,
+      "max_abs_spin_curvature_xy_A2": 167.78632097301357
+    },
+    {
+      "case": "mesh6-source80-occupied-cap80",
+      "C_est_spin": 2.006335408080375,
+      "Gamma_point_contribution": 1.7555639185470604,
+      "other_points_contribution": 0.2507714895333144,
+      "max_abs_spin_curvature_xy_A2": 167.7914529972812
+    },
+    {
+      "case": "mesh6-source80-pair-all",
+      "C_est_spin": -118.75602427044237,
+      "Gamma_point_contribution": -118.56155886739626,
+      "other_points_contribution": -0.1944654030461095,
+      "max_abs_spin_curvature_xy_A2": 11331.752733017809
+    },
+    {
+      "case": "mesh6-source80-pair-cap16",
+      "C_est_spin": -118.90000548884083,
+      "Gamma_point_contribution": -118.64772048495908,
+      "other_points_contribution": -0.25228500388175235,
+      "max_abs_spin_curvature_xy_A2": 11339.987798030666
+    },
+    {
+      "case": "mesh6-source80-pair-cap24",
+      "C_est_spin": -118.75782981066544,
+      "Gamma_point_contribution": -118.55184200497733,
+      "other_points_contribution": -0.20598780568811037,
+      "max_abs_spin_curvature_xy_A2": 11330.824024899226
+    },
+    {
+      "case": "mesh6-source80-pair-cap32",
+      "C_est_spin": -118.76213862835671,
+      "Gamma_point_contribution": -118.54680140915269,
+      "other_points_contribution": -0.2153372192040166,
+      "max_abs_spin_curvature_xy_A2": 11330.342260100773
+    },
+    {
+      "case": "mesh6-source80-pair-cap48",
+      "C_est_spin": -118.76612952865715,
+      "Gamma_point_contribution": -118.5620234905418,
+      "other_points_contribution": -0.20410603811534145,
+      "max_abs_spin_curvature_xy_A2": 11331.797140283114
+    },
+    {
+      "case": "mesh6-source80-pair-cap64",
+      "C_est_spin": -118.76320819734262,
+      "Gamma_point_contribution": -118.56161466770031,
+      "other_points_contribution": -0.20159352964230948,
+      "max_abs_spin_curvature_xy_A2": 11331.758066240938
+    },
+    {
+      "case": "mesh6-source80-pair-cap80",
+      "C_est_spin": -118.75602427044237,
+      "Gamma_point_contribution": -118.56155886739626,
+      "other_points_contribution": -0.1944654030461095,
+      "max_abs_spin_curvature_xy_A2": 11331.752733017809
+    }
+  ],
+  "shared_point_comparisons": [
+    {
+      "left": "mesh6-source64-occupied-all",
+      "right": "mesh12-source64-occupied-all",
+      "common_points": 36,
+      "maximum_tensor_difference_A2": 0.0027191021935584203,
+      "maximum_xy_difference_A2": 0.0012120460162578506,
+      "relative_xy_to_shared_peak": 7.223214008544741e-06
+    },
+    {
+      "left": "mesh6-source64-occupied-cap48",
+      "right": "mesh12-source64-occupied-cap48",
+      "common_points": 36,
+      "maximum_tensor_difference_A2": 5.218194744582016e-07,
+      "maximum_xy_difference_A2": 3.2055519483265016e-07,
+      "relative_xy_to_shared_peak": 1.9100524794061223e-09
+    },
+    {
+      "left": "mesh6-source64-occupied-all",
+      "right": "mesh18-source64-occupied-all",
+      "common_points": 36,
+      "maximum_tensor_difference_A2": 0.004088495287760452,
+      "maximum_xy_difference_A2": 0.004088495287760452,
+      "relative_xy_to_shared_peak": 2.4365474610939035e-05
+    },
+    {
+      "left": "mesh6-source64-occupied-cap48",
+      "right": "mesh18-source64-occupied-cap48",
+      "common_points": 36,
+      "maximum_tensor_difference_A2": 4.521944201751893e-06,
+      "maximum_xy_difference_A2": 3.5534652598201433e-06,
+      "relative_xy_to_shared_peak": 2.1173592689852938e-08
+    },
+    {
+      "left": "mesh6-source64-occupied-all",
+      "right": "mesh6-source80-occupied-all",
+      "common_points": 36,
+      "maximum_tensor_difference_A2": 0.032534475975202204,
+      "maximum_xy_difference_A2": 0.032534475975202204,
+      "relative_xy_to_shared_peak": 0.00019388990143320454
+    },
+    {
+      "left": "mesh6-source64-occupied-cap48",
+      "right": "mesh6-source80-occupied-cap48",
+      "common_points": 36,
+      "maximum_tensor_difference_A2": 1.0220350645795406e-06,
+      "maximum_xy_difference_A2": 1.0220350645795406e-06,
+      "relative_xy_to_shared_peak": 6.0898735712559184e-09
+    },
+    {
+      "left": "mesh6-source64-pair-all",
+      "right": "mesh12-source64-pair-all",
+      "common_points": 36,
+      "maximum_tensor_difference_A2": 0.0021517402621071824,
+      "maximum_xy_difference_A2": 0.0021517402621071824,
+      "relative_xy_to_shared_peak": 1.898868742828936e-07
+    },
+    {
+      "left": "mesh6-source64-pair-cap48",
+      "right": "mesh12-source64-pair-cap48",
+      "common_points": 36,
+      "maximum_tensor_difference_A2": 0.00024316608869412448,
+      "maximum_xy_difference_A2": 0.00024316608869412448,
+      "relative_xy_to_shared_peak": 2.1458740216775028e-08
+    },
+    {
+      "left": "mesh6-source64-pair-all",
+      "right": "mesh18-source64-pair-all",
+      "common_points": 36,
+      "maximum_tensor_difference_A2": 0.014862054656987311,
+      "maximum_xy_difference_A2": 0.014862054656987311,
+      "relative_xy_to_shared_peak": 1.3115472875305003e-06
+    },
+    {
+      "left": "mesh6-source64-pair-cap48",
+      "right": "mesh18-source64-pair-cap48",
+      "common_points": 36,
+      "maximum_tensor_difference_A2": 0.00017116017079388257,
+      "maximum_xy_difference_A2": 0.00017116017079388257,
+      "relative_xy_to_shared_peak": 1.5104415505670455e-08
+    },
+    {
+      "left": "mesh6-source64-pair-all",
+      "right": "mesh6-source80-pair-all",
+      "common_points": 36,
+      "maximum_tensor_difference_A2": 0.06349937287731677,
+      "maximum_xy_difference_A2": 0.06349937287731677,
+      "relative_xy_to_shared_peak": 5.603695597901591e-06
+    },
+    {
+      "left": "mesh6-source64-pair-cap48",
+      "right": "mesh6-source80-pair-cap48",
+      "common_points": 36,
+      "maximum_tensor_difference_A2": 0.000108506137621589,
+      "maximum_xy_difference_A2": 0.000108506137621589,
+      "relative_xy_to_shared_peak": 9.575368965514714e-09
+    }
+  ],
+  "interpretation": "Gamma contribution is the weight of one sampled point, not an integrated physical region. Scaling as 1/N^2 highlights unresolved point quadrature and does not certify the continuum proxy."
+}
