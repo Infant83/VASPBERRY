@@ -17,9 +17,9 @@ band plots provide context for the calculated topology and response.
 [Hands-on commands](docs/HANDS_ON.md) · [Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
 [Postprocessing guide](docs/POSTPROCESSING.md) · [Output formats](docs/OUTPUT_FORMAT.md)
 
-**Latest release: [1.6.0](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.0).**
-The commands below are available in the fixed `v1.6.0` source. The original
-short options remain supported. See the [release notes](docs/releases/v1.6.0.md),
+**Latest release: [1.5.1](https://github.com/Infant83/VASPBERRY/releases/tag/v1.5.1).**
+The commands below are available in the fixed `v1.5.1` source. The original
+short options remain supported. See the [release notes](docs/releases/v1.5.1.md),
 [changelog](CHANGELOG.md), [version policy](docs/RELEASING.md)
 and [migration notes](docs/MIGRATION.md).
 
@@ -57,7 +57,7 @@ make help
 ```
 
 For a fixed release, download and extract the source archive from
-[v1.6.0](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.0), then run the
+[v1.5.1](https://github.com/Infant83/VASPBERRY/releases/tag/v1.5.1), then run the
 same build commands from the extracted directory containing `Makefile`.
 **Archive builds do not require Git or Python.** No precompiled executable or
 system-wide installation is needed; the build creates local files in `build/`.

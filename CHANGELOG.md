@@ -4,6 +4,19 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-09-27
+
+### Release numbering
+
+- Publish the automatic-spinor update as a patch release. Use 1.5.1 for new
+  installations; it supersedes the earlier 1.6.0 numbering with the same
+  functionality. The published 1.6.0 tag and historical reference data remain fixed.
+- Retain automatic WAVECAR component detection, optional checked component
+  arguments, INI defaults and the execution/postprocessing documentation.
+  Scientific formulas and numerical results are unchanged.
+- Accept the reviewed 1.5.1 Z₂ producer explicitly; unreviewed versions remain
+  rejected. Publication requires the same thirteen exact-source validation jobs.
+
 ## [1.6.0] - 2026-09-27
 
 ### Automatic WAVECAR layout

@@ -214,7 +214,7 @@ def load_z2_field(path: Path) -> Z2Field:
             f"{path}: schema-v2 CSV columns are invalid ({'; '.join(details)})"
         )
 
-    if metadata.get("vaspberry_version") not in {"1.2.0", "1.3.0", "1.4.0", "1.4.1", "1.4.2", "1.5.0", "1.6.0"}:
+    if metadata.get("vaspberry_version") not in {"1.2.0", "1.3.0", "1.4.0", "1.4.1", "1.4.2", "1.5.0", "1.5.1", "1.6.0"}:
         raise Z2ComparisonError("unsupported schema-2 producer version")
     for key, expected in REQUIRED_EXACT_METADATA.items():
         if key not in metadata:
