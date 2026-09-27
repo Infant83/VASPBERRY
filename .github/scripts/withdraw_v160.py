@@ -13,12 +13,8 @@ KEEP_ID = 397441924
 WITHDRAW_TAG = 'v1.6.0'
 WITHDRAW_COMMIT = 'eb0b468aa0674f5ec579e75a014fe4591ec4cdfe'
 WITHDRAW_ID = 397438702
-OLD_INTRO = ('This patch release supersedes the earlier 1.6.0 numbering with the same\n'
-             'automatic-spinor functionality. Use **1.5.1** for new installations. The\n'
-             'published 1.6.0 tag and historical reference results remain unchanged.')
-NEW_INTRO = ('This patch release contains the automatic-spinor update. The duplicate 1.6.0\n'
-             'release and tag have been withdrawn. Use **1.5.1** for new installations;\n'
-             'its source tag and scientific results are unchanged.')
+OLD_INTRO = 'This patch release contains the automatic-spinor update. The duplicate 1.6.0\nrelease and tag have been withdrawn. Use **1.5.1** for new installations;\nits source tag and scientific results are unchanged.'
+NEW_INTRO = 'This patch release simplifies WAVECAR input handling.'
 
 
 def require(condition, message):
