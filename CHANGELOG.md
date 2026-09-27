@@ -4,13 +4,23 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+### Release administration
+
+- Withdraw the duplicate 1.6.0 release and tag at the maintainer's request.
+  Keep 1.5.1 as the current release without moving its tag or changing its
+  scientific code. Archive the withdrawn source by commit and retire its
+  publication automation.
+- Agree on the version before publication. Do not reuse withdrawn 1.6.0;
+  any future 1.6 minor release starts at 1.6.1 or later.
+
 ## [1.5.1] - 2026-09-27
 
 ### Release numbering
 
 - Publish the automatic-spinor update as a patch release. Use 1.5.1 for new
   installations; it supersedes the earlier 1.6.0 numbering with the same
-  functionality. The published 1.6.0 tag and historical reference data remain fixed.
+  functionality. The duplicate 1.6.0 release/tag was subsequently withdrawn;
+  its source remains archived by commit. Historical reference data are unchanged.
 - Retain automatic WAVECAR component detection, optional checked component
   arguments, INI defaults and the execution/postprocessing documentation.
   Scientific formulas and numerical results are unchanged.
@@ -18,6 +28,10 @@ All notable changes to VASPBERRY are recorded here.
   rejected. Publication requires the same thirteen exact-source validation jobs.
 
 ## [1.6.0] - 2026-09-27
+
+Duplicate release withdrawn in favor of 1.5.1. Its
+[original source](https://github.com/Infant83/VASPBERRY/commit/eb0b468aa0674f5ec579e75a014fe4591ec4cdfe)
+is retained for provenance; this version number will not be reused.
 
 ### Automatic WAVECAR layout
 

@@ -1,12 +1,12 @@
 # VASPBERRY 1.5.1 validation scope
 
-The patch-numbered release retains the automatic-spinor functionality published
-as 1.6.0. Its publisher requires thirteen successful validation jobs on the new
-exact source commit: Python 3.10/3.12, GNU and Intel serial builds, native Z₂
-regressions, public feature examples, actual Bi serial/MPI comparison, Intel
-MPI with ifx and ifort, and clean Linux/macOS source-archive installations.
-The release body records those runs and the immutable source commit; both
-published v1.5.0 and v1.6.0 tags remain fixed.
+Release 1.5.1 was validated by thirteen successful jobs on its exact
+[source commit](https://github.com/Infant83/VASPBERRY/commit/a9b2aa15f9b1d89d7da1fc10889a62bbf026059a):
+Python 3.10/3.12, GNU and Intel serial builds, native Z₂ regressions, public
+feature examples, actual Bi serial/MPI comparison, Intel MPI with ifx and
+ifort, and clean Linux/macOS source-archive installations. Its release body
+records those runs. The 1.5.1 tag and source remain unchanged after withdrawal
+of the duplicate 1.6.0 release/tag; the one-time publishers are retired.
 
 Automatic-layout checks cover scalar, two-component and collinear WAVECARs,
 omitted options, explicit assertions/conflicts, inconsistent k points/channels,

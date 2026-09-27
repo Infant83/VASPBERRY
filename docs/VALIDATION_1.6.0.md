@@ -1,22 +1,12 @@
-# VASPBERRY 1.6.0 validation scope
+# VASPBERRY 1.6.0 — withdrawn validation archive
 
-The release publisher requires thirteen successful validation jobs on the
-exact source commit: Python 3.10/3.12, GNU and Intel serial builds, native Z₂
-regressions, public feature examples, actual Bi serial/MPI comparison, Intel
-MPI with ifx and ifort, and clean Linux/macOS source-archive installations.
-The GitHub release body records those runs and the immutable source commit.
+The duplicate 1.6.0 release and tag were withdrawn at the maintainer's request
+on 2026-09-27. Use the [1.5.1 validation record](VALIDATION_1.5.1.md) for the
+active release.
 
-Automatic-layout regressions cover scalar, two-component and collinear
-WAVECARs, omitted options, explicit assertions and conflicts, inconsistent
-k points/channels, unsupported layouts, MPI behavior, inferred occupation
-multiplicity, and INI/PROCAR/cache-reuse workflows. Old explicit commands
-remain part of the compatibility checks.
-
-Native MoS₂ curvature and Bi pair exports are compared with the existing
-numerical references. The public Bi INI workflow checks end-to-end export,
-integration and saved-table plots with automatic spinor detection.
-
-These checks validate software behavior for supported full-complex WAVECARs.
-They do not establish material convergence or infer SOC, magnetization direction,
-or PROCAR spin-frame settings from the coefficient layout. Historical scientific
-reference outputs retain their original inputs and provenance.
+The former release's thirteen validation jobs passed on
+[commit eb0b468](https://github.com/Infant83/VASPBERRY/commit/eb0b468aa0674f5ec579e75a014fe4591ec4cdfe).
+Its [original validation scope](https://github.com/Infant83/VASPBERRY/blob/eb0b468aa0674f5ec579e75a014fe4591ec4cdfe/docs/VALIDATION_1.6.0.md)
+remains available by commit. Withdrawal corrects the duplicate release
+administration; it does not alter those historical results or the active 1.5.1
+source. See the [withdrawal record](releases/v1.6.0.md).

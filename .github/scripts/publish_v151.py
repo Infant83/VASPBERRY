@@ -219,6 +219,7 @@ def supersede_numbering(target):
 
 
 def main():
+    raise RuntimeError("Retired publication entrypoint; use the current release policy")
     target = os.environ['GITHUB_SHA']
     require(os.environ['GITHUB_REPOSITORY'] == REPO and
             os.environ['GITHUB_REF'] == 'refs/heads/master', 'Unexpected repository/ref')

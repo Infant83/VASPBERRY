@@ -6,7 +6,7 @@
 source. Clone it with `git clone https://github.com/Infant83/VASPBERRY.git`.
 Update a clean checkout with `git pull --ff-only`.
 
-A release tag, such as `v1.5.1`, stays fixed. Use the tag when reproducing a
+An active release tag, such as `v1.5.1`, stays fixed. Use the tag when reproducing a
 published calculation, and record the version plus `git rev-parse HEAD` in
 the calculation record. `git describe --tags --always --dirty` also identifies
 changes after a release. A development branch is not the default download.
@@ -23,20 +23,27 @@ Git LFS inputs may need the [input-fetch procedure](../examples/INPUTS.md).
 - Minor releases, for example 1.4.0, add compatible features and commands.
 - Major releases change public command or data contracts incompatibly.
 
+Agree on the version with the maintainer before publishing. Do not create an
+additional release merely to renumber the same update. Version 1.6.0 was
+withdrawn and must not be reused; a future 1.6 minor release must use 1.6.1
+or later.
+
 `VERSION` is the authoritative software version. CLI/Fortran version labels,
 `CITATION.cff`, release notes and the changelog must agree. A release records
 its date and a fixed tag; development work remains under an Unreleased
 changelog entry until publication. The CFF format version is separate from
 the software version. A historical DOI must not be reused as a new version DOI.
 
-The automatic-spinor update uses **1.5.1** as its patch release. It supersedes
-its earlier 1.6.0 numbering with the same functionality; the published 1.6.0
-source and tag remain available for reproduction.
+The automatic-spinor update uses **1.5.1**. At the maintainer's explicit
+request, the duplicate 1.6.0 release and tag were withdrawn. Its
+[source commit](https://github.com/Infant83/VASPBERRY/commit/eb0b468aa0674f5ec579e75a014fe4591ec4cdfe)
+and [withdrawal record](releases/v1.6.0.md) preserve provenance.
 
-Never move an existing release tag to fix a result. Publish the correction
-under a new version, preserve the earlier reference files, and explain the
-change. Software validation and material-specific convergence are separate;
-release notes retain the scientific scope and limitations.
+Ordinarily, published tags remain fixed: correct numerical results in a new
+release without moving the old tag. An explicit maintainer-requested withdrawal
+is an exception, recorded with the reason and original commit; do not reuse its
+version number or recreate its release/tag. The active 1.5.1 release and tag
+are unchanged. Software validation and material convergence remain separate.
 
 ## Publication checks
 
@@ -81,13 +88,9 @@ It also requires the postprocessing command, guide and example files, and
 preserves the immutable v1.4.2 tag. The scientific report remains the
 retained method edition; new command instructions are in the current guides.
 
-The `publish-v1.6.0.yml` workflow requires all thirteen exact-source validation
-jobs, including GNU/Bi, both Intel MPI builds, and Linux/macOS archive installs.
-It preserves the immutable v1.5.0 tag. Automatic spinor detection is exercised
-by reader, native and INI regressions; explicit component assertions remain
-supported. Historical reference tables retain their original provenance.
-
-The `publish-v1.5.1.yml` workflow requires the same thirteen validation jobs
-on the new exact source commit and preserves both published v1.5.0 and v1.6.0
-tags. Current download instructions use v1.5.1; earlier release records remain
-available with their original source and validation provenance.
+The former 1.6.0 and 1.5.1 publishers each required thirteen successful jobs
+on their exact release commit, including Bi, both Intel MPI builds and
+Linux/macOS archive installations. They have been retired so an old workflow
+cannot recreate the withdrawn tag or require it for future publication.
+Current downloads use 1.5.1; its original source and validation record remain
+unchanged. The withdrawal creates no new software version.
