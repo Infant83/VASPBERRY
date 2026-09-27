@@ -1360,7 +1360,7 @@
       else
        write(6,'(A)')'# Z2 PASS field staged; awaiting NFIELD output'
       endif
-      write(6,'(A,ES13.5)')'# Z2 field total Chern: ',totalchern
+      write(6,'(A,ES13.5)')'# Z2 field total Chern number: ',totalchern
       write(6,'(A,ES13.5)')'# Z2 field minimum link s.v.: ',minsv
       write(6,'(A,ES13.5)')'# Z2 field max TR flux residual: ',
      &                     maxfluxres
