@@ -1,10 +1,14 @@
-# Kubo curvature and two-dimensional charge Hall transport
+<a id="kubo-curvature-and-two-dimensional-charge-hall-transport"></a>
+
+# Kubo-formula Berry curvature and two-dimensional charge Hall response
 
 Actual VASP-based tutorials and reference results are provided for
-[native MoS₂ Kubo curvature](../examples/features/kubo-curvature/) and
-[MoS₂ Kubo charge-Hall scans](../examples/features/kubo-hall/), and
-[Bi occupied-subspace Fukui Hall](../examples/features/hall-valley/). Their
-methods and required sampling are explicitly different.
+[native MoS₂ Kubo-formula Berry curvature](../examples/features/kubo-curvature/) and
+[MoS₂ Kubo-formula charge-Hall scans](../examples/features/kubo-hall/), and
+[Bi occupied-subspace Hall response from the FHS method](../examples/features/hall-valley/). Their
+methods and required sampling are explicitly different: the Bi example uses
+Berry flux from the Fukui–Hatsugai–Suzuki (FHS) link-variable method, whereas
+the MoS₂ examples use Kubo-formula point Berry curvature.
 
 The VASPBERRY executable reads WAVECAR and exports point curvature or
 interband pair numerators. The supplied `tools/vaspberry_kubo.py` tool
@@ -23,7 +27,7 @@ which routes require VASP source instrumentation.
 ## Start from actual VASP output
 
 Use the [MoS₂ tutorial](../examples/features/kubo-curvature/) to execute
-VASPBERRY for a Kubo calculation on real VASP WAVECARs generated with the linked
+VASPBERRY for a Kubo-formula Berry-curvature calculation on real VASP WAVECARs generated with the linked
 preparation recipes. It includes the actual
 commands, high-precision CSV files, occupied-bundle maps and a single-band
 valley example. The full mesh and band path are calculated separately; a path
@@ -32,9 +36,9 @@ canonical momentum; PAW/nonlocal/SOC velocity corrections are not supplied by
 that approximation.
 
 The [Bi charge-Hall tutorial](../examples/features/hall-valley/) uses a different
-production route: full-mesh WAVECAR occupied-subspace Fukui transport in the
+production route: full-mesh WAVECAR occupied-subspace Hall response from FHS plaquette flux in the
 insulating gap. Bi's unresolved Kramers pairs prevent treating its individual
-bands as isolated point-Kubo input. Its zero charge Hall plateau is an actual
+bands as isolated-band input for pointwise Kubo-formula Berry curvature. Its zero charge Hall plateau is an actual
 material sanity check, not a nonzero valley-Hall demonstration.
 
 ## WAVECAR to charge Hall in one command
@@ -315,7 +319,7 @@ build/vaspberry --task kubo --wavecar WAVECAR \
 
 Choose `-ii` and `-if` for the physical subspace in your own material. The
 same options work with the MPI binary. `-kubo 2` preserves the input point
-order and performs no Chern integration. `-kubo 1` also prints the finite-mesh
+order and performs no Brillouin-zone integral for a Chern number. `-kubo 1` also prints the finite-mesh
 bundle integral using the existing mesh parameters; it requires the full
 uniform mesh with the correct `-kx` and `-ky` values.
 
@@ -452,16 +456,17 @@ normalization and must not be added to an already enumerated spinor spectrum.
 
 ## Point curvature and plaquette flux
 
-Kubo yields a value at each k point. A Fukui loop yields the flux through a
+The Kubo formula yields Berry curvature at each k point. An FHS loop yields the flux through a
 mesh plaquette in radians. Dividing that flux by cell area is an area-averaged
 curvature estimate, not a measurement of point curvature at the cell center.
 Their finite-mesh occupation approximations differ. Keep the existing
 `wavecar_fukui.py` workflows and their [valley-transport guide](VALLEY_TRANSPORT.md)
 when working with geometric plaquette data.
 
-Do not round a finite-mesh Kubo integral to make it integer. A lattice Fukui
-integer also needs a sufficiently resolved isolated band or bundle before it
-can be identified with the continuum invariant.
+Do not round a finite-mesh Kubo-formula curvature integral to make it integer.
+A lattice Chern number computed with the FHS method also needs a sufficiently
+resolved isolated band or bundle before it can be identified with the continuum
+invariant.
 
 ## Band windows and degeneracies
 
@@ -486,7 +491,7 @@ single-band matrix command is not a general non-Abelian bundle algorithm.
 The native `-kubo_bundle 1` route above explicitly supports an internally
 degenerate, externally separated selected group.
 
-An empty isolated band's unit-occupation Chern is a valid geometric question.
+An empty isolated band's unit-occupation Chern number is a valid geometric question.
 It is not the occupied Hall response of that material. In metals, electron and
 hole occupations must enter the integration. Partial band-window contributions
 must be identified as such; omitted occupied bands cannot silently be assigned
@@ -590,8 +595,9 @@ generated automatically. Finite-smearing source occupations are allowed;
 the postprocessing filling is explicitly T=0.
 
 Converge both the k mesh and accurately computed empty states. The
-[MnBi₂Te₄ example](../examples/materials/mnbi2te4-qah/) compares the Fukui
-invariant with actual unmodified VASP optical runs. It separates the coarse
+[MnBi₂Te₄ example](../examples/materials/mnbi2te4-qah/) compares the Chern number
+computed with the FHS method against results from actual unmodified VASP
+optical runs. It separates the coarse
 WAVEDER integral from VASPBERRY's dense full-connection Wannier calculation; a
 successful file/producer check does not establish integration convergence.
 
@@ -619,7 +625,7 @@ model-convergence and operator provenance.
 - [Xiao, Chang and Niu, Rev. Mod. Phys. 82, 1959 (2010), Eq.1.13](https://doi.org/10.1103/RevModPhys.82.1959): spectral curvature formula.
 - [Wang et al., Phys. Rev. B 74, 195118 (2006)](https://doi.org/10.1103/PhysRevB.74.195118): occupied-to-empty curvature, cancellation of occupied pairs and the subspace trace. See also the [2007 erratum](https://doi.org/10.1103/PhysRevB.76.169902).
 - [Wannier90 Berry module documentation](https://wannier90.readthedocs.io/en/latest/user_guide/postw90/berry/): connection, velocity and intrinsic Hall conventions.
-- [Fukui, Hatsugai and Suzuki, JPSJ 74, 1674 (2005)](https://doi.org/10.1143/JPSJ.74.1674): geometric lattice Chern calculation and continuum limit.
+- [Fukui, Hatsugai and Suzuki, JPSJ 74, 1674 (2005)](https://doi.org/10.1143/JPSJ.74.1674): geometric lattice Chern-number calculation and continuum limit.
 - [Gajdoš et al., Phys. Rev. B 73, 045112 (2006)](https://doi.org/10.1103/PhysRevB.73.045112): PAW optical matrix elements and generalized overlap terms.
 
 ## Developer analytic check (separate from VASP tutorials)
@@ -652,7 +658,7 @@ python3 tools/vaspberry_kubo.py hall \
 
 `demo` creates the two-band Qi–Wu–Zhang model's `matrix.npz` and `matrix.json`.
 It is a complete model fixture, not a simulated material. With this mass and
-orientation the lower-band continuum Chern is +1, so the zero-temperature
+orientation the lower-band continuum Chern number is +1, so the zero-temperature
 occupied sheet response at μ=0 approaches −1 in units of e²/h. Increase the
 mesh to inspect convergence; the tool does not round the result. The upper
 band is retained to make both the spectral sum and occupation window explicit.

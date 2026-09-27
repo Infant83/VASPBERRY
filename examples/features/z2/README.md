@@ -7,7 +7,7 @@ plot-only helper for paired reduced-coordinate fields. The step-by-step
 Bi tutorial below retains its distinct historical input and references.
 
 Buckled honeycomb Bi has **Z₂ = 1** for the occupied SOC bands 1–10 in this
-12 × 12 example. VASPBERRY evaluates the Fukui–Hatsugai integer field and
+12 × 12 example. VASPBERRY evaluates the Fukui–Hatsugai (FH) integer field and
 compares the parities of two complementary half Brillouin zones.
 
 ## Input and preparation

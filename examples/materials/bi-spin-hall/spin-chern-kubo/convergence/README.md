@@ -47,7 +47,7 @@ done
 Use the normal MPI launcher for your VASP installation. `OCC48_KUBO.csv` and
 `PAIR48_KUBO.csv` contain pointwise Cartesian sector curvature; their
 `*_KUBO_INTEGRAL.csv` files contain raw signed-area quadrature. `OCC_CHERN.csv`
-and `PAIR_CHERN.csv` contain the separate Fukui invariants. Each run requires its
+and `PAIR_CHERN.csv` contain the separate Chern numbers evaluated with FHS. Each run requires its
 own matching WAVECAR and OUTCAR. The source count and actual sum cutoff are
 recorded separately in the native CSV metadata.
 
@@ -74,14 +74,14 @@ independent source64 and source80 calculations at the same mesh. Changing
 
 At fixed source64 and response cutoff48, the actual results are:
 
-| Mesh | Occupied proxy `C_est_spin` | Pair proxy `C_est_spin` | Occupied Fukui | Pair Fukui |
+| Mesh | Occupied proxy `C_est_spin` | Pair proxy `C_est_spin` | Occupied spin Chern number (FHS) | Pair spin Chern number (FHS) |
 | --- | ---: | ---: | ---: | ---: |
 | 6×6 | 1.9997800132 | −118.76612842 | 1 | 2 |
 | 12×12 | 1.0382696725 | −29.02711625 | 1 | 2 |
 | 18×18 | 1.0268699256 | −12.25375432 | 1 | 2 |
 
 The occupied proxy changes by 0.01140 between 12×12 and 18×18 and remains
-0.02687 above the Fukui value. This is improved sampling behavior, not a
+0.02687 above the spin Chern number. This is improved sampling behavior, not a
 convergence certificate or a license to round. The pair proxy is clearly
 unconverged. Its single sampled Γ point contributes −118.5620, −29.6405 and
 −13.1736 on these meshes: the same large point value receives the shrinking
@@ -121,7 +121,7 @@ python3 "$EXAMPLE/spin-chern-kubo/convergence/plot.py" \
 This optional plotting step uses Matplotlib, reads native-derived tables and writes
 `figure.png`, `figure.pdf` and `figure.svg`. It does not rerun VASP or calculate
 the Berry curvature. The figure displays raw estimates, including negative
-and noninteger results, alongside the independent Fukui values.
+and noninteger results, alongside the Chern numbers evaluated independently with FHS.
 
 ## Provenance and interpretation
 
@@ -132,7 +132,7 @@ and sums native point curvature with `(b1×b2)/(Nx Ny)/(2π)`. It is labelled
 `POSTPROCESS_SUM_OF_NATIVE_POINT_CURVATURE`; it is not a synthetic native
 integral file. Original source files and headers were not edited.
 
-The independent NumPy Fukui oracle uses the assembled complete WAVECAR and the
+The independent NumPy FHS oracle uses the assembled complete WAVECAR and the
 common spin frame verified across all original OUTCARs. Its outputs are marked
 as independent validation, separately from the native full-mesh check. The
 [original input pack](../../inputs/convergence/README.md) preserves the exact
@@ -148,8 +148,8 @@ saved in [native-mesh12-restart/](reference/native-mesh12-restart/), with
 [comparison diagnostics](reference/native-restart-comparison.json). This check
 uses real VASP output metadata; it does not combine fabricated OUTCAR headers.
 
-No noninteger Kubo estimate is rounded into a Chern number. A stable Fukui
-integer on these meshes establishes consistency within the sampled pseudo
+No noninteger Kubo estimate is rounded into a Chern number. A stable spin Chern number
+evaluated with FHS on these meshes establishes consistency within the sampled pseudo
 wavefunction metric, while the curvature proxy still needs its own sampling,
 source-state and operator-approximation checks. The pair invariant describes
 bands 9–10 and is not the occupied system's Z2 index. See the full

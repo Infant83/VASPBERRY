@@ -1,6 +1,6 @@
 # Hands-on: execute VASPBERRY, inspect its data, and plot results
 
-The main workflow is **VASP → WAVECAR → VASPBERRY execution with Intel MPI → numerical files → analysis and plots**. Native curvature is already a numerical result that you can plot in your preferred program. A charge-Hall scan additionally integrates Kubo pairs with occupations.
+The main workflow is **VASP → WAVECAR → VASPBERRY execution with Intel MPI → numerical files → analysis and plots**. Native curvature is already a numerical result that you can plot in your preferred program. A charge-Hall scan additionally integrates interband pair data with occupations to evaluate the Kubo-formula response.
 
 For routine Hall and PROCAR analysis, start with the [single-file postprocessing guide](POSTPROCESSING.md) and [public Bi example](../examples/features/simple-postprocess/README.md): `python3 tools/vaspberry_post.py run analysis.ini` executes VASPBERRY and performs the requested numerical postprocessing and `python3 tools/vaspberry_post.py plot results/run01` draws them. An optional `python3 tools/vaspberry_post.py check analysis.ini` checks the inputs before running. The [settings reference](POSTPROCESSING_REFERENCE.md) lists the same input, output and naming conventions. The explicit stages below explain the native outputs and provide advanced controls.
 
@@ -22,7 +22,7 @@ Use your site's oneAPI setup path or modules when they differ. A retained Intel 
 | VASPBERRY `--task kubo` | WAVECAR → `KUBO.csv` | Calculate point curvature Ωxy in Å²; ready for a curvature plot |
 | VASPBERRY `--task kubo-pairs` | WAVECAR → `PAIRS.csv` | Calculate raw interband numerators N in eV² Å²; reusable transport input |
 | Python `import-pairs` | `PAIRS.csv` + same WAVECAR → `pairs.npz/json` | Validate, organize and cache those numbers; no Hall integration |
-| Python `pair-hall` | pair cache + μ/T/regions → `conductivity.csv/dat/npz/json` | Calculate the occupation-weighted Kubo transport integral |
+| Python `pair-hall` | pair cache + μ/T/regions → `conductivity.csv/dat/npz/json` | Calculate the occupation-weighted Kubo-formula transport integral |
 | `plot_hall.py` or another plotter | completed conductivity table → figures | Plot existing results; no new curvature or transport calculation |
 
 ## 1. Execute VASPBERRY directly on the supplied WAVECAR
@@ -176,8 +176,8 @@ The atom IDs and Cartesian spin axis are user inputs; no material-specific layer
 
 ## 6. Choose what can be inferred from the outputs
 
-- Native Fukui/Z₂ use wavefunction overlaps. Kubo point curvature and occupation-weighted transport have different discretizations and convergence checks.
-- Native Kubo uses pseudo-wavefunction canonical momentum. It is a useful baseline for charge and regional analysis; full material velocity may include missing PAW, nonlocal, SOC and Hubbard-U terms.
+- The Fukui–Hatsugai–Suzuki (FHS) method computes Chern numbers from wavefunction link variables; the separate Fukui–Hatsugai (FH) n-field method computes Z₂. Kubo-formula point Berry curvature and occupation-weighted response use different discretizations and convergence checks.
+- Native Kubo-formula calculations use pseudo-wavefunction canonical momentum. This approximation is a useful baseline for charge and regional analysis; full material velocity may include missing PAW, nonlocal, SOC and Hubbard-U terms.
 - Matching SOC `PROCAR`, `WAVECAR` and `OUTCAR` support atom/layer/orbital and chosen-axis spin character. The [PROCAR hands-on example](../examples/features/procar-character/) uses `tools/procar_character.py project`, `hall` and `plot` to save those weights, attribute selected isolated bands' charge Hall response, and make reusable figures. Define layer groups by actual atom IDs. This is character-weighted charge attribution; physical orbital-, layer- and spin-current operators are separate observables.
 - The optional [spin Hall route](SPIN_HALL.md) needs full spin/velocity matrices and supports a gapped 2D occupied group at T=0. The supplied instrumented VASP producer excludes Hubbard U; do not apply its Bi instructions unchanged to a DFT+U magnetic material.
 - Converge k sampling, source `NBANDS`, retained pair window and region choice separately. A smooth μ curve or picture does not refine the original k mesh.
@@ -212,7 +212,7 @@ For a sector-resolved curvature curve on a VASP k-path, use
 [`--task spin-kubo --bands 1:10`](SPIN_KUBO.md), with a band range appropriate
 to the material. VASPBERRY writes the native point CSV directly. Only add
 `--mesh NX,NY` for a full periodic mesh and its raw approximation integral;
-compare the same sector with `spin-chern` before assigning an integer Chern
+compare the same sector with `spin-chern` before assigning an integer Chern-number
 label. [Graphene](../examples/materials/graphene-spin-chern/kubo/) and
 [Bi](../examples/materials/bi-spin-hall/spin-chern-kubo/) provide both commands
 and optional plotting steps.
@@ -224,4 +224,4 @@ bands; `N` must include the selected group and external states. Choose a new
 separates this test from changing the source `NBANDS` or k mesh. The
 [graphene sampling example](../examples/materials/graphene-spin-chern/kubo/convergence/)
 adds local valley quadrature and electronic controls. These tests retain raw
-approximation errors; they do not establish a converged full-BZ spin-Kubo response.
+approximation errors; they do not establish a converged full-BZ spin-sector Kubo-formula curvature integral.

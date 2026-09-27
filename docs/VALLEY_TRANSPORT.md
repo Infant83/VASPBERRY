@@ -1,11 +1,12 @@
 # Valley-resolved intrinsic Hall transport
 
-The [Fukui feature example](../examples/features/fukui-chern/) recalculates occupied-subspace
-curvature and Chern from the actual public Bi WAVECAR.
+The [Chern-number example](../examples/features/fukui-chern/) uses the
+Fukui–Hatsugai–Suzuki (FHS) link-variable method to recalculate occupied-subspace
+Berry flux and the Chern number from the actual public Bi WAVECAR.
 Use the [material catalog](../examples/materials/) for WAVECAR input availability.
 
 This document specifies the physically validated post-processing path for
-chemical-potential-dependent Hall transport from VASPBERRY Fukui data. It also
+chemical-potential-dependent Hall transport from VASPBERRY plaquette data calculated using the FHS method. It also
 separates quantities that the current code can calculate from quantities that
 require additional energy information.
 
@@ -36,7 +37,9 @@ $`\mathbf b_1\times\mathbf b_2`$ points along $`+z`$. For a nonstandard plane
 or a left-handed reciprocal basis, the reported component and sign must instead
 be interpreted relative to that declared orientation.
 
-## 2. What VASPBERRY's Fukui output represents
+<a id="2-what-vaspberrys-fukui-output-represents"></a>
+
+## 2. What VASPBERRY's link-variable output represents
 
 For each uniform-mesh cell, VASPBERRY follows the loop
 
@@ -76,7 +79,7 @@ centers**, not the lower-left vertices. The four energy vertices are therefore
 
 ## 3. Correct finite-mesh occupation weighting
 
-For a Fukui plaquette, the implemented quadrature is
+For an FHS plaquette, the implemented quadrature is
 
 ```math
 \bar f_{n,p}(\mu,T)=\frac14\sum_{i=1}^{4}
@@ -109,8 +112,7 @@ A single isolated CBM band gives the doping-induced active-band contribution,
 ```
 
 It is not automatically the total Hall conductivity. For a chemical-potential
-window in which all valence bands remain fully occupied, their combined Fukui
-Chern number can be supplied as a constant baseline:
+window in which all valence bands remain fully occupied, their combined Chern number computed with the FHS method can be supplied as a constant baseline:
 
 ```math
 C_{\mathrm{occ}}(\mu,T)=C_{\mathrm{core}}+
@@ -127,7 +129,7 @@ valence-manifold curvature map.
 
 ## 5. Conditions for a single-band calculation
 
-Fermi-weighting a single-band Fukui flux is physically meaningful only if that
+Fermi-weighting single-band Berry flux from the FHS method is physically meaningful only if that
 band is isolated and nondegenerate over the relevant Brillouin zone and energy
 window. The postprocessor reports the minimum direct gap to all other EIGENVAL
 bands and rejects gaps below `--isolation-tolerance`.
@@ -166,7 +168,7 @@ to the actual band/curvature distribution.
 
 The legacy path needs:
 
-1. one **single-band Fukui** `BERRYCURV...dat` per active band;
+1. one **single-band Berry-flux file from the FHS method** `BERRYCURV...dat` per active band;
 2. the matching full-uniform-BZ `EIGENVAL` on the same k mesh;
 3. reciprocal vectors and mesh metadata in the curvature header.
 
@@ -179,7 +181,7 @@ Before integration, `tools/vaspberry_transport.py` checks:
 - both mesh dimensions contain at least two points, and the curvature and
   EIGENVAL $`k_z`$ planes agree modulo a reciprocal vector;
 - EIGENVAL has the same full mesh and uniform weights summing to one;
-- all four EIGENVAL vertices exist for every printed Fukui center;
+- all four EIGENVAL vertices exist for every printed FHS plaquette center;
 - requested band numbers, total band counts, and labeled UP/DN channels agree
   with the curvature headers, filenames, and selected EIGENVAL spin column;
 - an `ISPIN=2` curvature file used with EIGENVAL retains an unambiguous `.UP` or
@@ -187,8 +189,8 @@ Before integration, `tools/vaspberry_transport.py` checks:
   rejected rather than inferred from global `--spin`;
 - header $`\Delta S_k`$ agrees with
   $`|\mathbf b_1\times\mathbf b_2|/(N_xN_y)`$;
-- the unique-grid full-occupation Chern sum agrees with the file header;
-- the full-occupation single-band Fukui sum is within 0.005 of its nearest
+- the unique-grid full-occupation Chern-number sum agrees with the file header;
+- the full-occupation single-band Chern number from the FHS method is within 0.005 of its nearest
   integer (the legacy rounded $`C\simeq-4.0\times10^{-8}`$ example passes);
 - the maximum plaquette flux stays below a safety fraction of the principal-log
   branch boundary; otherwise a denser mesh is required;
@@ -265,7 +267,7 @@ columns are:
   `link_quality_min_sv`, and plane-wave intersection coverage.
 
 `diagnostics.json` records lattice/reciprocal vectors, mesh, RECL convention,
-energy gaps, full-occupation Chern sums, phase range, and worst conditioning.
+energy gaps, full-occupation Chern-number sums, phase range, and worst conditioning.
 The direct reader rejects nonpositive plane-wave counts and nonfinite k points,
 energies, occupations, or wave-function coefficients before they can enter an
 overlap. Although standard WAVECAR coefficients are stored as complex64, the
@@ -287,8 +289,8 @@ the actual reciprocal vectors, folds the same plaquette values into it, and
 uses Cartesian inverse-Angstrom axes. For a hexagonal reciprocal lattice this
 is the familiar hexagon; all closed-cell boundary representatives are shown,
 so the corners alternate between three equivalent K images and three
-equivalent K' images. **This option changes only the visualization.** Fukui
-loops, Chern sums, valley masks, and conductivity integrations remain on the
+equivalent K' images. **This option changes only the visualization.** FHS
+loops, Chern-number sums, valley masks, and conductivity integrations remain on the
 periodic (q_1,q_2) torus, avoiding boundary double counting.
 
 The default map ranges follow `--energy-band N` dynamically: 1:`N-1`, 1:`N`,
@@ -335,7 +337,7 @@ python tools/wavecar_fukui.py WAVECAR --nx 12 --ny 12 \
   --valley-kp 0.3333333,0.6666667,0 --plot --plot-domain first-bz
 ```
 
-This command calculates the determinant-link Fukui flux `Phi_n` of every
+This command calculates the FHS determinant-link Berry flux `Phi_n` of every
 leading subspace 1:`n`, for `n=1,...,MAX_BAND`. At each plaquette vertex it
 counts all represented eigenvalues satisfying `E_n(k) <= mu` and evaluates
 
@@ -467,7 +469,7 @@ python tools/vaspberry_transport.py map \
   --output berry_map.png
 ```
 
-Plot a Kubo line result together with its band energy:
+Plot a Kubo-formula Berry-curvature line result together with its band energy:
 
 ```bash
 python tools/vaspberry_transport.py line \
@@ -507,7 +509,9 @@ python tools/vaspberry_transport.py sigma \
 The K coordinates above are examples only. Use the convention and reciprocal
 basis of the actual calculation.
 
-## 10. Kubo status
+<a id="10-kubo-status"></a>
+
+## 10. Kubo-formula response status
 
 Legacy `-kubo 2` line-mode output is accepted for visualization only. It is not
 accepted by the validated transport integrator because a one-dimensional path
@@ -536,11 +540,11 @@ Run:
 PYTHONPATH=tools python -m unittest discover -s tests -v
 ```
 
-The tests cover replica invariance and disagreement detection, exact Chern/sign
+The tests cover replica invariance and disagreement detection, exact Chern-number/sign
 normalization, four-vertex occupation averaging at zero and finite temperature,
 full and shifted/shuffled EIGENVAL meshes, nonuniform and duplicate mesh
-rejection, K/K'/outside partition closure, core-Chern baselines, manifold/Kubo
-rejection, and the checked-in MoS2 9-copy-to-unique-grid Chern reconstruction.
+rejection, K/K'/outside partition closure, core-band Chern-number baselines, manifold/Kubo
+rejection, and the checked-in MoS2 9-copy-to-unique-grid Chern-number reconstruction.
 
 An independent Qi-Wu-Zhang two-band oracle additionally fixes the orientation
 and sign convention: for right-handed $`\mathbf b_1\times\mathbf b_2=+\hat z`$
@@ -548,7 +552,7 @@ and VASPBERRY's $`-\mathrm{Im}\log`$ plaquette phase, the occupied
 lower band at $`m=+1`$ has $`C=-1`$, and therefore
 $`\sigma_{xy}=+e^2/h`$. An independent analytic point-curvature oracle verifies
 monotonic Riemann-sum convergence from $`8\times8`$ through $`32\times32`$
-without weakening the nearest-integer gate applied to actual Fukui plaquette
+without weakening the nearest-integer gate applied to actual FHS plaquette
 fluxes. Separate synthetic
 K/K' packets verify exact cancellation for degenerate, opposite-curvature
 valleys and the expected finite total response when a controlled valley-energy

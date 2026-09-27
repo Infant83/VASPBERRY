@@ -1,9 +1,12 @@
 # Examples: calculate directly from VASP wavefunctions
 
 VASPBERRY reads **VASP WAVECAR files directly**. The compiled VASPBERRY executable
-calculates Fukui curvature and Chern numbers, projected-spin sectors, Z₂, Kubo curvature, circular
+calculates Berry curvature and Chern numbers, projected-spin sectors, Z₂, Kubo curvature, circular
 optical transitions and real-space wavefunctions. Use the resulting numerical files in your own analysis
 or the supplied Python plotting tools.
+
+Berry-flux plaquettes and Chern numbers use the **Fukui–Hatsugai–Suzuki (FHS)
+method**. Z₂ uses the distinct **Fukui–Hatsugai (FH) n-field method**.
 
 Build with `make serial` and run `build/vaspberry --help` for the native CLI.
 The older executable name `build/vaspberry-gfortran` and short flags remain
@@ -41,10 +44,10 @@ convergence and the report figures use the feature-specific guides below;
 
 | Quantity | Real VASP input | Native result and tutorial |
 |---|---|---|
-| [Fukui Berry curvature](features/fukui-berry-curvature/) | MoS₂, full 12×12 mesh | `BERRYCURV.dat`; opposite K/K′ curvature in a Cartesian BZ map |
+| [FHS Berry curvature](features/fukui-berry-curvature/) | MoS₂, full 12×12 mesh | `BERRYCURV.dat`; opposite K/K′ curvature in a Cartesian BZ map |
 | [Occupied Chern number](features/fukui-chern/) | Bi, full 12×12 mesh | `BERRYCURV.dat`; C = 0 for bands 1–10 |
 | [Spin Chern numbers](materials/graphene-spin-chern/) | Graphene, intrinsic SOC, matching full-mesh `WAVECAR` and `OUTCAR` | `SPIN_CHERN.csv`, `SPIN_BERRY.csv`, `SPIN_SPECTRUM.csv`; spin-sector topology with energy/spin-gap diagnostics |
-| Spin-sector Kubo curves: [graphene](materials/graphene-spin-chern/kubo/), [Bi](materials/bi-spin-hall/spin-chern-kubo/) | Ordinary VASP path and full-mesh WAVECAR/OUTCAR | `SPIN_KUBO.csv`, spin spectra, optional raw mesh integral; compare the same projector with Fukui Chern |
+| Spin-sector Kubo curves: [graphene](materials/graphene-spin-chern/kubo/), [Bi](materials/bi-spin-hall/spin-chern-kubo/) | Ordinary VASP path and full-mesh WAVECAR/OUTCAR | `SPIN_KUBO.csv`, spin spectra, optional raw mesh integral; compare the same projector with Chern numbers evaluated with FHS |
 | [Z₂ invariant](features/z2/comparison/) | MoS₂ and Bi, full 12×12 SOC meshes | `Z2_FIELD.csv`; Z₂ = 0 and 1, with paired n-field maps and half-zone diagnostics |
 | [Kubo Berry curvature](features/kubo-curvature/) | MoS₂, full mesh and matching K–Γ–K′ path | Native Kubo CSV; occupied-bundle curvature and band panels |
 | [Single-band valley curvature](features/kubo-curvature/valleys/) | MoS₂, two 9×9 K/K′ patches | Native Kubo CSV; isolated band-18 maps and line cuts |
@@ -53,7 +56,7 @@ convergence and the report figures use the feature-specific guides below;
 | [Real-space wavefunction](features/wavefunction/) | Γ in the supplied MoS₂ path WAVECAR | Native real/imaginary amplitude grids; spinor-state density |
 
 For an additional insulating charge-Hall check, the [Bi Hall guide](features/hall-valley/)
-integrates occupied-subspace Fukui flux and obtains a zero charge response.
+integrates occupied-subspace FHS flux and obtains a zero charge response.
 Kubo Hall occupation weighting and BZ integration currently use the bundled
 Python tools after native matrix-element export; its guide shows both
 stages explicitly. Python plotting reads the completed numerical outputs.
@@ -93,14 +96,14 @@ supplied WAVECAR files from inputs that require a VASP preparation step.
 
 ## MoS₂: finite curvature with zero total Chern number
 
-![MoS2 native Fukui map with matching bands and symmetry-path cut](features/fukui-berry-curvature/reference/smooth/figure.png)
+![MoS2 native FHS map with matching bands and symmetry-path cut](features/fukui-berry-curvature/reference/smooth/figure.png)
 
 The K and K′ valleys have opposite occupied-band curvature. The full-zone
-Chern number vanishes. The left panel uses native Fukui plaquettes in
+Chern number vanishes. The left panel uses native FHS plaquettes in
 Cartesian reciprocal coordinates; the other panels show a matching VASP
 band structure and an interpolated cut through the plaquette field.
 
-The [Fukui guide](features/fukui-berry-curvature/) supplies the executed
+The [FHS guide](features/fukui-berry-curvature/) supplies the executed
 VASP preparation, direct VASPBERRY command, numerical references and plotting
 commands. Generate its complete 12×12 WAVECAR once from the public SCF density;
 the file is about 149 MB. The matching path has 49 points and 26 bands.
@@ -158,7 +161,7 @@ VASPBERRY MPI support. See the [material catalogue](materials/),
 Each tutorial may provide a `run.py` helper that combines calculation,
 checks and plots using its fixed reference settings. The native-feature helpers launch
 the VASPBERRY executable and are optional conveniences for repeating examples.
-The supplementary Bi gap-Hall helper instead evaluates Fukui overlaps in
+The supplementary Bi gap-Hall helper instead evaluates FHS overlaps in
 Python as an independent transport check.
 Their `--postprocess-only` or `--plot-only` modes, where documented, read
 completed outputs without rerunning VASPBERRY.

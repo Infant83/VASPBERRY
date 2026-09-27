@@ -1,6 +1,6 @@
 # MoS₂: a trivial Z₂ insulator with valley Berry curvature
 
-The native Fukui–Hatsugai calculation gives **Z₂ = 0** for occupied SOC
+The native Fukui–Hatsugai (FH) calculation gives **Z₂ = 0** for occupied SOC
 bands 1–18 of monolayer 1H-MoS₂ on the actual full 12×12 mesh. Both half-zone
 integer sums are zero. This contrasts with the fresh Bi bilayer's **Z₂ = 1**;
 the [paired example](../comparison/) displays both native fields.
@@ -8,7 +8,7 @@ the [paired example](../comparison/) displays both native fields.
 ## 1. Reuse the full-mesh VASP preparation
 
 Use the same full-mesh WAVECAR as the
-[MoS₂ Fukui-curvature example](../../fukui-berry-curvature/).
+[MoS₂ FHS-curvature example](../../fukui-berry-curvature/).
 It contains 26 stored spinor bands at a 400 eV cutoff, generated from the
 supplied fixed SCF density with `ICHARG=11` and `ISYM=-1`. A band-path
 WAVECAR cannot replace this full periodic mesh.

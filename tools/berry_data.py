@@ -1,6 +1,6 @@
 """Versioned, physical point-curvature data and bounded-memory 2D Hall quadrature.
 
-This format is distinct from a Fukui plaquette flux. No reader divides an
+This format is distinct from an FHS plaquette flux. No reader divides an
 already normalized curvature by two, invents missing states, or repairs data.
 """
 from __future__ import annotations

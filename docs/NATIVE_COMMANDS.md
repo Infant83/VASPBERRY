@@ -46,11 +46,16 @@ All commands accept `--wavecar PATH` and detect the spinor components
 automatically. The mesh sizes and band ranges below are example choices;
 use the values appropriate to your source calculation.
 
+The Chern-number tasks use the Fukui–Hatsugai–Suzuki (FHS) link-variable
+method. The Z₂ task uses the separate Fukui–Hatsugai (FH) n-field method.
+Kubo-formula tasks evaluate Berry curvature or response from interband matrix
+elements. Task names below are unchanged command identifiers.
+
 | Task | Additional arguments | Numerical result and required sampling |
 |---|---|---|
-| `chern` | `--mesh 12,12 --bands 1:18` | Fukui occupied-subspace flux in `BERRYCURV.dat`; Chern number in its header. Full periodic 2D mesh. |
-| `spin-chern` | `--mesh 12,12 --bands 1:8 --spin-axis z` | Both projected-spin sector Chern numbers and flux/spectrum CSVs. Full periodic mesh and matching OUTCAR; [spin-Chern guide](SPIN_CHERN.md). Available in 1.6.1. |
-| `spin-kubo` | `--bands 1:10` | Projected-spin sector curvature proxy at every source k point; native CSVs, arbitrary path allowed. Explicit `--mesh NX,NY` adds a raw approximation integral. [Spin-sector Kubo guide](SPIN_KUBO.md); available in 1.6.1. |
+| `chern` | `--mesh 12,12 --bands 1:18` | Occupied-subspace Berry flux from the FHS method in `BERRYCURV.dat`; Chern number in its header. Full periodic 2D mesh. |
+| `spin-chern` | `--mesh 12,12 --bands 1:8 --spin-axis z` | Both projected-spin sector Chern numbers and flux/spectrum CSVs. Full periodic mesh and matching OUTCAR; [spin Chern number guide](SPIN_CHERN.md). Available in 1.6.1. |
+| `spin-kubo` | `--bands 1:10` | Projected-spin sector Kubo-formula Berry-curvature proxy at every source k point; native CSVs, arbitrary path allowed. Explicit `--mesh NX,NY` adds a raw approximation integral. [Spin-sector Kubo-formula guide](SPIN_KUBO.md); available in 1.6.1. |
 | `z2` | `--mesh 12,12 --bands 1:18` | `Z2_FIELD.csv` and `NFIELD.dat` after PASS. Full even Γ-centered mesh, SOC, time-reversal symmetry, occupied rank even and gap open; [full requirements](Z2_FUKUI_HATSUGAI.md). |
 | `kubo` | `--bands 1:18 --bundle 1 --curvature-csv KUBO.csv` | Bundle trace Ωxy in Å², one row per source k/spin. Mesh or path. External gaps must exceed 1e−5 eV. |
 | `kubo` | `--bands 18 --curvature-csv BAND18.csv` | Individual-band Ωxy, energy and minimum gap, plus legacy DAT companions. Inspect isolation before interpretation. |
@@ -72,7 +77,7 @@ so specify a single band.
 
 | Argument | Meaning |
 |---|---|
-| `--task NAME` | One calculation. Explicit task names reject conflicting legacy task flags. Default is Fukui `chern`. |
+| `--task NAME` | One calculation. Explicit task names reject conflicting legacy task flags. Default is `chern`, which uses the FHS method. |
 | `--wavecar PATH` | Input WAVECAR, default `WAVECAR` in the working directory. Quote paths containing spaces. |
 | `--outcar PATH` | For `spin-chern` and `spin-kubo`, matching spin-frame metadata; default `OUTCAR` in the working directory. Wavefunctions and spinor detection still come from WAVECAR. |
 | `--sum-bands N` | `spin-kubo` only: use source bands 1:N outside the selected group in the intermediate sum; default all stored bands. This keeps the VASP eigenstates fixed for sum-convergence checks. |
@@ -106,12 +111,12 @@ producer/compiler provenance and verify compatibility before a large run.
 
 Use a fresh working directory per native calculation and an absolute WAVECAR
 path. Legacy DAT and wavefunction outputs can replace existing files. Kubo
-and spin-Chern CSV exporters refuse an existing filename; they never append another
+and spin Chern number CSV exporters refuse an existing filename; they never append another
 calculation to it. A complete pair export ends with `result_status=PASS`;
-bundle, spin-Chern and Z₂ validation status must also be checked before use.
+bundle, spin Chern number and Z₂ validation status must also be checked before use.
 
 Legacy labels are retained for compatibility: `--output sample` produces
-`BERRYCURV.sample.dat` for Fukui, `sample.dat` for optical selectivity,
+`BERRYCURV.sample.dat` for Berry flux from the FHS method, `sample.dat` for optical selectivity,
 `CIRC_DICHROISM_W.sample_LEFT/RIGHT.dat` for spectra, and
 `VEL_EXPT.sample.dat` for velocity. Individual-band Kubo adds `.EIG-N`, and
 its sum has the base label. Scalar `ISPIN=2` DAT outputs add `.UP`/`.DN`.
@@ -176,8 +181,9 @@ groups, combines their projections with the saved canonical pair cache for
 selected isolated bands, and writes charge-attribution tables and plots.
 The saved VASPBERRY pair data can be reused for these projections.
 
-Native WAVECAR Kubo uses canonical momentum of pseudo-wavefunctions. It
-does not supply missing PAW/nonlocal/SOC velocity terms. These outputs support
+Native Kubo-formula calculations from WAVECAR use canonical momentum of
+pseudo-wavefunctions. This approximation does not supply missing
+PAW/nonlocal/SOC velocity terms. These outputs support
 the documented intrinsic charge-response approximation, not a complete
 longitudinal conductivity, relaxation-time transport or spin-Hall calculation.
 For additional physical operators and spin Hall, use the separately documented

@@ -18,7 +18,7 @@ supporting checks; it is not required by the native workflow.
 | Full velocity and spin export / `spin-hall` | Audited full complex PAW velocity and spin matrices from the same eigenstates | Conventional spin response and a companion charge response for a gapped 2D occupied bundle at T=0 | Same optional producer |
 | `wannier-hall` | VASP-derived Hamiltonian and position matrices | Dense full-connection integration of a finite Wannier model; gapped 2D occupied bundle at T=0 | Follow the source's VASP/Wannier interface recipe; the Hall postprocessor itself uses the supplied operators |
 
-The [Kubo guide](KUBO_TRANSPORT.md) gives the full input contracts and commands.
+The [Kubo-formula response guide](KUBO_TRANSPORT.md) gives the full input contracts and commands.
 The [output guide](OUTPUT_FORMAT.md) specifies the CSV, DAT, NPZ and metadata
 formats. JSON stores configuration and provenance; it does not replace the
 VASP calculation with an analytic model.
@@ -38,7 +38,7 @@ The canonical-momentum approximation does not include the full PAW,
 nonlocal and SOC velocity terms. Increasing k sampling or the intermediate
 band window improves the numerical evaluation of this approximation, but
 does not supply the missing operator terms. Report that distinction with
-the results. An integer Chern invariant, or cancellation of the total Hall
+the results. An integer Chern number, or cancellation of the total Hall
 response by time reversal, is not by itself an accuracy test of local or
 regional curvature magnitudes.
 

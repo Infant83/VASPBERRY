@@ -2,8 +2,8 @@
   "date": "2026-09-27",
   "files": {
     "plot.py": {
-      "sha256": "e0f34c1af69e67f1403c2bf0afb0f7b3423963dbd9b2ec6bf1f9e1c72693092a",
-      "bytes": 8274
+      "sha256": "128997418416a277f2680139597ac3c5c2c6491f5274aab7cff12df6a327e2dd",
+      "bytes": 8285
     },
     "prepare_vasp.py": {
       "sha256": "2192d9997463ad26b78ada0fbe841eae2a116297add2919c2f827affc9db1d6a",
@@ -14,8 +14,8 @@
       "bytes": 297
     },
     "README.md": {
-      "sha256": "6e60c63c3f5eefa199355e2c4c1277a10e6c7e5d6b3b1d3c3cfadd9720e2510b",
-      "bytes": 9235
+      "sha256": "28190bd2ca3b764c0bc9ee89e3291c80c0721db3aac98d71a7d26cba13d89445",
+      "bytes": 9237
     },
     "reference/summary.json": {
       "sha256": "2a348129de88d29cbe7a90ef58e4c123b233cb88fa85eb093e9eeb165b7f3fd8",
@@ -30,7 +30,7 @@
       "bytes": 22656
     },
     "reference/plotting.json": {
-      "sha256": "78f0864cf755327697e41e43cf87890f6bf71339a6e15669cb56838a0d9e2a1b",
+      "sha256": "b69e47cce6cc9a3783c184969cf10c97c2dd87ad8fc76e4cfca9b239fc10a6a8",
       "bytes": 2305
     },
     "reference/no-soc-native-rejection.txt": {
@@ -38,16 +38,16 @@
       "bytes": 178
     },
     "reference/figure.svg": {
-      "sha256": "22c7893b9de8327c534f4dd38bb323d86151633000c46c1e142ecfcfd151ab0e",
-      "bytes": 157132
+      "sha256": "6fb0f020904491a291a6e958215ca90e0112c150b8dac30a21e5a1db8aa8c98e",
+      "bytes": 163417
     },
     "reference/figure.pdf": {
-      "sha256": "8c1ed3c5d4ecb7f96884f3602ba3a9dc4c1a707b14cf351ff4b3f854f8e1272d",
-      "bytes": 56181
+      "sha256": "6bd3cef7e88934b2cda94b6794a614781f47260e0a97e53a55030abadfa03540",
+      "bytes": 56911
     },
     "reference/figure.png": {
-      "sha256": "d6e2410fbe6645446f27c3ff941ad267fac2b8fd1dcfee7bbbb0eace024d0cca",
-      "bytes": 321216
+      "sha256": "e4f8491927fdac8d06901ba3cd6c0cc638872af24611b67bde42d060afe0f426",
+      "bytes": 333665
     },
     "inputs/POSCAR": {
       "sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",

@@ -37,7 +37,7 @@ def main():
     p.add_argument('--path-labels',nargs='+')
     p.add_argument('--gap-k-index',type=int,help='Optional one-based band-path point for a micro-eV gap inset')
     p.add_argument('--k-fractional',type=float,nargs=2,default=[1/3,1/3],help='K label in this reciprocal basis; change for another lattice')
-    p.add_argument('--title',default='Graphene: projected-spin Chern sectors')
+    p.add_argument('--title',default='Graphene: Chern numbers of projected-spin sectors')
     p.add_argument('--output-dir',type=Path,required=True)
     p.add_argument('--formats',nargs='+',choices=['png','pdf','svg'],default=['png','pdf','svg'])
     a=p.parse_args()

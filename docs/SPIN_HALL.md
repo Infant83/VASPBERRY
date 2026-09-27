@@ -2,9 +2,9 @@
 
 VASPBERRY evaluates the conventional intrinsic spin Hall conductivity of a
 gapped two-dimensional occupied band group at zero temperature. It uses full
-complex spin and velocity matrices from the same VASP eigenstates. The
-separate Fukui–Hatsugai Z₂ calculation identifies the time-reversal topological
-phase. These are different observables: a nontrivial Z₂ phase does not require
+complex spin and velocity matrices from the same VASP eigenstates in the
+Kubo formula. The separate Fukui–Hatsugai (FH) n-field method for Z₂ identifies
+the time-reversal topological phase. These are different observables: a nontrivial Z₂ phase does not require
 an exactly quantized conventional bulk spin Hall conductivity when SOC mixes
 spin components.
 
@@ -22,8 +22,8 @@ sampling and interpolation errors are reported explicitly.
 | `spin-matrix` | SOC WAVECAR coefficients → all complex Pauli matrix elements and raw overlap; optional matching PAW augmentation |
 | `spin-hall` | Audited full PAW spin/velocity export → occupied-bundle spin-curvature tensor and intrinsic 2D sheet response |
 | `wannier-edge` | VASP-derived Wannier Hamiltonian → ideal finite-strip spectrum and boundary probabilities |
-| Native Fukui–Hatsugai Z₂ | Occupied VASP spinor wavefunctions → integer n-field and half-zone parity |
-| Native `spin-chern` | WAVECAR and matching OUTCAR → projected-spin sector Chern numbers and flux maps; [spin-Chern guide](SPIN_CHERN.md) |
+| Native FH Z₂ n-field method | Occupied VASP spinor wavefunctions → integer n-field and half-zone parity |
+| Native `spin-chern` | WAVECAR and matching OUTCAR → projected-spin sector Chern numbers and flux maps; [spin Chern number guide](SPIN_CHERN.md) |
 | Native `spin-kubo` | WAVECAR and OUTCAR → local projected-spin sector curvature proxy, including sector-basis variation; [path/mesh guide](SPIN_KUBO.md). This is not the conventional spin-current response. |
 
 The spin Hall command supports a full uniform 2D mesh, all occupied bands
@@ -174,8 +174,9 @@ spin multiplicity or post hoc integer rounding is applied. The opposite
 sectors can cancel in charge Hall while adding in spin Hall. This is the
 conventional current response, not a spin Chern number.
 
-The separate native [projected-spin Chern calculation](SPIN_CHERN.md) uses
-geometric links of positive/negative occupied-space spin sectors. It needs
+The separate native [projected-spin Chern number calculation](SPIN_CHERN.md) uses
+the Fukui–Hatsugai–Suzuki (FHS) link-variable method on positive/negative
+occupied-space spin sectors. It needs
 an open projected-spin gap as well as an isolated occupied space, and does
 not use the velocity matrices required by the spin-current response here.
 

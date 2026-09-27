@@ -176,7 +176,7 @@ For ordinary total Hall curves, **this is the complete input**. No group,
 region, projection or plot section is required. All stored bands enter the
 pair sum by default; mesh and band convergence remain part of the material
 study. For point-curvature maps or symmetry-path curves calculated directly
-by VASPBERRY, follow the [Kubo example](../examples/features/kubo-curvature/README.md).
+by VASPBERRY, follow the [Kubo-formula Berry-curvature example](../examples/features/kubo-curvature/README.md).
 
 ## Add layer and spin character
 
@@ -309,4 +309,4 @@ directory for another redraw.
 
 Keep explicit band/mesh/operator convergence choices when adapting the
 example. Advanced degeneracy controls and individual pipeline stages remain
-in the [Kubo reference](KUBO_TRANSPORT.md).
+in the [Kubo-formula transport reference](KUBO_TRANSPORT.md).

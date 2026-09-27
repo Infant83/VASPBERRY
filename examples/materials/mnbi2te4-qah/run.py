@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run direct Fukui and standard-WAVEDER Hall checks on a completed MnBi2Te4 mesh."""
+"""Run direct FHS and standard-WAVEDER Hall checks on a completed MnBi2Te4 mesh."""
 from __future__ import annotations
 import argparse
 import json
@@ -19,13 +19,13 @@ def main():
     parser.add_argument("--run-dir", type=Path, nargs="+", required=True,
                         help="completed full-mesh VASP optical run, or fixed-charge chunks covering that mesh")
     parser.add_argument("--wavecar", type=Path,
-                        help="complete mesh WAVECAR for Fukui; required for several source chunks")
+                        help="complete mesh WAVECAR for FHS; required for several source chunks")
     parser.add_argument("--mesh", type=int, default=6)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     sources = [path.resolve() for path in args.run_dir]
     if len(sources) > 1 and args.wavecar is None:
-        parser.error("several optical chunks require a complete --wavecar for the Fukui calculation")
+        parser.error("several optical chunks require a complete --wavecar for the FHS calculation")
     wavecar_path = args.wavecar.resolve() if args.wavecar else sources[0] / "WAVECAR"
     output = args.output_dir.resolve()
     if args.mesh < 2 or output.exists():
@@ -40,25 +40,25 @@ def main():
         if (part.header.nbands != wave.header.nbands or part.header.ispin != wave.header.ispin
                 or part.header.encut_ev != wave.header.encut_ev
                 or not np.array_equal(part.header.lattice, wave.header.lattice)):
-            parser.error("the Fukui and optical source wavefunctions must use the same lattice, cutoff, spin and band count")
+            parser.error("the FHS and optical source wavefunctions must use the same lattice, cutoff, spin and band count")
         for ik, point in enumerate(part.kpoints):
             delta = wave.kpoints - point
             delta -= np.rint(delta)
             matches = np.flatnonzero(np.max(np.abs(delta), axis=1) < 1e-12)
             if len(matches) != 1:
-                parser.error("optical source k points do not match the complete Fukui mesh")
+                parser.error("optical source k points do not match the complete FHS mesh")
             target = int(matches[0])
             if not np.allclose(part.energies[ik], wave.energies[target], atol=1e-8, rtol=0):
-                parser.error("Fukui and optical source energies differ")
+                parser.error("FHS and optical source energies differ")
             if (source / "WAVECAR").resolve() != wavecar_path:
                 if (part.nplane[ik] != wave.nplane[target]
                         or not np.allclose(point, wave.kpoints[target], atol=1e-12, rtol=0)
                         or not np.array_equal(part.g_vectors(ik), wave.g_vectors(target))):
-                    parser.error("the complete Fukui WAVECAR must preserve each source plane-wave basis")
+                    parser.error("the complete FHS WAVECAR must preserve each source plane-wave basis")
                 for first in range(1, wave.header.nbands + 1, 16):
                     bands = range(first, min(first + 16, wave.header.nbands + 1))
                     if not np.array_equal(part.coefficients(ik, bands), wave.coefficients(target, bands)):
-                        parser.error("the complete Fukui WAVECAR must preserve all optical-source coefficients exactly")
+                        parser.error("the complete FHS WAVECAR must preserve all optical-source coefficients exactly")
             covered.append(target)
     if sorted(covered) != list(range(wave.header.nkpoints)):
         parser.error("optical source runs must cover the complete mesh exactly once")
@@ -98,8 +98,8 @@ def main():
         "commands": commands,
     }
     (output / "result.json").write_text(json.dumps(record, indent=2) + "\n")
-    print(f"Completed direct Fukui and standard-WAVEDER calculations in {output}.")
-    print("An integer Fukui invariant does not establish convergence of the pointwise Kubo integral.")
+    print(f"Completed direct FHS and standard-WAVEDER calculations in {output}.")
+    print("A Chern number evaluated with FHS does not establish convergence of the pointwise Kubo integral.")
 
 
 if __name__ == "__main__":

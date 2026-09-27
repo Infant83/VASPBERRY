@@ -3,7 +3,9 @@
 Version 1.3.0 introduces `vaspberry.band-curvature` schema version **1** and
 `vaspberry.hall-spectrum` schema version **1**. Schema versions describe file
 contracts and are independent of the software version. These formats do not
-replace the existing Fukui plaquette or `VASPBERRY_Z2_FIELD` formats.
+replace the existing plaquette-flux format of the Fukui–Hatsugai–Suzuki (FHS)
+Chern-number method or the `VASPBERRY_Z2_FIELD` format of the separate
+Fukui–Hatsugai (FH) Z₂ n-field method.
 
 ## Read the file that matches your question
 
@@ -13,8 +15,8 @@ The Intel and GNU executables write the same numerical formats. The
 | File | Contains | Calculation still needed? | Typical plot |
 |---|---|---|---|
 | Native bundle `KUBO.csv` | k coordinates and computed Ωxy in `omega_z_A2` (Å²), selected-bundle gap (eV) | None for a curvature plot | Ω versus path samples; a full-mesh Ω map with the matching lattice |
-| Native `SPIN_CHERN.csv`, `SPIN_BERRY.csv`, `SPIN_SPECTRUM.csv` | Projected-spin sector invariants, plaquette flux and spin spectrum | None for plotting | Sector flux maps, spin-gap maps and mesh comparisons; [spin-Chern guide](SPIN_CHERN.md) |
-| Native `SPIN_KUBO.csv`, `SPIN_KUBO_SPECTRUM.csv`, optional `SPIN_KUBO_INTEGRAL.csv` | Positive/negative/parent point curvature, its decomposition and raw explicit-mesh integrals | None for plotting; use separate `spin-chern` for geometric integers | Spin-sector curves on a k path and full-mesh maps; [spin-sector Kubo guide](SPIN_KUBO.md) |
+| Native `SPIN_CHERN.csv`, `SPIN_BERRY.csv`, `SPIN_SPECTRUM.csv` | Projected-spin sector invariants, plaquette flux and spin spectrum | None for plotting | Sector flux maps, spin-gap maps and mesh comparisons; [spin Chern number guide](SPIN_CHERN.md) |
+| Native `SPIN_KUBO.csv`, `SPIN_KUBO_SPECTRUM.csv`, optional `SPIN_KUBO_INTEGRAL.csv` | Positive/negative/parent point curvature, its decomposition and raw explicit-mesh integrals | None for plotting; use separate `spin-chern` for geometric integers | Spin-sector curves on a k path and full-mesh maps; [spin-sector Kubo-formula guide](SPIN_KUBO.md) |
 | Native `PAIRS.csv` | Undivided interband products `numerator_*_eV2_A2`, two band energies and gap | Yes: occupations, squared-gap denominators and BZ integration | Intermediate pair analysis; it is not a conductivity table |
 | `pairs.npz` + `pairs.json` | Validated typed cache of those same pairs, mesh and provenance | Yes: `pair-hall` calculates transport | Reusable input for μ/T/region scans |
 | `conductivity.csv`, `.dat` or `.npz` + `.json` | σ, Δσ, μ, T, region and represented carrier count | None for plotting existing rows | Hall versus μ, temperature comparison, regional contrast or Hall versus carrier count |
@@ -23,7 +25,7 @@ The Intel and GNU executables write the same numerical formats. The
 
 **Import, integrate and plot are different operations.** `import-pairs`
 validates/repackages the native data; `pair-hall` performs a physical
-occupation-weighted Kubo calculation; `plot_hall.py` only plots the completed
+occupation-weighted Kubo-formula response calculation; `plot_hall.py` only plots the completed
 conductivity table. `wavecar-hall` orchestrates the first two together with
 the native executable and retains their intermediate files. Similarly,
 PROCAR `project` reads state projections, `hall` calculates attribution,
@@ -37,7 +39,9 @@ Cartesian BZ map additionally needs the matching reciprocal lattice; a line
 path does not become a full-zone map by interpolation. Keep the comments or
 JSON sidecars with any exported table.
 
-## Native projected-spin Chern
+<a id="native-projected-spin-chern"></a>
+
+## Native projected-spin Chern numbers
 
 The native [`spin-chern` task](SPIN_CHERN.md), available in 1.6.1, writes three CSVs
 with schema `VASPBERRY_SPIN_CHERN_V1`. `--output NAME` changes the default
@@ -65,7 +69,9 @@ isolated selected subspace.
 The two sectors are subspaces of the complete selected spinor space, not
 independent `ISPIN=2` channels or per-band PROCAR spin weights.
 
-## Native projected-spin Kubo curvature
+<a id="native-projected-spin-kubo-curvature"></a>
+
+## Native projected-spin Kubo-formula Berry curvature
 
 The native [`spin-kubo` task](SPIN_KUBO.md), available in 1.6.1, writes schema
 `VASPBERRY_SPIN_SECTOR_KUBO_V1`. It uses the same spin axis, band selection
@@ -113,7 +119,7 @@ Plot `k_distance_A-1` against `omega_plus_xy_A2` and `omega_minus_xy_A2`
 for an xy-plane path, or the appropriate tensor component for another plane.
 The [graphene](../examples/materials/graphene-spin-chern/kubo/) and
 [Bi](../examples/materials/bi-spin-hall/spin-chern-kubo/) examples show these
-plots beside full-zone Fukui results, retaining failures and unconverged
+plots beside full-zone Chern numbers and Berry fluxes from the FHS method, retaining failures and unconverged
 integrals rather than assigning unsupported Chern numbers.
 
 ## PROCAR character and charge-Hall attribution

@@ -1,7 +1,8 @@
 # MnBi₂Te₄: a magnetic Chern-insulator example
 
-This example computes the complete occupied-bundle Fukui invariant directly
-from an actual VASP WAVECAR with the VASPBERRY executable. It gives
+This example computes the complete occupied-bundle Chern number with the
+Fukui–Hatsugai–Suzuki (FHS) method directly from an actual VASP WAVECAR
+using the VASPBERRY executable. It gives
 **C = −1 for occupied bands 1–123**. A separate standard-WAVEDER integral
 illustrates why an integer invariant does not establish convergence of a
 pointwise Hall integral.
@@ -34,8 +35,8 @@ film gap reported in that paper.
 | Full NSCF mesh | 6×6×1 |
 | Stored spinor bands | 192 |
 | Sampled global gap | 17.1014 meV |
-| Fukui C, occupied bands 1–123 | −1 |
-| Fukui C, deep bands 1–36 | approximately 0 |
+| Chern number C (FHS), occupied bands 1–123 | −1 |
+| Chern number C (FHS), deep bands 1–36 | approximately 0 |
 | Standard-WAVEDER Hall integral, σ_xy/(e²/h) | +163.1092, unconverged |
 
 The Γ-point curvature is very narrow. The 6×6 optical integral greatly
@@ -113,7 +114,7 @@ spelling.
 ### Optional optical diagnostic and independent overlap check
 
 The following helper evaluates the same WAVECAR with the general
-[Python wavefunction-Fukui tool](../../../tools/wavecar_fukui.py) and runs
+[Python wavefunction-FHS tool](../../../tools/wavecar_fukui.py) and runs
 the common [`waveder-hall` command](../../../tools/vaspberry_kubo.py):
 
 ```sh
@@ -128,7 +129,7 @@ quantized result. No rounding or factor of two is applied to that integral.
 
 If a full mesh is divided into fixed-charge VASP runs, `--run-dir` accepts
 all of those directories. Supply the complete corresponding `--wavecar`
-for the Fukui links. The helper checks mesh coverage, energies, plane-wave
+for the FHS links. The helper checks mesh coverage, energies, plane-wave
 bases and all complex coefficients against the source runs. Independently
 recomputed or interpolated wavefunctions do not satisfy this assembly contract.
 
@@ -144,7 +145,7 @@ by this solver.
 The [supplied operators](inputs/wannier/operators/README.md) come from this
 actual VASP-derived Wannier model. Both H and all three position-connection
 components are needed; a WAVECAR alone does not contain the latter. No fitted
-analytic Hamiltonian or smoothed Fukui map replaces the response.
+analytic Hamiltonian or smoothed FHS map replaces the response.
 
 Three distinctions matter for this example:
 
@@ -229,7 +230,7 @@ VASPBERRY from the actual VASP-derived H and position operators. Open band
 circles are direct VASP samples; the gap inset follows K–Γ–M. Hollow Hall
 and convergence markers are the independent postw90 values on the same
 grids. All five prescribed quadrature controls are shown. The independent
-occupied-bundle Fukui invariant is C = −1; the Hall values are not rounded.
+occupied-bundle Chern number evaluated with FHS is C = −1; the Hall values are not rounded.
 
 ## 5. Optional support: independent postw90 crosscheck
 
@@ -237,7 +238,7 @@ The independent reference uses **Wannier90/postw90** to check the
 VASPBERRY full-connection calculation on the same finite operators. It retains the Hamiltonian and all
 three position-connection matrices from the actual VASP-derived model;
 postw90 evaluates the full J0 + J1 + J2 expression. This is not a fitted
-analytic Hamiltonian or an integral of a smoothed Fukui map.
+analytic Hamiltonian or an integral of a smoothed FHS map.
 
 Follow [the external-reference workflow](WANNIER_REFERENCE.md) to restore
 the supplied numerical operators, build the documented reader, and run
@@ -267,9 +268,9 @@ exported band/projection counts.
 
 ## Reference data
 
-- [VASPBERRY occupied-bundle Fukui output and comparison](reference/native-fukui/).
+- [VASPBERRY occupied-bundle FHS output and comparison](reference/native-fukui/).
 - [VASP-derived Wannier bands, VASPBERRY Hall response and all five convergence runs](reference/vaspberry-wannier/README.md).
-- [Occupied-bundle Fukui map](reference/fukui/fukui_occupied.csv) and
+- [Occupied-bundle FHS map](reference/fukui/fukui_occupied.csv) and
   [link diagnostics](reference/fukui/diagnostics.json).
 - [Actual VASP band samples](reference/direct-dft/sample-bands.csv),
   including nine independent points away from the training mesh.

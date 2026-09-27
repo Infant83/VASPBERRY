@@ -1,4 +1,4 @@
-# Native occupied-bundle Fukui reference
+# Native occupied-bundle Chern-number reference (FHS)
 
 The VASPBERRY executable reads the actual 6×6 MnBi₂Te₄ VASP WAVECAR
 and evaluates the complete occupied bands 1–123 (192 stored spinor bands).
@@ -24,7 +24,7 @@ when reconstructing flux from curvature. The map's extrema are independently
 checked against its numerical rows and recorded in `result.json`.
 
 The recorded command used four MPI ranks and the current task-based CLI.
-The serial and MPI builds select the same Fukui numerical routine:
+The serial and MPI builds select the same FHS numerical routine:
 
 ```sh
 mpirun -np 4 build/vaspberry-mpi --task chern --wavecar WAVECAR \

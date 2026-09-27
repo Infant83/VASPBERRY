@@ -19,7 +19,7 @@ No Python library compatibility or release date is promised by the present
 source tree. The existing Python scripts remain command-line post-processing
 tools until this separation and equivalence work is complete.
 
-Version 1.3.0 adds general Kubo/charge-Hall command-line tools and a versioned
+Version 1.3.0 adds general Kubo-formula Berry-curvature and charge-Hall command-line tools and a versioned
 point-curvature file format. Their internal modules are not a separately
 packaged stable Python library, and they do not replace the Fortran Z2 kernel.
-See [Kubo transport](KUBO_TRANSPORT.md) and [output format](OUTPUT_FORMAT.md).
+See [Kubo-formula transport](KUBO_TRANSPORT.md) and [output format](OUTPUT_FORMAT.md).

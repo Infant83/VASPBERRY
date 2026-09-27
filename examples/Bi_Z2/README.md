@@ -1,4 +1,4 @@
-# Bi 12 x 12 Fukui-Hatsugai Z2 example
+# Bi 12 x 12 Fukui–Hatsugai (FH) Z2 example
 
 This example demonstrates the official VASPBERRY `-z2 1` path on a buckled
 honeycomb Bi test structure. It evaluates the two-dimensional Z2 invariant by

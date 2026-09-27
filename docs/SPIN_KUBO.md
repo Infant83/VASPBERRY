@@ -1,6 +1,8 @@
-# Spin-sector Kubo curvature on a path and a full mesh
+<a id="spin-sector-kubo-curvature-on-a-path-and-a-full-mesh"></a>
 
-Use native `--task spin-kubo` to calculate the Berry-curvature approximation
+# Spin-sector Kubo-formula Berry curvature on a path and a full mesh
+
+Use native `--task spin-kubo` to calculate the Kubo-formula Berry-curvature approximation
 of the positive and negative projected-spin sectors at each supplied k point.
 It supports internally degenerate selected bands and includes the change of
 the spin-sector basis with k. VASPBERRY performs the calculation in Fortran;
@@ -8,8 +10,9 @@ Python is optional for drawing the resulting CSVs.
 
 This native task is available in VASPBERRY 1.6.1.
 Its canonical-momentum derivative approximation is intended for resolved
-curvature and comparisons. A separate [Fukui spin-Chern calculation](SPIN_CHERN.md)
-establishes the geometric sector Chern numbers on a complete periodic mesh.
+curvature and comparisons. A separate [spin Chern number calculation](SPIN_CHERN.md) uses the
+Fukui–Hatsugai–Suzuki (FHS) link-variable method to evaluate the geometric
+sector Chern numbers on a complete periodic mesh.
 
 ## 1. Build VASPBERRY
 
@@ -59,7 +62,9 @@ Skip lines starting with `#`, but retain them with the data as provenance.
 The path distance follows the input order. It is useful for a band path; the
 same column on an unordered full mesh is not a symmetry-path coordinate.
 
-## 3. Compare a full mesh with Fukui
+<a id="3-compare-a-full-mesh-with-fukui"></a>
+
+## 3. Compare full-mesh results with Chern numbers from the FHS method
 
 Use a **separate full periodic VASP mesh**, with the same Hamiltonian, selected
 band space and analysis axis. In its directory:
@@ -94,8 +99,9 @@ mpiexec -n 4 "$VB" --task spin-kubo --bands 9:10 --output PAIR
 ```
 
 In the Bi example this range selects a degenerate pair and gives rank-one
-positive and negative spin sectors. A group's Chern number can be assigned
-to one spin-resolved branch only when that branch is globally well defined.
+positive and negative spin sectors. A sector Chern number can be associated
+with one spin-resolved branch only when the sector has rank one and is globally
+well defined.
 For generic spin mixing, a projected-spin vector need not coincide with one
 nondegenerate energy eigenstate. A rank-five sector is a five-state subspace,
 not a single numbered band.
@@ -131,7 +137,7 @@ converging the source eigenstates is a separate check.
 
 - [Graphene SOC](../examples/materials/graphene-spin-chern/kubo/): a genuine
   Γ–K–M–Γ path, opposite occupied-sector curvature, and a tiny-gap example
-  showing why a coarse pointwise integral need not resemble a quantized Chern.
+  showing why a coarse pointwise integral need not resemble a quantized Chern number.
 - [Bi bilayer](../examples/materials/bi-spin-hall/spin-chern-kubo/): compare
   the complete occupied space with an isolated topmost degenerate pair. The
   invariants belong to different projectors and need not be equal.
@@ -140,7 +146,7 @@ These examples retain native CSVs, optional plotting commands and the actual
 VASP source identities. `result_status=PASS` certifies successful execution
 of the declared numerical checks; it is not a full-PAW or continuum accuracy
 certificate. A sampled energy/spin gap alone does not establish global band
-connectivity: the graphene pair example records a failed Fukui link check
+connectivity: the graphene pair example records a failed FHS link check
 and does not assign that pair a Chern number.
 
 ## Mathematical contract and approximation
@@ -196,7 +202,7 @@ whitening of unequal-energy states as an unchanged energy eigenbasis.
 Independent analytic Hamiltonian tests compare all three native tensor
 components with small geometric sector loops, include a nonzero spin-mixing
 contribution, test nonorthogonal frame changes, and compare full-BZ integrals
-with Fukui integers. This validates the kernel; it does not remove the
+with Chern numbers computed independently using the FHS method. This validates the kernel; it does not remove the
 material calculation's operator and sampling approximations.
 
 The projected-spin construction follows
@@ -206,7 +212,7 @@ and from [PROCAR-weighted character attribution](POSTPROCESSING.md).
 
 ## Material convergence examples
 
-- [Bi: mesh, retained intermediate states and source quality](../examples/materials/bi-spin-hall/spin-chern-kubo/convergence/) uses `--sum-bands` on unchanged WAVECAR files and compares the raw integral with independently evaluated Fukui sectors.
+- [Bi: mesh, retained intermediate states and source quality](../examples/materials/bi-spin-hall/spin-chern-kubo/convergence/) uses `--sum-bands` on unchanged WAVECAR files and compares the raw integral with sector Chern numbers independently evaluated using the FHS method.
 - [Graphene: resolving a tiny SOC peak](../examples/materials/graphene-spin-chern/kubo/convergence/) adds actual VASP valley points, native curvature, local overlap flux and solver controls. The local integrals do not cover the entire BZ.
 
 The [technical report, Section 3.10](TECHNICAL_REPORT.md#310-follow-up-convergence-tests) interprets these numerical controls together.

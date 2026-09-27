@@ -3,7 +3,7 @@
 This example starts from an actual two-atom buckled Bi bilayer calculated with
 VASP, including spin–orbit coupling. It connects three different calculations:
 
-1. The occupied-band Fukui–Hatsugai **Z₂ invariant** and integer n-field.
+1. The occupied-band Fukui–Hatsugai (FH) **Z₂ invariant** and integer n-field.
 2. The **conventional intrinsic spin Hall conductivity**, using PAW spin and
    full velocity matrices from the same VASP calculation.
 3. A supporting **edge-state check of Z₂ = 1**, using an ideal strip of a
@@ -170,7 +170,9 @@ it also assembles a full WAVECAR for the topology calculation. The supplied
 producer and Python response integration run serially. Independent chunks can
 run concurrently within available CPU and memory limits.
 
-## 3. Fukui Z₂ and the n-field
+<a id="3-fukui-z₂-and-the-n-field"></a>
+
+## 3. Z₂ with the FH n-field method
 
 The native invariant needs only an ordinary full-mesh WAVECAR. To generate
 it without the optional spin/velocity producer, restore the same fresh SCF
@@ -295,7 +297,7 @@ mesh, empty-state and finite-band spin-current approximation limits.
 
 ## Projected-spin geometry of occupied and selected subspaces
 
-The [native spin-sector Kubo/Fukui comparison](spin-chern-kubo/README.md) uses
+The [native spin-sector Kubo/FHS comparison](spin-chern-kubo/README.md) uses
 the occupied space and the top degenerate pair, with an ordinary-VASP symmetry
 path and full-BZ native outputs. These geometric sector quantities are distinct
 from the conventional spin-current Hall response above.

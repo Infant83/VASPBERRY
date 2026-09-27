@@ -10,7 +10,7 @@ bands 1–10 and empty bands 11–18. The ideal time-reversal-symmetric total
 charge-Hall response is zero; this fixed input and finite pair sum give a
 small residual, documented below. This is an installation/workflow
 demonstration with a real VASP input, not a convergence study.
-Its Kubo pair integral is distinct from the occupied-subspace Fukui result
+Its Kubo pair integral is distinct from the occupied-subspace FHS result
 shown in the [insulating Hall example](../hall-valley/README.md).
 
 ## Choose how far to go

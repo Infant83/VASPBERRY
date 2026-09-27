@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plot a reportable VASPBERRY Fukui-Hatsugai integer n-field."""
+"""Plot a reportable VASPBERRY Fukui–Hatsugai (FH) n-field."""
 
 from __future__ import annotations
 
@@ -225,7 +225,7 @@ def draw_field(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Plot a VASPBERRY Fukui-Hatsugai integer n-field.",
+        description="Plot a VASPBERRY Fukui–Hatsugai (FH) n-field.",
     )
     parser.add_argument("field_csv", type=Path, help="Z2_FIELD.csv input")
     parser.add_argument(
@@ -251,7 +251,7 @@ def main() -> int:
         ncol=3, frameon=False,
     )
     fig.suptitle(
-        "Fukui-Hatsugai integer n-field\n"
+        "Fukui–Hatsugai (FH) n-field\n"
         f"{nx} x {ny} fundamental mesh; Z2 = {z2}; result: PASS",
         fontsize=14, y=0.97,
     )

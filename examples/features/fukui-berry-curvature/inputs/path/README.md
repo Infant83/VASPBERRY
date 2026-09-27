@@ -44,9 +44,9 @@ The expected occupied–unoccupied gap is about 1.67355 eV. The demonstrated
 single-process calculation took about 55 seconds with a peak resident memory
 of 367 MB; costs depend on the VASP build and hardware.
 
-The band dispersion is shared by the Fukui and Kubo figures. The Fukui curve
+The band dispersion is shared by the FHS and Kubo figures. The FHS curve
 is extracted from the occupied-subspace plaquette field; its sampling is
-described in the [Fukui tutorial](../../README.md). Individual-band Kubo
+described in the [FHS tutorial](../../README.md). Individual-band Kubo
 curvature is undefined at degeneracies, so near-degenerate points must be
 masked as described in the [Kubo tutorial](../../../kubo-curvature/README.md).
 

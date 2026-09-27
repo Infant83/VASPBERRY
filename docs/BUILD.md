@@ -382,7 +382,7 @@ unowned field entries at zero; the fields and half-zone sums are reduced with
 guards and broadcasts the integer pass/fail status before all ranks continue or
 abort.
 
-All remaining `REAL*8` collective buffers in the legacy Chern, spectrum,
+All remaining `REAL*8` collective buffers in the legacy Chern-number, spectrum,
 optical-selectivity, and Kubo paths also use `MPI_DOUBLE_PRECISION`; the
 optional implementation-specific `MPI_REAL8` name is not required. Output
 array arguments use real arrays even in branches that do not inspect them, so

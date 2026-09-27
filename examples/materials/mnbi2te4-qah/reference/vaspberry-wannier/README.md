@@ -13,7 +13,7 @@ The final calculation gives **σxy = 1.0003849781827807 e²/h** at each of the
 three calculated chemical potentials inside the gap. Its 27,600 weighted
 points cover the full two-dimensional torus: an 80×80 base grid with 9×9
 subdivision of cells selected within 0.18 Å⁻¹ of periodic Γ. The response
-is not rounded or symmetrized. The independent direct-wavefunction Fukui
+is not rounded or symmetrized. The independent direct-wavefunction FHS
 result is C = −1, which corresponds to positive sheet σxy in this convention.
 
 | Base grid | Local subdivision | Radius (Å⁻¹) | Points | VASPBERRY σxy/(e²/h) |

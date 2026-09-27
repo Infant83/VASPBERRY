@@ -2,7 +2,9 @@
 
 Version 1.4.0 is available as a versioned source release. Preserve the exact producer
 version/commit and original files when migrating a calculation. The existing
-Fukui and Z2 command-line interfaces remain available.
+Chern-number interface based on the Fukui–Hatsugai–Suzuki (FHS) method and
+Z₂ interface based on the separate Fukui–Hatsugai (FH) n-field method remain
+available.
 
 ## Version 1.4.0 commands, projections and velocity fixes
 
@@ -32,8 +34,8 @@ allocated range. The corrected routine reports the bare canonical-momentum
 expectation in **m/s**, uses valid extrema indices, and prints scientific notation.
 Regenerate old `VEL_EXPT*.dat` from WAVECAR; do not infer physical zero velocity
 from those old rounded values. It remains a pseudo-wavefunction momentum
-diagnostic, not the full PAW/nonlocal/SOC/U group velocity. Separate Kubo
-curvature/pair kernels are unchanged by the velocity correction, and no new
+diagnostic, not the full PAW/nonlocal/SOC/U group velocity. Separate Kubo-formula
+Berry-curvature/pair kernels are unchanged by the velocity correction, and no new
 factor should be applied to their outputs.
 
 ## Legacy Kubo factor of two
@@ -56,7 +58,7 @@ not a guarantee of physical velocity completeness or mesh convergence.
 | Confirmed affected older Fortran Kubo output | Import with the explicit historical doubled convention |
 | Corrected 1.3.0 Fortran Kubo output | Import as standard normalization |
 | Generic interband-matrix Kubo result using `-2 Im` | Already normalized; do not divide by two again |
-| Fukui plaquette flux / Z2 n-field | Unaffected by this Kubo correction |
+| FHS plaquette flux / FH Z₂ n-field | Unaffected by this Kubo correction |
 | Unknown or modified producer | Establish its formula from source/provenance before importing |
 
 The `import-legacy` command requires an explicit source convention. It does
@@ -124,12 +126,12 @@ line-mode calculation into a two-dimensional integration mesh. See the
 
 ## Choose the correct output kind
 
-- Keep Fukui flux in radians with its cell and vertex-energy interpretation.
+- Keep Berry flux from the FHS method in radians with its cell and vertex-energy interpretation.
   Its old output is not an input to the point-curvature importer.
 - Use the standardized point-curvature NPZ/JSON pair for the new `hall`
   command. Arrays and metadata travel together; the JSON binds the NPZ bytes
   by checksum.
-- Carry the actual energy reference and occupations. A selected-band Chern
+- Carry the actual energy reference and occupations. A selected-band Chern number
   sum is not a replacement for a chemical-potential-dependent metal response.
 - Preserve invalid or experimental status. Converting storage formats does
   not turn a failed matrix check into a validated physical calculation.

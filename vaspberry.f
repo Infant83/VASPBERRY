@@ -55,7 +55,7 @@
 ! version 1.6.0 automatic WAVECAR spinor layout with checked -s
 !               : 2026. Sep. 27. H.-J. Kim
 ! release 1.5.1 patch numbering correction; calculation unchanged
-! version 1.6.1 projected-spin Chern, Kubo sectors and sum cutoff
+! version 1.6.1 projected-spin Chern numbers, Kubo sectors and sum cutoff
 !               : 2026. Sep. 27. H.-J. Kim
 ! last update and bug fixes : 2026. Sep. 27.
 
@@ -1983,7 +1983,7 @@
       else
        write(6,'(A)')'# Z2 PASS field staged; awaiting NFIELD output'
       endif
-      write(6,'(A,ES13.5)')'# Z2 field total Chern: ',totalchern
+      write(6,'(A,ES13.5)')'# Z2 field total Chern number: ',totalchern
       write(6,'(A,ES13.5)')'# Z2 field minimum link s.v.: ',minsv
       write(6,'(A,ES13.5)')'# Z2 field max TR flux residual: ',
      &                     maxfluxres
@@ -6036,7 +6036,8 @@
       write(6,*)"#for closed loop C on a small patches in k-space,"
       write(6,*)"#and (2) degree of optical selectivity between "
       write(6,*)"#two bands specified, and (3) a 2D Z2 invariant by"
-      write(6,*)"#the Fukui-Hatsugai lattice n-field method."
+      write(6,*)"#the Fukui-Hatsugai (FH) lattice n-field method."
+      write(6,*)"#Chern numbers use Fukui-Hatsugai-Suzuki (FHS) links."
       write(6,*)" "
       write(6,*)"#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       write(6,*)"#! Copyright 2015. Hyun-Jung Kim All rights reserved.!"
@@ -6294,20 +6295,21 @@
       write(6,*)"  build/vaspberry --help"
       write(6,*)"  build/vaspberry-gfortran remains a compatibility alias."
       write(6,*)" "
-      write(6,*)"*Tasks (--task NAME; default: chern / Fukui):"
-      write(6,*)"  chern          Fukui links on a full periodic 2D mesh"
+      write(6,*)"*Tasks (--task NAME; default: chern / FHS method):"
+      write(6,*)"  chern          Chern number via FHS links on a full periodic 2D mesh"
       write(6,*)"  spin-kubo      approximate spin-sector local curvature"
       write(6,*)"    --bands 1:N; arbitrary k list/path by default"
       write(6,*)"    --sum-bands N: sum within source bands 1:N (default all)"
       write(6,*)"    Explicit --mesh NX,NY additionally estimates integrals"
       write(6,*)"    Writes SPIN_KUBO.csv and SPIN_KUBO_SPECTRUM.csv"
-      write(6,*)"  spin-chern     projected-spin sectors, native links"
+      write(6,*)"  spin-chern     projected-spin Chern numbers via FHS links"
       write(6,*)"    --bands 1:N --mesh NX,NY --spin-axis z"
       write(6,*)"    --outcar OUTCAR (default); --spin-axis x|y|z|a,b,c"
       write(6,*)"    --energy-gap-tol 1e-8 (eV); --spin-gap-tol 1e-6"
       write(6,*)"    Writes SPIN_CHERN/BERRY/SPECTRUM.csv; pseudo metric"
-      write(6,*)"  z2             native n-field Z2 (-z2 1; limits below)"
-      write(6,*)"  kubo           point curvature on supplied k points"
+      write(6,*)"  z2             FH n-field Z2 invariant (-z2 1; limits below)"
+      write(6,*)"  kubo           Berry curvature from the Kubo formula"
+      write(6,*)"                 Evaluated at the supplied k points."
       write(6,*)"                 (-kubo 2; kubo-line is a synonym)"
       write(6,*)"                 No integer expectation on a path."
       write(6,*)"  kubo-integral  legacy integration diagnostic (-kubo 1)"
@@ -6321,6 +6323,8 @@
       write(6,*)"                 Existing Gamma-only reconstruction."
       write(6,*)"  velocity       velocity expectation (-vel 1)"
       write(6,*)"  --task rejects conflicting legacy task options."
+      write(6,*)"  FHS = Fukui-Hatsugai-Suzuki method for Chern numbers."
+      write(6,*)"  FH = Fukui-Hatsugai n-field method for the Z2 invariant."
       write(6,*)" "
       write(6,*)"*Readable aliases (each takes a separate value):"
       write(6,*)"  --wavecar PATH            -f PATH"
@@ -6490,7 +6494,7 @@
       write(6,*)"                  : no PAW/nonlocal velocity terms."
       write(6,*)"                  : Isolated bands and k/NBANDS"
       write(6,*)"                  : convergence are required."
-      write(6,*)"                  : -kubo 2 has no Chern integral."
+      write(6,*)"                  : -kubo 2 has no BZ curvature integral."
       write(6,*)"                  : Pre-1.3 Kubo values divide by 2;"
       write(6,*)"                  : never divide new outputs again."
       write(6,*)" -kubo_pairs PATH : Export all unordered source-band"

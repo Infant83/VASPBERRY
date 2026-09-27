@@ -6,7 +6,7 @@ are in [`../inputs/`](../inputs/).
 
 | Directory or file | Calculation |
 |---|---|
-| `z2/` | Native occupied-band Fukui–Hatsugai n-field, Z₂ = 1 |
+| `z2/` | Native occupied-band Fukui–Hatsugai (FH) n-field, Z₂ = 1 |
 | `fukui/` | Separate full occupied-bundle Chern calculation, C = 0 |
 | `hall-6x6-b48/`, `hall-12x12-b48/` | Full 48-band PAW matrix integration on each full mesh |
 | `hall-6x6-b48-cap*/` | Retained-band study on the same 48-band source |

@@ -7,8 +7,8 @@
       "bytes": 2488
     },
     "README.md": {
-      "sha256": "fb8d721db05e9995cce88415af690467f51940b70df142c02279c4acf4cca13e",
-      "bytes": 6083
+      "sha256": "24b9066930f6de3f85004b44aa639db7a7e93cf7387fb7a105cfbbdcd9bbb1bf",
+      "bytes": 6184
     },
     "reference/summary.json": {
       "sha256": "ca85d7489c4e15adc75ec4e7a25c39aa5163bcdd57ac0becd3d5472987094808",
@@ -19,7 +19,7 @@
       "bytes": 10565
     },
     "reference/plotting.json": {
-      "sha256": "fbabf8cda6ea4ef06587fc80e1c6c66c86fa5f93ed8b02b48206db2466b34d91",
+      "sha256": "dfd8d208bfdbc01ae9965dde2dc2d23769c55f33c775013bea71b382cecd6182",
       "bytes": 3346
     },
     "reference/all48-energy-comparison.json": {
@@ -31,20 +31,20 @@
       "bytes": 8875
     },
     "reference/figure.svg": {
-      "sha256": "4985c3f9cb58b30ee17df78b4268d38d57d7c3a6093b3fada5311a22118c372a",
-      "bytes": 188484
+      "sha256": "720282cb54fd12589267190634f789b15c6923c5ab95c8dceedf2a6b8f075556",
+      "bytes": 188567
     },
     "reference/comparison.csv": {
       "sha256": "4ae63c674f513c3c3b974a6c2d71be519f9cd422f214d5c4c9d1578a911ac596",
       "bytes": 327
     },
     "reference/figure.pdf": {
-      "sha256": "eb66b13164bdd4f9f77ff242a2b130c33c6482a87ee7fc26ae9b4810610e8c6c",
-      "bytes": 58467
+      "sha256": "75b0555805575589daa610a4cdd33d4bd886425d191238c22035cc78c4c9a0df",
+      "bytes": 58502
     },
     "reference/figure.png": {
-      "sha256": "7b136924f9b24df6d59dc20d0d6a01bc1dab8df753a3dea0f70c25ff369cd1d3",
-      "bytes": 429726
+      "sha256": "b85476f32a7c566a4d6def734abda286f221f768d15f4d806b402f09067497f9",
+      "bytes": 429862
     },
     "reference/pair-path/SPIN_KUBO_SPECTRUM.csv": {
       "sha256": "d0d643b232e27321810fb1a0d7419f94443e02199502dc8a7dab865a798dc98b",
@@ -125,6 +125,6 @@
   },
   "shared_plot_script": {
     "path": "examples/materials/graphene-spin-chern/kubo/plot.py",
-    "sha256": "7e383e84e23fed34d5e264395399734f547b8b920b737f70b5dca8ce87908606"
+    "sha256": "0a6973b2d2e1eaa0d492214d0ab5f572815fd76cf64e104dcba6b7b3acb8a7f4"
   }
 }

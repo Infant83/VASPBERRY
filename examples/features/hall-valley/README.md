@@ -15,7 +15,7 @@ For a two-dimensional insulator,
 C=\frac{1}{2\pi}\int_{\mathrm{BZ}}\mathrm{Tr}\,\Omega_z(\mathbf{k})\,d^2k.
 ```
 
-The Fukui method evaluates the occupied-subspace flux from determinants of
+The Fukui–Hatsugai–Suzuki (FHS) method evaluates the occupied-subspace flux from determinants of
 neighboring wavefunction overlaps. Internal Kramers degeneracies are retained
 within the occupied subspace; a gap is required between occupied and empty
 states. This is appropriate for the supplied Bi data, whose individual

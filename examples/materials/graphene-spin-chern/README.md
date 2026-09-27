@@ -188,5 +188,5 @@ material Hamiltonian when using this workflow for a research prediction.
 ## Local projected-spin curvature
 
 The [native spin-sector Kubo example](kubo/README.md) adds real path curves and
-raw full-mesh differential-proxy sums beside these Fukui invariants. Its CSVs
+raw full-mesh differential-proxy sums beside these spin Chern numbers. Its CSVs
 retain the approximation and sampling limits explicitly.

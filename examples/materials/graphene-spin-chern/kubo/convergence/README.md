@@ -15,7 +15,7 @@ The outputs distinguish three calculations:
 | Dashed Dirac curves | A diagnostic local model fitted to the measured energy dispersion; not an additional VASP result |
 
 Neither a local polygon flux nor a radial point sum is a full-BZ Chern number.
-The separate occupied-space Fukui calculation in the parent example gives
+The separate occupied-space FHS calculation in the parent example gives
 `C_plus=1`, `C_minus=-1` on the complete periodic BZ.
 
 ## Reproduce the ordinary VASP and native calculations
@@ -145,7 +145,7 @@ The coarse uniform 12×12 grid puts a huge weight on a peak whose measured width
 is only about 8.3×10⁻⁸ Å⁻¹. This accounts for the enormous point-sum sensitivity;
 the independently observed ~5.5% local amplitude difference is a separate
 approximation issue. In particular, refinement does not imply that a canonical
-Kubo integral must become the exact Fukui integer.
+Kubo integral must become the spin Chern number evaluated with FHS.
 
 On the same 16-band WAVECAR, `--sum-bands 10`, `12`, and the default `16` give
 maximum xy-sector relative changes of 1.13×10⁻¹⁰ (10→16) and 1.51×10⁻¹¹ (12→16).

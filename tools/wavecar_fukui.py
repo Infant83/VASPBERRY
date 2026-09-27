@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read a VASP WAVECAR and evaluate 2D Fukui plaquette phases.
+"""Read a VASP WAVECAR and evaluate 2D Fukui-Hatsugai-Suzuki (FHS) plaquette phases.
 
 This is a deliberately small, read-only validation program.  Its conventions
 match VASPBERRY 1.0:
@@ -649,7 +649,7 @@ def compute_cumulative_band_maps(
     grid: Grid,
     max_band: int,
 ) -> dict[int, tuple[np.ndarray, LinkSet, LinkSet]]:
-    """Return Fukui maps for every gauge-covariant subspace 1:n, n<=N."""
+    """Return FHS maps for every gauge-covariant subspace 1:n, n<=N."""
 
     xlinks = compute_cumulative_links(wavecar, grid, max_band, axis=0)
     ylinks = compute_cumulative_links(wavecar, grid, max_band, axis=1)
@@ -2654,7 +2654,7 @@ def plot_k_resolved_maps(
         else "Cartesian first Brillouin zone"
     )
     fig.suptitle(
-        "WAVECAR-direct Fukui maps in " + domain_title
+        "WAVECAR-direct FHS maps in " + domain_title
         + " (raw maps include quality diagnostics)"
     )
     output = output_dir / "wavecar_fukui_kresolved.png"

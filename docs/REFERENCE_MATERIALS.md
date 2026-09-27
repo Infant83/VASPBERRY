@@ -13,10 +13,15 @@ conventions and regression evidence behind that exercise.
 
 ## Reference map
 
+Chern-number examples use the Fukui–Hatsugai–Suzuki (FHS) link-variable
+method. Z₂ examples use the separate Fukui–Hatsugai (FH) n-field method.
+The Kubo-formula examples evaluate Berry curvature and response from
+interband matrix elements.
+
 | Topic | Actual VASP exercise and reference | Supplementary reference | Use in a guide or report |
 |---|---|---|---|
-| Fukui / Chern | [MoS₂ curvature map](../examples/features/fukui-berry-curvature/), [Bi Chern number](../examples/features/fukui-chern/) | [QWZ phases](../validation/models/fukui-chern/) | Explain local valley curvature, lattice flux, Chern phases and Hall sign |
-| Kubo curvature | [MoS₂ band path](../examples/features/kubo-curvature/) | [Analytic matrix curvature](../validation/models/kubo-curvature/) | Explain the curvature formula, units and comparison with an independent exact model |
+| FHS method / Chern numbers | [MoS₂ curvature map](../examples/features/fukui-berry-curvature/), [Bi Chern number](../examples/features/fukui-chern/) | [QWZ phases](../validation/models/fukui-chern/) | Explain local valley curvature, lattice flux, phases with nonzero Chern number and Hall sign |
+| Kubo-formula Berry curvature | [MoS₂ band path](../examples/features/kubo-curvature/) | [Analytic matrix curvature](../validation/models/kubo-curvature/) | Explain the curvature formula, units and comparison with an independent exact model |
 | Charge Hall / regions | [Bi insulating-gap response](../examples/features/hall-valley/) | [Model occupations and regions](../validation/models/hall-valley/) | Explain occupation weighting and regional/band sum rules; Bi demonstrates a zero charge-Hall plateau |
 | Z₂ | [Bi WAVECAR recalculation](../examples/features/z2/) | [Stored Bi field validation](../validation/models/z2/) | Explain field diagnostics, historical comparison and plotting separately from recalculation |
 | Optical response | [MoS₂ spectra](../examples/features/circular-dichroism/) | [Synthetic angular selectivity](../validation/models/circular-dichroism/) | Explain polarization conventions and an analytic angular-response check |
@@ -40,7 +45,7 @@ WAVECAR calculation.
    method or convention; the different datasets need not share numerical
    curves or parameter values.
 
-For example, the QWZ references help explain nonzero Chern phases and numerical
+For example, the QWZ references help explain phases with nonzero Chern number and numerical
 integration. The supplied Bi example has occupied C = 0 and Z₂ = 1, while the
 MoS₂ path has insufficient sampling for a Brillouin-zone Hall integral. Model
 figures therefore complement these exercises without supplying missing

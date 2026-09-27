@@ -2,12 +2,12 @@
   "status": "PASS",
   "files": {
     "plot.py": {
-      "bytes": 3516,
-      "sha256": "4f5e4d197f47badcdc37a07586d4ed3dd6a5f65f945e8c6f8dde2656288c45f3"
+      "bytes": 3523,
+      "sha256": "b90ce9a74787ff4244904d7e8d33e5ec206869ce239f58c52df16f098fc4e2ec"
     },
     "README.md": {
-      "bytes": 8301,
-      "sha256": "73fca5a129aeab51b0b78cf3fc7805c32f9114e77a2b72a87983f1c3f52e3f3c"
+      "bytes": 8402,
+      "sha256": "e7ab1396dde7401719e3266c65c8634aafeaef56481517111939cc4780148a49"
     },
     "reference/provenance.json": {
       "bytes": 51647,
@@ -15,7 +15,7 @@
     },
     "reference/plotting.json": {
       "bytes": 596,
-      "sha256": "9ed2dc9b60c37378d4713cd56f2209e025f70d475406a9068336746a59e96758"
+      "sha256": "59efb0091ba648bf6e1664bb8eea5e726bd4d1e1fb9a37b82c6001723cfb8362"
     },
     "reference/native-oracle-flux-comparison.json": {
       "bytes": 648,
@@ -34,20 +34,20 @@
       "sha256": "e52ec39a8dfea321e793cbcfdf4705b32d534663921dad4831b385fbb9212645"
     },
     "reference/figure.svg": {
-      "bytes": 123622,
-      "sha256": "10888d6b371a4ac4cb04e550c3dc7915df15a7211fbc4560cc94f895af7c1d56"
+      "bytes": 124696,
+      "sha256": "92a69b5a1bbb7ae7837480802d136c7762c76f8cf9b3071e2020b1a153719a23"
     },
     "reference/curvature-diagnostics.json": {
       "bytes": 12995,
       "sha256": "935a199a1a5b3c4bce586d1a18583f21d428904a6a6923683e95e1fa957fd173"
     },
     "reference/figure.pdf": {
-      "bytes": 28411,
-      "sha256": "7a8e109d2a0276f55d966166f92243617e503cfe2f5159ed9b30c5b215e7b7e1"
+      "bytes": 28404,
+      "sha256": "b47198ea4fa1765e6ffbc397065dea5c1127c839212f7b39e6ecd752e22abb06"
     },
     "reference/figure.png": {
-      "bytes": 259941,
-      "sha256": "44716a212bfb264e2cf42768a52dbb5ca0e804704cab9906b63c17156a478834"
+      "bytes": 262637,
+      "sha256": "e90d1983609bd007db21b3f9445b00fd91b5a8f184dfe4b1b1af99bdad20d466"
     },
     "reference/mesh12-source64-occupied-cap48/summary.json": {
       "bytes": 1454,

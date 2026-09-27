@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Plot native Berry curvature in the Cartesian reciprocal Wigner-Seitz cell.
 
-Native Fukui values are drawn as constant plaquette averages. No interpolation
+Native FHS values are drawn as constant plaquette averages. No interpolation
 or smoothing is applied. The current interface supports reciprocal planes
 parallel to Cartesian xy, with reciprocal vectors including 2*pi.
 """
@@ -259,7 +259,7 @@ def read_native_curvature(path, reciprocal):
             header = line.lstrip().upper()
             if (header.startswith("# KUBO") or "SCHEMA=VASPBERRY_BARE_MOMENTUM_KUBO" in header
                     or (header.startswith("#") and "BERRY CURVATURE" in header and "KUBO" in header)):
-                raise ValueError("this plotter expects Fukui plaquette averages, not Kubo point data")
+                raise ValueError("this plotter expects FHS plaquette averages, not Kubo point data")
     raw = np.loadtxt(path)
     if raw.ndim != 2 or raw.shape[1] != 7 or not np.isfinite(raw).all():
         raise ValueError("expected native seven-column BERRYCURV.dat")
@@ -267,7 +267,7 @@ def read_native_curvature(path, reciprocal):
     tolerance = 5.1e-7 * (1 + np.abs(reciprocal).sum(axis=0))
     if np.any(abs(raw[:, :3] - raw[:, 4:] @ reciprocal) > tolerance):
         raise ValueError("BERRYCURV coordinates disagree with the supplied POSCAR lattice")
-    # Fukui flux/positive cell area is the component along b1 x b2.
+    # FHS flux/positive cell area is the component along b1 x b2.
     # Express the displayed scalar as Cartesian Omega_z also for reversed bases.
     return raw[:, 4:], raw[:, 3] * np.sign(np.linalg.det(basis))
 

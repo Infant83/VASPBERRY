@@ -5,14 +5,14 @@ calculations for nonmagnetic monolayer MoS₂ with spin–orbit coupling.
 
 | Dataset | Sampling and supplied files | Tutorial |
 |---|---|---|
-| Full Brillouin zone | Γ-centered 12 × 12 × 1 mesh; public SCF density and executable NSCF preparation, current native result and historical `BERRYCURV.dat`. Generate the 149 MB mesh WAVECAR using licensed VASP. | [Fukui Berry-curvature map](../features/fukui-berry-curvature/) |
+| Full Brillouin zone | Γ-centered 12 × 12 × 1 mesh; public SCF density and executable NSCF preparation, current native result and historical `BERRYCURV.dat`. Generate the 149 MB mesh WAVECAR using licensed VASP. | [FHS Berry-curvature map](../features/fukui-berry-curvature/) |
 | K–Γ–K′ path | 48 k points, 32 spinor bands; actual `KPATH/2.band/WAVECAR`, VASP energies and calculation records. | [Kubo curvature](../features/kubo-curvature/), [circular optical response](../features/circular-dichroism/) |
 | Γ-point state | Records 24 and 25 of the path WAVECAR are Γ. | [Real-space wavefunction](../features/wavefunction/) |
 
-## Fukui curvature over the first Brillouin zone
+## FHS curvature over the first Brillouin zone
 
 The occupied 1–18 subspace has opposite-sign Berry curvature near K and K′,
-while the total Chern number vanishes. The [Fukui tutorial](../features/fukui-berry-curvature/)
+while the total Chern number vanishes. The [FHS tutorial](../features/fukui-berry-curvature/)
 provides the complete public-density NSCF preparation and current native
 reference: 400 eV cutoff, 26 SOC bands, occupied bands 1–18, curvature about
 ±12.31 Å² and C = 0. Its [input guide](../features/fukui-berry-curvature/inputs/)
@@ -33,7 +33,7 @@ python3 tools/plot_berry_curvature.py \
 ```
 
 This command redraws the historical result. For a new calculation, generate
-a full-mesh SOC WAVECAR and use the [step-by-step Fukui tutorial](../features/fukui-berry-curvature/).
+a full-mesh SOC WAVECAR and use the [step-by-step FHS tutorial](../features/fukui-berry-curvature/).
 The path WAVECAR cannot be substituted for a two-dimensional mesh.
 
 ## VASP preparation

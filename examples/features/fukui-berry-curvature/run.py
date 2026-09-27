@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""MoS2 Fukui curvature: calculate from a full WAVECAR mesh or replot its archive."""
+"""MoS2 FHS curvature: calculate from a full WAVECAR mesh or replot its archive."""
 from __future__ import annotations
 
 import argparse

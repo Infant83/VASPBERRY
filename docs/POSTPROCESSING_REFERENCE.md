@@ -191,7 +191,7 @@ cutoff must not split an unresolved group, and its highest band must be
 unoccupied within the numerical tolerance (10⁻⁸). These checks do not
 replace convergence of the source bands, pair window, k mesh and operator
 approximation. Controls such as explicit degeneracy coalescing or partial
-band acceptance are not INI keys; see [advanced Kubo commands](KUBO_TRANSPORT.md).
+band acceptance are not INI keys; see [advanced Kubo-formula transport commands](KUBO_TRANSPORT.md).
 
 ## Commands, saved results and reuse
 
@@ -246,7 +246,7 @@ front end are saved metadata/caches, not additional settings to author.
 | `region ... has no sampled points` | Check reciprocal basis, sampled plane and radius/IDs. A name such as M does not add a k point. |
 | Regions overlap or touch | Define disjoint regions; disks must also be geometrically separated under periodicity. |
 | `highest ... band occupied` / cutoff splits a group | Increase the retained/source band window as appropriate, or reconsider a scan extending beyond that window; converge the virtual-state sum. |
-| Unequal occupation in an unresolved pair | Review the source gaps and μ/T/reference. See [Kubo numerical policy](KUBO_TRANSPORT.md); no INI key silently bypasses the check. |
+| Unequal occupation in an unresolved pair | Review the source gaps and μ/T/reference. See [Kubo-formula numerical policy](KUBO_TRANSPORT.md); no INI key silently bypasses the check. |
 | PROCAR/OUTCAR mismatch or unresolved individual-state gap | Use files from one matching static run and isolated selected bands. Degenerate-band character-weighted Hall cannot be obtained by relabeling groups. |
 | Saved temperature/group absent | Select a value already calculated. Otherwise create a new run, using `--reuse` when source-compatible. |
 | Saved output changed or missing / reuse source mismatch | Restore the original complete result, or calculate a new one. Keep caches with their metadata and the matching WAVECAR for reuse. |

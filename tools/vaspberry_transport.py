@@ -6,7 +6,7 @@ The transport implemented here is the Berry-curvature (Fermi-sea) term
     C(mu,T) = sum_n integral_BZ f(E_nk-mu,T) Omega_n(k) d^2k / (2*pi)
     sigma_xy(mu,T)/(e^2/h) = -C(mu,T)
 
-for a two-dimensional, uniformly sampled *full* Brillouin zone. For Fukui
+for a two-dimensional, uniformly sampled *full* Brillouin zone. For Fukui-Hatsugai-Suzuki (FHS)
 plaquettes, ``Omega*dS`` is weighted by the average Fermi occupation of its four
 vertices. A line-mode calculation, including legacy Kubo path output, is useful
 for plotting but is deliberately rejected for transport.
@@ -369,19 +369,19 @@ def validate_unique_active_bands(bands: Sequence[int]) -> None:
 
 
 def validate_core_chern(core_chern: float, active_bands: Sequence[int]) -> int:
-    """Validate the integer Chern baseline assigned to omitted occupied bands."""
+    """Validate the integer Chern number baseline assigned to omitted occupied bands."""
 
     if not np.isfinite(core_chern):
-        raise ValueError("core Chern baseline must be finite")
+        raise ValueError("core Chern number baseline must be finite")
     nearest = int(np.rint(core_chern))
     if abs(core_chern - nearest) > 5.0e-3:
         raise ValueError(
-            f"core Chern baseline {core_chern:.9g} is not within 0.005 of an integer "
+            f"core Chern number baseline {core_chern:.9g} is not within 0.005 of an integer "
             f"(nearest {nearest})"
         )
     if active_bands and min(active_bands) == 1 and core_chern != 0.0:
         raise ValueError(
-            "a nonzero core Chern baseline is invalid when the active window starts at band 1"
+            "a nonzero core Chern number baseline is invalid when the active window starts at band 1"
         )
     return nearest
 
@@ -652,7 +652,7 @@ def attach_fukui_vertex_energies(
     band: int,
     tolerance: float = 2.0e-5,
 ) -> CurvatureData:
-    """Attach the four EIGENVAL vertex energies of every Fukui plaquette.
+    """Attach the four EIGENVAL vertex energies of every FHS plaquette.
 
     VASPBERRY reports the plaquette center. Its four WAVECAR/EIGENVAL vertices
     are center +/- dk1/2 +/- dk2/2. Fermi weighting therefore uses the
@@ -661,7 +661,7 @@ def attach_fukui_vertex_energies(
     """
 
     if curvature.metadata.get("band_mode") != "single-fukui":
-        raise ValueError("Fukui vertex attachment requires a single-band Fukui curvature map")
+        raise ValueError("FHS vertex attachment requires a single-band FHS curvature map")
     if not 1 <= band <= eigenval.nband:
         raise ValueError(f"band {band} is outside EIGENVAL range 1..{eigenval.nband}")
     validate_requested_band(curvature, band)
@@ -671,7 +671,7 @@ def attach_fukui_vertex_energies(
     eigen_grid = uniform_grid(eigenval.frac, tolerance, "EIGENVAL mesh")
     if curvature_grid.nx < 2 or curvature_grid.ny < 2:
         raise ValueError(
-            f"Fukui transport requires a 2D mesh with Nx,Ny >= 2; "
+            f"FHS transport requires a 2D mesh with Nx,Ny >= 2; "
             f"got {curvature_grid.nx}x{curvature_grid.ny}"
         )
     kz_delta = abs(float(_wrap_fractional(
@@ -716,7 +716,7 @@ def attach_fukui_vertex_energies(
         except KeyError as exc:
             raise ValueError(
                 "EIGENVAL mesh does not contain the four vertices implied by the "
-                f"Fukui center {center.tolist()}"
+                f"FHS center {center.tolist()}"
             ) from exc
 
     curvature.vertex_energies = eigenval.energies[vertices, band - 1]
@@ -800,7 +800,7 @@ def validate_fukui_geometry(
     area_rtol: float = 2.0e-4,
     chern_atol: float = 1.0e-3,
 ) -> tuple[float, float]:
-    """Validate dS and the full-band Fukui Chern sum on the unique mesh."""
+    """Validate dS and the full-band Chern number evaluated with the FHS method on the unique mesh."""
 
     nx, ny = uniform_full_bz_shape(data)
     header_nk = data.metadata.get("nk")
@@ -822,13 +822,13 @@ def validate_fukui_geometry(
     max_flux = float(np.max(np.abs(data.omega * dsk)))
     if max_flux >= 0.8 * math.pi:
         raise ValueError(
-            f"{data.source or '<data>'}: maximum Fukui plaquette flux {max_flux:.6g} rad "
+            f"{data.source or '<data>'}: maximum FHS plaquette flux {max_flux:.6g} rad "
             "is too close to the principal-log branch; use a denser k mesh"
         )
     nearest_chern = int(np.rint(chern))
     if abs(chern - nearest_chern) > 5.0e-3:
         raise ValueError(
-            f"{data.source or '<data>'}: fully occupied single-Fukui Chern {chern:.9g} "
+            f"{data.source or '<data>'}: fully occupied single-band Chern number {chern:.9g} evaluated with the FHS method "
             f"is not within 0.005 of an integer (nearest {nearest_chern}); check mesh, "
             "band isolation, and branch resolution"
         )
@@ -837,8 +837,8 @@ def validate_fukui_geometry(
         float(header_chern), chern, rel_tol=2.0e-4, abs_tol=chern_atol
     ):
         raise ValueError(
-            f"{data.source or '<data>'}: header Chern={float(header_chern):.9g} "
-            f"does not match the unique-grid Fukui sum {chern:.9g}"
+            f"{data.source or '<data>'}: header Chern number={float(header_chern):.9g} "
+            f"does not match the unique-grid FHS sum {chern:.9g}"
         )
     data.metadata["validated_dk_area_A^-2"] = dsk
     data.metadata["validated_unique_grid_chern"] = chern
@@ -964,7 +964,7 @@ def valley_masks(
             f"K and K' disks overlap (2r={2.0 * radius:.6g} A^-1 >= "
             f"separation={center_separation:.6g} A^-1); reduce --valley-radius"
         )
-    # Fukui outputs are already located at plaquette centers.
+    # FHS outputs are already located at plaquette centers.
     k_distance = periodic_cartesian_distance(data.frac, k_center, basis)
     kp_distance = periodic_cartesian_distance(data.frac, kp_center, basis)
     mask_k = (k_distance <= radius) & (k_distance <= kp_distance)
@@ -994,7 +994,7 @@ def integrate_sigma(
 ) -> dict[str, np.ndarray]:
     """Integrate band-resolved curvature on a uniform full 2D BZ.
 
-    Returns both the occupation-weighted Chern integral and the conventional
+    Returns both the occupation-weighted Berry-curvature integral and the conventional
     electron Hall sign, sigma_xy/(e^2/h) = -C_occ.
     """
 
@@ -1008,7 +1008,7 @@ def integrate_sigma(
     if not np.isfinite(isolation_tolerance) or isolation_tolerance < 0.0:
         raise ValueError("isolation tolerance must be finite and nonnegative")
     if not np.isfinite(core_chern):
-        raise ValueError("core Chern baseline must be finite")
+        raise ValueError("core Chern number baseline must be finite")
     active_bands = [
         int(data.metadata["band"])
         for data in datasets
@@ -1017,7 +1017,7 @@ def integrate_sigma(
     if len(active_bands) == len(datasets):
         validate_core_chern(core_chern, active_bands)
     elif abs(core_chern - np.rint(core_chern)) > 5.0e-3:
-        raise ValueError("core Chern baseline must be within 0.005 of an integer")
+        raise ValueError("core Chern number baseline must be within 0.005 of an integer")
     reference = datasets[0]
     for data in datasets:
         validate_finite_curvature(data)
@@ -1047,7 +1047,7 @@ def integrate_sigma(
             raise ValueError(f"{data.source or '<data>'}: unsupported curvature mode {mode!r}")
         if data.vertex_energies is None:
             raise ValueError(
-                f"{data.source or '<data>'}: four Fukui-plaquette vertex energies are "
+                f"{data.source or '<data>'}: four FHS plaquette vertex energies are "
                 "required; attach a matching full-mesh EIGENVAL"
             )
         min_gap = data.metadata.get("min_direct_band_gap_eV")
@@ -1073,7 +1073,7 @@ def integrate_sigma(
             raise ValueError("band datasets are not in the same periodic k-point order")
         data_dsk, _ = validate_fukui_geometry(data)
         if not math.isclose(data_dsk, reference_dsk, rel_tol=2.0e-4, abs_tol=1.0e-10):
-            raise ValueError("band datasets have inconsistent Fukui plaquette areas")
+            raise ValueError("band datasets have inconsistent FHS plaquette areas")
 
     result: dict[str, np.ndarray] = {"mu_eV": np.asarray(mu_values, dtype=float)}
     for region, mask in masks.items():
@@ -1536,7 +1536,7 @@ def build_parser() -> argparse.ArgumentParser:
     sigma_parser.add_argument(
         "--core-chern", type=float,
         help=(
-            "integer Chern baseline of fully occupied bands below the active "
+            "integer Chern number baseline of fully occupied bands below the active "
             "window; must be supplied explicitly when the first active band is >1"
         ),
     )

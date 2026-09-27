@@ -76,7 +76,7 @@ again, apply another distance correction, or rename an arbitrary `_hr.dat`
 file into this format.
 
 This model has 138 spinor functions and **87 occupied model bands**. The
-direct VASP Fukui calculation uses 123 occupied bands. Their difference is
+direct VASP FHS calculation uses 123 occupied bands. Their difference is
 the separately checked deep bundle, original bands 1–36, with C = 0. The
 model's local curvature can still differ from the full 123-band trace.
 

@@ -564,7 +564,7 @@ class TransportTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unsupported curvature mode"):
             vt.integrate_sigma([data], np.array([1.0]), temperature=0.0)
         data.vertex_energies = None
-        with self.assertRaisesRegex(ValueError, "single-band Fukui"):
+        with self.assertRaisesRegex(ValueError, "single-band FHS"):
             vt.attach_fukui_vertex_energies(data, synthetic_eigenval(4, 4), 1)
 
     def test_valley_partition_sums_to_total(self):

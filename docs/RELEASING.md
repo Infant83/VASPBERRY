@@ -84,7 +84,7 @@ retained method edition; new command instructions are in the current guides.
 
 The 1.6.1 publisher validates the version and required feature files, then
 waits for the complete CI, actual Bi, Intel MPI and source-archive installation
-checks on its exact source commit. New spin-Chern/spin-Kubo checks must pass
+checks on its exact source commit. New spin Chern number and spin-sector Kubo-formula checks must pass
 alongside the existing tasks. It preserves prior active release tags and
 refuses a conflicting tag or an advanced default branch. Current downloads
 use 1.6.1; the [validation record](VALIDATION_1.6.1.md) describes the required

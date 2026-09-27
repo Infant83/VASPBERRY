@@ -36,7 +36,7 @@
     "pair-mesh/SPIN_KUBO_INTEGRAL.csv": "aac1295dc90411e9f4b44075b4c8bdc3547ba557ed6193cf8670c5afb9bdf0da"
   },
   "poscar_sha256": "1cdb5ec3e51d94d22c7416bf15b3d3d584880f006ed5dfc166178a919b4f51b0",
-  "plot_script_sha256": "7e383e84e23fed34d5e264395399734f547b8b920b737f70b5dca8ce87908606",
+  "plot_script_sha256": "0a6973b2d2e1eaa0d492214d0ab5f572815fd76cf64e104dcba6b7b3acb8a7f4",
   "maps": {
     "proxy": {
       "mesh": [
@@ -81,9 +81,9 @@
     }
   },
   "outputs_sha256": {
-    "figure.png": "7f55a3da2f814254eb778d42908b67d5c668c1c130f3e98648e632a9585f4ed4",
-    "figure.pdf": "b75d0d1a7ac662efe12dbc3552cdde03751422e2ebfbbb96e43324bb4447bf17",
-    "figure.svg": "e381fef8fccc88a9e1fac3454d961920728404c080a12c4e54ecf3ae742bd488",
+    "figure.png": "4dd382a572b32ed93472f960c3af2b3d815d008a194e6f262a8ad9c8879e8751",
+    "figure.pdf": "8f67d63b63d66196e5a9c282a98b622a2c72a7a34ae09347cdd45b526889bf96",
+    "figure.svg": "9503c62052c956bb8fa8c494fded3589f1d1bde0a6dea5367ecd411a58cb9bbf",
     "comparison.csv": "b9a54832ef5637dad419d371242a916d26ffc61126358cc67058d0305ce642d0"
   }
 }

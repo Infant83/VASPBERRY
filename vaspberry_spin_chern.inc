@@ -245,7 +245,7 @@
        call spinchern_write(wavepath,outpath,prefix,nx,ny,first,last,
      & nk,r,wk,axis,rot,etol,stol,egap,indirect,occupied,
      & grammin,gramcond,eval,neg0,pos0,flux,area,lsv,cov,chern)
-       write(6,*)'# Spin Chern pseudo metric: C+, C-, Ccharge, Cspin'
+       write(6,*)'# Spin Chern numbers (pseudo metric): C+, C-, Ccharge, Cspin'
        write(6,'(4ES24.16)')chern(1),chern(2),chern(3),
      &                       (chern(1)-chern(2))/2d0
        write(6,*)'# Spin Chern result_status=PASS'

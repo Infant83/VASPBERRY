@@ -2,10 +2,12 @@
 
 **Topology and response functions directly from VASP wavefunctions.**
 VASPBERRY reads `WAVECAR` and evaluates wavefunction overlaps and interband
-matrix elements in Fortran. Use Fukui methods for Chern numbers and the 2D Z₂
-invariant, and Kubo calculations for Berry-curvature maps, symmetry paths and
-intrinsic charge Hall response. Projected-spin Chern numbers and spin-sector
-Kubo curves use a matching `OUTCAR` to establish the Cartesian spin frame.
+matrix elements in Fortran. Use the Fukui–Hatsugai–Suzuki (FHS) link-variable
+method for Chern numbers and the separate Fukui–Hatsugai (FH) n-field method
+for the 2D Z₂ invariant. Kubo-formula calculations provide Berry-curvature maps,
+symmetry-path curves and intrinsic charge Hall response. Projected-spin Chern
+numbers and spin-sector Kubo-formula Berry curvature use a matching `OUTCAR`
+to establish the Cartesian spin frame.
 
 ```text
 VASP calculation → WAVECAR → VASPBERRY → numerical output → analysis / plots
@@ -19,8 +21,8 @@ band plots provide context for the calculated topology and response.
 [Postprocessing guide](docs/POSTPROCESSING.md) · [Output formats](docs/OUTPUT_FORMAT.md)
 
 **VASPBERRY [1.6.1](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.1).**
-This release adds native [spin-Chern](docs/SPIN_CHERN.md) and
-[spin-sector Kubo](docs/SPIN_KUBO.md) workflows, with graphene and Bi examples
+This release adds native [spin Chern number](docs/SPIN_CHERN.md) and
+[spin-sector Kubo-formula Berry curvature](docs/SPIN_KUBO.md) workflows, with graphene and Bi examples
 and separate sampling/intermediate-band checks. Existing commands and original
 short options remain supported. See the [release notes](docs/releases/v1.6.1.md),
 [changelog](CHANGELOG.md), [version policy](docs/RELEASING.md)
@@ -125,27 +127,28 @@ Environment creation and package installation follow your site's usual practice.
 
 | Task | Native command | Actual VASP example and results |
 |---|---|---|
-| Fukui Berry flux and Chern number of an isolated band or bundle | `--task chern` | [MoS₂ BZ map](examples/features/fukui-berry-curvature/), [Bi occupied bundle](examples/features/fukui-chern/) |
+| Berry flux and Chern number of an isolated band or bundle using the FHS method | `--task chern` | [MoS₂ BZ map](examples/features/fukui-berry-curvature/), [Bi occupied bundle](examples/features/fukui-chern/) |
 | Projected-spin sector Chern numbers | `--task spin-chern` | [Graphene with intrinsic SOC](examples/materials/graphene-spin-chern/); `SPIN_CHERN.csv`, plaquette flux and spin spectra |
-| Spin-sector Kubo curvature | `--task spin-kubo` | [Path and mesh guide](docs/SPIN_KUBO.md); native sector curvature CSVs and explicitly approximate mesh integrals |
-| 2D Fukui–Hatsugai Z₂ invariant and n-field | `--task z2` | [MoS₂ (Z₂ = 0) and Bi (Z₂ = 1)](examples/features/z2/comparison/) |
-| Kubo Berry curvature on a BZ mesh or symmetry path | `--task kubo` | [MoS₂ occupied bundle and isolated-band maps, paths and bands](examples/features/kubo-curvature/) |
+| Spin-sector Kubo-formula Berry curvature | `--task spin-kubo` | [Path and mesh guide](docs/SPIN_KUBO.md); native sector curvature CSVs and explicitly approximate mesh integrals |
+| 2D Z₂ invariant and n-field using the FH method | `--task z2` | [MoS₂ (Z₂ = 0) and Bi (Z₂ = 1)](examples/features/z2/comparison/) |
+| Kubo-formula Berry curvature on a BZ mesh or symmetry path | `--task kubo` | [MoS₂ occupied bundle and isolated-band maps, paths and bands](examples/features/kubo-curvature/) |
 | Intrinsic charge Hall response versus chemical potential and temperature | `--task kubo-pairs`, then occupation-weighted postprocessing | [MoS₂ Hall and valley-region curves](examples/features/kubo-hall/) |
 | Circular optical selectivity and transition spectra | `--task optical` / `--task spectrum` | [MoS₂ circular dichroism](examples/features/circular-dichroism/) |
 | Real-space wavefunction at Γ | `--task wavefunction` | [MoS₂ wavefunction](examples/features/wavefunction/) |
 
-Fukui plaquette flux and Kubo point curvature are different finite-grid
-quantities. A Fukui integer needs band isolation and mesh checks. A Kubo
-integral is not rounded to an integer; its k mesh and intermediate band
-window must be converged. Native Kubo uses canonical momentum of the stored
-pseudo-wavefunctions. Optional full-velocity comparisons assess the missing
+FHS plaquette flux and Kubo-formula point Berry curvature are different
+finite-grid quantities. A Chern number computed with the FHS method needs band
+isolation and mesh checks. A Kubo-formula curvature integral is not rounded to
+an integer; its k mesh and intermediate band window must be converged. Native
+Kubo-formula calculations use canonical momentum of the stored pseudo-wavefunctions.
+Optional full-velocity comparisons assess the missing
 PAW/nonlocal/SOC terms; see [operator choices](docs/OPERATOR_ROUTES.md).
 For spin-sector convergence, use [`--sum-bands N`](docs/SPIN_KUBO.md#real-examples-and-interpretation)
 to vary the intermediate sum on unchanged wavefunctions. The
 [Bi comparisons](examples/materials/bi-spin-hall/spin-chern-kubo/convergence/)
 separate this from mesh and source-state changes; the
 [graphene controls](examples/materials/graphene-spin-chern/kubo/convergence/)
-resolve a local SOC peak without claiming a converged full-BZ Kubo integral.
+resolve a local SOC peak without claiming a converged full-BZ Kubo-formula curvature integral.
 
 For **layer, atom, orbital and spin character**, combine a matching SOC
 `PROCAR` with the WAVECAR and actual spin frame from `OUTCAR` using
@@ -192,7 +195,7 @@ These illustrative commands assume the appropriate `WAVECAR` in the working
 directory; the band indices are examples, not universal occupied counts.
 
 ```bash
-# Fukui flux and Chern number: full 12 × 12 mesh, bands 1–18.
+# Berry flux and Chern number from the FHS method: full 12 × 12 mesh, bands 1–18.
 mpiexec -n 4 ./build/vaspberry-ifx-mpi --task chern --wavecar WAVECAR \
   --mesh 12,12 --bands 1:18 --output BERRYCURV
 
@@ -265,7 +268,7 @@ directly in your preferred plotting tool. The direct VASPBERRY commands above
 require no Python script; the INI `run` command additionally automates cache
 validation and numerical Hall integration. See the [MoS₂ curvature example](examples/features/kubo-curvature/).
 The [hands-on commands](docs/HANDS_ON.md) and
-[individual Kubo stages](docs/KUBO_TRANSPORT.md#native-pairs-to-charge-hall)
+[individual Kubo-formula transport stages](docs/KUBO_TRANSPORT.md#native-pairs-to-charge-hall)
 remain available for users who need direct control of each stage.
 
 ## Optional extensions and supporting checks
@@ -284,9 +287,11 @@ cover extra operators and independent checks:
 
 The [technical report](docs/TECHNICAL_REPORT.md) connects these capabilities
 to reference figures. The [material catalog](examples/materials/) records
-input preparation and sampling. VASPBERRY implements the lattice method of
-[Fukui, Hatsugai and Suzuki, JPSJ 74, 1674 (2005)](https://doi.org/10.1143/JPSJ.74.1674);
-method-specific references are given in each guide.
+input preparation and sampling. The Chern-number calculation follows
+[Fukui, Hatsugai and Suzuki, JPSJ 74, 1674 (2005)](https://doi.org/10.1143/JPSJ.74.1674).
+The separate Z₂ n-field calculation follows
+[Fukui and Hatsugai, JPSJ 76, 053702 (2007)](https://doi.org/10.1143/JPSJ.76.053702).
+Method-specific references are given in each guide.
 
 ## Contributors
 

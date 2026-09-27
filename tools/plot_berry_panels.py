@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Show a Cartesian Berry-curvature map, a marked path, and matching bands.
 
-Fukui path values are periodic bilinear samples of plaquette averages. Kubo
+FHS path values are periodic bilinear samples of plaquette averages. Kubo
 curves use separately calculated point values on the supplied path. Numerical
 energy zeros and raw curvature files are never changed by plotting.
 """
@@ -199,13 +199,13 @@ def plot_panels(*, method, input_path, poscar_path, bands_csv, output_path,
     if method == "fukui":
         selected = re.search(r"Chern Number for the BANDS\s*:\s*(\d+)\s*-\s*(\d+)", Path(input_path).read_text())
         if selected is None or tuple(map(int, selected.groups())) != (1, occupied):
-            raise ValueError("native Fukui band range disagrees with the occupied-group label")
+            raise ValueError("native FHS band range disagrees with the occupied-group label")
         q, values = read_native_curvature(input_path, reciprocal)
         q, values, mesh = uniform_plaquettes(q, values)
         curve = periodic_bilinear(q, values, path_q)
         curve_kind = "periodic_bilinear_display_cut_of_plaquette_averages"
         map_kind = "native_plaquette_averages"
-        quantity = rf"Fukui: occupied bands 1–{occupied}"
+        quantity = rf"FHS: occupied bands 1–{occupied}"
         curve_label = "Map cut"
     elif method in ("kubo", "kubo-bundle"):
         if path_input is None:
@@ -334,7 +334,7 @@ def plot_panels(*, method, input_path, poscar_path, bands_csv, output_path,
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--method", choices=("fukui", "kubo", "kubo-bundle"), required=True)
-    parser.add_argument("--input", type=Path, required=True, help="native Fukui BERRYCURV.dat or mesh KUBO.csv")
+    parser.add_argument("--input", type=Path, required=True, help="native FHS BERRYCURV.dat or mesh KUBO.csv")
     parser.add_argument("--poscar", type=Path, required=True)
     bands = parser.add_mutually_exclusive_group(required=True)
     bands.add_argument("--bands-csv", type=Path, help="long-form unchanged VASP band table")

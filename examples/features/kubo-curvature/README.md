@@ -2,7 +2,7 @@
 
 The main figure shows the trace Berry curvature of **occupied bands 1–18**
 across the Brillouin zone and along **K–Γ–K′**. It uses the same occupied
-space and VASP inputs as the [Fukui example](../fukui-berry-curvature/).
+space and VASP inputs as the [FHS example](../fukui-berry-curvature/).
 
 ![MoS2 occupied-bundle Kubo map, bands and symmetry-path curve](reference/bundle/figure.png)
 
@@ -150,8 +150,8 @@ map interpolation. No smoothing is applied across invalid single-band data.
 [Calculation record](reference/bundle/result.json)
 
 Bands and curvature share cumulative Cartesian path distance; each K–Γ
-segment is approximately 1.320704 Å⁻¹. Fukui and Kubo now cover the same
-occupied space. Their finite-resolution values can differ: Fukui uses
+segment is approximately 1.320704 Å⁻¹. FHS and Kubo now cover the same
+occupied space. Their finite-resolution values can differ: FHS uses
 plaquette averages, whereas native Kubo uses point samples, a finite
 empty-band window and the canonical-momentum approximation.
 

@@ -1,6 +1,6 @@
 # MoS₂ and Bi: Z₂ = 0 and Z₂ = 1
 
-The same native Fukui–Hatsugai procedure gives **Z₂ = 0** for monolayer
+The same native Fukui–Hatsugai (FH) procedure gives **Z₂ = 0** for monolayer
 1H-MoS₂ and **Z₂ = 1** for the buckled Bi bilayer. Both use full Γ-centered
 12×12 meshes and complete occupied SOC bundles. The Bi result is the fresh
 PBE+SOC calculation used in the technical report, separate from the older

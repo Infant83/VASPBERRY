@@ -27,12 +27,12 @@ def main() -> int:
     parser.add_argument("--binary", type=Path, default=ROOT / "build/vaspberry-gfortran",
                         help="VASPBERRY executable")
     parser.add_argument("--bi-wavecar", type=Path, default=EXAMPLES / "Bi_Z2/WAVECAR",
-                        help="Full public Bi LFS WAVECAR for Fukui, Z2 and gap Hall")
+                        help="Full public Bi LFS WAVECAR for Chern numbers (FHS), Z2 (FH) and gap Hall")
     parser.add_argument("--mos2-wavecar", type=Path, default=EXAMPLES / "1H-MoS2/KPATH/2.band/WAVECAR",
                         help="Public MoS2 band-path WAVECAR")
     parser.add_argument("--mos2-mesh-wavecar", type=Path,
                         default=EXAMPLES / "features/fukui-berry-curvature/inputs/WAVECAR",
-                        help="Full 12x12 MoS2 WAVECAR generated with the Fukui tutorial's VASP inputs")
+                        help="Full 12x12 MoS2 WAVECAR generated with the FHS tutorial's VASP inputs")
     args = parser.parse_args()
     if args.all and args.features:
         parser.error("use feature IDs or --all, not both")

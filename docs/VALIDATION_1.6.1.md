@@ -2,8 +2,11 @@
 
 This compatible feature release adds native projected-spin `spin-chern` and
 `spin-kubo`, including `--sum-bands` for a response cutoff on unchanged source
-states. Existing ordinary Kubo, Fukui, Z₂ and postprocessing interfaces remain
-available. [Release notes](releases/v1.6.1.md) explain the commands and outputs.
+states. Existing Kubo-formula Berry-curvature/response, Chern-number, Z₂ and
+postprocessing interfaces remain available. Chern numbers use the
+Fukui–Hatsugai–Suzuki (FHS) link-variable method; Z₂ uses the separate
+Fukui–Hatsugai (FH) n-field method. [Release notes](releases/v1.6.1.md) explain
+the commands and outputs.
 
 ## Publication and installation
 
@@ -36,12 +39,13 @@ an unresolved energy multiplet or a retained-sum boundary is rejected.
 Independent exact-Hamiltonian tests compare all Cartesian sector curvatures
 with small geometric loops, include a nonzero spin-mixing derivative, and check
 axis reversal and selected-frame changes. An exact-model integral approaches
-the independent Fukui integer as its mesh is refined. Real Bi cutoff checks
+the Chern number computed independently using the FHS method as its mesh is
+refined. Real Bi cutoff checks
 also agree with an independent NumPy calculation. Default/full-band results
 are unchanged by introducing the optional retained sum cutoff.
 
 These checks validate the implemented geometric kernel and declared tangent.
-The ordinary WAVECAR Kubo route uses canonical momentum and a finite pseudo
+The ordinary WAVECAR Kubo-formula route uses canonical momentum and a finite pseudo
 basis. It is not the complete physical PAW/nonlocal/SOC velocity, nor a
 conventional spin-current Hall conductivity.
 
@@ -52,7 +56,7 @@ The [technical report](TECHNICAL_REPORT.md#310-follow-up-convergence-tests)
 
 | Follow-up | Verified result | Remaining physical calculation |
 |---|---|---|
-| [Bi](../examples/materials/bi-spin-hall/spin-chern-kubo/convergence/) | Occupied/pair spin Chern 1/2 persists on 6×6, 12×12, 18×18 meshes; a genuine full-mesh restart agrees with partition aggregation. | Pair Kubo integration near Γ is unresolved; the occupied estimate improves without a convergence certificate. High empty-state quality needs separate checks. |
+| [Bi](../examples/materials/bi-spin-hall/spin-chern-kubo/convergence/) | Occupied/pair spin Chern numbers 1 and 2 persist on 6×6, 12×12, 18×18 meshes; a genuine full-mesh restart agrees with partition aggregation. | Pair Kubo-formula curvature integration near Γ is unresolved; the occupied estimate improves without a convergence certificate. High empty-state quality needs separate checks. |
 | [Graphene](../examples/materials/graphene-spin-chern/kubo/convergence/) | Actual local VASP samples resolve the tiny-SOC peak. A stricter solver repeat changes native curvature by at most 0.0156%; the local geometric comparison differs by about 5.5%. | Radial point quadrature is still sample-sensitive; local polygons and fitted diagnostics are not full-BZ invariants. |
 | Graphene selected pair 7–8 | The failed sector-link check is preserved, with no assigned global pair Chern number. | A sampled energy/spin gap alone does not certify resolved global connectivity. |
 
@@ -60,7 +64,7 @@ These limitations are part of the documented numerical scope, not hidden
 successful-integer claims. Users can calculate and export local curvature,
 inspect diagnostics, choose complete isolated groups, and refine sampling
 without changing the output interface. No empirical rescaling or rounding is
-used to force a Kubo estimate to match a Chern integer.
+used to force a Kubo-formula curvature integral to match an integer Chern number.
 
 Saved example files retain the producer labels, source hashes and failed-case
 records from the development calculations that generated them. They are not

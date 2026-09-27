@@ -2,7 +2,7 @@
 
 Start with a real-material tutorial and compare its native outputs with the
 supplied reference. Then use the **same native Fortran command** with your
-VASP files, band selection and k sampling. Fukui, Z₂, Kubo curvature, optical
+VASP files, band selection and k sampling. Chern-number, Z₂, Kubo-curvature, optical
 transitions and wavefunction export read WAVECAR directly; Wannierization is
 not required for these calculations.
 
@@ -16,7 +16,7 @@ these steps with fixed reference checks; use the native CLI for general work.
 
 | Goal | Input sampling and decisions |
 |---|---|
-| Fukui curvature / Chern | A full periodic 2D mesh and an isolated band or isolated fixed-rank band bundle |
+| Berry curvature / Chern number (FHS) | A full periodic 2D mesh and an isolated band or isolated fixed-rank band bundle |
 | Z₂ | A gapped nonmagnetic TR-symmetric spinor calculation; even, unshifted Gamma-centered full Nx×Ny×1 mesh with ISYM=-1 |
 | Kubo curvature along a path | WAVECAR for the desired points; choose bands using your EIGENVAL and inspect near-degeneracies |
 | Charge Hall | A full integration mesh, a valid occupied subspace or valid point curvature, an energy reference and a sufficient band window |
@@ -46,7 +46,7 @@ required by a Brillouin-zone integral. The example's numerical `--mesh`, `--band
 
 ## Choose the correct transport route
 
-The [Bi Hall tutorial](features/hall-valley/) uses occupied-subspace Fukui flux
+The [Bi Hall tutorial](features/hall-valley/) uses occupied-subspace FHS flux
 in the insulating gap. It demonstrates a time-reversal-symmetric zero charge
 Hall result. It is not a point-Kubo calculation, a valley-Hall effect, or a
 nonzero Chern-insulator benchmark.

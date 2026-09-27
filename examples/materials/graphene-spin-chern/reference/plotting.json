@@ -64,8 +64,8 @@
   "band_energy_origin_eV": -2.717573602163395,
   "band_origin_scope": "midgap of supplied path samples",
   "output_sha256": {
-    "figure.png": "d6e2410fbe6645446f27c3ff941ad267fac2b8fd1dcfee7bbbb0eace024d0cca",
-    "figure.pdf": "8c1ed3c5d4ecb7f96884f3602ba3a9dc4c1a707b14cf351ff4b3f854f8e1272d",
-    "figure.svg": "22c7893b9de8327c534f4dd38bb323d86151633000c46c1e142ecfcfd151ab0e"
+    "figure.png": "e4f8491927fdac8d06901ba3cd6c0cc638872af24611b67bde42d060afe0f426",
+    "figure.pdf": "6bd3cef7e88934b2cda94b6794a614781f47260e0a97e53a55030abadfa03540",
+    "figure.svg": "6fb0f020904491a291a6e958215ca90e0112c150b8dac30a21e5a1db8aa8c98e"
   }
 }

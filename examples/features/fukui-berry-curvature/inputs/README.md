@@ -2,7 +2,7 @@
 
 These files generate a complete spinor WAVECAR for VASPBERRY from the public
 MoS₂ SCF charge density. The setup was executed with VASP 5.4.4 and then passed
-to the current native Fukui routine. The generated WAVECAR is about 149 MB and
+to the current native FHS routine. The generated WAVECAR is about 149 MB and
 is not bundled in the repository.
 
 ## Prepare the calculation

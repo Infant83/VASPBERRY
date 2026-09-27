@@ -37,7 +37,7 @@
     "pair-fukui/SPIN_CHERN.csv": "fe7f4dd893dd4c1971e8c9c6a05331b294881ae0fe38f64acdc5e78407c689d7"
   },
   "poscar_sha256": "5d8cd8514c4796a38bf89f7546e02f0f0718db24a99745580ee3542cc66e9405",
-  "plot_script_sha256": "7e383e84e23fed34d5e264395399734f547b8b920b737f70b5dca8ce87908606",
+  "plot_script_sha256": "0a6973b2d2e1eaa0d492214d0ab5f572815fd76cf64e104dcba6b7b3acb8a7f4",
   "maps": {
     "proxy": {
       "mesh": [
@@ -82,9 +82,9 @@
     }
   },
   "outputs_sha256": {
-    "figure.png": "7b136924f9b24df6d59dc20d0d6a01bc1dab8df753a3dea0f70c25ff369cd1d3",
-    "figure.pdf": "eb66b13164bdd4f9f77ff242a2b130c33c6482a87ee7fc26ae9b4810610e8c6c",
-    "figure.svg": "4985c3f9cb58b30ee17df78b4268d38d57d7c3a6093b3fada5311a22118c372a",
+    "figure.png": "b85476f32a7c566a4d6def734abda286f221f768d15f4d806b402f09067497f9",
+    "figure.pdf": "75b0555805575589daa610a4cdd33d4bd886425d191238c22035cc78c4c9a0df",
+    "figure.svg": "720282cb54fd12589267190634f789b15c6923c5ab95c8dceedf2a6b8f075556",
     "comparison.csv": "4ae63c674f513c3c3b974a6c2d71be519f9cd422f214d5c4c9d1578a911ac596"
   }
 }

@@ -1,4 +1,6 @@
-# Two-dimensional Z2 invariant by the Fukui-Hatsugai n-field method
+<a id="two-dimensional-z2-invariant-by-the-fukui-hatsugai-n-field-method"></a>
+
+# Two-dimensional Z₂ invariant by the Fukui–Hatsugai (FH) n-field method
 
 The [Z₂ feature example](../examples/features/z2/) recalculates the invariant
 from the real Bi WAVECAR, with exact commands, native reference outputs and a figure.
@@ -9,7 +11,9 @@ determine their Z₂ class.
 
 VASPBERRY's `-z2 1` option evaluates the two-dimensional class-AII invariant
 directly from a VASP spinor `WAVECAR`. It implements the lattice n-field
-construction of Fukui and Hatsugai on a full, uniform, Gamma-centered mesh.
+construction of Fukui and Hatsugai (FH, 2007) on a full, uniform, Gamma-centered
+mesh. This Z₂ construction is distinct from the Fukui–Hatsugai–Suzuki (FHS,
+2005) link-variable method for Chern numbers, cited separately below.
 
 ## Method implemented by VASPBERRY
 
@@ -85,7 +89,7 @@ The physical calculation must satisfy all of the following conditions:
 
 VASPBERRY checks the mesh reconstruction, reciprocal-G bijections, link
 conditioning, n-field integrality, time-reversal-odd wrapped flux, zero total
-Chern residual, and equality of the two half-zone parities. A PASS establishes
+Chern-number residual, and equality of the two half-zone parities. A PASS establishes
 the numerical self-consistency of the time-reversal reconstruction used by the
 Z2 routine. It does not independently establish that the raw `WAVECAR` is a
 nonmagnetic, time-reversal-symmetric insulating input, certify its

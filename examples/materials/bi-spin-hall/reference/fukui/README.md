@@ -1,6 +1,6 @@
 # Separate occupied-bundle Chern calculation
 
-The unchanged fresh 12 × 12 Bi WAVECAR was evaluated separately in ordinary Fukui mode, with occupied bands 1–10 and both SOC components:
+The unchanged fresh 12 × 12 Bi WAVECAR was evaluated separately in ordinary FHS mode, with occupied bands 1–10 and both SOC components:
 
 ```sh
 vaspberry-gfortran -f WAVECAR -o BERRYCURV \

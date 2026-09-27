@@ -3,7 +3,7 @@
   "features": [
     {
       "id": "fukui-berry-curvature",
-      "title": "MoS2 occupied-subspace Fukui Berry curvature over the first Brillouin zone",
+      "title": "MoS2 occupied-subspace Berry curvature (FHS) over the first Brillouin zone",
       "default_mode": "vasp_wavecar_calculation",
       "dataset": "mos2-mesh",
       "requires_fortran": true,
@@ -83,7 +83,7 @@
     },
     {
       "id": "hall-valley",
-      "title": "Bi insulating-gap charge Hall from occupied-subspace Fukui flux",
+      "title": "Bi insulating-gap charge Hall from occupied-subspace FHS flux",
       "default_mode": "vasp_wavecar_calculation",
       "dataset": "bi",
       "requires_fortran": false,
@@ -101,7 +101,7 @@
     },
     {
       "id": "z2",
-      "title": "Bi Fukui-Hatsugai Z2 invariant",
+      "title": "Bi Fukui–Hatsugai (FH) Z2 invariant",
       "default_mode": "vasp_wavecar_calculation",
       "dataset": "bi",
       "requires_fortran": true,

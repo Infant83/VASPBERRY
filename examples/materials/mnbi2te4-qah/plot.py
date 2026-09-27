@@ -128,7 +128,7 @@ def main():
     ah.plot(independent_mu, independent_sigma, "o", color="#444444", mfc="none",
             ms=7, mew=.9, label="postw90")
     ah.set(xlabel="Chemical potential\n− midgap (meV)", ylabel=r"$\sigma_{xy}$ ($e^2/h$)")
-    ah.text(.97, .07, r"$C_{\mathrm{Fukui}}=-1$", ha="right", transform=ah.transAxes)
+    ah.text(.97, .07, r"$C=-1$ (FHS)", ha="right", transform=ah.transAxes)
     ah.legend(frameon=False, fontsize=10.5, loc="lower left",
               bbox_to_anchor=(0, .17), handlelength=1.1, borderaxespad=.3)
     ah.set_ylim(min(0, float(sigma.min())-.08), max(1.12, float(sigma.max())+.08))

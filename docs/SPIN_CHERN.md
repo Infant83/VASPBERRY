@@ -48,8 +48,9 @@ excluded source band.
 
 Within the complete occupied space, VASPBERRY forms the full matrix of
 spin along the chosen Cartesian axis, including off-diagonal band elements.
-Its positive and negative eigenspaces define the two sectors. Fukui overlap
-links then give their Chern numbers:
+Its positive and negative eigenspaces define the two sectors. The
+Fukui–Hatsugai–Suzuki (FHS) method uses determinant link variables from
+wavefunction overlaps to calculate their Chern numbers:
 
 ```math
 C_{\mathrm{charge}}=C_++C_-,\qquad
@@ -76,10 +77,10 @@ and from [conventional spin Hall conductivity](SPIN_HALL.md). The latter
 uses a spin-current operator and has conductivity units. The two spinor
 components of an SOC state are not separate VASP `ISPIN=2` channels.
 
-To draw sector-resolved point curvature along a path, use the separate native
+To draw sector-resolved Kubo-formula Berry curvature along a path, use the separate native
 [`spin-kubo` task](SPIN_KUBO.md). Its canonical-momentum derivative proxy
 includes the changing spin-sector basis. Compare its raw full-mesh integral
-with this task's geometric result; a path alone cannot determine Chern.
+with this task's geometric result; a path alone cannot determine a Chern number.
 
 ## Read and plot the results
 
@@ -100,7 +101,7 @@ Existing output files are rejected. `--output NAME` changes the prefix from
 An energy gap is measured in eV. The projected-Pauli distance from zero is
 dimensionless; it is not an energy broadening. A closed spin gap means this
 axis-dependent spin-sector decomposition is unresolved, even when the
-ordinary occupied-space Chern or Z₂ calculation remains meaningful.
+ordinary occupied-space Chern-number or Z₂ calculation remains meaningful.
 
 The default tolerances are `--energy-gap-tol 1e-8` eV for selected-to-excluded
 states and `--spin-gap-tol 1e-6` for the projected-Pauli distance from zero.
