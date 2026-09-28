@@ -3,9 +3,10 @@
 **Topology and response functions directly from VASP wavefunctions.**
 VASPBERRY reads `WAVECAR` and evaluates wavefunction overlaps and interband
 matrix elements in Fortran. Use the Fukui–Hatsugai–Suzuki (FHS) link-variable
-method for Chern numbers and the separate Fukui–Hatsugai (FH) n-field method
-for the 2D Z₂ invariant. Kubo-formula calculations provide Berry-curvature maps,
-symmetry-path curves and intrinsic charge Hall response. Projected-spin Chern
+method, also called the Fukui method, for Chern numbers. The separate
+Fukui–Hatsugai (FH) n-field method gives the 2D Z₂ invariant. Kubo-formula
+calculations provide Berry-curvature maps, symmetry-path curves and intrinsic
+charge Hall response. Projected-spin Chern
 numbers and spin-sector Kubo-formula Berry curvature use a matching `OUTCAR`
 to establish the Cartesian spin frame.
 
@@ -127,7 +128,7 @@ Environment creation and package installation follow your site's usual practice.
 
 | Task | Native command | Actual VASP example and results |
 |---|---|---|
-| Berry flux and Chern number of an isolated band or bundle using the FHS method | `--task chern` | [MoS₂ BZ map](examples/features/fukui-berry-curvature/), [Bi occupied bundle](examples/features/fukui-chern/) |
+| Berry flux and Chern number of an isolated band or bundle using the Fukui method | `--task chern` | [MoS₂ BZ map](examples/features/fukui-berry-curvature/), [Bi occupied bundle](examples/features/fukui-chern/) |
 | Projected-spin sector Chern numbers | `--task spin-chern` | [Graphene with intrinsic SOC](examples/materials/graphene-spin-chern/); `SPIN_CHERN.csv`, plaquette flux and spin spectra |
 | Spin-sector Kubo-formula Berry curvature | `--task spin-kubo` | [Path and mesh guide](docs/SPIN_KUBO.md); native sector curvature CSVs and explicitly approximate mesh integrals |
 | 2D Z₂ invariant and n-field using the FH method | `--task z2` | [MoS₂ (Z₂ = 0) and Bi (Z₂ = 1)](examples/features/z2/comparison/) |
@@ -136,8 +137,8 @@ Environment creation and package installation follow your site's usual practice.
 | Circular optical selectivity and transition spectra | `--task optical` / `--task spectrum` | [MoS₂ circular dichroism](examples/features/circular-dichroism/) |
 | Real-space wavefunction at Γ | `--task wavefunction` | [MoS₂ wavefunction](examples/features/wavefunction/) |
 
-FHS plaquette flux and Kubo-formula point Berry curvature are different
-finite-grid quantities. A Chern number computed with the FHS method needs band
+Plaquette flux from the Fukui method and Kubo-formula point Berry curvature
+are different finite-grid quantities. A Chern number computed with the Fukui method needs band
 isolation and mesh checks. A Kubo-formula curvature integral is not rounded to
 an integer; its k mesh and intermediate band window must be converged. Native
 Kubo-formula calculations use canonical momentum of the stored pseudo-wavefunctions.
@@ -195,7 +196,7 @@ These illustrative commands assume the appropriate `WAVECAR` in the working
 directory; the band indices are examples, not universal occupied counts.
 
 ```bash
-# Berry flux and Chern number from the FHS method: full 12 × 12 mesh, bands 1–18.
+# Berry flux and Chern number from the Fukui method: full 12 × 12 mesh, bands 1–18.
 mpiexec -n 4 ./build/vaspberry-ifx-mpi --task chern --wavecar WAVECAR \
   --mesh 12,12 --bands 1:18 --output BERRYCURV
 

@@ -3,7 +3,7 @@
 Use the real SOC graphene inputs from the [parent example](../README.md).
 This example compares the native **local differential curvature proxy** with
 native **spin-sector Chern numbers** of the same selected energy subspace,
-evaluated with the **Fukui–Hatsugai–Suzuki (FHS) method**.
+evaluated with the **Fukui–Hatsugai–Suzuki (FHS) method**, called the **Fukui method** below.
 It includes all occupied spinor bands 1–8 and an optional local calculation for
 the top occupied pair 7–8.
 
@@ -46,7 +46,7 @@ reference execution used GNU serial, with independent implementation checks.
 | `SPIN_KUBO.csv` | Local sector and parent curvature vectors, parent-projected and spin-mixing terms, path distance, gaps and conditioning |
 | `SPIN_KUBO_SPECTRUM.csv` | Projected Pauli spectrum at every stored point |
 | `SPIN_KUBO_INTEGRAL.csv` | Raw noninteger C_est sums; created only with explicit `--mesh` |
-| `SPIN_CHERN.csv`, `SPIN_BERRY.csv`, `SPIN_SPECTRUM.csv` | Chern numbers evaluated with FHS, plaquette fluxes, and projected spectrum |
+| `SPIN_CHERN.csv`, `SPIN_BERRY.csv`, `SPIN_SPECTRUM.csv` | Chern numbers evaluated with the Fukui method, plaquette fluxes, and projected spectrum |
 
 The native point file supplies xy, yz, zx curvature in Å². Fractional and Cartesian
 k coordinates and cumulative path distance are included. These plain CSVs can
@@ -60,7 +60,7 @@ python3 "$EXAMPLE/kubo/plot.py" \
   --poscar "$EXAMPLE/inputs/POSCAR" --output-dir "$WORK/kubo-figure"
 ```
 
-The mesh directory also supplies the FHS outputs. If both folders contain
+The mesh directory also supplies the Fukui method outputs. If both folders contain
 `PAIR_KUBO.csv`, the pair curves and any completed `PAIR_CHERN.csv` are included
 automatically. Detailed folder and prefix overrides remain available in `--help`.
 
@@ -76,7 +76,7 @@ python3 "$EXAMPLE/kubo/plot.py" --input-dir "$EXAMPLE/kubo/reference" \
 The signed-log scale exposes the very large K-point values without clipping
 or changing them. Lines connect the stored path samples; they do not resolve
 the actual microscopic width of the peak. Full-BZ proxy values are drawn as
-constant cells centered on native k points. FHS fluxes are shown on their
+constant cells centered on native k points. Fluxes from the Fukui method are shown on their
 own plaquettes in radians. The two maps have different meanings and units.
 `comparison.csv` retains full numerical values, while the figure uses a finite
 number of significant digits for display.
@@ -84,7 +84,7 @@ number of significant digits for display.
 ## Interpret this numerical example
 
 For the 12×12 occupied subspace, the raw proxy gives
-`C_est_spin=1.1359066841142153e12`; the FHS calculation gives spin Chern number `C_spin=1`.
+`C_est_spin=1.1359066841142153e12`; the Fukui method gives spin Chern number `C_spin=1`.
 The sub-micro-eV gap makes direct point sampling particularly unsuitable for
 integrating this sharply localized response on a coarse uniform mesh. Missing
 derivative terms and the finite 16-band source are additional limitations.
@@ -101,7 +101,7 @@ The optional pair command is:
 ```
 
 At the stored points the pair is energy/spin separated and the local proxy
-succeeds. However, its actual full-BZ FHS calculation fails the link guard
+succeeds. However, its actual full-BZ calculation with the Fukui method fails the link guard
 (minimum singular value 2.35e-10 at k4). Its global isolation and sampling remain
 unresolved, and **no Chern number is assigned to this graphene pair**.
 The failure is retained in `reference/pair-fukui/`. The

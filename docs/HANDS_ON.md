@@ -176,7 +176,7 @@ The atom IDs and Cartesian spin axis are user inputs; no material-specific layer
 
 ## 6. Choose what can be inferred from the outputs
 
-- The Fukui–Hatsugai–Suzuki (FHS) method computes Chern numbers from wavefunction link variables; the separate Fukui–Hatsugai (FH) n-field method computes Z₂. Kubo-formula point Berry curvature and occupation-weighted response use different discretizations and convergence checks.
+- The Fukui–Hatsugai–Suzuki (FHS) method, also called the Fukui method, computes Chern numbers from wavefunction link variables; the separate Fukui–Hatsugai (FH) n-field method computes Z₂. Kubo-formula point Berry curvature and occupation-weighted response use different discretizations and convergence checks.
 - Native Kubo-formula calculations use pseudo-wavefunction canonical momentum. This approximation is a useful baseline for charge and regional analysis; full material velocity may include missing PAW, nonlocal, SOC and Hubbard-U terms.
 - Matching SOC `PROCAR`, `WAVECAR` and `OUTCAR` support atom/layer/orbital and chosen-axis spin character. The [PROCAR hands-on example](../examples/features/procar-character/) uses `tools/procar_character.py project`, `hall` and `plot` to save those weights, attribute selected isolated bands' charge Hall response, and make reusable figures. Define layer groups by actual atom IDs. This is character-weighted charge attribution; physical orbital-, layer- and spin-current operators are separate observables.
 - The optional [spin Hall route](SPIN_HALL.md) needs full spin/velocity matrices and supports a gapped 2D occupied group at T=0. The supplied instrumented VASP producer excludes Hubbard U; do not apply its Bi instructions unchanged to a DFT+U magnetic material.

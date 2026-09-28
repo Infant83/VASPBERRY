@@ -11,8 +11,8 @@ Python is optional for drawing the resulting CSVs.
 This native task is available in VASPBERRY 1.6.1.
 Its canonical-momentum derivative approximation is intended for resolved
 curvature and comparisons. A separate [spin Chern number calculation](SPIN_CHERN.md) uses the
-Fukui–Hatsugai–Suzuki (FHS) link-variable method to evaluate the geometric
-sector Chern numbers on a complete periodic mesh.
+Fukui–Hatsugai–Suzuki (FHS) link-variable method, also called the Fukui method,
+to evaluate the geometric sector Chern numbers on a complete periodic mesh.
 
 ## 1. Build VASPBERRY
 
@@ -64,7 +64,9 @@ same column on an unordered full mesh is not a symmetry-path coordinate.
 
 <a id="3-compare-a-full-mesh-with-fukui"></a>
 
-## 3. Compare full-mesh results with Chern numbers from the FHS method
+<a id="3-compare-full-mesh-results-with-chern-numbers-from-the-fhs-method"></a>
+
+## 3. Compare full-mesh results with Chern numbers from the Fukui method
 
 Use a **separate full periodic VASP mesh**, with the same Hamiltonian, selected
 band space and analysis axis. In its directory:
@@ -146,7 +148,7 @@ These examples retain native CSVs, optional plotting commands and the actual
 VASP source identities. `result_status=PASS` certifies successful execution
 of the declared numerical checks; it is not a full-PAW or continuum accuracy
 certificate. A sampled energy/spin gap alone does not establish global band
-connectivity: the graphene pair example records a failed FHS link check
+connectivity: the graphene pair example records a failed link check in the Fukui method
 and does not assign that pair a Chern number.
 
 ## Mathematical contract and approximation
@@ -202,7 +204,7 @@ whitening of unequal-energy states as an unchanged energy eigenbasis.
 Independent analytic Hamiltonian tests compare all three native tensor
 components with small geometric sector loops, include a nonzero spin-mixing
 contribution, test nonorthogonal frame changes, and compare full-BZ integrals
-with Chern numbers computed independently using the FHS method. This validates the kernel; it does not remove the
+with Chern numbers computed independently using the Fukui method. This validates the kernel; it does not remove the
 material calculation's operator and sampling approximations.
 
 The projected-spin construction follows
@@ -212,7 +214,7 @@ and from [PROCAR-weighted character attribution](POSTPROCESSING.md).
 
 ## Material convergence examples
 
-- [Bi: mesh, retained intermediate states and source quality](../examples/materials/bi-spin-hall/spin-chern-kubo/convergence/) uses `--sum-bands` on unchanged WAVECAR files and compares the raw integral with sector Chern numbers independently evaluated using the FHS method.
+- [Bi: mesh, retained intermediate states and source quality](../examples/materials/bi-spin-hall/spin-chern-kubo/convergence/) uses `--sum-bands` on unchanged WAVECAR files and compares the raw integral with sector Chern numbers independently evaluated using the Fukui method.
 - [Graphene: resolving a tiny SOC peak](../examples/materials/graphene-spin-chern/kubo/convergence/) adds actual VASP valley points, native curvature, local overlap flux and solver controls. The local integrals do not cover the entire BZ.
 
 The [technical report, Section 3.10](TECHNICAL_REPORT.md#310-follow-up-convergence-tests) interprets these numerical controls together.

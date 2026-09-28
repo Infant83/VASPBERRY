@@ -127,7 +127,7 @@
       "bands.csv": "e7082383919d9cbb79fac30f653ba3e42726d61fdc941305f0dad3b0d415454f"
     },
     "path_input_sha256": "9466e45bc1c5d96d2472fdb56e91f536a2fafad146596f21bfd8de2107338a9d",
-    "plotter_sha256": "ed9896d490a790b76dca91d87c17e99c57895016f1490ffb182e524b5fa99547"
+    "plotter_sha256": "b070c322d5ca3d9813350a230bf9715b95ad3df844c7423addbca0f5e7debfc4"
   },
   "units": {
     "energy": "eV (unchanged WAVECAR zero)",
@@ -139,8 +139,8 @@
     "KUBO_path.csv": "9466e45bc1c5d96d2472fdb56e91f536a2fafad146596f21bfd8de2107338a9d",
     "bands.csv": "e7082383919d9cbb79fac30f653ba3e42726d61fdc941305f0dad3b0d415454f",
     "path_curvature.csv": "b98d9b6b0e7c65caf3d43100aa2099cdab2f8784a190ba34491e735658a622ff",
-    "figure.png": "ed9ad600880d39c4b7735e8505ca8e1284e0d455206cba5a1006f0dfa544f4f3",
-    "figure.pdf": "745b53759842fd6cc67af0f1aa203815687cf10ee273b339b92d8c503a316381"
+    "figure.png": "28d75e3fc7945968f2838424ccb0e844d888d51d29021f88715e9a8afd9b42c4",
+    "figure.pdf": "693154b4200f972720e77482f963b055e5f4fd94012a37f2330f4420afaa7b20"
   },
   "provenance": {
     "status": "PASS",

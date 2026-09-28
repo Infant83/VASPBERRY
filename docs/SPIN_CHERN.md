@@ -49,8 +49,9 @@ excluded source band.
 Within the complete occupied space, VASPBERRY forms the full matrix of
 spin along the chosen Cartesian axis, including off-diagonal band elements.
 Its positive and negative eigenspaces define the two sectors. The
-Fukui–Hatsugai–Suzuki (FHS) method uses determinant link variables from
-wavefunction overlaps to calculate their Chern numbers:
+Fukui–Hatsugai–Suzuki (FHS) method, also called the Fukui method, uses
+determinant link variables from wavefunction overlaps to calculate their
+Chern numbers:
 
 ```math
 C_{\mathrm{charge}}=C_++C_-,\qquad

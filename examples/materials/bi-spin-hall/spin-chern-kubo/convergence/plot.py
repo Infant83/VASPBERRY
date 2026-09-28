@@ -23,7 +23,7 @@ def main():
  for col,(bands,title,color) in enumerate([('1:10','Occupied bands 1–10','#196c93'),('9:10','Selected pair 9–10','#ad4329')]):
   ax=axes[0,col];selected=sorted([r for r in rows if r['series']=='mesh' and r['bands']==bands],key=lambda r:r['mesh'])
   ax.plot([r['mesh'] for r in selected],[r['C_est_spin'] for r in selected],'o-',color=color,label='Canonical proxy, sum bands ≤48')
-  ax.axhline(selected[0]['Fukui_C_spin'],color='black',ls='--',lw=1.2,label='Spin Chern number (FHS)')
+  ax.axhline(selected[0]['Fukui_C_spin'],color='black',ls='--',lw=1.2,label='Spin Chern number (Fukui)')
   if col==1:ax.plot([r['mesh'] for r in selected],[r['Gamma_point_contribution'] for r in selected],'x:',color='#777777',label='One sampled Γ-point contribution')
   ax.set(xlabel='N in N×N mesh',ylabel='Raw spin-sector integral',title=title,xticks=[6,12,18])
   ax.legend(fontsize=8,loc='best');ax.grid(alpha=.18)

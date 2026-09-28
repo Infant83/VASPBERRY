@@ -4,8 +4,9 @@ Version 1.3.0 introduces `vaspberry.band-curvature` schema version **1** and
 `vaspberry.hall-spectrum` schema version **1**. Schema versions describe file
 contracts and are independent of the software version. These formats do not
 replace the existing plaquette-flux format of the Fukui–Hatsugai–Suzuki (FHS)
-Chern-number method or the `VASPBERRY_Z2_FIELD` format of the separate
-Fukui–Hatsugai (FH) Z₂ n-field method.
+method, also called the Fukui method, for Chern numbers. The
+`VASPBERRY_Z2_FIELD` format belongs to the separate Fukui–Hatsugai (FH)
+Z₂ n-field method and is also unchanged.
 
 ## Read the file that matches your question
 
@@ -119,7 +120,7 @@ Plot `k_distance_A-1` against `omega_plus_xy_A2` and `omega_minus_xy_A2`
 for an xy-plane path, or the appropriate tensor component for another plane.
 The [graphene](../examples/materials/graphene-spin-chern/kubo/) and
 [Bi](../examples/materials/bi-spin-hall/spin-chern-kubo/) examples show these
-plots beside full-zone Chern numbers and Berry fluxes from the FHS method, retaining failures and unconverged
+plots beside full-zone Chern numbers and Berry fluxes from the Fukui method, retaining failures and unconverged
 integrals rather than assigning unsupported Chern numbers.
 
 ## PROCAR character and charge-Hall attribution

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Read a VASP WAVECAR and evaluate 2D Fukui-Hatsugai-Suzuki (FHS) plaquette phases.
+"""Read a VASP WAVECAR and evaluate 2D plaquette phases.
+
+The Fukui-Hatsugai-Suzuki (FHS) method is called the Fukui method here.
 
 This is a deliberately small, read-only validation program.  Its conventions
 match VASPBERRY 1.0:
@@ -2654,7 +2656,7 @@ def plot_k_resolved_maps(
         else "Cartesian first Brillouin zone"
     )
     fig.suptitle(
-        "WAVECAR-direct FHS maps in " + domain_title
+        "Fukui method (WAVECAR): " + domain_title
         + " (raw maps include quality diagnostics)"
     )
     output = output_dir / "wavecar_fukui_kresolved.png"

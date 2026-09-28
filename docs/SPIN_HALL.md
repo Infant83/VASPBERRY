@@ -175,8 +175,8 @@ sectors can cancel in charge Hall while adding in spin Hall. This is the
 conventional current response, not a spin Chern number.
 
 The separate native [projected-spin Chern number calculation](SPIN_CHERN.md) uses
-the Fukui–Hatsugai–Suzuki (FHS) link-variable method on positive/negative
-occupied-space spin sectors. It needs
+the Fukui–Hatsugai–Suzuki (FHS) link-variable method, also called the Fukui
+method, on positive/negative occupied-space spin sectors. It needs
 an open projected-spin gap as well as an isolated occupied space, and does
 not use the velocity matrices required by the spin-current response here.
 

@@ -14,13 +14,14 @@ conventions and regression evidence behind that exercise.
 ## Reference map
 
 Chern-number examples use the Fukui–Hatsugai–Suzuki (FHS) link-variable
-method. Z₂ examples use the separate Fukui–Hatsugai (FH) n-field method.
+method, also called the Fukui method. Z₂ examples use the separate
+Fukui–Hatsugai (FH) n-field method.
 The Kubo-formula examples evaluate Berry curvature and response from
 interband matrix elements.
 
 | Topic | Actual VASP exercise and reference | Supplementary reference | Use in a guide or report |
 |---|---|---|---|
-| FHS method / Chern numbers | [MoS₂ curvature map](../examples/features/fukui-berry-curvature/), [Bi Chern number](../examples/features/fukui-chern/) | [QWZ phases](../validation/models/fukui-chern/) | Explain local valley curvature, lattice flux, phases with nonzero Chern number and Hall sign |
+| Fukui method / Chern numbers | [MoS₂ curvature map](../examples/features/fukui-berry-curvature/), [Bi Chern number](../examples/features/fukui-chern/) | [QWZ phases](../validation/models/fukui-chern/) | Explain local valley curvature, lattice flux, phases with nonzero Chern number and Hall sign |
 | Kubo-formula Berry curvature | [MoS₂ band path](../examples/features/kubo-curvature/) | [Analytic matrix curvature](../validation/models/kubo-curvature/) | Explain the curvature formula, units and comparison with an independent exact model |
 | Charge Hall / regions | [Bi insulating-gap response](../examples/features/hall-valley/) | [Model occupations and regions](../validation/models/hall-valley/) | Explain occupation weighting and regional/band sum rules; Bi demonstrates a zero charge-Hall plateau |
 | Z₂ | [Bi WAVECAR recalculation](../examples/features/z2/) | [Stored Bi field validation](../validation/models/z2/) | Explain field diagnostics, historical comparison and plotting separately from recalculation |

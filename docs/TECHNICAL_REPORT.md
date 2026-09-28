@@ -14,7 +14,7 @@ properties directly from VASP wavefunctions. Its main workflow reads a
 WAVECAR with the native Fortran executable and writes numerical results for
 post-processing and plotting. The
 examples compare occupied-space and spin-sector Chern numbers evaluated with the
-Fukui-Hatsugai-Suzuki (FHS) method, the Z₂ invariant evaluated with the
+Fukui-Hatsugai-Suzuki (FHS) method (also called the Fukui method), the Z₂ invariant evaluated with the
 Fukui-Hatsugai (FH) method, and Berry curvature from the Kubo formula on
 Brillouin-zone meshes and symmetry paths. A native projected-spin
 Kubo task also resolves the two spin sectors, including the change of their
@@ -38,7 +38,7 @@ limitations with reproducible inputs, commands and reference results.
 
 ### 1.1 Berry curvature from wavefunction overlaps
 
-The Fukui-Hatsugai-Suzuki (FHS) method evaluates the Berry phase around each cell
+The Fukui method evaluates the Berry phase around each cell
 of a periodic k mesh using overlaps between neighboring wavefunctions.
 For an isolated group of bands, the overlap is a matrix and its determinant
 gives a gauge-invariant loop phase. With the connection
@@ -63,7 +63,7 @@ The discrete construction and its band-group extension are described by
 
 The map and integral convey different information. A material can have strong
 local curvature at opposite valleys while its total Chern number is zero.
-The FHS link construction supplies a lattice Chern number; the Kubo
+The link construction in the Fukui method supplies a lattice Chern number; the Kubo
 integral is not rounded or adjusted to reproduce that integer. An integer
 lattice Chern number also needs a sufficiently resolved mesh and
 a physically appropriate isolated band group.
@@ -74,7 +74,7 @@ For an isolated selected band space, the native `spin-chern` task
 constructs the matrix of $`\sigma_{\hat a}`$ along a chosen Cartesian axis.
 It retains all off-diagonal band elements. Its positive and negative
 eigenspaces define the spin sectors, following
-[Prodan](https://doi.org/10.1103/PhysRevB.80.125327). The FHS method evaluates
+[Prodan](https://doi.org/10.1103/PhysRevB.80.125327). The Fukui method evaluates
 their Chern numbers $`C_+`$ and $`C_-`$; the spin Chern number is their
 half-difference:
 
@@ -251,7 +251,7 @@ Independent four-state tests with exact derivatives agree with small
 geometric sector loops within $`6.94\times10^{-9}`$ in model units for all
 three components. Nonorthogonal selected-frame changes and axis reversal
 preserve the expected geometry. The exact-model positive-sector integral
-approaches the Chern number +1 obtained with the FHS method: 1.015414722 at
+approaches the Chern number +1 obtained with the Fukui method: 1.015414722 at
 8×8 and 1.000000169 at 24×24.
 The mixing term reaches 0.05207, so its omission is detectable. These tests
 validate the geometric kernel separately from material approximations.
@@ -262,7 +262,7 @@ The direct-wavefunction workflow has four steps:
 
 1. Calculate the electronic states with VASP, using a full periodic mesh
    for BZ integrals or an explicit path for local curvature and band context.
-2. Run the native VASPBERRY executable on the WAVECAR. Select the FHS method
+2. Run the native VASPBERRY executable on the WAVECAR. Select the Fukui method
    for Chern numbers, the FH n-field method for the Z₂ invariant, Kubo-formula
    calculations for pointwise curvature and charge response, or the optical
    and wavefunction output modes.
@@ -279,9 +279,9 @@ The current repository build provides the following `--task` selectors:
 
 | Native task | Numerical output |
 |---|---|
-| `chern` | Berry flux, area-averaged curvature and Chern number of the selected band space, evaluated with the FHS method |
+| `chern` | Berry flux, area-averaged curvature and Chern number of the selected band space, evaluated with the Fukui method |
 | `z2` | Z₂ invariant from the Fukui-Hatsugai (FH) n-field method |
-| `spin-chern` | Spin-sector Berry fluxes and Chern numbers from the FHS method; spin Chern number (available in v1.6.1) |
+| `spin-chern` | Spin-sector Berry fluxes and Chern numbers from the Fukui method; spin Chern number (available in v1.6.1) |
 | `spin-kubo` | Projected-spin sector point curvature and optional raw mesh integrals (available in v1.6.1) |
 | `kubo` | Pointwise band or bundle curvature on a mesh or path |
 | `kubo-pairs` | Interband-pair data for Python charge-Hall integration |
@@ -352,7 +352,7 @@ calculation or a material-convergence benchmark.
 
 | Dataset | Wavefunctions and sampling | Quantities shown |
 |---|---|---|
-| Monolayer MoS₂, full zone | SOC; 12×12 mesh; 26 bands; 400 eV | Occupied-space Berry curvature from the FHS method and the Kubo formula, bands 1–18 |
+| Monolayer MoS₂, full zone | SOC; 12×12 mesh; 26 bands; 400 eV | Occupied-space Berry curvature from the Fukui method and the Kubo formula, bands 1–18 |
 | Monolayer MoS₂, matching path | SOC; 49 K–Γ–K′ points; 26 bands; 400 eV | VASP band structure and Kubo curvature beside the maps |
 | Monolayer MoS₂, local valleys | SOC; two 9×9 patches; 26 bands; 400 eV | Isolated band-18 curvature near K and K′ |
 | Monolayer MoS₂, transport | SOC; 12×12 to 36×36 meshes; stored and retained band windows varied separately; 400 eV | Chemical-potential and temperature dependence of regional Hall response |
@@ -360,7 +360,7 @@ calculation or a material-convergence benchmark.
 | MoS₂ stacking comparison | Monolayer and 1H, 2H, 3R bilayers; PBE+SOC; separate 6×6 SCF densities; 49 Γ–M–K–Γ–K′ points; 60/64 path bands; 400 eV | VASP bands and circular optical selection from WAVECAR and standard WAVEDER |
 | Monolayer MoS₂, supplied path | SOC; 48 K–Γ–K′ points; 32 bands; 400 eV | Γ-point state density; original optical tutorial |
 | Buckled Bi bilayer | Two atoms; PBE+SOC; 400 eV; fresh 12×12 SCF density; full 6×6, 12×12 and 18×18 meshes; occupied bands 1–10 | Native Z₂ n-field; optional PAW spin response in Appendix A |
-| MnBi₂Te₄, three septuple layers | SOC+U; 21 atoms; full 6×6 VASP mesh; 192 bands; occupied bands 1–123; 270 eV | Occupied-space Chern number from WAVECAR using the FHS method; coarse optical-integral diagnostic |
+| MnBi₂Te₄, three septuple layers | SOC+U; 21 atoms; full 6×6 VASP mesh; 192 bands; occupied bands 1–123; 270 eV | Occupied-space Chern number from WAVECAR using the Fukui method; coarse optical-integral diagnostic |
 | Planar graphene | Two C atoms; PBE+SOC; 520 eV; 16 bands; occupied bands 1–8; full 6×6, 9×9 and 12×12 meshes | Native projected-spin sectors and Chern numbers; separate no-SOC gap control |
 | Graphene spin-sector Kubo | Same fixed density; 49 Γ–K–M–Γ points and 12×12 mesh; 16 bands | Bands 1–8 and 7–8 local curvature; occupied-space Chern-number comparison; rejected pair link |
 | Bi spin-sector Kubo | Same fresh Bi fixed density; 49 Γ–K–M–Γ points and 6×6 mesh; 48 bands; 400 eV | Bands 1–10 and 9–10 local curvature; different occupied/pair Chern numbers |
@@ -387,11 +387,13 @@ construction is additional to the WAVECAR workflows in the main text.
 
 <a id="31-mos₂-fukui-berry-curvature-over-the-full-brillouin-zone"></a>
 
-### 3.1 MoS₂: Berry curvature from the FHS method over the full Brillouin zone
+### 3.1 MoS₂: Berry curvature from the Fukui method over the full Brillouin zone
 
-![Berry-curvature map from the FHS method, band structure and symmetry-path cut](../examples/features/fukui-berry-curvature/reference/smooth/figure.png)
+<a id="31-mos₂-berry-curvature-from-the-fhs-method-over-the-full-brillouin-zone"></a>
 
-**Figure 1.** (a) Area-averaged Berry curvature from the FHS method of occupied bands 1–18 in the
+![Berry-curvature map from the Fukui method, band structure and symmetry-path cut](../examples/features/fukui-berry-curvature/reference/smooth/figure.png)
+
+**Figure 1.** (a) Area-averaged Berry curvature from the Fukui method of occupied bands 1–18 in the
 Cartesian first Brillouin zone. The dashed line marks K–Γ–K′, with
 K = (1/3, 2/3) and K′ = −K in reciprocal coordinates. Native 12×12 plaquette
 values are displayed with periodic bilinear interpolation onto a 401×401
@@ -433,7 +435,7 @@ valid for the bundle calculation. The native option `-kubo_bundle 1` performs
 the external-band sum directly, avoiding large cancelling internal terms.
 
 Figures 1 and 2 describe the same occupied band space. Their numerical
-values need not coincide at this resolution: the FHS method gives finite-plaquette
+values need not coincide at this resolution: the Fukui method gives finite-plaquette
 averages, while this Kubo result uses pointwise canonical momentum and a
 finite empty-band window. The 12×12 mesh and 26 stored bands require
 convergence for quantitative predictions. NumPy interpolation smooths only
@@ -648,7 +650,9 @@ conversion of complex amplitudes into a physical-coordinate density map.
 
 <a id="36-mnbi₂te₄-occupied-bundle-fukui-chern-number"></a>
 
-### 3.6 MnBi₂Te₄: occupied-space Chern number from the FHS method
+### 3.6 MnBi₂Te₄: occupied-space Chern number from the Fukui method
+
+<a id="36-mnbi₂te₄-occupied-space-chern-number-from-the-fhs-method"></a>
 
 This example demonstrates a nonzero Chern number of the complete
 occupied VASP band space. The three-septuple-layer MnBi₂Te₄ film has 21 atoms
@@ -657,18 +661,18 @@ vertical spacings from Yan et al., with in-plane $`a=4.336`$ Å, PBE+SOC and
 Mn $`U_{\rm eff}=5.34`$ eV following Otrokov et al. It is distinct from the
 relaxed films in that study.
 
-The VASP gap is **17.10 meV**. The FHS method applied to the **complete occupied
+The VASP gap is **17.10 meV**. The Fukui method applied to the **complete occupied
 valence-band space, bands 1–123, gives the Chern number C = −1**, corresponding to
 $`\sigma_{xy}=+e^2/h`$ in our convention. A direct 6×6 PAW optical integral
 instead gives **163.109 $`e^2/h`$**: the Γ-point curvature reaches approximately
 $`-1.52\times10^4`$ Å², and this coarse mesh overweights the narrow peak.
 This optical result is a convergence diagnostic, not a quantized response.
-An integer Chern number obtained with the FHS method does not establish convergence of the pointwise
+An integer Chern number obtained with the Fukui method does not establish convergence of the pointwise
 Kubo integral, and no integer value is imposed on that integral.
 
 The native Fortran calculation evaluates overlap determinants directly in
 the complete VASP occupied space. Its **C = −1** result and all 36 plaquette
-fluxes agree with the independent Python implementation of the FHS method within
+fluxes agree with the independent Python implementation of the Fukui method within
 the native map's printed precision. The separately checked deep bands 1–36
 form a C = 0 bundle. The
 [native output and comparison](../examples/materials/mnbi2te4-qah/reference/native-fukui/)
@@ -774,8 +778,8 @@ uniform $`10^{-9}`$ relative tolerance. Such agreement of the dominant peaks
 does not imply accuracy of their much smaller difference.
 
 Selecting the top pair with `--bands 7:8` produces local sector curvature
-where the sampled energy and spin gaps pass. A separate full-mesh FHS
-calculation rejects that pair: an adjacent-sector overlap has minimum
+where the sampled energy and spin gaps pass. A separate full-mesh calculation
+with the Fukui method rejects that pair: an adjacent-sector overlap has minimum
 singular value $`2.35\times10^{-10}`$, below the link threshold. Consequently
 the example retains the rejection and assigns **no pair Chern number**.
 Pointwise gap checks alone do not certify globally resolved connectivity;
@@ -786,7 +790,7 @@ the exact cause of this pair-link failure is not established here.
 **Figure 10.** (a) Positive/negative occupied-sector Kubo curvature along
 Γ–K–M–Γ. (b) Local curvature of the 7–8 pair, without a global Chern number
 assignment. (c) Raw occupied positive-sector point curvature on the 12×12
-mesh. (d) Independent positive-sector Berry flux from the FHS method. Signed-log
+mesh. (d) Independent positive-sector Berry flux from the Fukui method. Signed-log
 display exposes both signs and the very large peaks; it does not modify
 the stored data or repair the mesh integral. The example plotter reads
 native CSVs, changes no wavefunctions and performs no additional curvature
@@ -816,14 +820,14 @@ Section 3.10 follows the same Hamiltonian through 12×12 and 18×18 meshes;
 it separates the stable discrete invariant from the slowly resolved Kubo
 quadrature.
 
-| Bi subspace | Sector ranks | Sector Chern numbers $`C_+,C_-`$ (FHS) | Raw $`C_{\rm spin}^{\rm est}`$ |
+| Bi subspace | Sector ranks | Sector Chern numbers $`C_+,C_-`$ (Fukui method) | Raw $`C_{\rm spin}^{\rm est}`$ |
 |---|---|---|---:|
 | Occupied bands 1–10 | 5 + 5 | +1, −1 | 1.999774784 |
 | Top pair 9–10 | 1 + 1 | +2, −2 | −118.7661327 |
 
 The Kubo estimates disagree strongly with the geometric results. Rounding
 1.99977 to 2 would even assign the wrong occupied-sector invariant. Keep
-the Chern number from the FHS method and the local canonical approximation separate; refine
+the Chern number from the Fukui method and the local canonical approximation separate; refine
 sampling and source bands, then examine the missing physical-operator
 terms before using the Kubo integral quantitatively.
 
@@ -836,7 +840,7 @@ SOC they do not identify two independent collinear energy channels.
 
 **Figure 11.** (a,b) Actual 49-point occupied and pair-sector path curves.
 (c) Occupied positive-sector point curvature on the 6×6 mesh. (d) The
-same occupied space's independent positive-sector Berry flux from the FHS method. All panels
+same occupied space's independent positive-sector Berry flux from the Fukui method. All panels
 use native outputs. Straight segments connect path samples only; no
 interpolated Hamiltonian supplies extra samples. The saved decomposition
 columns permit additional plots of the parent contribution and the
@@ -854,7 +858,7 @@ constant. Three controls answer different questions: vary the mesh with source
 The example supplies ordinary VASP preparation, native MPI commands and
 portable full-point tables, with separate source and output checksums.
 
-| Mesh, source64 / cutoff48 | Occupied raw spin integral | Pair raw spin integral | Spin Chern number (FHS), occupied / pair |
+| Mesh, source64 / cutoff48 | Occupied raw spin integral | Pair raw spin integral | Spin Chern number (Fukui method), occupied / pair |
 |---|---:|---:|---:|
 | 6×6 | 1.9997800132 | −118.76612842 | 1 / 2 |
 | 12×12 | 1.0382696725 | −29.02711625 | 1 / 2 |
@@ -895,7 +899,7 @@ processed each partition with its original matching OUTCAR; post-processing
 validated the assembled periodic grid and applied the signed area weights
 of Section 1.2.1. The table is therefore labelled as an aggregate of native
 point curvature, separately from native full-mesh integral output. The
-independent validation with the FHS method uses actual assembled WAVECAR coefficients and
+independent validation with the Fukui method uses actual assembled WAVECAR coefficients and
 the common verified spin frame. Source headers were not altered.
 
 An additional ordinary VASP 12×12/source64 restart produced a genuine matching
@@ -909,7 +913,7 @@ it does not certify the physical convergence of those values.
 
 **Figure 12.** Bi mesh and intermediate-state controls using the same
 Hamiltonian. The figure retains noninteger and negative raw estimates;
-Spin Chern numbers evaluated with the FHS method are shown as independent geometric references. The cutoff
+Spin Chern numbers evaluated with the Fukui method are shown as independent geometric references. The cutoff
 sweep uses an unchanged source80 WAVECAR. The associated source-padding
 table holds the retained cutoff fixed. Full point data permit alternative plots
 without rerunning the native curvature calculation.
@@ -1003,7 +1007,7 @@ for spectra and transport. State units, represented bands, temperature and
 broadening in the caption.
 
 Start with WAVECAR and the native executable to calculate Chern numbers with
-the FHS method, the Z₂ invariant with the FH method, Kubo
+the Fukui method, the Z₂ invariant with the FH method, Kubo
 curvature, optical selection and state densities. For charge Kubo transport,
 export the native interband pairs and use the Python occupation/integration
 step to scan chemical potential and temperature without repeating the
@@ -1031,7 +1035,7 @@ numerical files for reproducibility.
 
 These additional routes address the operator content of response functions.
 They complement the native WAVECAR examples; they are not prerequisites for
-Chern-number calculations with the FHS method, the FH Z₂ invariant, or
+Chern-number calculations with the Fukui method, the FH Z₂ invariant, or
 canonical-momentum Kubo-formula analysis. Standard WAVEDER needs no
 VASP source change. Full velocity and PAW spin inputs use the separately
 documented instrumented producer. Their Python backends and convergence

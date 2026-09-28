@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Draw completed native spin-sector Kubo proxies beside Chern numbers evaluated with FHS."""
+"""Draw completed native spin-sector Kubo proxies beside Chern numbers evaluated with the Fukui method."""
 import argparse,csv,hashlib,json
 from pathlib import Path
 import sys
@@ -54,7 +54,7 @@ def main():
  p.add_argument('--prefix',default='SPIN')
  p.add_argument('--pair-prefix',default='SPIN')
  p.add_argument('--poscar',required=True,type=Path)
- p.add_argument('--title',default='Projected-spin sectors: differential proxy and Chern numbers (FHS)')
+ p.add_argument('--title',default='Projected-spin sectors: differential proxy and Chern numbers (Fukui method)')
  p.add_argument('--path-node-indices',nargs='+',type=int,default=[1,17,33,49])
  p.add_argument('--path-labels',nargs='+',default=['Γ','K','M','Γ'])
  p.add_argument('--k-fractional',nargs=2,type=float,default=[1/3,1/3])
@@ -121,8 +121,8 @@ def main():
  bq=np.column_stack([numeric(berry,k) for k in ['k1','k2','k3']]);flux=numeric(berry,'flux_plus_rad')
  if abs(flux.sum()/(2*np.pi)-fv['C_plus'])>1e-8:raise ValueError('FHS flux sum and Chern-number summary disagree')
  artist,map_fukui=draw_plaquette_map(axes[1,1],bq,flux,reciprocal,k_fractional=a.k_fractional)
- fig.colorbar(artist,ax=axes[1,1],shrink=.8,label='Native + sector flux (rad)');axes[1,1].set_title('(d) Occupied FHS plaquette flux')
- table=[['Subspace','Raw C_est,+','Raw C_est,−','C+ (FHS)','C− (FHS)']]
+ fig.colorbar(artist,ax=axes[1,1],shrink=.8,label='Native + sector flux (rad)');axes[1,1].set_title('(d) Fukui method: occupied flux')
+ table=[['Subspace','Raw C_est,+','Raw C_est,−','C+ (Fukui)','C− (Fukui)']]
  for c in comparison:table.append([c['subspace']+' '+c['bands'],f"{c['C_est_plus']:.7g}",f"{c['C_est_minus']:.7g}",'unassigned' if c['C_Fukui_plus'] is None else f"{c['C_Fukui_plus']:.7g}",'unassigned' if c['C_Fukui_minus'] is None else f"{c['C_Fukui_minus']:.7g}"])
  tx=fig.add_axes([.08,.06,.84,.08]);tx.axis('off');tab=tx.table(cellText=table[1:],colLabels=table[0],loc='center',cellLoc='center');tab.auto_set_font_size(False);tab.set_fontsize(9);tab.scale(1,1.3)
  fig.suptitle(a.title,fontsize=14);fig.text(.5,.93,'Canonical-momentum derivative proxy · pseudo Gram metric · no integer rounding',ha='center',fontsize=10);fig.text(.5,.02,'Lines connect stored points; cell colors are constant. C_est is not a certified topological invariant.',ha='center',fontsize=9)

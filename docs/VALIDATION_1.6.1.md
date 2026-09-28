@@ -4,8 +4,8 @@ This compatible feature release adds native projected-spin `spin-chern` and
 `spin-kubo`, including `--sum-bands` for a response cutoff on unchanged source
 states. Existing Kubo-formula Berry-curvature/response, Chern-number, Z₂ and
 postprocessing interfaces remain available. Chern numbers use the
-Fukui–Hatsugai–Suzuki (FHS) link-variable method; Z₂ uses the separate
-Fukui–Hatsugai (FH) n-field method. [Release notes](releases/v1.6.1.md) explain
+Fukui–Hatsugai–Suzuki (FHS) link-variable method, also called the Fukui
+method; Z₂ uses the separate Fukui–Hatsugai (FH) n-field method. [Release notes](releases/v1.6.1.md) explain
 the commands and outputs.
 
 ## Publication and installation
@@ -39,7 +39,7 @@ an unresolved energy multiplet or a retained-sum boundary is rejected.
 Independent exact-Hamiltonian tests compare all Cartesian sector curvatures
 with small geometric loops, include a nonzero spin-mixing derivative, and check
 axis reversal and selected-frame changes. An exact-model integral approaches
-the Chern number computed independently using the FHS method as its mesh is
+the Chern number computed independently using the Fukui method as its mesh is
 refined. Real Bi cutoff checks
 also agree with an independent NumPy calculation. Default/full-band results
 are unchanged by introducing the optional retained sum cutoff.

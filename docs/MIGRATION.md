@@ -2,9 +2,9 @@
 
 Version 1.4.0 is available as a versioned source release. Preserve the exact producer
 version/commit and original files when migrating a calculation. The existing
-Chern-number interface based on the Fukui–Hatsugai–Suzuki (FHS) method and
-Z₂ interface based on the separate Fukui–Hatsugai (FH) n-field method remain
-available.
+Chern-number interface based on the Fukui–Hatsugai–Suzuki (FHS) method, also
+called the Fukui method, remains available. The Z₂ interface retains the
+separate Fukui–Hatsugai (FH) n-field method.
 
 ## Version 1.4.0 commands, projections and velocity fixes
 
@@ -58,7 +58,7 @@ not a guarantee of physical velocity completeness or mesh convergence.
 | Confirmed affected older Fortran Kubo output | Import with the explicit historical doubled convention |
 | Corrected 1.3.0 Fortran Kubo output | Import as standard normalization |
 | Generic interband-matrix Kubo result using `-2 Im` | Already normalized; do not divide by two again |
-| FHS plaquette flux / FH Z₂ n-field | Unaffected by this Kubo correction |
+| Plaquette flux from the Fukui method / FH Z₂ n-field | Unaffected by this Kubo correction |
 | Unknown or modified producer | Establish its formula from source/provenance before importing |
 
 The `import-legacy` command requires an explicit source convention. It does
@@ -126,7 +126,7 @@ line-mode calculation into a two-dimensional integration mesh. See the
 
 ## Choose the correct output kind
 
-- Keep Berry flux from the FHS method in radians with its cell and vertex-energy interpretation.
+- Keep Berry flux from the Fukui method in radians with its cell and vertex-energy interpretation.
   Its old output is not an input to the point-curvature importer.
 - Use the standardized point-curvature NPZ/JSON pair for the new `hall`
   command. Arrays and metadata travel together; the JSON binds the NPZ bytes

@@ -5,15 +5,15 @@ density as the [parent Bi example](../README.md). It compares the occupied
 space 1–10 with the selected top pair 9–10. Native `spin-kubo` produces local
 projected-spin curvature from a canonical-momentum derivative proxy; native
 `spin-chern` independently computes full-BZ Chern numbers with the
-Fukui–Hatsugai–Suzuki (FHS) method. This geometric
+Fukui–Hatsugai–Suzuki (FHS) method, called the Fukui method below. This geometric
 sector calculation is distinct from conventional spin-current Hall transport.
 
 On the saved 6×6 mesh, occupied bands 1–10 give `C+=1,C−=-1,Cspin=1`
-with FHS.
+with the Fukui method.
 The selected pair 9–10 gives `C+=2,C−=-2,Cspin=2`. The latter describes that pair;
 it is not the occupied system's invariant or its Z2 index. One coarse mesh is
 not evidence of mesh convergence. The pointwise proxy sums remain raw and
-noninteger even where a Chern number has been evaluated with FHS.
+noninteger even where a Chern number has been evaluated with the Fukui method.
 
 ## Prepare and run ordinary VASP
 
@@ -69,7 +69,7 @@ contain the path coordinate, all three Cartesian curvature components,
 spin-mixing decomposition and local quality checks. `*_KUBO_INTEGRAL.csv`
 contains raw full-mesh sums only when `--mesh` is supplied. The separate
 `*_CHERN.csv` and `*_BERRY.csv` contain the Chern numbers and plaquette flux
-evaluated with FHS.
+evaluated with the Fukui method.
 The native program writes `result_status=PASS` only after its checks pass.
 Choose new output prefixes before rerunning; existing files are not overwritten.
 
@@ -85,7 +85,7 @@ python3 "$PLOT" \
   --title 'Bi: occupied and selected-pair spin sectors' --output-dir "$WORK/figure"
 ```
 
-The plot finds FHS outputs in the mesh directory and automatically includes
+The plot finds the Fukui method outputs in the mesh directory and automatically includes
 the `PAIR_*` outputs when present. Folder/prefix overrides are listed by `--help`.
 
 To replay the saved figure using only public CSVs:
@@ -102,7 +102,7 @@ Curvature uses a signed-log display; full-precision comparisons are saved in
 native point-cell/plaquette values are clipped to the first Brillouin zone.
 
 For this 6×6 source the occupied proxy has `C_est_spin≈1.9997748`, while the
-pair proxy has `C_est_spin≈−118.76613`; the corresponding spin Chern numbers evaluated with FHS are 1
+pair proxy has `C_est_spin≈−118.76613`; the corresponding spin Chern numbers evaluated with the Fukui method are 1
 and 2. These discrepancies are retained. Canonical momentum is an approximate
 derivative, 48 stored bands are finite, and this mesh does not establish
 quadrature convergence. Do not round the proxy, interpret it as a conventional

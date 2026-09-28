@@ -7,7 +7,7 @@ All notable changes to VASPBERRY are recorded here.
 ### Documentation and terminology
 
 - Distinguish Chern numbers and spin Chern numbers from the
-  Fukui-Hatsugai-Suzuki (FHS) method used to calculate them, and describe
+  Fukui-Hatsugai-Suzuki (FHS, also called Fukui) method used to calculate them, and describe
   Berry-curvature/response calculations in terms of the Kubo formula.
 - Identify the separate Z₂ n-field construction as the Fukui-Hatsugai (FH)
   method. Update guides, examples, figure labels, help and the technical report.

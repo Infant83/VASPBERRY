@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Show a Cartesian Berry-curvature map, a marked path, and matching bands.
 
-FHS path values are periodic bilinear samples of plaquette averages. Kubo
-curves use separately calculated point values on the supplied path. Numerical
-energy zeros and raw curvature files are never changed by plotting.
+The Fukui-Hatsugai-Suzuki (FHS) method is called the Fukui method here.
+For the Fukui method, path values are periodic bilinear samples of plaquette
+averages. Curves from the Kubo formula use separately calculated point values
+on the supplied path. Numerical energy zeros and raw curvature files are never
+changed by plotting.
 """
 from __future__ import annotations
 
@@ -205,7 +207,7 @@ def plot_panels(*, method, input_path, poscar_path, bands_csv, output_path,
         curve = periodic_bilinear(q, values, path_q)
         curve_kind = "periodic_bilinear_display_cut_of_plaquette_averages"
         map_kind = "native_plaquette_averages"
-        quantity = rf"FHS: occupied bands 1–{occupied}"
+        quantity = rf"Fukui method: occupied bands 1–{occupied}"
         curve_label = "Map cut"
     elif method in ("kubo", "kubo-bundle"):
         if path_input is None:
@@ -235,7 +237,7 @@ def plot_panels(*, method, input_path, poscar_path, bands_csv, output_path,
                 raise ValueError("Kubo bundle path gaps disagree with band table")
         curve_kind = "native_Kubo_at_actual_path_points"
         map_kind = "pointwise_Kubo_bundle_trace" if method == "kubo-bundle" else "pointwise_Kubo_band_curvature"
-        quantity = rf"Kubo: occupied bands 1–{occupied}" if method == "kubo-bundle" else rf"Kubo: band {band}"
+        quantity = rf"Kubo formula: occupied bands 1–{occupied}" if method == "kubo-bundle" else rf"Kubo formula: band {band}"
         curve_label = "Occupied bundle" if method == "kubo-bundle" else rf"Band {band}"
     else:
         raise ValueError("method must be fukui, kubo or kubo-bundle")
@@ -334,7 +336,7 @@ def plot_panels(*, method, input_path, poscar_path, bands_csv, output_path,
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--method", choices=("fukui", "kubo", "kubo-bundle"), required=True)
-    parser.add_argument("--input", type=Path, required=True, help="native FHS BERRYCURV.dat or mesh KUBO.csv")
+    parser.add_argument("--input", type=Path, required=True, help="native BERRYCURV.dat (Fukui method) or mesh KUBO.csv")
     parser.add_argument("--poscar", type=Path, required=True)
     bands = parser.add_mutually_exclusive_group(required=True)
     bands.add_argument("--bands-csv", type=Path, help="long-form unchanged VASP band table")

@@ -6,8 +6,9 @@ The transport implemented here is the Berry-curvature (Fermi-sea) term
     C(mu,T) = sum_n integral_BZ f(E_nk-mu,T) Omega_n(k) d^2k / (2*pi)
     sigma_xy(mu,T)/(e^2/h) = -C(mu,T)
 
-for a two-dimensional, uniformly sampled *full* Brillouin zone. For Fukui-Hatsugai-Suzuki (FHS)
-plaquettes, ``Omega*dS`` is weighted by the average Fermi occupation of its four
+for a two-dimensional, uniformly sampled *full* Brillouin zone. For the
+Fukui-Hatsugai-Suzuki (FHS) method, called the Fukui method here, ``Omega*dS``
+for each plaquette is weighted by the average Fermi occupation of its four
 vertices. A line-mode calculation, including legacy Kubo path output, is useful
 for plotting but is deliberately rejected for transport.
 

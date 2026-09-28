@@ -5,8 +5,9 @@ K and K′ valleys. Time-reversal symmetry makes the total Chern number vanish
 even though the local curvature is finite. This example uses the **Fukui–Hatsugai–Suzuki (FHS) method** to calculate
 plaquette fluxes and the corresponding **curvature Ωz(kx, ky)** from an actual
 VASP spinor WAVECAR and plots the curvature in Cartesian reciprocal coordinates inside the hexagonal first Brillouin zone.
+We use the common shorthand **Fukui method** below.
 
-![MoS2 FHS curvature map, matching bands and symmetry-path cut](reference/smooth/figure.png)
+![MoS2 curvature map from the Fukui method, matching bands and symmetry-path cut](reference/smooth/figure.png)
 
 The reference above was calculated with the current native VASPBERRY routine
 from a newly generated, complete **12 × 12 × 1 VASP mesh**. The public structure
@@ -25,12 +26,12 @@ replace this two-dimensional mesh.
 | Basis | 400 eV cutoff, 26 stored spinor bands, 144 k points |
 | Selected subspace | Occupied bands 1–18 |
 | Sampled occupied-to-empty gap | 1.67355 eV; the sampled global gap is also positive |
-| FHS sampling | 144 independent plaquettes |
+| Fukui method sampling | 144 independent plaquettes |
 | Input files | [POSCAR](inputs/POSCAR), [INCAR](inputs/INCAR), [KPOINTS](inputs/KPOINTS), public [CHGCAR.gz](../../1H-MoS2/KPATH/1.scf/CHGCAR.gz) |
 | VASP reference output | [OUTCAR](reference/vasp/OUTCAR), [EIGENVAL](reference/vasp/EIGENVAL), [OSZICAR](reference/vasp/OSZICAR) |
 
 The NSCF step took about 144 seconds and 602 MB peak resident memory on the
-reference machine. The native FHS step took about one minute. These timings
+reference machine. The native Fukui method step took about one minute. These timings
 indicate the scale of this small example; they are not a convergence study.
 
 ## 1. Generate the full-mesh WAVECAR
@@ -68,7 +69,7 @@ cd ../..
 Spinor components are detected automatically. `--bands 1:18` uses the
 determinant of the occupied-subspace overlap matrix, allowing degeneracy
 within that subspace. `--mesh 12,12` describes the WAVECAR mesh; it does not
-generate missing k points. This FHS calculation does not use the Kubo
+generate missing k points. This calculation with the Fukui method does not use the Kubo
 sum over empty intermediate states.
 
 The sign convention is `phi = −Arg(product of link determinants)` around
@@ -165,7 +166,7 @@ result record. Its input is the VASP WAVECAR. JSON files record results and prov
 | [Path curve](reference/smooth/path_curvature.csv), [bands](reference/path/bands.csv) | Plotted line values and unchanged 26-band VASP energies |
 | [Path EIGENVAL](reference/path/EIGENVAL), [OUTCAR](reference/path/OUTCAR) | Matching 49-point VASP calculation |
 | [Standalone map](reference/figure.png), [PDF](reference/figure.pdf) | Original Cartesian first-BZ map |
-| [BERRYCURV.dat](reference/BERRYCURV.dat) | Current native FHS output; only the workstation path in its comment header is normalized |
+| [BERRYCURV.dat](reference/BERRYCURV.dat) | Current native output from the Fukui method; only the workstation path in its comment header is normalized |
 | [summary.csv](reference/summary.csv) | 144 unique plaquette centers, Ωz and flux; fractional centers use a centered primitive cell |
 | [result.json](reference/result.json) | Input identity, numerical checks, units and plotting convention |
 | [crosscheck.json](reference/crosscheck.json) | Independent production Python FHS comparison using the same actual WAVECAR |

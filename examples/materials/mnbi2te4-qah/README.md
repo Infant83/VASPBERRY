@@ -2,7 +2,7 @@
 
 This example computes the complete occupied-bundle Chern number with the
 Fukui–Hatsugai–Suzuki (FHS) method directly from an actual VASP WAVECAR
-using the VASPBERRY executable. It gives
+using the VASPBERRY executable. We use the shorthand **Fukui method** below. It gives
 **C = −1 for occupied bands 1–123**. A separate standard-WAVEDER integral
 illustrates why an integer invariant does not establish convergence of a
 pointwise Hall integral.
@@ -230,7 +230,7 @@ VASPBERRY from the actual VASP-derived H and position operators. Open band
 circles are direct VASP samples; the gap inset follows K–Γ–M. Hollow Hall
 and convergence markers are the independent postw90 values on the same
 grids. All five prescribed quadrature controls are shown. The independent
-occupied-bundle Chern number evaluated with FHS is C = −1; the Hall values are not rounded.
+occupied-bundle Chern number evaluated with the Fukui method is C = −1; the Hall values are not rounded.
 
 ## 5. Optional support: independent postw90 crosscheck
 

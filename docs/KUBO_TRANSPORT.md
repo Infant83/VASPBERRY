@@ -5,10 +5,11 @@
 Actual VASP-based tutorials and reference results are provided for
 [native MoS₂ Kubo-formula Berry curvature](../examples/features/kubo-curvature/) and
 [MoS₂ Kubo-formula charge-Hall scans](../examples/features/kubo-hall/), and
-[Bi occupied-subspace Hall response from the FHS method](../examples/features/hall-valley/). Their
+[Bi occupied-subspace Hall response](../examples/features/hall-valley/). Their
 methods and required sampling are explicitly different: the Bi example uses
-Berry flux from the Fukui–Hatsugai–Suzuki (FHS) link-variable method, whereas
-the MoS₂ examples use Kubo-formula point Berry curvature.
+Berry flux from the Fukui–Hatsugai–Suzuki (FHS) link-variable method, also
+called the Fukui method, whereas the MoS₂ examples use Kubo-formula point
+Berry curvature.
 
 The VASPBERRY executable reads WAVECAR and exports point curvature or
 interband pair numerators. The supplied `tools/vaspberry_kubo.py` tool
@@ -36,8 +37,9 @@ canonical momentum; PAW/nonlocal/SOC velocity corrections are not supplied by
 that approximation.
 
 The [Bi charge-Hall tutorial](../examples/features/hall-valley/) uses a different
-production route: full-mesh WAVECAR occupied-subspace Hall response from FHS plaquette flux in the
-insulating gap. Bi's unresolved Kramers pairs prevent treating its individual
+production route: occupied-subspace Hall response in the insulating gap,
+using plaquette flux calculated by the Fukui method from a full-mesh WAVECAR.
+Bi's unresolved Kramers pairs prevent treating its individual
 bands as isolated-band input for pointwise Kubo-formula Berry curvature. Its zero charge Hall plateau is an actual
 material sanity check, not a nonzero valley-Hall demonstration.
 
@@ -456,15 +458,16 @@ normalization and must not be added to an already enumerated spinor spectrum.
 
 ## Point curvature and plaquette flux
 
-The Kubo formula yields Berry curvature at each k point. An FHS loop yields the flux through a
-mesh plaquette in radians. Dividing that flux by cell area is an area-averaged
-curvature estimate, not a measurement of point curvature at the cell center.
+The Kubo formula yields Berry curvature at each k point. The Fukui method
+yields the flux through a mesh plaquette in radians from a loop of link
+variables. Dividing that flux by cell area is an area-averaged curvature
+estimate, not a measurement of point curvature at the cell center.
 Their finite-mesh occupation approximations differ. Keep the existing
 `wavecar_fukui.py` workflows and their [valley-transport guide](VALLEY_TRANSPORT.md)
 when working with geometric plaquette data.
 
 Do not round a finite-mesh Kubo-formula curvature integral to make it integer.
-A lattice Chern number computed with the FHS method also needs a sufficiently
+A lattice Chern number computed with the Fukui method also needs a sufficiently
 resolved isolated band or bundle before it can be identified with the continuum
 invariant.
 
@@ -596,7 +599,7 @@ the postprocessing filling is explicitly T=0.
 
 Converge both the k mesh and accurately computed empty states. The
 [MnBi₂Te₄ example](../examples/materials/mnbi2te4-qah/) compares the Chern number
-computed with the FHS method against results from actual unmodified VASP
+computed with the Fukui method against results from actual unmodified VASP
 optical runs. It separates the coarse
 WAVEDER integral from VASPBERRY's dense full-connection Wannier calculation; a
 successful file/producer check does not establish integration convergence.

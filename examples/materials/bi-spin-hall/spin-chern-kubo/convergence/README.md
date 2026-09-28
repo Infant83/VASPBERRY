@@ -4,6 +4,8 @@ This follow-up varies the full Brillouin-zone mesh, the number of intermediate
 states in `spin-kubo`, and the VASP source eigensystem separately. The structure,
 PAW potential and fixed SCF density are identical to the [parent example](../../README.md).
 The 2016 Bi dataset is not used in this convergence series.
+Chern numbers are evaluated with the Fukui–Hatsugai–Suzuki (FHS) method,
+called the Fukui method below.
 
 `--bands 1:10` defines the occupied parent subspace. `--bands 9:10` defines only
 the top occupied pair. `--sum-bands 48` retains source bands 1–48 in the response
@@ -47,7 +49,7 @@ done
 Use the normal MPI launcher for your VASP installation. `OCC48_KUBO.csv` and
 `PAIR48_KUBO.csv` contain pointwise Cartesian sector curvature; their
 `*_KUBO_INTEGRAL.csv` files contain raw signed-area quadrature. `OCC_CHERN.csv`
-and `PAIR_CHERN.csv` contain the separate Chern numbers evaluated with FHS. Each run requires its
+and `PAIR_CHERN.csv` contain the separate Chern numbers evaluated with the Fukui method. Each run requires its
 own matching WAVECAR and OUTCAR. The source count and actual sum cutoff are
 recorded separately in the native CSV metadata.
 
@@ -74,7 +76,7 @@ independent source64 and source80 calculations at the same mesh. Changing
 
 At fixed source64 and response cutoff48, the actual results are:
 
-| Mesh | Occupied proxy `C_est_spin` | Pair proxy `C_est_spin` | Occupied spin Chern number (FHS) | Pair spin Chern number (FHS) |
+| Mesh | Occupied proxy `C_est_spin` | Pair proxy `C_est_spin` | Occupied spin Chern number (Fukui) | Pair spin Chern number (Fukui) |
 | --- | ---: | ---: | ---: | ---: |
 | 6×6 | 1.9997800132 | −118.76612842 | 1 | 2 |
 | 12×12 | 1.0382696725 | −29.02711625 | 1 | 2 |
@@ -121,7 +123,7 @@ python3 "$EXAMPLE/spin-chern-kubo/convergence/plot.py" \
 This optional plotting step uses Matplotlib, reads native-derived tables and writes
 `figure.png`, `figure.pdf` and `figure.svg`. It does not rerun VASP or calculate
 the Berry curvature. The figure displays raw estimates, including negative
-and noninteger results, alongside the Chern numbers evaluated independently with FHS.
+and noninteger results, alongside the Chern numbers evaluated independently with the Fukui method.
 
 ## Provenance and interpretation
 
@@ -149,7 +151,7 @@ saved in [native-mesh12-restart/](reference/native-mesh12-restart/), with
 uses real VASP output metadata; it does not combine fabricated OUTCAR headers.
 
 No noninteger Kubo estimate is rounded into a Chern number. A stable spin Chern number
-evaluated with FHS on these meshes establishes consistency within the sampled pseudo
+evaluated with the Fukui method on these meshes establishes consistency within the sampled pseudo
 wavefunction metric, while the curvature proxy still needs its own sampling,
 source-state and operator-approximation checks. The pair invariant describes
 bands 9–10 and is not the occupied system's Z2 index. See the full

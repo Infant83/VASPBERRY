@@ -62,12 +62,12 @@
     "bands.csv": "e7082383919d9cbb79fac30f653ba3e42726d61fdc941305f0dad3b0d415454f"
   },
   "path_input_sha256": null,
-  "plotter_sha256": "7905c948c1e30742cd58d22bd67645295f80a1693e9f3c077da9fcce3fa60fa5",
+  "plotter_sha256": "b070c322d5ca3d9813350a230bf9715b95ad3df844c7423addbca0f5e7debfc4",
   "status": "PASS",
   "workflow_mode": "plot_existing_native_outputs",
   "output_sha256": {
-    "figure.png": "153731be4390b627a145c3c142a22e57a7718f2bc65ef9a5e9441e28c5c88b1c",
-    "figure.pdf": "c93c5ad7f44740dce2edb32e385c1f055c430f2945e494b691f75bdfe528eb91",
+    "figure.png": "1cfd79e1c16ef11de896fa751c28b3f68a85eb579ab96181fb3ccd17baf17bb4",
+    "figure.pdf": "e21c8a09ef1034828c75d8e0788ce76f040fff4d7042f7f925150be261a6f49e",
     "path_curvature.csv": "475c62da9bc165d7542604faa066d90882a45cb9f6ec9b2496a4635261e12492"
   }
 }

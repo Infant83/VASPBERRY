@@ -3,12 +3,12 @@
   "date": "2026-09-27",
   "files": {
     "plot.py": {
-      "sha256": "0a6973b2d2e1eaa0d492214d0ab5f572815fd76cf64e104dcba6b7b3acb8a7f4",
-      "bytes": 10792
+      "sha256": "17c446224ffa1624888abc768671cb8613205fc82c24f50f5ecff551f57d674e",
+      "bytes": 10818
     },
     "README.md": {
-      "sha256": "74b404712206905c6b784db6bb0f34399143b74c783c96d5bdefa5b3bc832e37",
-      "bytes": 5824
+      "sha256": "ce6748927c94fb4e6097ea98cbbd7ba27a4f8ea5bc279fecbe7df04caf83c4ab",
+      "bytes": 5914
     },
     "reference/summary.json": {
       "sha256": "38ff3a1ab1b070cc3a9fbc2a7823853343931061a43eb45691fb180b5e98e1fc",
@@ -19,24 +19,24 @@
       "bytes": 4787
     },
     "reference/plotting.json": {
-      "sha256": "de120015343dad83c157d3a903fe07ea0bd35a884ba2945d74bd33353b990b5a",
+      "sha256": "8a16cb17ba06724055edcb30e46693057ba1f057b75a515b29fe232bfe5e9916",
       "bytes": 3259
     },
     "reference/figure.svg": {
-      "sha256": "9503c62052c956bb8fa8c494fded3589f1d1bde0a6dea5367ecd411a58cb9bbf",
-      "bytes": 189609
+      "sha256": "54f8cade5118231e941bdba45a1a9acb6199c4df79e54f50c40a2012fe0e257a",
+      "bytes": 189415
     },
     "reference/comparison.csv": {
       "sha256": "b9a54832ef5637dad419d371242a916d26ffc61126358cc67058d0305ce642d0",
       "bytes": 331
     },
     "reference/figure.pdf": {
-      "sha256": "8f67d63b63d66196e5a9c282a98b622a2c72a7a34ae09347cdd45b526889bf96",
-      "bytes": 55669
+      "sha256": "4e480ba08661c2572545b573931c84f283599894421627a4460b1b6bf62c771d",
+      "bytes": 55363
     },
     "reference/figure.png": {
-      "sha256": "4dd382a572b32ed93472f960c3af2b3d815d008a194e6f262a8ad9c8879e8751",
-      "bytes": 358219
+      "sha256": "b6cf25b3a1648b8e1ec07040a1d609e1efbfae7e49399b5b4930f819bedecd32",
+      "bytes": 358023
     },
     "reference/pair-path/SPIN_KUBO_SPECTRUM.csv": {
       "sha256": "3726ea5e42e2e4f3cf207df3af0d28f596b4713a3ffbfda5fe902d6fe1a5efb4",
@@ -101,6 +101,6 @@
   },
   "shared_plot_script": {
     "path": "examples/materials/graphene-spin-chern/kubo/plot.py",
-    "sha256": "0a6973b2d2e1eaa0d492214d0ab5f572815fd76cf64e104dcba6b7b3acb8a7f4"
+    "sha256": "17c446224ffa1624888abc768671cb8613205fc82c24f50f5ecff551f57d674e"
   }
 }

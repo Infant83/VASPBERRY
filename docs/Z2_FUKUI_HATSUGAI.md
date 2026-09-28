@@ -13,7 +13,8 @@ VASPBERRY's `-z2 1` option evaluates the two-dimensional class-AII invariant
 directly from a VASP spinor `WAVECAR`. It implements the lattice n-field
 construction of Fukui and Hatsugai (FH, 2007) on a full, uniform, Gamma-centered
 mesh. This Z₂ construction is distinct from the Fukui–Hatsugai–Suzuki (FHS,
-2005) link-variable method for Chern numbers, cited separately below.
+2005) link-variable method for Chern numbers, also called the Fukui method
+and cited separately below.
 
 ## Method implemented by VASPBERRY
 

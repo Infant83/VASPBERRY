@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Plot native Berry curvature in the Cartesian reciprocal Wigner-Seitz cell.
 
-Native FHS values are drawn as constant plaquette averages. No interpolation
+The Fukui-Hatsugai-Suzuki (FHS) method is called the Fukui method here.
+Its native output is drawn as constant plaquette averages. No interpolation
 or smoothing is applied. The current interface supports reciprocal planes
 parallel to Cartesian xy, with reciprocal vectors including 2*pi.
 """
