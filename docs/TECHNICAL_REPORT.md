@@ -2,10 +2,15 @@
 
 [Download the PDF report](TECHNICAL_REPORT.pdf).
 
-Software edition: VASPBERRY 1.6.1. Terminology revision: 28 September 2026.
-Saved reference tables retain the producer
-identities and input checksums of their original calculation; software validation
-and material convergence are recorded separately.
+**Hyun-Jung Kim**<sup>1,2</sup>[^present-address]
+
+<sup>1</sup> Korea Institute for Advanced Study (KIAS), Seoul, Republic of Korea
+
+<sup>2</sup> Forschungszentrum Jülich, Jülich, Germany
+
+[^present-address]: Present address: LG Display, Republic of Korea. Affiliations 1 and 2 refer to the institutions where the initial code development was carried out; the author was an Alexander von Humboldt Fellow at Forschungszentrum Jülich.
+
+Based on VASPBERRY 1.6.1.
 
 ## Abstract
 
@@ -33,6 +38,10 @@ not establish a converged transport integral. Optional physical-operator
 extensions and VASP-derived Wannier checks are documented separately in the
 appendices. The report documents software capabilities and numerical
 limitations with reproducible inputs, commands and reference results.
+
+**Reading the links.** Blue text is clickable. Links marked ↗ open online
+guides, calculation and plotting commands, or data. Appendix links jump to
+the corresponding section within this report.
 
 ## 1. Methods
 
@@ -91,7 +100,7 @@ $`\Sigma_{\hat a}v=\lambda Ov`$, with $`v^\dagger Ov=1`$, to form sector
 links in one consistent pseudo metric. It therefore declares a pseudo-wavefunction
 geometric representation, without PAW augmentation. The matching OUTCAR
 provides the spin-frame transformation; the wavefunctions and automatic
-component detection come from WAVECAR. The [native guide](SPIN_CHERN.md)
+component detection come from WAVECAR. The [native guide ↗](SPIN_CHERN.md)
 specifies inputs, diagnostics and output tables. These geometric invariants
 are distinct from PROCAR-weighted charge attribution and the conventional
 spin-current response in Appendix A.2. A full occupied space describes the
@@ -124,7 +133,7 @@ and requires no VASP source modification. Two optional comparisons extend
 the operator description: standard VASP optical output for insulating
 occupied bundles, and an instrumented producer for full velocity and spin
 matrices. These input routes and their distinct scopes are summarized in the
-[operator guide](OPERATOR_ROUTES.md). A more complete operator addresses an
+[operator guide ↗](OPERATOR_ROUTES.md). A more complete operator addresses an
 operator approximation; its k-mesh and band-window convergence must still be tested.
 
 For an isolated occupied bundle $`\mathcal V`$, the trace curvature is
@@ -153,7 +162,7 @@ Within an insulating gap at zero temperature, this becomes
 $`\sigma_{xy}=-(e^2/h)C_\mathrm{occ}`$ in the stated convention. General
 background on Berry curvature and electronic transport is given in
 [Xiao, Chang and Niu](https://doi.org/10.1103/RevModPhys.82.1959).
-The [Bi Hall example](../examples/features/hall-valley/) evaluates the occupied-group flux directly;
+The [Bi Hall example ↗](../examples/features/hall-valley/) evaluates the occupied-group flux directly;
 it does not assign independent curvatures to unresolved Kramers partners.
 
 For chemical potentials crossing band edges, the Kubo implementation uses
@@ -244,7 +253,7 @@ C_s^{\rm est}=\frac{1}{2\pi N_xN_y}
 The signed area preserves the orientation for tilted cells. No path
 integration or integer rounding is performed. To determine a Chern number, run
 `spin-chern` separately on a complete mesh using the same band range and
-axis. The [native guide](SPIN_KUBO.md), [output contract](OUTPUT_FORMAT.md#native-projected-spin-kubo-curvature)
+axis. The [native guide ↗](SPIN_KUBO.md), [output contract ↗](OUTPUT_FORMAT.md#native-projected-spin-kubo-curvature)
 and Sections 3.8–3.10 provide commands and real material comparisons.
 
 Independent four-state tests with exact derivatives agree with small
@@ -281,8 +290,8 @@ The current repository build provides the following `--task` selectors:
 |---|---|
 | `chern` | Berry flux, area-averaged curvature and Chern number of the selected band space, evaluated with the Fukui method |
 | `z2` | Z₂ invariant from the Fukui-Hatsugai (FH) n-field method |
-| `spin-chern` | Spin-sector Berry fluxes and Chern numbers from the Fukui method; spin Chern number (available in v1.6.1) |
-| `spin-kubo` | Projected-spin sector point curvature and optional raw mesh integrals (available in v1.6.1) |
+| `spin-chern` | Spin-sector Berry fluxes and Chern numbers from the Fukui method; spin Chern number |
+| `spin-kubo` | Projected-spin sector point curvature and optional raw mesh integrals |
 | `kubo` | Pointwise band or bundle curvature on a mesh or path |
 | `kubo-pairs` | Interband-pair data for Python charge-Hall integration |
 | `optical` / `spectrum` | Circular transition selectivity / broadened spectra |
@@ -290,11 +299,9 @@ The current repository build provides the following `--task` selectors:
 
 For example, `build/vaspberry --task kubo` selects the native pointwise
 calculation; supply the WAVECAR and band options listed in the
-[usage guide](../README.md#usage) and [worked examples](../examples/README.md).
-The two projected-spin tasks are available in v1.6.1. Other task aliases
-are available in v1.4.0 and
-later releases; legacy short flags remain supported. The
-[hands-on guide](HANDS_ON.md) and [report-to-example map](../examples/REPORT_REPRODUCTION.md)
+[usage guide ↗](../README.md#usage) and [worked examples ↗](../examples/README.md).
+Legacy short flags remain supported. The
+[hands-on guide ↗](HANDS_ON.md) and [report-to-example map ↗](../examples/REPORT_REPRODUCTION.md)
 give the input files, commands and expected outputs for each example.
 
 Python prepares inputs, normalizes outputs and performs the stated
@@ -343,7 +350,7 @@ This analysis supports layer/spin-colored band and curvature plots and
 comparisons of doping-induced projected contributions. Conventional spin Hall
 uses a spin-current operator and is treated separately in Appendix A.2;
 diagonal PROCAR character alone does not supply that operator. The
-[public projection tutorial](../examples/features/procar-character/) gives
+[public projection tutorial ↗](../examples/features/procar-character/) gives
 `project`, `hall` and `plot` commands with a small analytic fixture. That fixture
 tests software conventions and reproducibility; it is not a new VASP material
 calculation or a material-convergence benchmark.
@@ -365,7 +372,7 @@ calculation or a material-convergence benchmark.
 | Graphene spin-sector Kubo | Same fixed density; 49 Γ–K–M–Γ points and 12×12 mesh; 16 bands | Bands 1–8 and 7–8 local curvature; occupied-space Chern-number comparison; rejected pair link |
 | Bi spin-sector Kubo | Same fresh Bi fixed density; 49 Γ–K–M–Γ points and 6×6 mesh; 48 bands; 400 eV | Bands 1–10 and 9–10 local curvature; different occupied/pair Chern numbers |
 
-The [input guide](../examples/INPUTS.md) links the structures and VASP files.
+The [input guide ↗](../examples/INPUTS.md) links the structures and VASP files.
 The MoS₂ maps and their matching path use the same public SCF charge density,
 structure, potentials, cutoff and 26-band window. VASP 5.4.4 generated the
 12×12 mesh and 49-point path with `ICHARG=11` and `ISYM=-1`; only the k-point
@@ -375,7 +382,7 @@ The stacking examples use fixed, documented idealized structures and a common
 24 Å cell height. The 3R slab additionally uses a self-consistent z dipole
 correction. These small path calculations illustrate optical analysis across
 input systems; no structural or full-zone response convergence is asserted.
-The [stacking guide](../examples/materials/mos2-stacking-valley/) provides the
+The [stacking guide ↗](../examples/materials/mos2-stacking-valley/) provides the
 geometries and complete VASP workflow. The real-space example and original
 optical tutorial retain the separate supplied 32-band path.
 
@@ -414,7 +421,7 @@ optical response in MoS₂ is discussed by
 [Xiao et al.](https://doi.org/10.1103/PhysRevLett.108.196802).
 The present map is a finite-mesh example rather than a convergence study.
 
-[Calculation and plotting commands](../examples/features/fukui-berry-curvature/)
+[Calculation and plotting commands ↗](../examples/features/fukui-berry-curvature/)
 
 ### 3.2 MoS₂: Kubo curvature of the occupied valence-band bundle
 
@@ -441,7 +448,7 @@ finite empty-band window. The 12×12 mesh and 26 stored bands require
 convergence for quantitative predictions. NumPy interpolation smooths only
 the display; all integration and numerical checks use the original samples.
 
-[Calculation and interpretation](../examples/features/kubo-curvature/)
+[Calculation and interpretation ↗](../examples/features/kubo-curvature/)
 
 #### 3.2.1 MoS₂: an isolated single band near the valleys
 
@@ -463,7 +470,7 @@ the spin-split valley physics described by
 The patch data describe local curvature; a full-zone integral requires
 the appropriate isolated band bundle and complete BZ sampling.
 
-[VASP preparation, calculation and reference data](../examples/features/kubo-curvature/valleys/)
+[VASP preparation, calculation and reference data ↗](../examples/features/kubo-curvature/valleys/)
 
 #### 3.2.2 MoS₂: intrinsic charge and regional valley Hall response
 
@@ -498,13 +505,13 @@ norm, on a common $`\mu-E_v`$ grid.
 
 The final mesh change exceeds the stated 1% criterion. The last cutoff
 increment is below 1%; these separate tests do not establish joint
-convergence. The [reference guide](../examples/features/kubo-hall/) includes
+convergence. The [reference guide ↗](../examples/features/kubo-hall/) includes
 the commands and additional checks on empty-state accuracy and numerical
 degeneracy grouping.
 
 This rigid-band response uses canonical momentum, omitting PAW augmentation
 and nonlocal/SOC velocity terms. Numerical refinement does not remove those
-approximations. The [supplementary plot](../examples/features/kubo-hall/reference/figures/mos2-hall-checks.pdf)
+approximations. The [supplementary plot ↗](../examples/features/kubo-hall/reference/figures/mos2-hall-checks.pdf)
 retains the finite-mesh steps at 0 K.
 
 #### 3.2.3 Optional comparison: matching the current operators
@@ -535,7 +542,7 @@ general advantage in convergence rate.
 The full-velocity route includes the supported PAW, nonlocal and SOC
 operator terms, giving a more complete current description. Generating its
 input uses the optional VASP instrumentation; ordinary WAVECAR remains the
-starting workflow. The [separate comparison guide](../examples/features/kubo-hall/operator-comparison/)
+starting workflow. The [separate comparison guide ↗](../examples/features/kubo-hall/operator-comparison/)
 provides preparation instructions, both reusable pair caches and the original
 CSV/DAT/NPZ results. Their integration can be repeated without VASP.
 
@@ -577,9 +584,9 @@ no source modification. Its comparison with native momentum tests helicity
 and symmetry. The two spectral definitions have different finite-broadening
 weights, so their ratio differences do not isolate an operator correction
 and their absolute intensities are not equated. The
-[stacking guide and reference spectra](../examples/materials/mos2-stacking-valley/)
+[stacking guide and reference spectra ↗](../examples/materials/mos2-stacking-valley/)
 provide complete VASP inputs, both channel spectra and reproduction commands;
-the original [monolayer optical tutorial](../examples/features/circular-dichroism/)
+the original [monolayer optical tutorial ↗](../examples/features/circular-dichroism/)
 remains the introductory example.
 
 ### 3.4 MoS₂ and Bi: contrasting native Z₂ invariants
@@ -610,7 +617,7 @@ show each sum followed by its parity.
 | Bi | 1–10 | −3 / +3 | **1** | 0.535 / 0.497 |
 
 Both occupied bundles have **C = 0** (Section 3.1 and the
-[Bi check](../examples/materials/bi-spin-hall/reference/fukui/README.md)),
+[Bi check ↗](../examples/materials/bi-spin-hall/reference/fukui/README.md)),
 yet their Z₂ values differ. Finite local Berry curvature and valley response
 are compatible with trivial MoS₂. The n-field pattern is gauge and branch
 dependent; its agreed half-zone parity is the invariant, not the local tile
@@ -628,10 +635,10 @@ Bi edge connectivity supports its bulk result (Appendix B.2). Conventional
 spin Hall response is a separate observable and need not be quantized when
 spin is not conserved (Appendix A.3).
 
-[Commands and paired figure](../examples/features/z2/comparison/) ·
-[MoS₂ native field](../examples/features/z2/mos2/reference/Z2_FIELD.csv) ·
-[Bi native field](../examples/materials/bi-spin-hall/reference/z2/Z2_FIELD.csv) ·
-[Fresh Bi preparation](../examples/materials/bi-spin-hall/)
+[Commands and paired figure ↗](../examples/features/z2/comparison/) ·
+[MoS₂ native field ↗](../examples/features/z2/mos2/reference/Z2_FIELD.csv) ·
+[Bi native field ↗](../examples/materials/bi-spin-hall/reference/z2/Z2_FIELD.csv) ·
+[Fresh Bi preparation ↗](../examples/materials/bi-spin-hall/)
 
 ### 3.5 MoS₂: a real-space Γ state
 
@@ -646,7 +653,7 @@ the plane-wave coefficient norm. The PAW augmentation is not part of this
 plot, so a unit density integral is not imposed. The example illustrates
 conversion of complex amplitudes into a physical-coordinate density map.
 
-[Wavefunction calculation guide](../examples/features/wavefunction/)
+[Wavefunction calculation guide ↗](../examples/features/wavefunction/)
 
 <a id="36-mnbi₂te₄-occupied-bundle-fukui-chern-number"></a>
 
@@ -675,8 +682,8 @@ the complete VASP occupied space. Its **C = −1** result and all 36 plaquette
 fluxes agree with the independent Python implementation of the Fukui method within
 the native map's printed precision. The separately checked deep bands 1–36
 form a C = 0 bundle. The
-[native output and comparison](../examples/materials/mnbi2te4-qah/reference/native-fukui/)
-and [material guide](../examples/materials/mnbi2te4-qah/)
+[native output and comparison ↗](../examples/materials/mnbi2te4-qah/reference/native-fukui/)
+and [material guide ↗](../examples/materials/mnbi2te4-qah/)
 provide the actual command, VASP inputs, overlap diagnostics and
 standard-WAVEDER coarse-mesh result.
 
@@ -690,7 +697,7 @@ establish convergence of this coarse VASP optical integral.
 
 ### 3.7 Graphene: Chern numbers of projected-spin sectors
 
-The [graphene example](../examples/materials/graphene-spin-chern/) uses actual
+The [graphene example ↗](../examples/materials/graphene-spin-chern/) uses actual
 VASP spinor wavefunctions for a planar two-atom cell with $`a=2.46`$ Å and
 a 20 Å cell height, PBE+SOC, a 520 eV cutoff and 16 stored bands. The selected
 space comprises bands 1–8. With Cartesian +z as the analysis axis, the native
@@ -737,12 +744,12 @@ Chern numbers while the charge sum vanishes. (c) Actual VASP bands on
 WAVECAR energies. (d) The projected-Pauli spectrum remains separated from
 zero. Mesh agreement establishes the integer result for this fixed input;
 the maps do not resolve the microscopic width or peak height of the Dirac
-curvature. [Saved data and drawing commands](../examples/materials/graphene-spin-chern/)
+curvature. [Saved data and drawing commands ↗](../examples/materials/graphene-spin-chern/)
 reproduce all four panels.
 
 ### 3.8 Graphene: spin-sector Kubo curves and a tiny-gap limit
 
-The [spin-Kubo example](../examples/materials/graphene-spin-chern/kubo/)
+The [spin-Kubo example ↗](../examples/materials/graphene-spin-chern/kubo/)
 uses the same graphene Hamiltonian as Section 3.7, with a 49-point
 Γ–K–M–Γ path and a separate 12×12 mesh. Execute VASPBERRY in each directory
 containing its matching WAVECAR and OUTCAR:
@@ -756,7 +763,7 @@ mpiexec -n 4 "$VB" --task spin-chern --bands 1:8 --mesh 12,12
 ```
 
 Here `VB` is the native executable built as described in the
-[Intel MPI walkthrough](HANDS_ON.md). OUTCAR supplies the actual source spin
+[Intel MPI walkthrough ↗](HANDS_ON.md). OUTCAR supplies the actual source spin
 frame; spinor coefficients and energies come from WAVECAR. Neither a PROCAR
 spin weight nor a manual spinor-count option is used.
 
@@ -798,7 +805,7 @@ calculation. Reference data and input/output hashes accompany the figure.
 
 ### 3.9 Bi: occupied sectors and an isolated top pair
 
-The [Bi spin-sector example](../examples/materials/bi-spin-hall/spin-chern-kubo/)
+The [Bi spin-sector example ↗](../examples/materials/bi-spin-hall/spin-chern-kubo/)
 uses the fresh fixed density of Section 3.4, 48 stored bands, a 400 eV cutoff,
 a complete 6×6 mesh and a separately calculated 49-point Γ–K–M–Γ path.
 For this positive-60° lattice convention, fractional K is $`(1/3,2/3,0)`$
@@ -850,7 +857,7 @@ projected-spin mixing correction.
 
 #### 3.10.1 Bi: separate mesh, response cutoff and source-state quality
 
-The [convergence example](../examples/materials/bi-spin-hall/spin-chern-kubo/convergence/)
+The [convergence example ↗](../examples/materials/bi-spin-hall/spin-chern-kubo/convergence/)
 holds the structure, PAW potential, fixed SCF density and physical Hamiltonian
 constant. Three controls answer different questions: vary the mesh with source
 `NBANDS=64` and `--sum-bands 48`; vary the sum cutoff on one unchanged
@@ -920,7 +927,7 @@ without rerunning the native curvature calculation.
 
 #### 3.10.2 Graphene: actual local sampling around the SOC gap
 
-The [local graphene example](../examples/materials/graphene-spin-chern/kubo/convergence/)
+The [local graphene example ↗](../examples/materials/graphene-spin-chern/kubo/convergence/)
 adds 146 actual VASP points around K and K′ to the same fixed-density,
 520 eV, 16-band calculation. Each valley has its center and nine radii
 from $`10^{-9}`$ to $`10^{-5}`$ Å⁻¹, with eight angles per ring.
@@ -999,7 +1006,7 @@ ordinary VASP/native commands accompany the example.
 
 ## 4. Practical use
 
-Begin with the [example guide](../examples/README.md), reproduce the chosen
+Begin with the [example guide ↗](../examples/README.md), reproduce the chosen
 quantity, and then select the sampling and band window appropriate to your
 own material. Use Cartesian reciprocal-space maps to display lattice symmetry,
 named k paths for band-resolved quantities, and energy or chemical potential
@@ -1014,22 +1021,24 @@ step to scan chemical potential and temperature without repeating the
 matrix-element calculation. These main workflows do not require Wannier90.
 For layer, orbital and spin attribution, add the matching PROCAR and OUTCAR,
 define atom groups and a spin axis, and follow the
-[projection tutorial](../examples/features/procar-character/). Each strained,
+[projection tutorial ↗](../examples/features/procar-character/). Each strained,
 field-biased or magnetically distinct calculation needs its own matching
 wavefunctions and projections; changing occupations alone does not recalculate
 the electronic structure under those perturbations.
 Optional standard optical or full transition-matrix inputs allow additional
 operator terms to be assessed on matching electronic states. The
-[operator guide](OPERATOR_ROUTES.md) links the input requirements and
+[operator guide ↗](OPERATOR_ROUTES.md) links the input requirements and
 separate instructions for each route.
 
 For quantitative conclusions, converge the VASP electronic structure,
 k mesh and relevant band window. The examples show how the methods are used;
-the [supplementary analytic references](REFERENCE_MATERIALS.md) check formulas
-and conventions, while [version 1.4.0 validation](VALIDATION_1.4.0.md) and the
-[earlier validation record](VALIDATION_1.3.0.md) document the
+the [supplementary analytic references ↗](REFERENCE_MATERIALS.md) check formulas
+and conventions, while [version 1.4.0 validation ↗](VALIDATION_1.4.0.md) and the
+[earlier validation record ↗](VALIDATION_1.3.0.md) document the
 numerical implementation. Detailed execution records remain alongside the
-numerical files for reproducibility.
+numerical files for reproducibility. Saved reference tables retain the producer
+identities and input checksums of their original calculation; software
+validation and material convergence are recorded separately.
 
 ## Appendix A. Optional physical-operator extensions
 
@@ -1080,7 +1089,7 @@ groups are summed before forming $`\eta`$, which is essential at degeneracies.
 These k-resolved strengths are independent-particle quantities; they do not
 include excitons or emission kinetics. The ordinary WAVECAR calculation uses
 canonical momentum with its native photon-energy normalization. The
-[optical guide](PAW_OPTICS.md) specifies both conventions and their comparison.
+[optical guide ↗](PAW_OPTICS.md) specifies both conventions and their comparison.
 
 ### A.2 PAW spin matrices and conventional spin Hall response
 
@@ -1144,7 +1153,7 @@ Z₂ topology and conventional spin Hall response are separate tests. A
 nontrivial time-reversal invariant insulator need not have an exactly
 quantized bulk spin Hall coefficient when spin is not conserved. The
 optional ideal-edge check in Appendix B.2 addresses boundary connectivity,
-not a finite-device conductance. The [spin Hall guide](SPIN_HALL.md)
+not a finite-device conductance. The [spin Hall guide ↗](SPIN_HALL.md)
 gives the operator contract and reproduction commands.
 
 ### A.3 Bi: optional spin Hall conductivity and convergence
@@ -1199,9 +1208,9 @@ the diagonal velocity gives a maximum error of $`1.74\times10^{-4}`$ eV Å.
 The latter is a producer validation on development test points, not a material
 convergence result.
 
-[Spin Hall reproduction guide](../examples/materials/bi-spin-hall/) ·
-[Numerical conventions](SPIN_HALL.md) ·
-[Validation details](VALIDATION_1.3.0.md)
+[Spin Hall reproduction guide ↗](../examples/materials/bi-spin-hall/) ·
+[Numerical conventions ↗](SPIN_HALL.md) ·
+[Validation details ↗](VALIDATION_1.3.0.md)
 
 ## Appendix B. Optional Wannier supporting validation
 
@@ -1256,7 +1265,7 @@ The VASP-derived interpolation was checked on separate 12×12 and 18×18
 meshes: its sampled gaps differ from VASP by at most 2.426 meV and bands
 9–12 by at most 33.23 meV. Localization stopped before its requested spread
 tolerance. The strip represents an ideal truncation of bulk hoppings, with
-no edge relaxation or device contacts. The [Bi reproduction guide](../examples/materials/bi-spin-hall/)
+no edge relaxation or device contacts. The [Bi reproduction guide ↗](../examples/materials/bi-spin-hall/)
 retains the complete interpolation, symmetry and strip-width checks.
 
 ### B.3 MnBi₂Te₄: dense integration of a supplied finite model
@@ -1299,7 +1308,7 @@ places all three chemical potentials inside the sampled model gap.
 This validates VASPBERRY's full-connection evaluation of a fixed finite model.
 The source 6×6 mesh, structure and basis still require convergence for
 quantitative material predictions; localization stopped before its spread
-tolerance. The [material tutorial](../examples/materials/mnbi2te4-qah/NATIVE_WANNIER.md)
+tolerance. The [material tutorial ↗](../examples/materials/mnbi2te4-qah/NATIVE_WANNIER.md)
 provides the actual inputs, VASPBERRY commands and outputs. The independent
 external reference is retained separately. This input route requires both
 Wannier operators; it does not infer missing PAW/nonlocal/SOC velocity terms
