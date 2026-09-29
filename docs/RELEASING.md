@@ -6,7 +6,7 @@
 source. Clone it with `git clone https://github.com/Infant83/VASPBERRY.git`.
 Update a clean checkout with `git pull --ff-only`.
 
-The current release tag is `v1.6.1`. Use the fixed tag when reproducing a
+The current release tag is `v1.6.2`. Use the fixed tag when reproducing a
 published calculation, and record the version plus `git rev-parse HEAD` in
 the calculation record. `git describe --tags --always --dirty` also identifies
 changes after a release. A development branch is not the default download.
@@ -17,10 +17,10 @@ Git LFS inputs may need the [input-fetch procedure](../examples/INPUTS.md).
 
 ## Version policy
 
-- Patch releases, for example 1.5.1, contain compatible fixes, including input
+- Patch releases, for example 1.6.2, contain compatible fixes, including input
   detection and simpler use of existing commands. Numerical bug fixes must
   describe changed results and any migration needed.
-- Minor releases, for example 1.6.1, add compatible features and commands.
+- Minor releases, for example 1.7.0, add compatible features and commands.
 - Major releases change public command or data contracts incompatibly.
 
 Agree on the version with the maintainer before publishing. Do not create an
@@ -36,8 +36,8 @@ the software version. A historical DOI must not be reused as a new version DOI.
 Published tags remain fixed: correct numerical results in a new release
 without moving the old tag. Preserve historical input/output metadata when
 updating instructions. Software validation and material convergence remain
-separate. Version 1.6.1 adds compatible native spin-sector tasks and the
-intermediate-band sum control; see its [release notes](releases/v1.6.1.md).
+separate. Version 1.6.2 improves native command help and documentation without
+changing numerical methods or data formats; see its [release notes](releases/v1.6.2.md).
 
 ## Publication checks
 
@@ -82,11 +82,15 @@ It also requires the postprocessing command, guide and example files, and
 preserves the immutable v1.4.2 tag. The scientific report remains the
 retained method edition; new command instructions are in the current guides.
 
-The 1.6.1 publisher validates the version and required feature files, then
-waits for the complete CI, actual Bi, Intel MPI and source-archive installation
-checks on its exact source commit. New spin Chern number and spin-sector Kubo-formula checks must pass
-alongside the existing tasks. It preserves prior active release tags and
-refuses a conflicting tag or an advanced default branch. Current downloads
-use 1.6.1; the [validation record](VALIDATION_1.6.1.md) describes the required
-checks and their physical scope. After publication, verify the actual
-version-pinned archive against the checked source and replay the public examples.
+The `publish-v1.6.2.yml` workflow validates the version and required source
+files, including the shared native help include. It requires all thirteen CI,
+actual Bi, Intel MPI and source-archive installation jobs on its exact source
+commit. Help checks run alongside the existing numerical regressions. The
+publisher preserves earlier tags and refuses a conflicting tag or an advanced
+default branch. The completed v1.6.1 publisher remains manual.
+
+The [1.6.2 validation scope](VALIDATION_1.6.2.md) defines these requirements;
+the published release body records the exact commit and successful runs.
+After publication, verify the actual version-pinned archive against that
+source and replay the public examples. The technical report remains the
+1.6.1 method baseline, and saved calculations retain their producer metadata.

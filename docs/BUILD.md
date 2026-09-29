@@ -48,15 +48,15 @@ make help
 ```
 
 To install the fixed release instead, download **Source code (tar.gz)** or
-**Source code (zip)** from the [v1.6.1 release page](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.1),
-extract it, and enter `VASPBERRY-1.6.1`. The same Makefile commands work without
+**Source code (zip)** from the [v1.6.2 release page](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.2),
+extract it, and enter `VASPBERRY-1.6.2`. The same Makefile commands work without
 Git metadata. For example:
 
 ```bash
-curl -fL https://github.com/Infant83/VASPBERRY/archive/refs/tags/v1.6.1.tar.gz \
-  -o VASPBERRY-1.6.1.tar.gz
-tar -xzf VASPBERRY-1.6.1.tar.gz
-cd VASPBERRY-1.6.1
+curl -fL https://github.com/Infant83/VASPBERRY/archive/refs/tags/v1.6.2.tar.gz \
+  -o VASPBERRY-1.6.2.tar.gz
+tar -xzf VASPBERRY-1.6.2.tar.gz
+cd VASPBERRY-1.6.2
 make help
 ```
 

@@ -4,6 +4,8 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+## [1.6.2] - 2026-09-29
+
 ### Native command help
 
 - Make `--help` and `-h` show a short overview. Add task and option help,
@@ -25,7 +27,11 @@ All notable changes to VASPBERRY are recorded here.
   Berry-curvature/response calculations in terms of the Kubo formula.
 - Identify the separate Z₂ n-field construction as the Fukui-Hatsugai (FH)
   method. Update guides, examples, figure labels, help and the technical report.
-  Numerical algorithms, results, command options and data formats are unchanged.
+  These editorial updates leave numerical algorithms, results and data formats
+  unchanged.
+- Add author affiliations, a present-address note and visible links to guides,
+  calculation commands and data in the technical report. Its scientific content
+  remains the 1.6.1 method baseline; saved results keep their original producers.
 
 ## [1.6.1] - 2026-09-27
 

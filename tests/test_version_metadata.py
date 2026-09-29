@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_VERSION = "1.6.1"
+EXPECTED_VERSION = "1.6.2"
 ARCHIVED_V1_DOI = "10.5281/zenodo.1402593"
 
 
@@ -36,13 +36,14 @@ class VersionMetadataTests(unittest.TestCase):
         self.assertRegex(citation, rf"(?m)^version:\s*{re.escape(EXPECTED_VERSION)}\s*$")
         self.assertNotIn("unreleased", citation)
         self.assertIn("exact commit", citation)
-        self.assertRegex(citation, r"(?m)^date-released:\s*'2026-09-27'\s*$")
+        self.assertRegex(citation, r"(?m)^date-released:\s*'2026-09-29'\s*$")
         self.assertIn(f"/releases/tag/v{EXPECTED_VERSION}", citation)
         self.assertNotIn(ARCHIVED_V1_DOI, citation)
         self.assertNotRegex(citation, r"(?m)^doi:\s*")
 
     def test_changelog_records_scientific_release_boundaries(self):
         changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        self.assertIn("## [1.6.2] - 2026-09-29", changelog)
         self.assertIn("## [1.6.1] - 2026-09-27", changelog)
         self.assertIn("## [1.5.1] - 2026-09-27", changelog)
         self.assertIn("## [1.5.0] - 2026-09-26", changelog)

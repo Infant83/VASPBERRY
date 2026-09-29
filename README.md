@@ -21,11 +21,12 @@ band plots provide context for the calculated topology and response.
 [Hands-on commands](docs/HANDS_ON.md) · [Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
 [Postprocessing guide](docs/POSTPROCESSING.md) · [Output formats](docs/OUTPUT_FORMAT.md)
 
-**VASPBERRY [1.6.1](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.1).**
-This release adds native [spin Chern number](docs/SPIN_CHERN.md) and
-[spin-sector Kubo-formula Berry curvature](docs/SPIN_KUBO.md) workflows, with graphene and Bi examples
-and separate sampling/intermediate-band checks. Existing commands and original
-short options remain supported. See the [release notes](docs/releases/v1.6.1.md),
+**VASPBERRY [1.6.2](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.2).**
+This patch adds concise native help for tasks and options: start with
+`--help task`, then try `--help kubo` or `--help bands`. Existing calculations,
+data formats and original short options remain supported. The guides now make
+the path from input files to numerical results and plots easier to follow.
+See the [release notes](docs/releases/v1.6.2.md), [validation scope](docs/VALIDATION_1.6.2.md),
 [changelog](CHANGELOG.md), [version policy](docs/RELEASING.md)
 and [migration notes](docs/MIGRATION.md).
 
@@ -63,7 +64,7 @@ make help
 ```
 
 For a fixed release, download and extract the source archive from
-[v1.6.1](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.1), then run the
+[v1.6.2](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.2), then run the
 same build commands from the extracted directory containing `Makefile`.
 **Archive builds do not require Git or Python.** No precompiled executable or
 system-wide installation is needed; the build creates local files in `build/`.
@@ -166,7 +167,7 @@ separate operator route described in the [spin guide](docs/SPIN_HALL.md).
 
 ### Find a calculation with native help
 
-Current source builds provide a short overview and help for individual tasks
+VASPBERRY 1.6.2 provides a short overview and help for individual tasks
 and options. After building, list the tasks, inspect a calculation, then run
 the first example below:
 

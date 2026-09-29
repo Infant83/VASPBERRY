@@ -108,6 +108,8 @@ class HallWorkflowTests(unittest.TestCase):
         out = args.output_dir
         self.assertEqual(set(p.name for p in (out/'hall').iterdir()), {'conductivity.npz', 'conductivity.json'})
         self.assertEqual(meta['output_formats'], ['npz'])
+        self.assertEqual(meta['provenance']['vaspberry_version'],
+                         (ROOT/'VERSION').read_text().strip())
         manifest = json.loads((out/'workflow.json').read_text())
         self.assertEqual((manifest['status'], manifest['complete'], manifest['native_exit_code']), ('PASS', True, 0))
         self.assertTrue((out/'pairs/pairs.npz').is_file())

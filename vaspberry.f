@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.6.1 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.6.2 (f77) for VASP
 ! Written by Hyun-Jung Kim
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -57,7 +57,9 @@
 ! release 1.5.1 patch numbering correction; calculation unchanged
 ! version 1.6.1 projected-spin Chern numbers, Kubo sectors and sum cutoff
 !               : 2026. Sep. 27. H.-J. Kim
-! last update and bug fixes : 2026. Sep. 27.
+! version 1.6.2 topic-based native help; calculation unchanged
+!               : 2026. Sep. 29.
+! last update and bug fixes : 2026. Sep. 29.
 
 !#define MPI_USE
 !#undef  MPI_USE        
@@ -146,8 +148,8 @@
       mpi_comm_earth = 0
 #endif
 
-      ver_tag="# VASPBERRY (Ver 1.6.1), by Hyun-Jung Kim."//
-     &        " 2026. Sep. 27."
+      ver_tag="# VASPBERRY (Ver 1.6.2), by Hyun-Jung Kim."//
+     &        " 2026. Sep. 29."
       call vaspberry_help_request(ver_tag,.false.)
 #ifdef MPI_USE
       if(myrank == 0)then
@@ -1665,7 +1667,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.6.1'
+      write(94,'(A)')'# vaspberry_version=1.6.2'
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
@@ -1865,7 +1867,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.6.1'
+      write(94,'(A)')'# vaspberry_version=1.6.2'
       if(fieldok)then
        write(94,'(A)')'# result_status=PASS'
       else
@@ -4025,7 +4027,7 @@
       implicit none
       integer iunit
       write(iunit,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_V2'
-      write(iunit,'(A)')'# vaspberry_version=1.6.1'
+      write(iunit,'(A)')'# vaspberry_version=1.6.2'
       write(iunit,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
       write(iunit,'(A)')'# operator='//
      & 'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
@@ -4227,7 +4229,7 @@
       endif
       if(isp.eq.1)then
        write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1'
-       write(96,'(A)')'# vaspberry_version=1.6.1'
+       write(96,'(A)')'# vaspberry_version=1.6.2'
        write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
        write(96,'(A)')'# operator='//
      &  'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
@@ -4441,7 +4443,7 @@
        endif
        if(isp.eq.1)then
         write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_PAIRS_V1'
-        write(96,'(A)')'# vaspberry_version=1.6.1'
+        write(96,'(A)')'# vaspberry_version=1.6.2'
         write(96,'(A)')'# result_kind=UNORDERED_INTERBAND_NUMERATORS'
         write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
         write(96,'(A)')'# operator='//

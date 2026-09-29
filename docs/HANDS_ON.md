@@ -4,7 +4,7 @@ The main workflow is **VASP → WAVECAR → VASPBERRY execution with Intel MPI �
 
 For routine Hall and PROCAR analysis, start with the [single-file postprocessing guide](POSTPROCESSING.md) and [public Bi example](../examples/features/simple-postprocess/README.md): `python3 tools/vaspberry_post.py run analysis.ini` executes VASPBERRY and performs the requested numerical postprocessing and `python3 tools/vaspberry_post.py plot results/run01` draws them. An optional `python3 tools/vaspberry_post.py check analysis.ini` checks the inputs before running. The [settings reference](POSTPROCESSING_REFERENCE.md) lists the same input, output and naming conventions. The explicit stages below explain the native outputs and provide advanced controls.
 
-Use VASPBERRY 1.6.1 for this walkthrough. Start in the repository root in Bash on a Linux host with Intel oneAPI Fortran, oneMKL and Intel MPI available. The following uses four MPI ranks; select the rank count allowed by your cluster allocation. Choose a fresh output directory when repeating a calculation.
+Use VASPBERRY 1.6.2 for this walkthrough. Start in the repository root in Bash on a Linux host with Intel oneAPI Fortran, oneMKL and Intel MPI available. The following uses four MPI ranks; select the rank count allowed by your cluster allocation. Choose a fresh output directory when repeating a calculation.
 
 ```bash
 source /opt/intel/oneapi/setvars.sh
@@ -17,7 +17,7 @@ mpiexec -n 4 "$vb_bin" --help
 
 Use your site's oneAPI setup path or modules when they differ. A retained Intel Classic installation can use `make ifort-mpi` and `vb_bin="$repo_dir/build/vaspberry-ifort-mpi"`. [Build details and GNU alternatives](BUILD.md) include the byte-RECL input requirement and compiler validation status. [Native commands](NATIVE_COMMANDS.md) explain arguments; the [report-to-example map](../examples/REPORT_REPRODUCTION.md) links material inputs and figures.
 
-For a current source build, explore the native help before the first calculation:
+Explore the native help before the first calculation:
 
 ```bash
 mpiexec -n 4 "$vb_bin" --help task

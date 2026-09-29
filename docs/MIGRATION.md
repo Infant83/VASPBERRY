@@ -1,4 +1,15 @@
-# Migrating to the 1.4.0 source
+# Migrating to the current source
+
+Version 1.6.2 adds native topic help without changing calculation commands or
+numerical output formats. Use `--help task`, then `--help NAME` for a task or
+option; the complete flag reference is `--help all` (also `--help legacy`).
+The [current release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.2),
+[native reference](NATIVE_COMMANDS.md) and [hands-on tutorial](HANDS_ON.md)
+provide the current setup and commands. Earlier migration requirements follow.
+
+<a id="migrating-to-the-140-source"></a>
+
+## Migrating from releases before 1.4.0
 
 Version 1.4.0 is available as a versioned source release. Preserve the exact producer
 version/commit and original files when migrating a calculation. The existing
@@ -138,14 +149,14 @@ line-mode calculation into a two-dimensional integration mesh. See the
 
 ## Version and release records
 
-`VERSION`, CLI version output and current citation metadata identify 1.3.0.
+`VERSION`, CLI version output and current citation metadata identify 1.6.2.
 Historical changelog entries, the 1.2.0 release notes and archived reference
 data retain their original versions. The CFF schema version is independent
 of the software version.
 
 The 2018 DOI `10.5281/zenodo.1402593` identifies VASPBERRY V1.0. It is not a
-DOI for version 1.3.0. Use the immutable
-[`v1.3.0` release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.3.0)
+DOI for version 1.6.2. Use the immutable
+[`v1.6.2` release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.2)
 for version-pinned source, or `master` for current source. Build binaries locally.
 Cite the software version, exact commit and method references appropriate to
 the calculation; see the [version policy](RELEASING.md).

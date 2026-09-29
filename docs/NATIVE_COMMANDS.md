@@ -7,7 +7,7 @@ the commands below execute VASPBERRY directly, without a Python script. The
 
 ## Learn one task or option at a time
 
-Current source builds include topic help in the native Fortran executable.
+VASPBERRY 1.6.2 includes topic help in the native Fortran executable.
 After [building](BUILD.md), use `--help task` to choose a calculation,
 `--help kubo` to read its inputs and outputs, and `--help bands` to check an
 option before executing the example below:
