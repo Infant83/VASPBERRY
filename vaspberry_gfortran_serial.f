@@ -81,6 +81,7 @@
 
       ver_tag="# VASPBERRY (Ver 1.6.1), by Hyun-Jung Kim."//
      &        " 2026. Sep. 27."
+      call vaspberry_help_request(ver_tag,.true.)
       pi=4.*atan(1.)
       berrymax=0d0
       berrymin=0d0
@@ -3779,6 +3780,12 @@
       end subroutine test
 
       subroutine help(ver_tag)
+      implicit none
+      character*(*) ver_tag
+      call vaspberry_help_show(ver_tag,'overview',.true.)
+      end subroutine help
+
+      subroutine help_all(ver_tag)
       character*75 ver_tag
       write(6,*)"          **** PROGRAM INSTRUCTION ***"
       write(6,*)"Historical serial source: no -kubo implementation."
@@ -3815,7 +3822,7 @@
       write(6,*)"*        -kx nx -ky ny -is n"
       write(6,*)" "
       write(6,*)"             ### POSSIBLE OPTIONS ###"
-      write(6,*)" -h               : Print this help and stop"
+      write(6,*)" -h               : Print help overview and stop"
       write(6,*)" -f filename      : File name to be read"
       write(6,*)"                  : Default: WAVECAR"
       write(6,*)" -kx(ky) kx(ky)   : k-point grid of your system"
@@ -3877,10 +3884,9 @@
       write(6,*)"                  : occupied bands 1:NE, NBANDS>NE,"
       write(6,*)"                  : and each of four 2D TRIM once."
       write(6,*)"                  : Example (12x12, NE=10):"
-      write(6,*)"                  : ./build/vaspberry-gfortran"
-      write(6,*)"                  :   -f WAVECAR -o NFIELD"
-      write(6,*)"                  :   -z2 1 -kx 12 -ky 12 -s 2"
-      write(6,*)"                  :   -ii 1 -if 10"
+      write(6,*)"  ./build/vaspberry-gfortran -f WAVECAR -o NFIELD "//achar(92)
+      write(6,*)"    -z2 1 -kx 12 -ky 12 -s 2 "//achar(92)
+      write(6,*)"    -ii 1 -if 10"
       write(6,*)"                  : PASS writes NFIELD.dat and"
       write(6,*)"                  : Z2_FIELD.csv. Report z2_invariant"
       write(6,*)"                  : only for result_status=PASS; the"
@@ -3912,8 +3918,8 @@
       write(6,*)" A CBM-only result is an incremental contribution."
       write(6,*)" Total sigma_xy also needs the valence manifold."
       write(6,*)" "
-      write(6,*)"* default: -f WAVECAR -kx 2 -ky 2 -ii 1 -if VBM"//
-     &" -kp 1"
+      write(6,*)"* default: -f WAVECAR -kx 12 -ky 12 -ii 1 -if VBM"//
+     &" -kp 2"
       write(6,*)"* here, VBM is valence band maximum"
       write(6,*)" "
       write(6,*)"*Compilation: see Makefile and docs/BUILD.md."
@@ -3935,8 +3941,10 @@
       write(6,*)" read such a legacy WAVECAR, but use it only for"
       write(6,*)" files written with that same RECL convention."
       stop
-      end subroutine help
+      end subroutine help_all
 
       subroutine vaspberry_fail
       stop 1
       end subroutine vaspberry_fail
+
+#include "vaspberry_help.inc"

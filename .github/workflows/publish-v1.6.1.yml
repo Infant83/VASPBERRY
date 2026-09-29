@@ -1,17 +1,8 @@
 name: Publish VASPBERRY 1.6.1
 
 on:
-  push:
-    branches: [master]
-    paths:
-      - '.github/workflows/publish-v1.6.1.yml'
-      - '.github/scripts/publish_v161.py'
-      - 'docs/releases/v1.6.1.md'
-      - '.github/workflows/ci.yml'
-      - '.github/workflows/bi-z2-validation.yml'
-      - '.github/workflows/intel-mpi-validation.yml'
-      - '.github/workflows/installation-validation.yml'
-      - '.github/scripts/validate_native_spin.py'
+  # Publication is complete; keep manual access and all immutable-tag guards.
+  # Later validation changes must not restart this version-specific publisher.
   workflow_dispatch:
 
 permissions:

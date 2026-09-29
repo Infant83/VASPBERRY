@@ -17,6 +17,19 @@ mpiexec -n 4 "$vb_bin" --help
 
 Use your site's oneAPI setup path or modules when they differ. A retained Intel Classic installation can use `make ifort-mpi` and `vb_bin="$repo_dir/build/vaspberry-ifort-mpi"`. [Build details and GNU alternatives](BUILD.md) include the byte-RECL input requirement and compiler validation status. [Native commands](NATIVE_COMMANDS.md) explain arguments; the [report-to-example map](../examples/REPORT_REPRODUCTION.md) links material inputs and figures.
 
+For a current source build, explore the native help before the first calculation:
+
+```bash
+mpiexec -n 4 "$vb_bin" --help task
+mpiexec -n 4 "$vb_bin" --help kubo
+mpiexec -n 4 "$vb_bin" --help bands
+```
+
+This lists the calculations, explains `kubo`, then explains the band selector.
+Help needs neither Python nor a WAVECAR. Continue with step 1 to execute the
+calculation; use `--help spin-chern` for another task, or `--help all`
+(also `--help legacy`) for the complete flag reference.
+
 | Stage | Reads → writes | Purpose |
 |---|---|---|
 | VASPBERRY `--task kubo` | WAVECAR → `KUBO.csv` | Calculate point curvature Ωxy in Å²; ready for a curvature plot |

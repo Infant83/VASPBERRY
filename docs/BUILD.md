@@ -9,8 +9,9 @@ VASP `WAVECAR`; Python tools are optional for subsequent analysis and plotting.
 The main route below uses **Intel oneAPI Fortran (`ifx`), Intel MPI, and
 sequential oneMKL on Linux**. Choose the GNU route if those packages are not
 available. All commands run from the source directory containing `Makefile`.
-Keep `vaspberry_spin_chern.inc` and `vaspberry_spin_kubo.inc` beside
-`vaspberry.f` when copying the updated source; both belong to the native
+Keep `vaspberry_help.inc`, `vaspberry_spin_chern.inc` and
+`vaspberry_spin_kubo.inc` beside `vaspberry.f` when copying the updated source;
+all three belong to the native
 executable and are included by the Makefile.
 Extract or clone into a writable path without spaces; the Makefile rejects
 whitespace in the absolute repository/build path.

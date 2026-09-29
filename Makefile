@@ -65,7 +65,7 @@ define build_if_changed
     $(call shell_quote,OMPI_FC=$(OMPI_FC)) $(call shell_quote,OMPI_FCFLAGS=$(OMPI_FCFLAGS)) \
     $(call shell_quote,OMPI_LDFLAGS=$(OMPI_LDFLAGS)) $(call shell_quote,OMPI_LIBS=$(OMPI_LIBS)) \
     $(call shell_quote,MPICH_FC=$(MPICH_FC)) > "$$tmp"; \
-  cksum $(call shell_quote,$<) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc $(foreach file,$(MAKEFILE_LIST),$(call shell_quote,$(file))) >> "$$tmp"; \
+  cksum $(call shell_quote,$<) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(foreach file,$(MAKEFILE_LIST),$(call shell_quote,$(file))) >> "$$tmp"; \
   if [ ! -f "$@" ] || [ -n $(call shell_quote,$(filter-out force-build-config,$?)) ] || \
       ! cmp -s "$$tmp" "$(2)"; then \
     printf '%s\n' $(call shell_quote,$(1)); \
@@ -117,7 +117,7 @@ $(BUILD_DIR): | check-build-dir
 
 force-build-config:
 
-$(GNU_SERIAL_BIN): $(SERIAL_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
+$(GNU_SERIAL_BIN): $(SERIAL_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
 	$(call build_if_changed,$(SERIAL_COMMAND),$(SERIAL_CONFIG))
 
 # Keep the old compiler-specific name without a second compiled binary.
@@ -126,7 +126,7 @@ force-serial-compat:
 $(GNU_SERIAL_COMPAT_BIN): $(GNU_SERIAL_BIN) force-serial-compat
 	ln -sf vaspberry "$@"
 
-$(GNU_MPI_BIN): $(MPI_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
+$(GNU_MPI_BIN): $(MPI_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
 	$(call build_if_changed,$(MPI_COMMAND),$(MPI_CONFIG))
 
 $(MPI_RUNTIME_TEST): tests/fortran/test_mpi_runtime.f90 $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
@@ -139,6 +139,8 @@ check-gnu: check-serial-help check-mpi-runtime check-mpi-help
 check-serial-help: $(GNU_SERIAL_BIN)
 	$< --help > $(BUILD_DIR)/help-serial.txt
 	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-serial.txt
+	$< --help all > $(BUILD_DIR)/help-serial-all.txt
+	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-serial-all.txt all
 
 check-mpi-runtime: $(MPI_RUNTIME_TEST)
 	$(MPIEXEC) $(MPIEXEC_FLAGS) -n 2 $<
@@ -146,22 +148,24 @@ check-mpi-runtime: $(MPI_RUNTIME_TEST)
 check-mpi-help: $(GNU_MPI_BIN)
 	$(MPIEXEC) $(MPIEXEC_FLAGS) -n 2 $< -h > $(BUILD_DIR)/help-mpi.txt
 	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-mpi.txt
+	$(MPIEXEC) $(MPIEXEC_FLAGS) -n 2 $< -h all > $(BUILD_DIR)/help-mpi-all.txt
+	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-mpi-all.txt all
 
 # Load the Intel compiler, MPI SDK and oneMKL environment before these targets.
 # The dedicated Intel MPI workflow exercises the default oneMKL link flags.
-ifx: | $(BUILD_DIR)
+ifx: $(SERIAL_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(MAKEFILE_LIST) | $(BUILD_DIR)
 	$(IFX) $(INTEL_FLAGS) $(FFLAGS) -o $(BUILD_DIR)/vaspberry-ifx \
 	  $(SERIAL_SOURCE) $(LDFLAGS) $(IFX_MKL_FLAGS)
 
-ifx-mpi: | $(BUILD_DIR)
+ifx-mpi: $(MPI_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(MAKEFILE_LIST) | $(BUILD_DIR)
 	$(MPIIFX) $(INTEL_FLAGS) -DMPI_USE $(FFLAGS) -o $(BUILD_DIR)/vaspberry-ifx-mpi \
 	  $(MPI_SOURCE) $(LDFLAGS) $(IFX_MKL_FLAGS)
 
-ifort: | $(BUILD_DIR)
+ifort: $(SERIAL_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(MAKEFILE_LIST) | $(BUILD_DIR)
 	$(IFORT) $(INTEL_FLAGS) $(FFLAGS) -o $(BUILD_DIR)/vaspberry-ifort \
 	  $(SERIAL_SOURCE) $(LDFLAGS) $(IFORT_MKL_FLAGS)
 
-ifort-mpi: | $(BUILD_DIR)
+ifort-mpi: $(MPI_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(MAKEFILE_LIST) | $(BUILD_DIR)
 	$(MPIIFORT) $(INTEL_FLAGS) -DMPI_USE $(FFLAGS) \
 	  -o $(BUILD_DIR)/vaspberry-ifort-mpi \
 	  $(MPI_SOURCE) $(LDFLAGS) $(IFORT_MKL_FLAGS)
@@ -169,22 +173,30 @@ ifort-mpi: | $(BUILD_DIR)
 check-ifx: ifx
 	$(BUILD_DIR)/vaspberry-ifx --help > $(BUILD_DIR)/help-ifx.txt
 	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-ifx.txt
+	$(BUILD_DIR)/vaspberry-ifx --help all > $(BUILD_DIR)/help-ifx-all.txt
+	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-ifx-all.txt all
 
 check-ifort: ifort
 	$(BUILD_DIR)/vaspberry-ifort --help > $(BUILD_DIR)/help-ifort.txt
 	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-ifort.txt
+	$(BUILD_DIR)/vaspberry-ifort --help all > $(BUILD_DIR)/help-ifort-all.txt
+	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-ifort-all.txt all
 
 check-ifx-mpi: ifx-mpi
 	$(MPIIFX) -O2 -o $(BUILD_DIR)/test-ifx-mpi-runtime tests/fortran/test_mpi_runtime.f90 $(FFLAGS) $(LDFLAGS)
 	$(INTEL_MPIEXEC) $(INTEL_MPIEXEC_FLAGS) -n 2 $(BUILD_DIR)/test-ifx-mpi-runtime
 	$(INTEL_MPIEXEC) $(INTEL_MPIEXEC_FLAGS) -n 2 $(BUILD_DIR)/vaspberry-ifx-mpi --help > $(BUILD_DIR)/help-ifx-mpi.txt
 	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-ifx-mpi.txt
+	$(INTEL_MPIEXEC) $(INTEL_MPIEXEC_FLAGS) -n 2 $(BUILD_DIR)/vaspberry-ifx-mpi --help all > $(BUILD_DIR)/help-ifx-mpi-all.txt
+	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-ifx-mpi-all.txt all
 
 check-ifort-mpi: ifort-mpi
 	$(MPIIFORT) -O2 -o $(BUILD_DIR)/test-ifort-mpi-runtime tests/fortran/test_mpi_runtime.f90 $(FFLAGS) $(LDFLAGS)
 	$(INTEL_MPIEXEC) $(INTEL_MPIEXEC_FLAGS) -n 2 $(BUILD_DIR)/test-ifort-mpi-runtime
 	$(INTEL_MPIEXEC) $(INTEL_MPIEXEC_FLAGS) -n 2 $(BUILD_DIR)/vaspberry-ifort-mpi --help > $(BUILD_DIR)/help-ifort-mpi.txt
 	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-ifort-mpi.txt
+	$(INTEL_MPIEXEC) $(INTEL_MPIEXEC_FLAGS) -n 2 $(BUILD_DIR)/vaspberry-ifort-mpi --help all > $(BUILD_DIR)/help-ifort-mpi-all.txt
+	sh tests/check_fortran_help.sh $(BUILD_DIR)/help-ifort-mpi-all.txt all
 
 clean: check-build-dir
 	rm -rf -- "$(SAFE_BUILD_DIR)"

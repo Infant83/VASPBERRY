@@ -22,6 +22,7 @@ on:
       - "vaspberry.f"
       - "vaspberry_spin_chern.inc"
       - "vaspberry_spin_kubo.inc"
+      - "vaspberry_help.inc"
       - "vaspberry_gfortran_serial.f"
   workflow_dispatch:
 

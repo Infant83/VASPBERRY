@@ -643,9 +643,18 @@ class FortranSourceRegressionTests(unittest.TestCase):
     def test_mpi_help_finalizes_cleanly(self):
         source = SOURCE_PATH.read_text(encoding="utf-8", errors="strict")
         help_body = compact_fortran(fortran_subroutine(source, "help"))
-        self.assertIn("callmpi_initialized(", help_body)
-        self.assertIn("callmpi_finalized(", help_body)
-        self.assertIn("callmpi_finalize(ierr)", help_body)
+        self.assertIn("callvaspberry_help_show(", help_body)
+        shared = (ROOT / "vaspberry_help.inc").read_text(encoding="utf-8")
+        for routine, status in (("vaspberry_help_show", 0),
+                                ("vaspberry_help_error", 1)):
+            body = compact_fortran(fortran_subroutine(shared, routine))
+            self.assertIn(f"callvaspberry_help_finish({status})", body)
+        finish = compact_fortran(fortran_subroutine(shared, "vaspberry_help_finish"))
+        self.assertIn("callmpi_initialized(", finish)
+        self.assertIn("callmpi_finalized(", finish)
+        self.assertIn("callmpi_finalize(ierr)", finish)
+        all_body = compact_fortran(fortran_subroutine(source, "help_all"))
+        self.assertIn("callmpi_finalize(ierr)", all_body)
 
     def test_mpi_real8_buffers_use_the_standard_double_precision_type(self):
         compact = compact_fortran(self.source)

@@ -4,6 +4,20 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+### Native command help
+
+- Make `--help` and `-h` show a short overview. Add task and option help,
+  including `--help task`, `--help kubo`, `--help bands` and
+  `--help spin-chern`; retain the complete flag reference through
+  `--help all` (also `--help legacy`).
+- Add an Intel MPI walkthrough from task selection to option help and a
+  native calculation. Help requires neither Python nor material input files.
+
+### Maintenance
+
+- Keep the completed v1.6.1 publisher manual so subsequent validation changes
+  do not restart publication.
+
 ### Documentation and terminology
 
 - Distinguish Chern numbers and spin Chern numbers from the

@@ -5,6 +5,34 @@ analysis and plotting. These examples use **Intel oneAPI Fortran and Intel MPI**
 the commands below execute VASPBERRY directly, without a Python script. The
 [hands-on guide](HANDS_ON.md) follows the saved files through transport and plots.
 
+## Learn one task or option at a time
+
+Current source builds include topic help in the native Fortran executable.
+After [building](BUILD.md), use `--help task` to choose a calculation,
+`--help kubo` to read its inputs and outputs, and `--help bands` to check an
+option before executing the example below:
+
+```bash
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --help task
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --help kubo
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --help bands
+```
+
+These commands need neither Python nor material input files. Replace `kubo`
+with another calculation, such as `spin-chern` or `spin-kubo`, to read that
+task's requirements. Replace `bands` with an option name, such as `mesh`.
+Run help as a separate command, without calculation arguments. `--help --bands`
+also selects the `bands` topic; `-h` accepts the same topics as `--help`.
+
+| Help request | Shows |
+|---|---|
+| `--help` or `-h` | Short overview and where to go next |
+| `--help task` or `--help tasks` | Available calculations |
+| `--help kubo` | One task's purpose, inputs, outputs and example |
+| `--help options` | Available option topics |
+| `--help bands` | One option's values and usage |
+| `--help all` or `--help legacy` | Complete flag reference, including historical options |
+
 ## A runnable first command
 
 In Bash on a Linux oneAPI host, start at the repository root and use the
@@ -95,7 +123,7 @@ For `spin-kubo`, the same default prefix gives `SPIN_KUBO.csv` and
 `SPIN_KUBO_SPECTRUM.csv`; an explicitly supplied full `--mesh` additionally
 gives `SPIN_KUBO_INTEGRAL.csv`. No integer invariant is assigned by this task.
 
-Every option takes a separate value: use `--mesh 12,12`, not
+Pass option values as separate arguments: use `--mesh 12,12`, not
 `--mesh=12,12` or `--mesh 12 12`. Lists contain no spaces. Modern names and
 legacy flags can be mixed where needed; optical energy-grid controls above
 retain their short names. There is no need to learn every historical flag.

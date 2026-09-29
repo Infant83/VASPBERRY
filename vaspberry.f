@@ -138,9 +138,6 @@
       call MPI_COMM_SIZE(MPI_COMM_WORLD,nprocs,ierr)
       call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ierr)
       if(myrank == 0)then
-       write(6,*)"THIS IS ROOT:",myrank
-      endif
-      if(myrank == 0)then
        time_1=MPI_WTIME()
       endif
 #else
@@ -151,6 +148,12 @@
 
       ver_tag="# VASPBERRY (Ver 1.6.1), by Hyun-Jung Kim."//
      &        " 2026. Sep. 27."
+      call vaspberry_help_request(ver_tag,.false.)
+#ifdef MPI_USE
+      if(myrank == 0)then
+       write(6,*)"THIS IS ROOT:",myrank
+      endif
+#endif
       pi=4.*atan(1.)
       berrymax=0d0
       berrymin=0d0
@@ -6264,6 +6267,12 @@
       end subroutine test
 
       subroutine help(ver_tag)
+      implicit none
+      character*(*) ver_tag
+      call vaspberry_help_show(ver_tag,'overview',.false.)
+      end subroutine help
+
+      subroutine help_all(ver_tag)
       character*256 ver_tag
       logical print_help
 #ifdef MPI_USE
@@ -6288,9 +6297,9 @@
       write(6,*)ver_tag
       write(6,*)" "
       write(6,*)"*Native WAVECAR workflow: make serial"
-      write(6,*)"  build/vaspberry --task chern --wavecar WAVECAR"
+      write(6,*)"  build/vaspberry --task chern --wavecar WAVECAR "//achar(92)
       write(6,*)"    --mesh 12,12 --bands 1:18"
-      write(6,*)"  build/vaspberry --task kubo --bands 18"
+      write(6,*)"  build/vaspberry --task kubo --bands 18 "//achar(92)
       write(6,*)"    --curvature-csv curvature.csv"
       write(6,*)"  build/vaspberry --task kubo-pairs --pairs-csv pairs.csv"
       write(6,*)"  build/vaspberry --help"
@@ -6345,7 +6354,7 @@
       write(6,*)"  --real-grid NX,NY,NZ     -ng NX,NY,NZ"
       write(6,*)"  --imaginary 0|1          -im 0|1"
       write(6,*)"  --theta DEG --phi DEG    -theta DEG -phi DEG"
-      write(6,*)"  --help                  print this help and stop"
+      write(6,*)"  --help [TOPIC]          short overview or topic help"
       write(6,*)"  All legacy flags remain accepted (details below)."
       write(6,*)" "
       write(6,*)"*Outputs and reusable results:"
@@ -6385,7 +6394,7 @@
       write(6,*)"*        -kx nx -ky ny -is n"
       write(6,*)" "
       write(6,*)"             ### POSSIBLE OPTIONS ###"
-      write(6,*)" -h               : Print this help and stop"
+      write(6,*)" -h               : Print help overview and stop"
       write(6,*)" -f filename      : File name to be read"
       write(6,*)"                  : Default: WAVECAR"
       write(6,*)" -kx(ky) kx(ky)   : k-point grid of your system"
@@ -6543,10 +6552,9 @@
       write(6,*)"                  : occupied bands 1:NE, NBANDS>NE,"
       write(6,*)"                  : and each of four 2D TRIM once."
       write(6,*)"                  : Example (12x12, NE=10):"
-      write(6,*)"                  : ./build/vaspberry-gfortran"
-      write(6,*)"                  :   -f WAVECAR -o NFIELD"
-      write(6,*)"                  :   -z2 1 -kx 12 -ky 12 -s 2"
-      write(6,*)"                  :   -ii 1 -if 10"
+      write(6,*)"  ./build/vaspberry-gfortran -f WAVECAR -o NFIELD "//achar(92)
+      write(6,*)"    -z2 1 -kx 12 -ky 12 -s 2 "//achar(92)
+      write(6,*)"    -ii 1 -if 10"
       write(6,*)"                  : PASS writes NFIELD.dat and"
       write(6,*)"                  : Z2_FIELD.csv. Report z2_invariant"
       write(6,*)"                  : only for result_status=PASS; the"
@@ -6578,8 +6586,8 @@
       write(6,*)" A CBM-only result is an incremental contribution."
       write(6,*)" Total sigma_xy also needs the valence manifold."
       write(6,*)" "
-      write(6,*)"* default: -f WAVECAR -kx 2 -ky 2 -ii 1 -if VBM"//
-     &" -kp 1"
+      write(6,*)"* default: -f WAVECAR -kx 12 -ky 12 -ii 1 -if VBM"//
+     &" -kp 2"
       write(6,*)"* here, VBM is valence band maximum"
       write(6,*)" "
       write(6,*)"*Compilation: see Makefile and docs/BUILD.md."
@@ -6609,7 +6617,7 @@
       endif
 #endif
       stop
-      end subroutine help
+      end subroutine help_all
 
       subroutine vaspberry_fail
 #ifdef MPI_USE
@@ -6623,3 +6631,5 @@
 #include "vaspberry_spin_chern.inc"
 
 #include "vaspberry_spin_kubo.inc"
+
+#include "vaspberry_help.inc"

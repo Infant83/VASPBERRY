@@ -1,13 +1,18 @@
 #!/bin/sh
 set -eu
 
-if [ "$#" -ne 1 ]; then
-  echo "usage: $0 HELP_OUTPUT" >&2
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+  echo "usage: $0 HELP_OUTPUT [overview|all]" >&2
   exit 2
 fi
 
 help_output=$1
+mode=${2:-overview}
 version=$(tr -d '[:space:]' < VERSION)
+case "$mode" in
+  overview|all) ;;
+  *) echo "unknown help-check mode: $mode" >&2; exit 2 ;;
+esac
 
 # Concurrent MPI writers can splice help text mid-line. Require one writer.
 banner_count=$(grep -F -o -- 'PROGRAM INSTRUCTION' "$help_output" | wc -l | tr -d '[:space:]')
@@ -16,6 +21,27 @@ if [ "$banner_count" -ne 1 ]; then
   exit 1
 fi
 
+if [ "$mode" = overview ]; then
+  line_count=$(wc -l < "$help_output" | tr -d '[:space:]')
+  if [ "$line_count" -gt 50 ]; then
+    echo "overview help is too long: $line_count lines (maximum 50)" >&2
+    exit 1
+  fi
+  for required in \
+    "Ver $version" \
+    "--help task" \
+    "--help kubo" \
+    "--help bands" \
+    "--help all" \
+    "WAVECAR" \
+    "docs/NATIVE_COMMANDS.md"
+  do
+    if ! grep -F -- "$required" "$help_output" >/dev/null; then
+      echo "missing overview help contract: $required" >&2
+      exit 1
+    fi
+  done
+else
 for required in \
   "Ver $version" \
   "build/vaspberry --task chern --wavecar WAVECAR" \
@@ -24,7 +50,7 @@ for required in \
   "--task rejects conflicting legacy task options." \
   "No integer expectation on a path." \
   "All legacy flags remain accepted" \
-  "-h               : Print this help and stop" \
+  "--help [TOPIC]" \
   "-z2  1" \
   "-kubo_bundle 1" \
   "-kubo_pairs PATH" \
@@ -57,6 +83,7 @@ do
     exit 1
   fi
 done
+fi
 
 for forbidden in \
   "Legacy Fukui Z2 candidate" \

@@ -164,6 +164,25 @@ separate operator route described in the [spin guide](docs/SPIN_HALL.md).
 
 ## Usage
 
+### Find a calculation with native help
+
+Current source builds provide a short overview and help for individual tasks
+and options. After building, list the tasks, inspect a calculation, then run
+the first example below:
+
+```bash
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --help
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --help task
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --help kubo
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --help bands
+```
+
+Help runs in the native Fortran executable; it needs neither Python nor a
+WAVECAR. Use `--help spin-chern` for that task, `--help options` to find option
+names, and `--help all` (also `--help legacy`) for the complete flag reference.
+`-h` is the short form of `--help`. See the
+[native help guide](docs/NATIVE_COMMANDS.md#learn-one-task-or-option-at-a-time).
+
 ### First calculation: the supplied MoS₂ WAVECAR
 
 Run from the repository root. This small example uses the actual SOC
@@ -217,7 +236,7 @@ The native syntax groups a mesh as `NX,NY` and a band range as `FIRST:LAST`.
 Specialized legacy options can still be used; for example, `--task kubo` is
 `-kubo 2`, and `--bands 1:18` is `-ii 1 -if 18`. The optional
 `--task kubo-integral` (`-kubo 1`) additionally evaluates the mesh integral.
-Use `mpiexec -n 4 ./build/vaspberry-ifx-mpi --help` or the [native command reference](docs/NATIVE_COMMANDS.md) for the full list. For example:
+Use `mpiexec -n 4 ./build/vaspberry-ifx-mpi --help all` or the [native command reference](docs/NATIVE_COMMANDS.md) for the full list. For example:
 
 ```bash
 mpiexec -n 4 ./build/vaspberry-ifx-mpi --task chern --wavecar WAVECAR \

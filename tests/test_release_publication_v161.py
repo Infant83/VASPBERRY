@@ -15,10 +15,12 @@ TARGET = 'a'*40
 
 
 class ReleaseChecks(unittest.TestCase):
-    def test_completed_installation_publisher_has_no_automatic_trigger(self):
-        workflow = (ROOT/'.github/workflows/publish-v1.4.2.yml').read_text()
-        self.assertIn('  workflow_dispatch:', workflow)
-        self.assertNotIn('\n  push:', workflow)
+    def test_completed_publishers_have_no_automatic_trigger(self):
+        for version in ('1.4.2', '1.6.1'):
+            with self.subTest(version=version):
+                workflow = (ROOT/f'.github/workflows/publish-v{version}.yml').read_text()
+                self.assertIn('  workflow_dispatch:', workflow)
+                self.assertNotIn('\n  push:', workflow)
 
     def test_archive_installation_jobs_cannot_be_omitted_or_skipped(self):
         workflow = 'installation-validation.yml'
