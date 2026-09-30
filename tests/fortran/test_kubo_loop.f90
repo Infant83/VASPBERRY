@@ -29,8 +29,8 @@ program test_kubo_loop
     if(abs(upper(1)+expected)>2d-6*abs(expected))stop 2
     if(abs(lower(1)+upper(1))>1d-12)stop 3
     if(spinor==2)then
-      call write_kubo_band_csv('fixture.csv',1,1,1,nk,nband,wk,lower)
-      call write_kubo_band_csv('fixture.csv',1,2,1,nk,nband,wk,upper)
+      call write_kubo_band_csv('fixture.csv',1,1,1,1,2,nk,nband,wk,lower)
+      call write_kubo_band_csv('fixture.csv',1,1,2,1,2,nk,nband,wk,upper)
     endif
     close(10)
   enddo

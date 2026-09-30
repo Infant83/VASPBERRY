@@ -28,6 +28,7 @@ import numpy as np
 from plot_berry_curvature import (draw_bz_outline, plaquettes_in_first_bz,
     read_native_curvature, reciprocal_from_poscar, uniform_plaquettes)
 from wavecar_fukui import Wavecar
+from native_kubo_csv import BAND_SCHEMA, TRACE_SCHEMA, read_curvature_csv
 
 
 def digest(path):
@@ -95,10 +96,10 @@ def native_metadata(path):
 def read_kubo(path, band, threshold):
     if not np.isfinite(threshold) or threshold < 0:
         raise ValueError("isolation threshold must be finite and nonnegative")
-    lines, metadata = native_metadata(path)
-    if metadata.get("normalization") != "STANDARD_MINUS_TWO_IM":
-        raise ValueError("Kubo input must use the current physical normalization")
-    rows = [r for r in csv.DictReader(line for line in lines if not line.startswith("#")) if int(r["band"]) == band]
+    _, all_rows = read_curvature_csv(path, kind="band")
+    if any(row["min_gap_eV"] is None for row in all_rows):
+        raise ValueError("single-band plotter requires other stored bands and a defined gap")
+    rows = [r for r in all_rows if r["band"] == band]
     rows.sort(key=lambda r: int(r["k_index"]))
     if not rows or [int(r["k_index"]) for r in rows] != list(range(1, len(rows) + 1)):
         raise ValueError("Kubo input needs exactly one selected-band row per k point")
@@ -150,10 +151,10 @@ def read_bundle(path, occupied, threshold):
     """Read a guarded native bundle trace; never sum ill-conditioned band CSVs."""
     if not np.isfinite(threshold) or threshold < 0:
         raise ValueError("isolation threshold must be finite and nonnegative")
-    lines, meta = native_metadata(path)
-    if (meta.get("schema") != "VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1"
-            or meta.get("normalization") != "STANDARD_MINUS_TWO_IM"
-            or meta.get("operator") != "WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY"
+    meta, rows = read_curvature_csv(path, kind="trace")
+    if any(row["min_external_gap_eV"] is None for row in rows):
+        raise ValueError("bundle plotter requires excluded states and a defined external gap")
+    if (meta.get("operator") != "WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY"
             or meta.get("berry_connection") != "A_i=i<u|d/dk_i u>"
             or meta.get("intermediate_bands") != "EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS"
             or meta.get("result_kind") != "ISOLATED_BUNDLE_TRACE"
@@ -161,7 +162,6 @@ def read_bundle(path, occupied, threshold):
         raise ValueError("a successful current native Kubo bundle CSV is required")
     if tuple(int(meta[k]) for k in ("band_min", "band_max", "band_rank")) != (1, occupied, occupied):
         raise ValueError("Kubo bundle range disagrees with the occupied-group label")
-    rows = list(csv.DictReader(line for line in lines if not line.startswith("#")))
     rows.sort(key=lambda r: int(r["k_index"]))
     if not rows or [int(r["k_index"]) for r in rows] != list(range(1, len(rows) + 1)):
         raise ValueError("bundle input needs one selected-spin row per k point")
@@ -330,12 +330,17 @@ def plot_panels(*, method, input_path, poscar_path, bands_csv, output_path,
                 isolation_threshold_eV=threshold if method.startswith("kubo") else None,
                 color_limit_A2=bound, source_sha256={str(Path(p).name): digest(p) for p in (input_path, poscar_path, bands_csv)},
                 path_input_sha256=digest(path_input) if path_input is not None else None,
+                completion_validation={name: ("terminal_pass_and_full_coverage"
+                    if header.get("schema") in (TRACE_SCHEMA, BAND_SCHEMA) else "legacy_unverified")
+                    for name, header in zip(("map", "path"), headers)} if method.startswith("kubo") else None,
+                curvature_reader_sha256=digest(Path(__file__).with_name("native_kubo_csv.py")),
                 plotter_sha256=digest(__file__))
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--method", choices=("fukui", "kubo", "kubo-bundle"), required=True)
+    parser.add_argument("--method", choices=("fukui", "kubo", "kubo-bundle"), required=True,
+                        help="input format: Fukui plaquettes, individual-band Kubo CSV, or selected-space trace CSV; not a native calculation switch")
     parser.add_argument("--input", type=Path, required=True, help="native BERRYCURV.dat (Fukui method) or mesh KUBO.csv")
     parser.add_argument("--poscar", type=Path, required=True)
     bands = parser.add_mutually_exclusive_group(required=True)

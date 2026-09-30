@@ -46,12 +46,13 @@ mkdir -p results/mos2-valleys-native
   cd results/mos2-valleys-native
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/mos2-valleys-vasp/WAVECAR" \
-    --task kubo --bands 17:18 \
+    --task kubo --bands 17:18 --per-band 1 \
     --curvature-csv KUBO.csv --output BERRYCURV > vaspberry.log
 )
 ```
 
-It exports bands 17 and 18 with intermediate bands 1–26; the map shows
+`--per-band 1` requests separate curves for bands 17 and 18, with intermediate
+bands 1–26. Without that flag, `--bands 17:18` would give their combined trace; the map shows
 band 18. The runner compares CSV energies, coordinates and minimum gaps
 against an independent WAVECAR read before plotting. It requires the target
 band to remain separated by more than 10 meV at every sampled point.

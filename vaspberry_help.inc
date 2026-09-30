@@ -30,6 +30,16 @@
         call vaspberry_help_show(ver_tag,topic,legacy_build)
        endif
       enddo
+! Reject removed options before any input I/O, including historical builds.
+      do j=1,narg,2
+       call get_command_argument(j,arg)
+       if(trim(arg).eq.'--bundle'.or.
+     &    trim(arg).eq.'-kubo_bundle')then
+        call vaspberry_help_error('--bundle/-kubo_bundle was removed; '//
+     &   'use --task kubo --bands FIRST:LAST for the selected-space trace, '//
+     &   'or add --per-band 1 for individual bands')
+       endif
+      enddo
       end subroutine vaspberry_help_request
 
       subroutine vaspberry_help_rank(print_help)
@@ -183,7 +193,7 @@
        known=.true.
       case('pairs-csv')
        known=.true.
-      case('bundle')
+      case('bundle','per-band')
        known=.true.
       case('spin-axis')
        known=.true.
@@ -343,7 +353,7 @@
        write(6,'(A)')'Each calculation option takes one separate value; no --name=value.'
        write(6,'(A)')'Read a topic with --help NAME or --help --NAME:'
        write(6,'(A)')'  task  wavecar  bands  mesh  spinor  output'
-       write(6,'(A)')'  curvature-csv  pairs-csv  bundle'
+       write(6,'(A)')'  curvature-csv  pairs-csv  per-band'
        write(6,'(A)')'  spin-axis  outcar  energy-gap-tol  spin-gap-tol  sum-bands'
        write(6,'(A)')'  wavefunction-band  kpoint  real-grid  imaginary  theta  phi'
        write(6,'(A)')'Optical controls retain legacy names: ien fen nediv sigma.'
@@ -413,21 +423,31 @@
        write(6,'(A)')'One band:'
        write(6,'(A)')'  vaspberry --task kubo --bands 18 --curvature-csv curvature.csv'
        write(6,'(A)')'Occupied-group trace (allows internal degeneracies):'
-       write(6,'(A)')'  vaspberry --task kubo --bands 1:18 --bundle 1 '//achar(92)
+       write(6,'(A)')'  vaspberry --task kubo --bands 1:18 '//achar(92)
        write(6,'(A)')'    --curvature-csv KUBO.csv'
        write(6,'(A)')'--wavecar PATH defaults to WAVECAR. Mesh and path data are accepted;'
        write(6,'(A)')'this task preserves source k-point order and does not integrate a path.'
-       write(6,'(A)')'Without --bundle 1, a band range produces individual-band curvatures.'
+       write(6,'(A)')'Selected ranges use the whole subspace by default.'
+       write(6,'(A)')'Default trace CSV: KUBO.csv. --curvature-csv PATH changes the filename.'
+       write(6,'(A)')'For each individual band instead, add --per-band 1.'
+       write(6,'(A)')'A singleton or each per-band state needs all gaps >1e-5 eV.'
+       write(6,'(A)')'The trace excludes internal transitions; external gaps must exceed 1e-5 eV.'
+       write(6,'(A)')'Failed gap checks create no curvature outputs; bands are never enlarged.'
+       write(6,'(A)')'Omitted bands retain legacy occupied inference and individual-band output;'
+       write(6,'(A)')'specify --bands explicitly. Pure legacy -ii/-if without --task/--bands'
+       write(6,'(A)')'retains individual bands. --task with -ii/-if uses the new range rule.'
        write(6,'(A)')'CSV omega_z_A2 uses the standard -2 Im normalization, in Angstrom^2.'
        write(6,'(A)')'The operator is canonical momentum from pseudo WAVECAR coefficients;'
        write(6,'(A)')'PAW augmentation and nonlocal velocity corrections are not included.'
        write(6,'(A)')'Check band isolation and k/NBANDS convergence. CSV paths must be new.'
+       write(6,'(A)')'A complete CSV records source counts and ends in result_status=PASS.'
+       write(6,'(A)')'Writes PATH.partial first; only successful complete output becomes PATH.'
        write(6,'(A)')'kubo-line is a synonym; legacy selector: -kubo 2.'
-       write(6,'(A)')'Related: bundle curvature-csv kubo-integral kubo-pairs.'
+       write(6,'(A)')'Related: per-band curvature-csv kubo-integral kubo-pairs.'
       case('kubo-integral')
        write(6,'(A)')'Full-mesh Kubo-formula integration diagnostic (legacy -kubo 1).'
        write(6,'(A)')'  vaspberry --task kubo-integral --mesh 12,12 --bands 1:18 '//achar(92)
-       write(6,'(A)')'    --bundle 1 --curvature-csv KUBO.csv'
+       write(6,'(A)')'    --curvature-csv KUBO.csv'
        write(6,'(A)')'Use the actual full uniform 2D mesh in WAVECAR; never use a path.'
        write(6,'(A)')'The bundle CSV is the same pointwise curvature as for --task kubo.'
        write(6,'(A)')'An additional finite-grid curvature integral is printed to stdout.'
@@ -442,7 +462,7 @@
        write(6,'(A)')'Writes energies, fractional k coordinates and three Cartesian numerators'
        write(6,'(A)')'(yz,zx,xy), in eV^2 Angstrom^2. No gap division or occupation weighting.'
        write(6,'(A)')'Source occupations may vary with k. No gap or finite-mu result is assumed.'
-       write(6,'(A)')'Not compatible with --curvature-csv or --bundle 1.'
+       write(6,'(A)')'Not compatible with --curvature-csv or --per-band.'
        write(6,'(A)')'The file must be new; a final result_status=PASS marks complete export.'
        write(6,'(A)')'Numerators use canonical momentum in the pseudo-wavefunction metric,'
        write(6,'(A)')'without PAW/nonlocal velocity terms; they are not conductivity yet.'
@@ -503,7 +523,7 @@
        write(6,'(A)')'--bands N | --bands FIRST:LAST : one-based inclusive band selection.'
        write(6,'(A)')'Examples: --bands 18 ; --bands 1:18. No spaces inside a range.'
        write(6,'(A)')'chern: one band or the full selected link-variable subspace.'
-       write(6,'(A)')'kubo: individual bands; add --bundle 1 for the selected-group trace.'
+       write(6,'(A)')'kubo: N is individual; FIRST:LAST with different ends is the group trace.'
        write(6,'(A)')'spin-chern/spin-kubo: the selected isolated energy subspace.'
        write(6,'(A)')'z2: all occupied bands 1:NE, with even rank and NBANDS>NE.'
        write(6,'(A)')'optical: initial/final endpoints. spectrum: LAST caps empty bands;'
@@ -511,7 +531,9 @@
        write(6,'(A)')'velocity: only the first selected band; choose one explicitly.'
        write(6,'(A)')'kubo-pairs: omit this option; every source-band pair is exported.'
        write(6,'(A)')'Default boundary is inferred from source occupations, not fixed at 18.'
-       write(6,'(A)')'Legacy equivalents: -is N or -ii FIRST -if LAST.'
+       write(6,'(A)')'Legacy selectors: -is N or -ii FIRST -if LAST.'
+       write(6,'(A)')'With --task kubo these follow the new range rule; pure legacy -kubo'
+       write(6,'(A)')'with -ii/-if keeps individual bands. Explicit --bands uses the new rule.'
        write(6,'(A)')'This selector does not set the number of intermediate states;'
        write(6,'(A)')'--sum-bands is a separate spin-kubo-only convergence control.'
       case('mesh')
@@ -530,9 +552,9 @@
        write(6,'(A)')'Example: --wavecar /data/project/WAVECAR ; legacy equivalent: -f PATH.'
        write(6,'(A)')'Quote paths with spaces. Prefer short paths (native fields: 256 chars).'
        write(6,'(A)')'Reads full-complex single-precision coefficients with RTAG=45200.'
-       write(6,'(A)')'GNU and supplied Intel targets use byte RECL. Reader and VASP writer'
-       write(6,'(A)')'must agree on the direct-access record unit; word-RECL files are not'
-       write(6,'(A)')'automatically converted. See docs/BUILD.md for producer compatibility.'
+       write(6,'(A)')'GNU and supplied Intel targets use byte RECL. The native reader detects'
+       write(6,'(A)')'byte or four-byte-word producer layouts and reports physical byte stride.'
+       write(6,'(A)')'Ambiguous, truncated or invalid layouts fail before allocation; no conversion.'
        write(6,'(A)')'--spinor auto checks scalar/two-component layout throughout the file.'
        write(6,'(A)')'Help never attempts to open or inspect this input.'
       case('spinor')
@@ -561,31 +583,42 @@
        write(6,'(A)')'--curvature-csv PATH : exact band/bundle Kubo curvature CSV filename.'
        write(6,'(A)')'Example: --task kubo --bands 18 --curvature-csv BAND18.csv.'
        write(6,'(A)')'Used only with kubo or kubo-integral (legacy -kubo 2 or 1).'
-       write(6,'(A)')'The parent directory must exist and PATH must be a new file.'
+       write(6,'(A)')'The parent directory must exist; PATH and PATH.partial must be new.'
+       write(6,'(A)')'Trace V2/band V3 includes declared counts and terminal result_status=PASS.'
        write(6,'(A)')'Band rows include spin,k,band,energy,min_gap,omega_z_A2.'
-       write(6,'(A)')'--bundle 1 instead exports selected-group trace and external-gap data.'
+       write(6,'(A)')'A multi-band range exports selected-group trace and external-gap data.'
        write(6,'(A)')'omega_z_A2 is normalized Berry curvature in Angstrom^2.'
        write(6,'(A)')'Preserve comment metadata with the table; see docs/OUTPUT_FORMAT.md.'
        write(6,'(A)')'Not compatible with --pairs-csv. Legacy equivalent: -kubo_csv PATH.'
       case('pairs-csv')
        write(6,'(A)')'--pairs-csv PATH : exact reusable native pair-export CSV filename.'
        write(6,'(A)')'Use with --task kubo-pairs; legacy equivalent: -kubo 2 -kubo_pairs PATH.'
-       write(6,'(A)')'The parent directory must exist and the file must be new.'
-       write(6,'(A)')'Omit --bands, --curvature-csv and --bundle 1.'
+       write(6,'(A)')'The parent directory must exist; PATH and PATH.partial must be new.'
+       write(6,'(A)')'PATH.partial is renamed only after all records are written and closed.'
+       write(6,'(A)')'Omit --bands, --curvature-csv and --per-band.'
        write(6,'(A)')'All unordered source-band pairs are exported, with no gap division or'
        write(6,'(A)')'occupation weighting. Require the final result_status=PASS marker.'
        write(6,'(A)')'See --help kubo-pairs for quantities, units and postprocessing.'
+      case('per-band')
+       write(6,'(A)')'--per-band 0|1 : individual Kubo output when 1; default 0.'
+       write(6,'(A)')'Requires --task kubo, kubo-line or kubo-integral.'
+       write(6,'(A)')'Example: --task kubo --bands 1:18 --per-band 1 --curvature-csv BANDS.csv.'
+       write(6,'(A)')'Without it, a selected multi-band range is the selected-space trace.'
+       write(6,'(A)')'Individual bands require all gaps >1e-5 eV at every source k/spin,'
+       write(6,'(A)')'including gaps to other selected bands. Degeneracy fails before output.'
+       write(6,'(A)')'No band range is enlarged automatically. A trace requires only external'
+       write(6,'(A)')'gaps >1e-5 eV; internal transitions are excluded before division.'
+       write(6,'(A)')'The trace writes CSV only, one row per source k/spin; default KUBO.csv.'
+       write(6,'(A)')'For the full source space its trace is zero in the truncated basis;'
+       write(6,'(A)')'this is not a convergence result. Neither route applies occupations.'
+       write(6,'(A)')'For individual output CSV is opt-in; existing DAT output remains.'
+       write(6,'(A)')'Omitted bands retain occupied inference and individual output; use --bands.'
+       write(6,'(A)')'Rejected with pair export, spin-sector, FHS and all other tasks.'
       case('bundle')
-       write(6,'(A)')'--bundle 0|1 : choose individual bands (0, default) or group trace (1).'
-       write(6,'(A)')'Use with kubo/kubo-integral and --curvature-csv PATH.'
-       write(6,'(A)')'Example: --task kubo --bands 1:18 --bundle 1 --curvature-csv KUBO.csv.'
-       write(6,'(A)')'Internal transitions are excluded; internal degeneracies are allowed.'
-       write(6,'(A)')'The selected group must be isolated: external gaps must exceed 1e-5 eV.'
-       write(6,'(A)')'If all source bands are selected, the empty external space gives zero'
-       write(6,'(A)')'within the truncated WAVECAR basis; this is not a convergence result.'
-       write(6,'(A)')'Bundle mode writes only its CSV, with one row per source k/spin.'
-       write(6,'(A)')'It is not occupation weighting and is incompatible with pair export.'
-       write(6,'(A)')'Legacy equivalent: -kubo_bundle 1.'
+       write(6,'(A)')'--bundle and -kubo_bundle were removed; old commands fail explicitly.'
+       write(6,'(A)')'Use --task kubo --bands FIRST:LAST for the selected-space trace.'
+       write(6,'(A)')'The CSV defaults to KUBO.csv; --curvature-csv PATH changes its filename.'
+       write(6,'(A)')'Use --per-band 1 with that task for individual-band results.'
       case('spin-axis')
        write(6,'(A)')'--spin-axis x|y|z|A,B,C : Cartesian analysis axis for spin-sector tasks.'
        write(6,'(A)')'Default z; for example --spin-axis 0,0,1.'
@@ -708,7 +741,7 @@
        write(6,'(A)')'Set the absolute executable path:'
        write(6,'(A)')'  VB=/absolute/path/to/build/vaspberry-ifx'
        write(6,'(A)')'  "$VB" --task chern --wavecar /data/WAVECAR --mesh 12,12 --bands 1:18'
-       write(6,'(A)')'  "$VB" --task kubo --wavecar /data/WAVECAR --bands 1:18 --bundle 1 '//achar(92)
+       write(6,'(A)')'  "$VB" --task kubo --wavecar /data/WAVECAR --bands 1:18 '//achar(92)
        write(6,'(A)')'    --curvature-csv KUBO.csv'
        write(6,'(A)')'  "$VB" --task kubo-pairs --wavecar /data/WAVECAR --pairs-csv PAIRS.csv'
        write(6,'(A)')'Backslashes continue commands onto the next line; options take one value.'

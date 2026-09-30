@@ -23,6 +23,9 @@ program test_kubo_bundle
   nbmax=1;b1=[1d0,0d0,0d0];b2=[0d0,1d0,0d0];b3=[0d0,0d0,1d0];wk=0d0
   hbar=6.582119569e-16;c=2.99792458e8;em=.510998950e6;metertoang=1.e10
   unit=hbar**4/em**2*metertoang**4*c**4
+  if(mode=="overflow-result".or.mode=="band-overflow")then
+    b1=b1*1d160;b2=b2*1d160
+  endif
   call check_kubo_bundle_gaps(2,nk,nband,1,2)
   do spinor=1,2
     np=4*spinor;nplist=np
@@ -40,10 +43,14 @@ program test_kubo_bundle
     do isp=1,2
       do ik=1,nk
         do i=1,nband
+          if(mode=="truncated".and.isp==2.and.ik==nk.and.i==nband)cycle
           write(10,rec=3+(ik-1)*(nband+1)+nk*(nband+1)*(isp-1)+i)coeff(1:np,i)
         enddo
       enddo
     enddo
+    if(mode=="truncated")call read_kubo_coefficients(coeff(:,1),np,2,nk,nband,nk,nband)
+    if(mode=="band-overflow")call kubo_berry_curvature(lower,b1,b2,b3,wk,1,nband,10d0, &
+         spinor,nplist,nbmax,npmax,nk,2,nprocs,myrank,comm)
     call kubo_bundle_curvature(omega,gap,b1,b2,b3,wk,1,nband,10d0,spinor, &
          nplist,nbmax,npmax,nk,1,2,nprocs,myrank,comm)
     do ik=1,nk
@@ -65,14 +72,14 @@ program test_kubo_bundle
     call kubo_bundle_curvature(omega,gap,b1,b2,b3,wk,1,nband,10d0,spinor, &
          nplist,nbmax,npmax,nk,1,2,nprocs,myrank,comm)
     if(spinor==2.and.myrank==0)then
-      call write_kubo_bundle_csv('bundle.csv',1,nk,nband,1,2,wk,omega,gap)
-      call write_kubo_bundle_csv('bundle.csv',2,nk,nband,1,2,wk,omega,gap)
+      call write_kubo_bundle_csv('bundle.csv',1,2,nk,nband,1,2,wk,omega,gap)
+      call write_kubo_bundle_csv('bundle.csv',2,2,nk,nband,1,2,wk,omega,gap)
     endif
     call kubo_bundle_curvature(total,gap,b1,b2,b3,wk,1,nband,10d0,spinor, &
          nplist,nbmax,npmax,nk,1,3,nprocs,myrank,comm)
     if(any(total/=0d0))stop 15
     if(any(gap/=huge(1d0)))stop 16
-    if(spinor==2.and.myrank==0)call write_kubo_bundle_csv('all.csv',1,nk,nband,1,3,wk,total,gap)
+    if(spinor==2.and.myrank==0)call write_kubo_bundle_csv('all.csv',1,1,nk,nband,1,3,wk,total,gap)
     close(10)
   enddo
   if(myrank==0)print *, 'KUBO_BUNDLE_PASS'

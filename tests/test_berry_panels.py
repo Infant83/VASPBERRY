@@ -315,7 +315,23 @@ class PanelDataIntegrityTests(unittest.TestCase):
         lines = self.mesh.read_text().splitlines()
         with self.mesh.open("a") as handle:
             handle.write(lines[-1] + "\n")
-        with self.assertRaisesRegex(ValueError, "one selected-spin row"):
+        with self.assertRaisesRegex(ValueError, "coverage"):
+            panels.read_bundle(self.mesh, 1, 1e-5)
+
+    def test_current_bundle_completion_is_checked_before_plotting(self):
+        write_bundle(self.mesh, self.qmesh, self.native_values, metadata={
+            "schema": "VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V2",
+            "source_nkpoints": len(self.qmesh), "source_nspin": 1,
+            "expected_rows": len(self.qmesh), "result_status": "INCOMPLETE"})
+        incomplete = self.mesh.read_text()
+        with self.assertRaisesRegex(ValueError, "terminal"):
+            panels.read_bundle(self.mesh, 1, 1e-5)
+        self.mesh.write_text(incomplete + "# result_status=PASS\n")
+        _, values, _ = panels.read_bundle(self.mesh, 1, 1e-5)
+        np.testing.assert_array_equal(values, self.native_values)
+        # A surviving footer cannot certify a missing final data row.
+        self.mesh.write_text("\n".join(incomplete.splitlines()[:-1])+"\n# result_status=PASS\n")
+        with self.assertRaisesRegex(ValueError, "row count"):
             panels.read_bundle(self.mesh, 1, 1e-5)
 
     def test_bundle_panels_preserve_trace_and_matching_direct_path_values(self):
@@ -324,6 +340,8 @@ class PanelDataIntegrityTests(unittest.TestCase):
         before = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in [self.mesh, self.path_kubo, self.bands]}
         metadata = self.call_plot(method="kubo-bundle", map_style="smooth", display_grid=25)
         self.assertEqual(metadata["map_quantity"], "pointwise_Kubo_bundle_trace")
+        self.assertEqual(metadata["completion_validation"],
+                         {"map": "legacy_unverified", "path": "legacy_unverified"})
         self.assertEqual(metadata["masked_path_points"], 0)
         self.assertIsNone(metadata["kubo_band"])
         with (self.path / "curve.csv").open() as handle:

@@ -42,7 +42,8 @@ class CompiledPairTests(unittest.TestCase):
         production = routine(source, "kubo_interband_term", "function")
         production += "\n".join(routine(source, name) for name in (
             "kubo_pair_numerators", "write_kubo_pairs_csv", "kubo_bundle_gap",
-            "kubo_bundle_curvature", "mpi_job_distribution_chain",
+            "kubo_bundle_curvature", "mpi_job_distribution_chain", "read_kubo_coefficients",
+            "open_kubo_csv", "finish_kubo_csv",
         ))
         (cls.work / "production.f").write_text(production)
         flags = ["-cpp", "-O2", "-fcheck=all", "-ffixed-line-length-none"]
@@ -129,7 +130,7 @@ class CompiledPairTests(unittest.TestCase):
         before=p.read_bytes()
         failed=self.run_command([str(self.work/"pairs"),"degenerate"],case,False)
         self.assertNotEqual(failed.returncode,0)
-        self.assertIn("cannot open new Kubo pairs CSV",failed.stderr)
+        self.assertIn("cannot open new Kubo CSV",failed.stderr)
         self.assertEqual(p.read_bytes(),before)
 
     def test_failed_exports_do_not_have_pass_footer_and_count_overflow_is_guarded(self):
@@ -156,7 +157,7 @@ class CompiledPairTests(unittest.TestCase):
         invalid=[(["-kubo_pairs","pairs.csv"],"requires Kubo-only mode 2"),
                  (["-kubo","1","-kubo_pairs","pairs.csv"],"requires Kubo-only mode 2"),
                  ([*valid,"-kubo_csv","band.csv"],"exclusive"),
-                 ([*valid,"-kubo_bundle","1","-kubo_csv","bundle.csv"],"exclusive"),
+                 ([*valid,"-kubo_bundle","1","-kubo_csv","bundle.csv"],"removed"),
                  ([*valid,"-ii","1"],"omit -ii/-if/-is/-nn"),
                  ([*valid,"-if","3"],"omit -ii/-if/-is/-nn"),
                  ([*valid,"-is","1"],"omit -ii/-if/-is/-nn"),

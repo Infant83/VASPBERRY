@@ -1,11 +1,40 @@
 # Migrating to the current source
 
-Version 1.6.2 adds native topic help without changing calculation commands or
-numerical output formats. Use `--help task`, then `--help NAME` for a task or
+VASPBERRY 1.6.3 simplifies native Kubo band selection and strengthens
+curvature-output validation as specified below. Use `--help task`, then `--help NAME` for a task or
 option; the complete flag reference is `--help all` (also `--help legacy`).
-The [current release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.2),
+The [current release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.3),
 [native reference](NATIVE_COMMANDS.md) and [hands-on tutorial](HANDS_ON.md)
 provide the current setup and commands. Earlier migration requirements follow.
+
+## Native Kubo band selection
+
+Version 1.6.3 removes `--bundle` and `-kubo_bundle`. Both names now
+fail with migration guidance instead of selecting a mode. For named tasks
+`kubo`, `kubo-line` and `kubo-integral`:
+
+| Requested result | Current arguments | Output |
+|---|---|---|
+| One isolated band | `--bands 18 --curvature-csv BAND18.csv` | Individual-band CSV and legacy DAT |
+| Trace of bands 1–18 | `--bands 1:18` | `KUBO.csv`, one row per k/spin |
+| Separate bands 18 and 19 | `--bands 18:19 --per-band 1 --curvature-csv BANDS.csv` | Individual-band CSV and legacy DAT |
+
+Use `--curvature-csv PATH` to name the trace file explicitly. Trace CSV V2
+and individual-band CSV V3 keep the numerical columns and add completion
+and coverage metadata; see [output formats](OUTPUT_FORMAT.md#native-kubo-bundle-csv).
+The physical bundle concept and Python `bundle-hall` integration remain valid.
+Older schemas are accepted as legacy-unverified inputs, with their original
+metadata preserved; rerun when the new completion guarantee is required.
+
+A named Kubo task applies this selection rule even with legacy `-ii`/`-if`
+endpoints. A purely legacy `-kubo` command retains individual-band output.
+Single/per-band modes now reject any selected-to-other-source-band gap at
+or below 1e-5 eV before writing results. The trace checks only selected-to-
+excluded gaps and permits internal degeneracies. Pair, spin-sector and
+Chern-number tasks retain their existing semantics.
+
+These are 1.6.3 interface changes; fixed 1.6.2 binaries retain their original behavior. Use the [tagged 1.6.2 guide](https://github.com/Infant83/VASPBERRY/blob/v1.6.2/docs/NATIVE_COMMANDS.md)
+when reproducing that release's commands.
 
 <a id="migrating-to-the-140-source"></a>
 
@@ -19,7 +48,8 @@ separate Fukui–Hatsugai (FH) n-field method.
 
 ## Version 1.4.0 commands, projections and velocity fixes
 
-Use the [native reference](NATIVE_COMMANDS.md) and [hands-on tutorial](HANDS_ON.md)
+Use the [native reference](https://github.com/Infant83/VASPBERRY/blob/v1.4.0/docs/NATIVE_COMMANDS.md)
+and [hands-on tutorial](https://github.com/Infant83/VASPBERRY/blob/v1.4.0/docs/HANDS_ON.md)
 for the readable commands included in the fixed 1.4.0 tag; record the exact
 source commit. Original short flags remain supported. The serial executable
 is `build/vaspberry`; `build/vaspberry-gfortran` remains a compatibility name.
@@ -81,7 +111,7 @@ new calculations.
 
 ### Corrected Fortran output
 
-The optional `-kubo_csv PATH` writes full-precision per-band rows with spin,
+The legacy optional `-kubo_csv PATH` writes full-precision per-band rows with spin,
 k index, band, fractional coordinates, energy, minimum gap and `omega_z_A2`.
 Its comments identify `STANDARD_MINUS_TWO_IM`. Request all bands present in
 the WAVECAR when preparing the current importer's input; a selected n-band
@@ -149,14 +179,14 @@ line-mode calculation into a two-dimensional integration mesh. See the
 
 ## Version and release records
 
-`VERSION`, CLI version output and current citation metadata identify 1.6.2.
+`VERSION`, CLI version output and current citation metadata identify 1.6.3.
 Historical changelog entries, the 1.2.0 release notes and archived reference
 data retain their original versions. The CFF schema version is independent
 of the software version.
 
 The 2018 DOI `10.5281/zenodo.1402593` identifies VASPBERRY V1.0. It is not a
-DOI for version 1.6.2. Use the immutable
-[`v1.6.2` release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.2)
+DOI for version 1.6.3. Use the immutable
+[`v1.6.3` release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.3)
 for version-pinned source, or `master` for current source. Build binaries locally.
 Cite the software version, exact commit and method references appropriate to
 the calculation; see the [version policy](RELEASING.md).

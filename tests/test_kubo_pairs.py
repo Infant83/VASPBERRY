@@ -371,3 +371,51 @@ class NativePairContractTests(unittest.TestCase):
             for mu in (-1.,2.,3.):
                 with self.subTest(mu=mu),self.assertRaisesRegex(ValueError,'global insulating gap'):
                     kp.bundle_hall_spectrum(path,self.wave,[mu],occupied=2,mu_reference=.25,**self.options)
+
+    def test_current_trace_validates_both_spins_before_integrating_selected_spin(self):
+        self.fake.header.ispin=2
+        path=self.root/'current-trace.csv'
+        metadata=dict(schema='VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V2',normalization='STANDARD_MINUS_TWO_IM',
+            operator=kp.OPERATOR,berry_connection=kp.CONNECTION,result_status='INCOMPLETE',
+            band_min=1,band_max=2,band_rank=2,source_nbands=3,source_nkpoints=4,source_nspin=2,
+            expected_rows=8,intermediate_bands='EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS')
+        out=io.StringIO()
+        for key,value in metadata.items():out.write(f'# {key}={value}\n')
+        writer=csv.writer(out,lineterminator='\n')
+        writer.writerow(['spin','k_index','kx_frac','ky_frac','kz_frac','omega_z_A2','min_external_gap_eV'])
+        for spin in (1,2):
+            for k,q in enumerate(self.data.kpoints_fractional):
+                writer.writerow([spin,k+1,*q,.2*(k+1),3.])
+        text=out.getvalue()+'# result_status=PASS\n'
+        path.write_text(text)
+        with patch.object(kp,'Wavecar',return_value=self.fake):
+            rows,meta=kp.bundle_hall_spectrum(path,self.wave,[0.],occupied=2,mu_reference=.25,**self.options)
+            self.assertAlmostEqual(total(rows)[0]['sigma_e2_over_h'],-np.pi)
+            self.assertEqual(meta['source_metadata']['native_metadata']['completion_validation'],
+                             'terminal_pass_and_full_coverage')
+            # Spin 1 is complete in every corruption below. The complete file still is not.
+            cases=[text.rsplit('# result_status=PASS',1)[0],
+                   '\n'.join(line for line in text.splitlines() if not line.startswith('2,'))+'\n',
+                   text.replace('2,4,', '2,3,'),
+                   text.replace('2,4,0.5,0.5,0.0,0.8,3.0', '2,4,0.5,0.5,0.0,nan,3.0')]
+            for bad in cases:
+                self.assertNotEqual(bad,text)
+                path.write_text(bad)
+                with self.assertRaises(ValueError):
+                    kp.bundle_hall_spectrum(path,self.wave,[0.],occupied=2,mu_reference=.25,**self.options)
+
+    def test_pair_import_rejects_data_appended_after_completion_footer(self):
+        path=self.native()
+        with path.open('a') as stream:stream.write('# interrupted concatenation\n')
+        with self.assertRaisesRegex(ValueError,'terminal'):
+            self.load(path)
+
+    def test_pair_import_rejects_conflicting_or_premature_completion(self):
+        path=self.native()
+        text=path.read_text()
+        for status in ('FAIL','PASS'):
+            path.write_text('# result_status='+status+'\n'+text)
+            with self.subTest(status=status),self.assertRaisesRegex(ValueError,'only at the end'):
+                self.load(path)
+        path.write_text('# result_status = INCOMPLETE\n'+text)
+        self.assertEqual(self.load(path).metadata['complete'],True)

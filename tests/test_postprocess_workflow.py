@@ -277,7 +277,7 @@ ions = 2
         self.assertEqual([s['status'] for s in record['stages']], ['PASS', 'FAILED'])
         self.assertFalse((out/'hall').exists())
         self.assertFalse((out/'pairs').exists())
-        self.assertIn('complete native physical output required', (out/'logs/import-pairs.stderr.log').read_text())
+        self.assertIn('terminal result_status=PASS', (out/'logs/import-pairs.stderr.log').read_text())
 
     def test_reuse_skips_native_without_binary_and_retains_exact_numerical_arrays(self):
         first = self.settings('first'); self.calculate(first)

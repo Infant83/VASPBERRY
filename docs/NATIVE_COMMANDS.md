@@ -5,9 +5,13 @@ analysis and plotting. These examples use **Intel oneAPI Fortran and Intel MPI**
 the commands below execute VASPBERRY directly, without a Python script. The
 [hands-on guide](HANDS_ON.md) follows the saved files through transport and plots.
 
+This guide follows VASPBERRY 1.6.3. Its Kubo range selection replaces the
+native `--bundle`/`-kubo_bundle` flags; see the
+[migration guide](MIGRATION.md#native-kubo-band-selection) when updating from 1.6.2.
+
 ## Learn one task or option at a time
 
-VASPBERRY 1.6.2 includes topic help in the native Fortran executable.
+VASPBERRY includes topic help in the native Fortran executable.
 After [building](BUILD.md), use `--help task` to choose a calculation,
 `--help kubo` to read its inputs and outputs, and `--help bands` to check an
 option before executing the example below:
@@ -48,7 +52,7 @@ mkdir results-native-path-01
 cd results-native-path-01
 mpiexec -n 4 "$VB_BIN" --task kubo \
   --wavecar "$VB_ROOT/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-  --bands 1:18 --bundle 1 --curvature-csv KUBO.csv
+  --bands 1:18 --curvature-csv KUBO.csv
 cd "$VB_ROOT"
 ```
 
@@ -86,18 +90,25 @@ elements. Task names below are unchanged command identifiers.
 | `spin-chern` | `--mesh 12,12 --bands 1:8 --spin-axis z` | Both projected-spin sector Chern numbers and flux/spectrum CSVs. Full periodic mesh and matching OUTCAR; [spin Chern number guide](SPIN_CHERN.md). Available in 1.6.1. |
 | `spin-kubo` | `--bands 1:10` | Projected-spin sector Kubo-formula Berry-curvature proxy at every source k point; native CSVs, arbitrary path allowed. Explicit `--mesh NX,NY` adds a raw approximation integral. [Spin-sector Kubo-formula guide](SPIN_KUBO.md); available in 1.6.1. |
 | `z2` | `--mesh 12,12 --bands 1:18` | `Z2_FIELD.csv` and `NFIELD.dat` after PASS. Full even Γ-centered mesh, SOC, time-reversal symmetry, occupied rank even and gap open; [full requirements](Z2_FUKUI_HATSUGAI.md). |
-| `kubo` | `--bands 1:18 --bundle 1 --curvature-csv KUBO.csv` | Bundle trace Ωxy in Å², one row per source k/spin. Mesh or path. External gaps must exceed 1e−5 eV. |
+| `kubo` | `--bands 1:18 --curvature-csv KUBO.csv` | Bundle trace Ωxy in Å², one row per source k/spin. Mesh or path. External gaps must exceed 1e−5 eV. |
 | `kubo` | `--bands 18 --curvature-csv BAND18.csv` | Individual-band Ωxy, energy and minimum gap, plus legacy DAT companions. Inspect isolation before interpretation. |
+| `kubo` | `--bands 18:19 --per-band 1 --curvature-csv BANDS18_19.csv` | Separate curvature rows for bands 18 and 19. Each must be isolated from every other source band by more than 1e−5 eV. |
 | `kubo-pairs` | `--pairs-csv PAIRS.csv` | Every source-band pair's undivided momentum numerator, energies and k coordinates; all yz/zx/xy components. No band selector. |
-| `kubo-integral` | `--mesh 12,12 --bands 1:18 --bundle 1 --curvature-csv KUBO.csv` | Same bundle CSV plus a finite-grid integral in stdout. Requires the full mesh; this diagnostic is not an occupation-weighted transport scan. |
+| `kubo-integral` | `--mesh 12,12 --bands 1:18 --curvature-csv KUBO.csv` | Same bundle CSV plus a finite-grid integral in stdout. Requires the full mesh; this diagnostic is not an occupation-weighted transport scan. |
 | `optical` | `--mesh 12,12 --bands 18:19 --theta 0 --phi 0` | Selected transition 18→19 circular selectivity in `BERRYCURV.dat` (legacy filename). |
 | `spectrum` | `--mesh 12,12 --bands 1:20 -ien 1 -fen 3 -nediv 201 -sigma 0.05` | Broadened left/right transition spectra in `OPT_TRANS_RATE_LEFT.dat` and `OPT_TRANS_RATE_RIGHT.dat`. Energies/broadening in eV. [Optical workflow](../examples/features/circular-dichroism/). |
 | `wavefunction` | `--wavefunction-band 18 --kpoint 24 --real-grid 24,24,64 --imaginary 1` | CHGCAR-style `PARCHG-W-K024-E018-SPIN1` and its `-IM-SPIN1` companion. Index 24 is Γ in the included 48-point path only. Matching POSCAR/EIGENVAL must be in the working directory. [Wavefunction workflow](../examples/features/wavefunction/). |
 | `velocity` | `--bands 18` | Canonical-momentum velocity expectation in `VEL_EXPT.dat`, x/y components in m/s; a single-band diagnostic. |
 
 `kubo-line` is a synonym of `kubo`; both preserve the supplied k-point order.
-For `kubo`, `--bands 1:18` without `--bundle 1` means eighteen individual-band
-curvatures, not the degenerate occupied-subspace trace. Optical band endpoints
+For `kubo`, `kubo-line` and `kubo-integral`, `--bands N` selects one band;
+a multi-band range such as `--bands 1:18` selects the trace of that entire
+subspace. Internal degeneracies are allowed in this trace, but its gap to
+every excluded source band must exceed 1e−5 eV. Add `--per-band 1` only when
+you need separate bands: every selected band must then satisfy the same gap
+threshold against every other source band, including other selected bands.
+If a multi-band trace has no explicit `--curvature-csv`, it writes `KUBO.csv`.
+Optical band endpoints
 instead select the initial/final transition; `spectrum` uses the selected band
 window and source occupied boundary. `velocity` uses the first selected band,
 so specify a single band.
@@ -114,8 +125,8 @@ so specify a single band.
 | `--energy-gap-tol VALUE` / `--spin-gap-tol VALUE` | Both spin-sector tasks: default 1e-8 eV for the selected energy subspace and 1e-6 for the dimensionless projected-Pauli distance from zero. |
 | `--spinor auto` / `--spinor 1` / `--spinor 2` | Default `auto`: detect the component count from WAVECAR. Explicit `1` or `2` checks the file layout; it is not a spin-degeneracy factor. |
 | `--mesh NX,NY` | Mesh dimensions for mesh-based algorithms. It does not generate k points, interpolate, or convert a path into a mesh. |
-| `--bands FIRST:LAST` / `--bands N` | Inclusive one-based band range / one band. Explicit selection avoids guessing the occupied boundary. |
-| `--bundle 1` | Trace curvature of the selected group, allowing internal degeneracies; requires `--curvature-csv`. |
+| `--bands FIRST:LAST` / `--bands N` | Inclusive one-based band range / one band. For native Kubo tasks a multi-band range means the subspace trace by default. |
+| `--per-band 1` | Native `kubo`, `kubo-line` and `kubo-integral` only: calculate separate isolated bands rather than the multi-band trace. |
 | `--curvature-csv PATH` / `--pairs-csv PATH` | Exact CSV output filename. Parent directory must already exist. |
 | `--output LABEL` | Output naming label, not a directory. For `spin-chern`, default `SPIN` gives `SPIN_CHERN.csv`, `SPIN_BERRY.csv`, `SPIN_SPECTRUM.csv`; it does not replace explicit Kubo CSV paths. |
 
@@ -131,18 +142,25 @@ retain their short names. There is no need to learn every historical flag.
 Two components identify a noncollinear spinor, not whether VASP enabled SOC.
 The spin-axis convention still comes from the matching OUTCAR.
 
-The supplied Intel and GNU targets expect byte-record, single-precision complex
-WAVECAR coefficients (`RTAG=45200`). Older files whose RECL is in compiler
-words are not automatically converted by the native reader. Retain the VASP
-producer/compiler provenance and verify compatibility before a large run.
+The current native reader detects byte and legacy four-byte-word RECL
+layouts automatically for supported WAVECAR coefficients (`RTAG=45200`).
+It validates the header and record layout without rewriting the input.
+Keep the supplied Intel `-assume byterecl` build flag: it sets the reader's
+internal units, not a restriction on the detected file layout. Retain the
+original VASP producer/compiler provenance.
 
 ## Where outputs go
 
 Use a fresh working directory per native calculation and an absolute WAVECAR
 path. Legacy DAT and wavefunction outputs can replace existing files. Kubo
 and spin Chern number CSV exporters refuse an existing filename; they never append another
-calculation to it. A complete pair export ends with `result_status=PASS`;
-bundle, spin Chern number and Z₂ validation status must also be checked before use.
+calculation to it. Current native curvature and pair exports must end with
+`result_status=PASS`. Trace CSV V2 and individual-band CSV V3 begin as
+INCOMPLETE and record their expected row coverage; a header or partial file
+is not a completed calculation. Curvature and pair exporters use a `.partial` file
+and publish the final filename only on successful completion. Existing
+final or partial filenames are refused. Spin Chern number and Z₂ validation status
+must also be checked before use.
 
 Legacy labels are retained for compatibility: `--output sample` produces
 `BERRYCURV.sample.dat` for Berry flux from the Fukui method, `sample.dat` for optical selectivity,
@@ -150,7 +168,8 @@ Legacy labels are retained for compatibility: `--output sample` produces
 `VEL_EXPT.sample.dat` for velocity. Individual-band Kubo adds `.EIG-N`, and
 its sum has the base label. Scalar `ISPIN=2` DAT outputs add `.UP`/`.DN`.
 Wavefunction filenames are selected by k and band; `--output` does not rename
-them. Bundle/pair exports use only their explicit CSV path.
+them. A multi-band trace uses `--curvature-csv PATH`, or `KUBO.csv` when the
+path is omitted. Pair export requires its explicit CSV path.
 
 The native program currently stores most paths in 256-character fields.
 Prefer short working paths. The CSV interfaces are the preferred precision
@@ -162,7 +181,7 @@ operator assumptions, and the NPZ/JSON caches used by postprocessing.
 
 | Native output | Contents | Next use |
 |---|---|---|
-| `KUBO.csv` with `--bundle 1` | `spin,k_index,kx_frac,ky_frac,kz_frac,omega_z_A2,min_external_gap_eV` | Plot the computed Ωxy in Å² against k index/path position, or use the lattice for a BZ map |
+| Multi-band trace `KUBO.csv` | `spin,k_index,kx_frac,ky_frac,kz_frac,omega_z_A2,min_external_gap_eV` | Plot the computed Ωxy in Å² against k index/path position, or use the lattice for a BZ map |
 | Individual-band curvature CSV | k/band IDs, fractional k, band energy, gap and `omega_z_A2` | Plot energy and curvature for the selected isolated band |
 | `PAIRS.csv` | k/spin and n/m IDs, two energies, gap and three `numerator_*_eV2_A2` columns | Integrate occupations and squared energy denominators to obtain Hall response |
 

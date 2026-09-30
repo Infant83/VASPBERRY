@@ -85,13 +85,44 @@ class NativeCliTests(unittest.TestCase):
                          "-ii", "1", "-if", "18", "-s", "1", "-o", "sample"])
         self.equivalent(["--bands", "18"], ["-is", "18"])
 
-    def test_curvature_bundle_and_pairs_aliases(self):
-        self.equivalent(["--task", "kubo", "--bands", "1:18", "--bundle", "1",
-                         "--curvature-csv", "/tmp/a b/curvature.csv"],
-                        ["-kubo", "2", "-ii", "1", "-if", "18", "-kubo_bundle", "1",
-                         "-kubo_csv", "/tmp/a b/curvature.csv"])
+    def test_selected_range_defaults_to_trace_and_per_band_is_explicit(self):
+        trace = ["--task", "kubo", "--bands", "1:18"]
+        for equivalent in (["--bands", "1:18", "-kubo", "2"],
+                           ["--task", "kubo", "-ii", "1", "-if", "18"],
+                           [*trace, "--per-band", "0"],
+                           [*trace, "--curvature-csv", "KUBO.csv"]):
+            self.equivalent(trace, equivalent)
+        self.assertIn("KUBO.csv", self.run_parser(trace).stdout)
+        for task, flag in (("kubo", "2"), ("kubo-line", "2"), ("kubo-integral", "1")):
+            self.equivalent(["--task", task, "--bands", "1:18", "--per-band", "1"],
+                            ["-kubo", flag, "-ii", "1", "-if", "18"])
+            self.equivalent(["--task", task, "--bands", "18:18"],
+                            ["-kubo", flag, "-is", "18"])
         self.equivalent(["--pairs-csv", "pairs.csv", "--task", "kubo-pairs"],
                         ["-kubo", "2", "-kubo_pairs", "pairs.csv"])
+
+    def test_removed_selectors_give_migration_errors(self):
+        for flag in ("--bundle", "-kubo_bundle"):
+            for suffix in ([], ["0"], ["1"], ["garbage"]):
+                for prefix in ([], ["--task", "kubo"]):
+                    result = self.run_parser([*prefix, flag, *suffix], False)
+                    self.assertIn("removed", result.stderr)
+                    self.assertIn("--bands FIRST:LAST", result.stderr)
+                    self.assertIn("--per-band 1", result.stderr)
+        # Removed-option text at a legacy filename value position is data.
+        self.run_parser(["-f", "--bundle", "-kubo", "2"])
+
+    def test_per_band_requires_modern_ordinary_kubo_task(self):
+        for value in ("0", "1"):
+            for task in ("chern", "spin-chern", "spin-kubo", "z2", "optical", "velocity"):
+                result = self.run_parser(["--task", task, "--bands", "1:2",
+                                          "--per-band", value], False)
+                self.assertIn("--per-band requires", result.stderr)
+            for args in (["-kubo", "2", "--bands", "1:2"],
+                         ["--task", "kubo-pairs", "--pairs-csv", "p.csv"],
+                         ["--task", "kubo", "--pairs-csv", "p.csv"]):
+                result = self.run_parser([*args, "--per-band", value], False)
+                self.assertIn("--per-band requires", result.stderr)
 
     def test_wavefunction_and_angle_aliases(self):
         self.equivalent(["--task", "wavefunction", "--wavefunction-band", "18",
@@ -113,7 +144,7 @@ class NativeCliTests(unittest.TestCase):
 
     def test_missing_requirements_and_existing_csv_guards(self):
         for args in [["--task", "wavefunction"], ["--task", "kubo-pairs"],
-                     ["--task", "kubo", "--bundle", "1"],
+                     ["--task", "chern", "--per-band", "1"],
                      ["--task", "chern", "--curvature-csv", "c.csv"],
                      ["--task", "kubo-pairs", "--pairs-csv", "p.csv", "--bands", "1:2"],
                      ["--task", "kubo", "--wavecar", "same", "--curvature-csv", "same"],
@@ -133,7 +164,7 @@ class NativeCliTests(unittest.TestCase):
             "--real-grid": ["1,2", "1,2,3,4", "1,,2", "1,0,2"],
             "--spinor": ["0", "3", "1,2", "1/", "abc"],
             "--wavefunction-band": ["0", "-1", "1.2"],
-            "--kpoint": ["0", "-1"], "--bundle": ["2", "0,1"],
+            "--kpoint": ["0", "-1"], "--per-band": ["2", "0,1", "-1", "1.0"],
             "--imaginary": ["2"], "--theta": ["abc", "1,2", "1/", "NaN", "Inf", "1e999"],
         }.items():
             for value in bad_values:
@@ -217,6 +248,278 @@ class NativeExecutionTests(unittest.TestCase):
                     struct.pack_into("<2f", data, (record + 1 + band) * stride + ipw * 8,
                                      coeff.real, coeff.imag)
         path.write_bytes(data)
+
+    def write_gap_fixture(self, path, energies):
+        """ISPIN channels/k points/bands, independent orthonormal plane waves."""
+        stride, nk, nb = 1024, 2, 3
+        data = bytearray(stride * (2 + len(energies) * nk * (nb + 1)))
+        struct.pack_into("<3d", data, 0, stride, len(energies), 45200)
+        struct.pack_into("<12d", data, stride, nk, nb, 120.,
+                         1., 0., 0., 0., 1., 0., 0., 0., 1.)
+        for isp, channel in enumerate(energies):
+            for ik, point in enumerate(((.25, .25, 0.), (-.25, -.25, 0.))):
+                record = 2 + (isp * nk + ik) * (nb + 1)
+                values = [3., *point]
+                for ib, energy in enumerate(channel[ik]):
+                    values += [energy, 0., 1. if ib < 2 else 0.]
+                struct.pack_into("<13d", data, record * stride, *values)
+                for band in range(nb):
+                    for ipw in range(3):
+                        coeff = cmath.exp(2j * math.pi * band * ipw / 3) / math.sqrt(3)
+                        struct.pack_into("<2f", data, (record + 1 + band) * stride + ipw * 8,
+                                         coeff.real, coeff.imag)
+        path.write_bytes(data)
+
+    def execute_gap_case(self, name, energies, flags, success=True, prefix=(), binary=None):
+        case = self.work / name
+        case.mkdir()
+        self.write_gap_fixture(case / "WAVECAR", energies)
+        result = subprocess.run([*prefix, str(binary or self.binary), "--spinor", "1", *flags],
+                                cwd=case, capture_output=True, text=True, timeout=30,
+                                env=dict(os.environ, OMPI_ALLOW_RUN_AS_ROOT="1",
+                                         OMPI_ALLOW_RUN_AS_ROOT_CONFIRM="1",
+                                         OMPI_MCA_rmaps_base_oversubscribe="1"))
+        self.assertEqual(result.returncode == 0, success, result.stdout + result.stderr)
+        return case, result
+
+    def test_internal_degeneracy_uses_trace_without_auto_enlargement(self):
+        energies = [[[-1., -1., 1.], [-1., -1., 1.]]]
+        case, result = self.execute_gap_case("trace-degenerate", energies,
+                                             ["--task", "kubo", "--bands", "1:2"])
+        text = (case / "KUBO.csv").read_text()
+        self.assertIn("VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V2", text)
+        self.assertEqual(len([line for line in text.splitlines() if line and line[0].isdigit()]), 2)
+        self.assertEqual({p.name for p in case.iterdir()}, {"WAVECAR", "KUBO.csv"})
+        for i, flags in enumerate((["--bands", "1"], ["--bands", "1:1"],
+                                   ["--bands", "1:2", "--per-band", "1"])):
+            case, result = self.execute_gap_case(f"degenerate-single-{i}", energies,
+                                                 ["--task", "kubo", *flags,
+                                                  "--curvature-csv", "BANDS.csv"], False)
+            self.assertEqual({p.name for p in case.iterdir()}, {"WAVECAR"})
+            self.assertIn("other_band", result.stderr)
+            self.assertIn("1e-5 eV", result.stderr)
+            self.assertIn("selection was not enlarged", result.stderr)
+
+    def test_later_spin_k_and_nonfinite_gaps_fail_before_any_output(self):
+        clear = [[-2., -1., 1.], [-2., -1., 1.]]
+        for i, bad in enumerate((-1., -1. + 1.e-5, -1. + 5.e-6, float("nan"))):
+            # Third band is outside the selected range; failure is in the last spin/k.
+            energies = [clear, [clear[0], [-2., -1., bad]]]
+            for j, selection in enumerate((["--bands", "2"],
+                                            ["--bands", "1:2", "--per-band", "1"],
+                                            ["--bands", "1:2"])):
+                case, result = self.execute_gap_case(f"late-gap-{i}-{j}", energies,
+                    ["--task", "kubo", *selection, "--curvature-csv", "FAIL.csv"], False)
+                self.assertEqual({p.name for p in case.iterdir()}, {"WAVECAR"})
+                self.assertIn("isolated", result.stderr)
+        case, result = self.execute_gap_case("legacy-degenerate", [[[-1., -1., 1.]] * 2],
+                                             ["-kubo", "2", "-ii", "1", "-if", "2"], False)
+        self.assertEqual({p.name for p in case.iterdir()}, {"WAVECAR"})
+
+    def test_individual_outputs_and_trace_agree_when_bands_are_isolated(self):
+        energies = [[[-2., -1., 1.], [-2., -1., 1.]]]
+        trace, _ = self.execute_gap_case("isolated-trace", energies,
+                                         ["--task", "kubo", "--bands", "1:2"])
+        per_band, _ = self.execute_gap_case("isolated-per-band", energies,
+            ["--task", "kubo", "--bands", "1:2", "--per-band", "1", "--curvature-csv", "BANDS.csv"])
+        legacy, _ = self.execute_gap_case("isolated-legacy", energies,
+            ["-kubo", "2", "-ii", "1", "-if", "2", "-kubo_csv", "BANDS.csv"])
+        self.assertEqual((per_band / "BANDS.csv").read_bytes(), (legacy / "BANDS.csv").read_bytes())
+        import csv
+        def rows(path):
+            return list(csv.DictReader(line for line in path.read_text().splitlines() if not line.startswith("#")))
+        bands = rows(per_band / "BANDS.csv")
+        for row in rows(trace / "KUBO.csv"):
+            total = sum(float(b["omega_z_A2"]) for b in bands if b["k_index"] == row["k_index"])
+            self.assertAlmostEqual(float(row["omega_z_A2"]), total, delta=1e-12)
+        before = (trace / "KUBO.csv").read_bytes()
+        result = subprocess.run([str(self.binary), "--spinor", "1", "--task", "kubo", "--bands", "1:2"],
+                                cwd=trace, capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual((trace / "KUBO.csv").read_bytes(), before)
+
+    @unittest.skipUnless(shutil.which("mpifort") and shutil.which("mpiexec"), "MPI tools required")
+    def test_mpi_trace_and_gap_rejection_exit_without_partial_files(self):
+        wrapper = subprocess.run(["mpifort", "--version"], capture_output=True, text=True)
+        if "GNU Fortran" not in wrapper.stdout + wrapper.stderr:
+            self.skipTest("GNU MPI wrapper required")
+        binary = self.work / "vaspberry-mpi"
+        built = subprocess.run(["mpifort", "-cpp", "-DMPI_USE", "-O0", "-fcheck=all",
+                                "-ffixed-line-length-none", "-fallow-argument-mismatch",
+                                str(ROOT / "vaspberry.f"), "-llapack", "-lblas", "-o", str(binary)],
+                               capture_output=True, text=True)
+        self.assertEqual(built.returncode, 0, built.stderr)
+        prefix = ["mpiexec", "-n", "2"]
+        energies = [[[-1., -1., 1.], [-1., -1., 1.]]]
+        serial, _ = self.execute_gap_case("mpi-reference", energies,
+                                          ["--task", "kubo", "--bands", "1:2"])
+        parallel, _ = self.execute_gap_case("mpi-trace", energies,
+                                            ["--task", "kubo", "--bands", "1:2"],
+                                            prefix=prefix, binary=binary)
+        self.assertEqual((serial / "KUBO.csv").read_bytes(), (parallel / "KUBO.csv").read_bytes())
+        energies = [[[-2., -1., 1.], [-2., -1., 1.]],
+                    [[-2., -1., 1.], [-2., -1., -1.]]]
+        for i, flags in enumerate((["--bands", "2"],
+                                   ["--bands", "1:2", "--per-band", "1"],
+                                   ["--bands", "1:2"])):
+            case, result = self.execute_gap_case(f"mpi-late-gap-{i}", energies,
+                ["--task", "kubo", *flags], False, prefix=prefix, binary=binary)
+            self.assertEqual({p.name for p in case.iterdir()}, {"WAVECAR"})
+            self.assertIn("isolated", result.stderr)
+
+        # The same native MPI executable must resolve word4 and coordinate corrupt-input failure.
+        case = self.work / "mpi-word-recl";case.mkdir()
+        self.write_gap_fixture(case / "WAVECAR", [[[-1., -1., 1.], [-1., -1., 1.]]])
+        self.word_recl_copy(case / "WAVECAR")
+        env = dict(os.environ, OMPI_ALLOW_RUN_AS_ROOT="1", OMPI_ALLOW_RUN_AS_ROOT_CONFIRM="1",
+                   OMPI_MCA_rmaps_base_oversubscribe="1")
+        command = [*prefix, str(binary), "--spinor", "1", "--task", "kubo", "--bands", "1:2"]
+        result = subprocess.run(command, cwd=case, capture_output=True, text=True, timeout=30, env=env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((serial / "KUBO.csv").read_bytes(), (case / "KUBO.csv").read_bytes())
+        for corrupt in ("nan", "inf", "truncate"):
+            case = self.work / ("mpi-corrupt-" + corrupt);case.mkdir()
+            self.write_gap_fixture(case / "WAVECAR", [[[-2., -1., 1.], [-2., -1., 1.]]] * 2)
+            data = bytearray((case / "WAVECAR").read_bytes())
+            if corrupt == "truncate":
+                del data[-1024:]
+            else:
+                struct.pack_into("<f", data, 17 * 1024, float(corrupt))
+            (case / "WAVECAR").write_bytes(data)
+            result = subprocess.run(command, cwd=case, capture_output=True, text=True, timeout=30, env=env)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse((case / "KUBO.csv").exists())
+            for partial in case.glob("*.csv.partial"):
+                self.assertNotIn("result_status=PASS", partial.read_text())
+
+    @staticmethod
+    def word_recl_copy(path):
+        data = path.read_bytes()
+        recl = int(struct.unpack_from("<d", data)[0])
+        out = bytearray(4 * len(data))
+        for start in range(0, len(data), recl):
+            out[4 * start:4 * start + recl] = data[start:start + recl]
+        path.write_bytes(out)
+
+    def test_byte_and_word_recl_have_identical_complete_outputs(self):
+        energies = [[[-2., -1., 1.], [-2., -1., 1.]]] * 2
+        modes = [("trace", ["--task", "kubo", "--bands", "1:2"], "KUBO.csv", 4),
+                 ("bands", ["--task", "kubo", "--bands", "1:2", "--per-band", "1",
+                             "--curvature-csv", "BANDS.csv"], "BANDS.csv", 8),
+                 ("pairs", ["--task", "kubo-pairs", "--pairs-csv", "PAIRS.csv"], "PAIRS.csv", 12)]
+        for mode, flags, output, rows in modes:
+            results = []
+            for word in (False, True):
+                case = self.work / f"recl-{mode}-{word}"
+                case.mkdir()
+                self.write_gap_fixture(case / "WAVECAR", energies)
+                if word:
+                    self.word_recl_copy(case / "WAVECAR")
+                run = subprocess.run([str(self.binary), "--spinor", "1", *flags],
+                                     cwd=case, capture_output=True, text=True, timeout=30)
+                self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+                self.assertIn("RECL_layout=" + ("word4" if word else "byte"), run.stdout)
+                text = (case / output).read_text()
+                self.assertIn("# source_nspin=2", text)
+                self.assertIn("# source_nkpoints=2", text)
+                self.assertIn("# expected_rows=" + str(rows), text)
+                self.assertEqual(text.rstrip().splitlines()[-1], "# result_status=PASS")
+                self.assertEqual(text.count("result_status=PASS"), 1)
+                self.assertFalse((case / (output + ".partial")).exists())
+                self.assertEqual(len([line for line in text.splitlines() if line and line[0].isdigit()]), rows)
+                results.append(text)
+            self.assertEqual(*results)
+
+    def test_corrupt_coefficients_never_publish_complete_csv(self):
+        clear = [[[-2., -1., 1.], [-2., -1., 1.]]] * 2
+        for component, value in ((0, float("nan")), (1, float("inf"))):
+            for mode, flags, output in (
+                ("trace", ["--task", "kubo", "--bands", "1:2"], "KUBO.csv"),
+                ("full", ["--task", "kubo", "--bands", "1:3"], "KUBO.csv"),
+                ("bands", ["--task", "kubo", "--bands", "1:2", "--per-band", "1",
+                           "--curvature-csv", "BANDS.csv"], "BANDS.csv"),
+                ("pairs", ["--task", "kubo-pairs", "--pairs-csv", "PAIRS.csv"], "PAIRS.csv")):
+                case = self.work / f"bad-coeff-{component}-{mode}"
+                case.mkdir()
+                self.write_gap_fixture(case / "WAVECAR", clear)
+                data = bytearray((case / "WAVECAR").read_bytes())
+                # Last source spin, last k, last band's real/imaginary coefficient.
+                struct.pack_into("<f", data, 17 * 1024 + component * 4, value)
+                (case / "WAVECAR").write_bytes(data)
+                run = subprocess.run([str(self.binary), "--spinor", "1", *flags],
+                                     cwd=case, capture_output=True, text=True, timeout=30)
+                self.assertNotEqual(run.returncode, 0)
+                self.assertIn("nonfinite Kubo coefficients", run.stderr)
+                self.assertFalse((case / output).exists())
+                # Spin 1 already wrote its rows, but these are staged, not complete output.
+                self.assertTrue((case / (output + ".partial")).exists())
+                for partial in case.glob("*.csv.partial"):
+                    self.assertNotIn("result_status=PASS", partial.read_text())
+
+    def test_truncation_and_invalid_or_ambiguous_headers_fail_before_allocation(self):
+        clear = [[[-2., -1., 1.], [-2., -1., 1.]]] * 2
+        mutations = {
+            "truncated": lambda data: data.__delitem__(slice(-1024, None)),
+            "fractional-nk": lambda data: struct.pack_into("<d", data, 1024, 2.5),
+            "nan-nk": lambda data: struct.pack_into("<d", data, 1024, float("nan")),
+            "nan-cutoff": lambda data: struct.pack_into("<d", data, 1040, float("nan")),
+            "negative-cutoff": lambda data: struct.pack_into("<d", data, 1040, -1.),
+            "singular": lambda data: struct.pack_into("<9d", data, 1048, *([0.] * 9)),
+            "huge-record-count": lambda data: struct.pack_into("<d", data, 1024, 2147483647.),
+            "fractional-recl": lambda data: struct.pack_into("<d", data, 0, 1024.5),
+        }
+        for name, mutate in mutations.items():
+            case = self.work / ("header-" + name)
+            case.mkdir()
+            self.write_gap_fixture(case / "WAVECAR", clear)
+            data = bytearray((case / "WAVECAR").read_bytes());mutate(data)
+            (case / "WAVECAR").write_bytes(data)
+            run = subprocess.run([str(self.binary), "--task", "kubo", "--bands", "1:2"],
+                                 cwd=case, capture_output=True, text=True, timeout=30)
+            self.assertNotEqual(run.returncode, 0, run.stdout + run.stderr)
+            self.assertNotIn("TOTAL RECORD LENGTH", run.stdout)
+            self.assertEqual({p.name for p in case.iterdir()}, {"WAVECAR"})
+        case = self.work / "ambiguous-recl";case.mkdir()
+        data = bytearray(16384)
+        struct.pack_into("<3d", data, 0, 1024., 1., 45200.)
+        for stride in (1024, 4096):
+            struct.pack_into("<12d", data, stride, 1., 1., 120.,
+                             1., 0., 0., 0., 1., 0., 0., 0., 1.)
+        (case / "WAVECAR").write_bytes(data)
+        run = subprocess.run([str(self.binary), "--task", "kubo", "--bands", "1"],
+                             cwd=case, capture_output=True, text=True, timeout=30)
+        self.assertNotEqual(run.returncode, 0)
+        self.assertIn("valid candidates =", run.stderr)
+        self.assertNotIn("TOTAL RECORD LENGTH", run.stdout)
+        self.assertEqual({p.name for p in case.iterdir()}, {"WAVECAR"})
+
+    def test_one_source_band_still_validates_its_coefficients(self):
+        for corrupt in (False, True):
+            case = self.work / f"one-band-{corrupt}";case.mkdir()
+            data = bytearray(4 * 512)
+            struct.pack_into("<3d", data, 0, 512., 1., 45200.)
+            struct.pack_into("<12d", data, 512, 1., 1., 120.,
+                             1., 0., 0., 0., 1., 0., 0., 0., 1.)
+            struct.pack_into("<7d", data, 1024, 1., 0., 0., 0., -1., 0., 2.)
+            struct.pack_into("<2f", data, 1536, float("nan") if corrupt else 1., 0.)
+            (case / "WAVECAR").write_bytes(data)
+            run = subprocess.run([str(self.binary), "--spinor", "1", "--task", "kubo", "--bands", "1",
+                                  "--curvature-csv", "BAND.csv"],
+                                 cwd=case, capture_output=True, text=True, timeout=30)
+            self.assertEqual(run.returncode == 0, not corrupt, run.stdout + run.stderr)
+            if corrupt:
+                self.assertIn("nonfinite Kubo coefficients", run.stderr)
+                self.assertFalse((case / "BAND.csv").exists())
+
+    def test_existing_partial_csv_is_preserved(self):
+        case = self.work / "existing-partial";case.mkdir()
+        self.write_gap_fixture(case / "WAVECAR", [[[-2., -1., 1.], [-2., -1., 1.]]])
+        partial = case / "KUBO.csv.partial";partial.write_text("previous interrupted run")
+        run = subprocess.run([str(self.binary), "--spinor", "1", "--task", "kubo", "--bands", "1:2"],
+                             cwd=case, capture_output=True, text=True, timeout=30)
+        self.assertNotEqual(run.returncode, 0)
+        self.assertFalse((case / "KUBO.csv").exists())
+        self.assertEqual(partial.read_text(), "previous interrupted run")
 
     def test_pairs_ignore_source_occupations_but_subspace_guard_remains(self):
         outputs = []

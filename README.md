@@ -21,14 +21,17 @@ band plots provide context for the calculated topology and response.
 [Hands-on commands](docs/HANDS_ON.md) · [Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
 [Postprocessing guide](docs/POSTPROCESSING.md) · [Output formats](docs/OUTPUT_FORMAT.md)
 
-**VASPBERRY [1.6.2](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.2).**
-This patch adds concise native help for tasks and options: start with
-`--help task`, then try `--help kubo` or `--help bands`. Existing calculations,
-data formats and original short options remain supported. The guides now make
-the path from input files to numerical results and plots easier to follow.
-See the [release notes](docs/releases/v1.6.2.md), [validation scope](docs/VALIDATION_1.6.2.md),
-[changelog](CHANGELOG.md), [version policy](docs/RELEASING.md)
-and [migration notes](docs/MIGRATION.md).
+**VASPBERRY [1.6.3](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.3).**
+Native Kubo band selection is simpler: `--bands N` calculates one band,
+and a multi-band range calculates its subspace trace. Use `--per-band 1`
+for separate bands. Byte and legacy four-byte-word WAVECAR record lengths
+are detected automatically. New curvature exports check finite results and
+complete row coverage before reporting success.
+
+The native `--bundle` and `-kubo_bundle` flags have been removed. See the
+[short migration guide](docs/MIGRATION.md#native-kubo-band-selection),
+[release notes](docs/releases/v1.6.3.md), [validation scope](docs/VALIDATION_1.6.3.md),
+[changelog](CHANGELOG.md) and [version policy](docs/RELEASING.md).
 
 ## Install and run VASPBERRY
 
@@ -64,7 +67,7 @@ make help
 ```
 
 For a fixed release, download and extract the source archive from
-[v1.6.2](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.2), then run the
+[v1.6.3](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.3), then run the
 same build commands from the extracted directory containing `Makefile`.
 **Archive builds do not require Git or Python.** No precompiled executable or
 system-wide installation is needed; the build creates local files in `build/`.
@@ -167,7 +170,7 @@ separate operator route described in the [spin guide](docs/SPIN_HALL.md).
 
 ### Find a calculation with native help
 
-VASPBERRY 1.6.2 provides a short overview and help for individual tasks
+VASPBERRY provides a short overview and help for individual tasks
 and options. After building, list the tasks, inspect a calculation, then run
 the first example below:
 
@@ -193,7 +196,7 @@ the occupied bands 1–18 at its supplied k points:
 ```bash
 mkdir -p results/mos2-path
 mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo \
-  --wavecar examples/1H-MoS2/KPATH/2.band/WAVECAR --bands 1:18 --bundle 1 \
+  --wavecar examples/1H-MoS2/KPATH/2.band/WAVECAR --bands 1:18 \
   --curvature-csv results/mos2-path/KUBO.csv
 ```
 
@@ -206,6 +209,11 @@ fractional coordinates with the reciprocal lattice. The
 matching full-BZ/path dataset and commands for the reference panels. A line
 path alone cannot supply a BZ integral. Use a fresh output
 path for each run.
+
+A multi-band trace defaults to `KUBO.csv` if `--curvature-csv` is omitted.
+For separate bands, use `--bands 18:19 --per-band 1`; each selected band must
+be separated from every other stored band by more than 1e-5 eV. The trace
+requires this gap only between the selected subspace and excluded bands.
 
 ### Apply the same commands to your system
 
@@ -226,7 +234,7 @@ mpiexec -n 4 ./build/vaspberry-ifx-mpi --task z2 --wavecar WAVECAR \
 
 # Occupied-bundle point curvature, excluding internal transitions.
 mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo --wavecar WAVECAR \
-  --bands 1:18 --bundle 1 --curvature-csv KUBO_BUNDLE.csv
+  --bands 1:18 --curvature-csv KUBO_BUNDLE.csv
 
 # Reusable all-band pair numerators for charge Hall postprocessing.
 mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo-pairs --wavecar WAVECAR \
@@ -234,9 +242,10 @@ mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo-pairs --wavecar WAVECAR \
 ```
 
 The native syntax groups a mesh as `NX,NY` and a band range as `FIRST:LAST`.
-Specialized legacy options can still be used; for example, `--task kubo` is
-`-kubo 2`, and `--bands 1:18` is `-ii 1 -if 18`. The optional
-`--task kubo-integral` (`-kubo 1`) additionally evaluates the mesh integral.
+Specialized legacy options can still be used. A named Kubo task uses the
+new band-range semantics even when its endpoints are given by `-ii`/`-if`.
+Pure legacy `-kubo` commands retain separate-band output with the same
+isolation checks. `--task kubo-integral` additionally evaluates the mesh integral.
 Use `mpiexec -n 4 ./build/vaspberry-ifx-mpi --help all` or the [native command reference](docs/NATIVE_COMMANDS.md) for the full list. For example:
 
 ```bash

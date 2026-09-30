@@ -99,12 +99,14 @@ mkdir results/mos2-direct-kubo && (
   mpiexec.hydra -n 4 "$repo_dir/build/vaspberry-ifx-mpi" \
     --task kubo \
     --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-    --bands 1:18 --bundle 1 \
+    --bands 1:18 \
     --curvature-csv KUBO.csv > vaspberry.log
 )
 ```
 
-This executes **VASPBERRY through MPI** without a Python helper. It reads
+This command uses VASPBERRY 1.6.3; see the
+[migration guide](MIGRATION.md#native-kubo-band-selection) for older commands.
+It executes **VASPBERRY through MPI** without a Python helper. It reads
 the supplied SOC MoS₂ WAVECAR and creates
 `results/mos2-direct-kubo/KUBO.csv`, plus the execution log. The CSV has one
 occupied-bundle curvature row for bands 1–18 at each of the 48 stored path

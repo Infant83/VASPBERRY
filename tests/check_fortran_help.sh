@@ -49,10 +49,10 @@ for required in \
   "--bands FIRST:LAST or N" \
   "--task rejects conflicting legacy task options." \
   "No integer expectation on a path." \
-  "All legacy flags remain accepted" \
+  "Legacy band selectors remain accepted." \
   "--help [TOPIC]" \
   "-z2  1" \
-  "-kubo_bundle 1" \
+  "--per-band 0|1" \
   "-kubo_pairs PATH" \
   "No gap division or occupations." \
   "Source occupations may vary with k." \
@@ -60,7 +60,8 @@ for required in \
   "Legacy DAT files may be replaced: use a fresh cwd." \
   "Reference and output names: docs/NATIVE_COMMANDS.md." \
   "External gaps must exceed 1e-5 eV." \
-  "Writes bundle CSV only; default 0." \
+  "Selected ranges use the whole subspace by default." \
+  "Default trace CSV: KUBO.csv." \
   "Fukui-Hatsugai n-field Z2 index" \
   "full, even Gamma-centered mesh" \
   "ICHARG=11 run with ISYM=-1" \

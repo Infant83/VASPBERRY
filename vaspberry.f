@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.6.2 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.6.3 (f77) for VASP
 ! Written by Hyun-Jung Kim
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -59,7 +59,9 @@
 !               : 2026. Sep. 27. H.-J. Kim
 ! version 1.6.2 topic-based native help; calculation unchanged
 !               : 2026. Sep. 29.
-! last update and bug fixes : 2026. Sep. 29.
+! version 1.6.3 native input/output integrity and RECL detection
+!               : 2026. Sep. 30.
+! last update and bug fixes : 2026. Sep. 30.
 
 !#define MPI_USE
 !#undef  MPI_USE        
@@ -148,8 +150,8 @@
       mpi_comm_earth = 0
 #endif
 
-      ver_tag="# VASPBERRY (Ver 1.6.2), by Hyun-Jung Kim."//
-     &        " 2026. Sep. 29."
+      ver_tag="# VASPBERRY (Ver 1.6.3), by Hyun-Jung Kim."//
+     &        " 2026. Sep. 30."
       call vaspberry_help_request(ver_tag,.false.)
 #ifdef MPI_USE
       if(myrank == 0)then
@@ -319,14 +321,19 @@
         endif
       endif ! check multi or single ?
       ns=nmax-nini+1
-      if(ikubo_bundle.eq.1)then
+      if(ikubo.gt.0.and.len_trim(kubo_pairs).eq.0)then
        if(nini.lt.1.or.nmax.lt.nini.or.nmax.gt.nband)then
-        write(0,*) '*** error - Kubo bundle range outside 1:NBANDS'
+        write(0,*) '*** error - Kubo band range outside 1:NBANDS'
         call vaspberry_fail
        endif
-! Validate every spin/k before any bundle output is created.
-       call check_kubo_bundle_gaps(ispin,nk,nband,nini,nmax)
-       allocate(kubo_bundle_gap(nk))
+! Validate every spin/k before any curvature output is created.
+! The requested band selection is never enlarged automatically.
+       if(ikubo_bundle.eq.1)then
+        call check_kubo_bundle_gaps(ispin,nk,nband,nini,nmax)
+        allocate(kubo_bundle_gap(nk))
+       else
+        call check_kubo_band_gaps(ispin,nk,nband,nini,nmax)
+       endif
       endif
       if(iz .eq. 1)then
        if(ne .lt. 2 .or. ne .ge. nband)then
@@ -1086,7 +1093,7 @@
      &             nband,ecut,ispinor,nplist,nbmax,npmax,
      &             nk,nini,nmax,nprocs,myrank,mpi_comm_earth)
           if(myrank.eq.0)then
-           call write_kubo_bundle_csv(kubo_csv,isp,nk,nband,
+           call write_kubo_bundle_csv(kubo_csv,isp,ispin,nk,nband,
      &          nini,nmax,wklist,berrycurv_kubo_tot,kubo_bundle_gap)
            if(ikubo.eq.1)then
             chernnumber_total=sum(berrycurv_kubo_tot)*dSkxky/(2.*pi)
@@ -1118,7 +1125,7 @@
 
            if(myrank .eq. 0) then
             if(len_trim(kubo_csv).gt.0)then
-             call write_kubo_band_csv(kubo_csv,isp,ie,nini,
+             call write_kubo_band_csv(kubo_csv,isp,ispin,ie,nini,nmax,
      &                    nk,nband,wklist,berrycurv_kubo)
             endif
             chernnumber=0d0
@@ -1667,7 +1674,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.6.2'
+      write(94,'(A)')'# vaspberry_version=1.6.3'
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
@@ -1867,7 +1874,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.6.2'
+      write(94,'(A)')'# vaspberry_version=1.6.3'
       if(fieldok)then
        write(94,'(A)')'# result_status=PASS'
       else
@@ -2126,7 +2133,7 @@
      &   selectivity(n(k)),        (recip)kx        ky        kz"
 
         elseif(ikubo .ge. 1)then !standard bare-momentum Kubo
-         call write_kubo_metadata(32)
+         call write_kubo_metadata(32,2)
          if(ikubo.eq.1)then
           write(32,'(A)')'# integration=UNIFORM_FULL_2D_BZ'
           write(32,'(A)')'# Chern integral=sum(Omega*dk_area)/(2*pi)'
@@ -3896,12 +3903,112 @@
       return
       endsubroutine
 
+! Checked full-complex WAVECAR coefficient read shared by native Kubo routes.
+      subroutine read_kubo_coefficients(coeff,np,isp,ik,band,nk,nband)
+      use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+      implicit none
+      integer np,isp,ik,band,nk,nband,ios,i
+      integer*8 irec
+      complex*8 coeff(np)
+      irec=3_8+int(ik-1,8)*(nband+1_8)+
+     &     int(nk,8)*(nband+1_8)*(isp-1_8)+band
+      read(10,rec=irec,iostat=ios)(coeff(i),i=1,np)
+      if(ios.ne.0)then
+       write(0,*)'*** error - cannot read Kubo coefficients: ',
+     &           'spin,k,band,iostat = ',isp,ik,band,ios
+       call vaspberry_fail
+      endif
+      if(.not.all(ieee_is_finite(real(coeff))).or.
+     &   .not.all(ieee_is_finite(aimag(coeff))))then
+       write(0,*)'*** error - nonfinite Kubo coefficients: ',
+     &           'spin,k,band = ',isp,ik,band
+       call vaspberry_fail
+      endif
+      end subroutine read_kubo_coefficients
+
+! Stage complete CSVs beside the destination, then publish only after close.
+! A failed process may leave PATH.partial for diagnosis; it is not a result.
+      subroutine open_kubo_csv(path,first)
+      implicit none
+      character*(*) path
+      character*512 staging
+      logical first,exists
+      integer ios
+      staging=trim(path)//'.partial'
+      inquire(file=trim(path),exist=exists,iostat=ios)
+      if(ios.ne.0.or.exists)then
+       write(0,*)'*** error - cannot open new Kubo CSV: ',trim(path)
+       call vaspberry_fail
+      endif
+      if(first)then
+       open(96,file=trim(staging),status='new',action='write',
+     &      iostat=ios)
+      else
+       open(96,file=trim(staging),status='old',position='append',
+     &      action='write',iostat=ios)
+      endif
+      if(ios.ne.0)then
+       write(0,*)'*** error - cannot open Kubo staging CSV: ',
+     &           trim(staging)
+       call vaspberry_fail
+      endif
+      end subroutine open_kubo_csv
+
+      subroutine finish_kubo_csv(path,last)
+      use, intrinsic :: iso_c_binding, only: c_int,c_char,c_null_char
+      implicit none
+! Use the C ABI: GNU and classic Intel Fortran RENAME extensions differ.
+      interface
+       integer(c_int) function csv_rename(old_name,new_name)
+     &  bind(C,name='rename')
+        import c_int,c_char
+        character(kind=c_char),intent(in) :: old_name(*),new_name(*)
+       end function csv_rename
+      end interface
+      character*(*) path
+      character*512 staging
+      logical last,exists
+      integer ios
+      staging=trim(path)//'.partial'
+      flush(96,iostat=ios)
+      if(ios.ne.0)then
+       write(0,*)'*** error - cannot flush Kubo CSV data'
+       call vaspberry_fail
+      endif
+      if(last)then
+       write(96,'(A)',iostat=ios)'# result_status=PASS'
+       if(ios.ne.0)then
+        write(0,*)'*** error - cannot finish Kubo CSV'
+        call vaspberry_fail
+       endif
+      endif
+      close(96,iostat=ios)
+      if(ios.ne.0)then
+       write(0,*)'*** error - cannot close Kubo CSV staging file'
+       call vaspberry_fail
+      endif
+      if(last)then
+       inquire(file=trim(path),exist=exists,iostat=ios)
+       if(ios.ne.0.or.exists)then
+        write(0,*)'*** error - cannot replace existing Kubo CSV'
+        call vaspberry_fail
+       endif
+       ios=csv_rename(trim(staging)//c_null_char,
+     &                trim(path)//c_null_char)
+       if(ios.ne.0)then
+        write(0,*)'*** error - cannot publish completed Kubo CSV'
+        call vaspberry_fail
+       endif
+      endif
+      end subroutine finish_kubo_csv
+
 !!$*  subroutine for computing berry curvature for the nn band in the given k-point using kubo formula
       subroutine kubo_berry_curvature(berrycurv_kubo,
      &           b1,b2,b3,wklist,isp,
      &           nband,ecut,ispinor,nplist,nbmax,npmax,
      &           nk,nn,
      &           nprocs,myrank,mpi_comm_earth)
+      use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
       implicit real*8 (a-h,o-z)
 #ifdef MPI_USE
       include 'mpif.h'
@@ -3941,6 +4048,11 @@
       berrycurv_kubo_ = 0.0d0
 !    !do ik=1,nk
       do ik=sum(ourjob(1:myrank))+1, sum(ourjob(1:myrank+1))
+       wk=wklist(:,ik)
+       if(nband.eq.1)then
+        call read_kubo_coefficients(coeff,nplist(ik),isp,ik,
+     &                              nn,nk,nband)
+       endif
        call ener_read(ener,isp,ik,nk,nband)      
        !write(6,*) "start ener routine..";stop
        !write(6,*) 'checking nn=1 energy',ener(1);stop
@@ -3957,11 +4069,9 @@
         np=nplist(ik)
         call plindx(ig,ncnt, ispinor,wk,b1,b2,b3,nbmax,np,ecut,npmax)
         !write(6,*)ik,nband,isp,nn,np;stop
-        read(10,rec=(3+(ik-1)*(nband+1)+
-     &                nk*(nband+1)*(isp-1)+nn))(coeff(i),i=1,np)
+        call read_kubo_coefficients(coeff,np,isp,ik,nn,nk,nband)
         coeffn=coeff;coeff=(0.,0.)
-        read(10,rec=(3+(ik-1)*(nband+1)+
-     &                nk*(nband+1)*(isp-1)+mm))(coeff(i),i=1,np)
+        call read_kubo_coefficients(coeff,np,isp,ik,mm,nk,nband)
         coeffm=coeff;coeff=(0.,0.)
 !       write(6,*) coeffn,coeffm;stop
         do iplane=1,ncnt
@@ -3999,6 +4109,11 @@
      &                        ener(nn)-ener(mm))
         endif ! if mm is not equal to nn
        enddo ! band index mm loop end 
+       if(.not.ieee_is_finite(berrycurv_kubo(ik)))then
+        write(0,*)'*** error - nonfinite local Kubo curvature: ',
+     &            'spin,k,band = ',isp,ik,nn
+        call vaspberry_fail
+       endif
        write(6,'(A,I4,4F16.6)')"# IK, K(reci), 
      & Berry Curvature (A^2, Kubo) : ",
      &                         ik,wk,berrycurv_kubo(ik)
@@ -4010,7 +4125,10 @@
      &                   MPI_SUM, mpi_comm_earth, mpierr)
       berrycurv_kubo  = berrycurv_kubo_
 #endif
-
+      if(.not.all(ieee_is_finite(berrycurv_kubo)))then
+       write(0,*)'*** error - nonfinite reduced Kubo curvature'
+       call vaspberry_fail
+      endif
       return
       end subroutine kubo_berry_curvature 
 
@@ -4023,41 +4141,51 @@
       kubo_interband_term=-2d0*dimag(px_nm*conjg(py_nm))/gap**2
       end function kubo_interband_term
 
-      subroutine write_kubo_metadata(iunit)
+      subroutine write_kubo_metadata(iunit,schema)
       implicit none
-      integer iunit
-      write(iunit,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_V2'
-      write(iunit,'(A)')'# vaspberry_version=1.6.2'
+      integer iunit,schema
+      if(schema.eq.3)then
+       write(iunit,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_V3'
+      else
+       write(iunit,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_V2'
+      endif
+      write(iunit,'(A)')'# vaspberry_version=1.6.3'
       write(iunit,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
       write(iunit,'(A)')'# operator='//
      & 'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
       write(iunit,'(A)')'# berry_connection=A_i=i<u|d/dk_i u>'
       write(iunit,'(A)')'# occupation_weighting=NONE'
       write(iunit,'(A)')'# degeneracy_policy='//
-     & 'SKIP_ABS_GAP_LE_MACHINE_EPSILON_eV'
+     & 'REJECT_ABS_GAP_LE_1e-5_eV'
+      write(iunit,'(A)')'# min_gap_threshold_eV=1.000000000000000E-005'
       write(iunit,'(A)')'# migration='//
      & 'PRE_1.3_KUBO_CURVATURE_AND_CHERN_DIVIDE_BY_2'
       end subroutine write_kubo_metadata
 
-      subroutine write_kubo_band_csv(path,isp,nn,nfirst,
+      subroutine write_kubo_band_csv(path,isp,ispin,nn,nfirst,nlast,
      &                              nk,nband,wklist,omega)
+      use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
       implicit none
       character*(*) path
-      integer isp,nn,nfirst,nk,nband,ik,m,ios
+      integer isp,ispin,nn,nfirst,nlast,nk,nband,ik,m,ios
       real*8 wklist(3,nk),omega(nk),ener(nband),gap
-      if(isp.eq.1.and.nn.eq.nfirst)then
-       open(96,file=trim(path),status='new',action='write',
-     &      iostat=ios)
-      else
-       open(96,file=trim(path),status='old',position='append',
-     &      action='write',iostat=ios)
-      endif
-      if(ios.ne.0)then
-       write(0,*) '*** error - cannot open new Kubo CSV: ',trim(path)
+      if(.not.all(ieee_is_finite(omega)).or.
+     &   .not.all(ieee_is_finite(wklist)))then
+       write(0,*)'*** error - nonfinite Kubo band output'
        call vaspberry_fail
       endif
+      call open_kubo_csv(path,isp.eq.1.and.nn.eq.nfirst)
       if(isp.eq.1.and.nn.eq.nfirst)then
-       call write_kubo_metadata(96)
+       call write_kubo_metadata(96,3)
+       write(96,'(A)')'# result_status=INCOMPLETE'
+       write(96,'(A,I0)')'# source_nkpoints=',nk
+       write(96,'(A,I0)')'# source_nspin=',ispin
+       write(96,'(A,I0)')'# source_nbands=',nband
+       write(96,'(A,I0)')'# band_min=',nfirst
+       write(96,'(A,I0)')'# band_max=',nlast
+       write(96,'(A,I0)')'# band_rank=',nlast-nfirst+1
+       write(96,'(A,I0)')'# expected_rows=',
+     &                 int(nk,8)*ispin*(nlast-nfirst+1_8)
        write(96,'(A)')'# index_base=1'
        write(96,'(A,I0)')'# intermediate_bands=1:',nband
        write(96,'(A)')'spin,k_index,band,kx_frac,ky_frac,kz_frac,'//
@@ -4076,11 +4204,7 @@
         call vaspberry_fail
        endif
       enddo
-      close(96,iostat=ios)
-      if(ios.ne.0)then
-       write(0,*) '*** error - cannot close Kubo CSV'
-       call vaspberry_fail
-      endif
+      call finish_kubo_csv(path,isp.eq.ispin.and.nn.eq.nlast)
       end subroutine write_kubo_band_csv
 
 ! Trace curvature of a spectrally isolated selected subspace. Internal
@@ -4093,6 +4217,10 @@
       integer nband,nfirst,nlast,nn,mm
       real*8 ener(nband),gap
       gap=huge(1d0)
+      if(.not.all(ieee_is_finite(ener)))then
+       gap=-1d0
+       return
+      endif
       do nn=nfirst,nlast
        do mm=1,nband
         if(mm.ge.nfirst.and.mm.le.nlast)cycle
@@ -4105,6 +4233,46 @@
        enddo
       enddo
       end subroutine kubo_bundle_gap
+
+! Individual-band curvature requires every selected state to be isolated,
+! including from other selected states. Inspect every spin/k before output.
+      subroutine check_kubo_band_gaps(ispin,nk,nband,nfirst,nlast)
+      use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+      implicit none
+      integer ispin,nk,nband,nfirst,nlast,isp,ik,nn,mm,nearest
+      real*8 ener(nband),gap
+      do isp=1,ispin
+       do ik=1,nk
+        call ener_read(ener,isp,ik,nk,nband)
+        do nn=nfirst,nlast
+         gap=huge(1d0)
+         nearest=nn
+         if(.not.ieee_is_finite(ener(nn)))gap=-1d0
+         do mm=1,nband
+          if(mm.eq.nn)cycle
+          if(.not.ieee_is_finite(ener(mm)))then
+           gap=-1d0
+           nearest=mm
+          else
+           if(abs(ener(nn)-ener(mm)).lt.gap)then
+            gap=abs(ener(nn)-ener(mm))
+            nearest=mm
+           endif
+          endif
+         enddo
+         if(gap.le.1d-5)then
+          write(0,*)'*** error - individual Kubo band is not ',
+     &     'isolated: spin,k_index,band,other_band,min_gap_eV = ',
+     &     isp,ik,nn,nearest,gap
+          write(0,*)'*** requires all gaps > 1e-5 eV; explicitly ',
+     &     'choose a separated --bands FIRST:LAST subspace ',
+     &     'without --per-band 1; selection was not enlarged'
+          call vaspberry_fail
+         endif
+        enddo
+       enddo
+      enddo
+      end subroutine check_kubo_band_gaps
 
       subroutine check_kubo_bundle_gaps(ispin,nk,nband,nfirst,nlast)
       implicit none
@@ -4128,6 +4296,7 @@
      &           b1,b2,b3,wklist,isp,nband,ecut,ispinor,
      &           nplist,nbmax,npmax,nk,nfirst,nlast,
      &           nprocs,myrank,mpi_comm_earth)
+      use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
       implicit none
 #ifdef MPI_USE
       include 'mpif.h'
@@ -4162,7 +4331,14 @@
         call vaspberry_fail
        endif
 ! Selecting every retained state gives a zero finite-basis trace.
-       if(nfirst.eq.1.and.nlast.eq.nband)cycle
+       if(nfirst.eq.1.and.nlast.eq.nband)then
+! Even a zero finite-basis trace must not certify unreadable source states.
+        do nn=nfirst,nlast
+         call read_kubo_coefficients(coeff,nplist(ik),isp,ik,
+     &                               nn,nk,nband)
+        enddo
+        cycle
+       endif
        wk=wklist(:,ik)
        np=nplist(ik)
        call plindx(ig,ncnt,ispinor,wk,b1,b2,b3,nbmax,np,ecut,npmax)
@@ -4176,11 +4352,11 @@
        enddo
        irec=3+(ik-1)*(nband+1)+nk*(nband+1)*(isp-1)
        do nn=nfirst,nlast
-        read(10,rec=irec+nn)(coeff(i),i=1,np)
+        call read_kubo_coefficients(coeff,np,isp,ik,nn,nk,nband)
         coeffn(1:np)=coeff(1:np)
         do mm=1,nband
          if(mm.ge.nfirst.and.mm.le.nlast)cycle
-         read(10,rec=irec+mm)(coeff(i),i=1,np)
+         call read_kubo_coefficients(coeff,np,isp,ik,mm,nk,nband)
          coeffm(1:np)=coeff(1:np)
          px=(0d0,0d0)
          py=(0d0,0d0)
@@ -4198,6 +4374,11 @@
      &                                            ener(nn)-ener(mm))
         enddo
        enddo
+       if(.not.ieee_is_finite(omega(ik)))then
+        write(0,*)'*** error - nonfinite local Kubo trace: ',
+     &            'spin,k = ',isp,ik
+        call vaspberry_fail
+       endif
       enddo
 #ifdef MPI_USE
       call MPI_ALLREDUCE(omega,omega_reduce,nk,MPI_DOUBLE_PRECISION,
@@ -4208,35 +4389,40 @@
      &                   mpi_comm_earth,mpierr)
       external_gap=gap_reduce
 #endif
-      end subroutine kubo_bundle_curvature
-
-      subroutine write_kubo_bundle_csv(path,isp,nk,nband,
-     &           nfirst,nlast,wklist,omega,external_gap)
-      implicit none
-      character*(*) path
-      integer isp,nk,nband,nfirst,nlast,ik,ios
-      real*8 wklist(3,nk),omega(nk),external_gap(nk)
-      if(isp.eq.1)then
-       open(96,file=trim(path),status='new',action='write',iostat=ios)
-      else
-       open(96,file=trim(path),status='old',position='append',
-     &      action='write',iostat=ios)
-      endif
-      if(ios.ne.0)then
-       write(0,*)'*** error - cannot open new Kubo bundle CSV: ',
-     &           trim(path)
+      if(.not.all(ieee_is_finite(omega)).or.
+     &   .not.all(ieee_is_finite(external_gap)))then
+       write(0,*)'*** error - nonfinite reduced Kubo trace/gap'
        call vaspberry_fail
       endif
+      end subroutine kubo_bundle_curvature
+
+      subroutine write_kubo_bundle_csv(path,isp,ispin,nk,nband,
+     &           nfirst,nlast,wklist,omega,external_gap)
+      use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+      implicit none
+      character*(*) path
+      integer isp,ispin,nk,nband,nfirst,nlast,ik,ios
+      real*8 wklist(3,nk),omega(nk),external_gap(nk)
+      if(.not.all(ieee_is_finite(omega)).or.
+     &   .not.all(ieee_is_finite(wklist)).or.
+     &   .not.all(ieee_is_finite(external_gap)))then
+       write(0,*)'*** error - nonfinite Kubo trace output'
+       call vaspberry_fail
+      endif
+      call open_kubo_csv(path,isp.eq.1)
       if(isp.eq.1)then
-       write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1'
-       write(96,'(A)')'# vaspberry_version=1.6.2'
+       write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V2'
+       write(96,'(A)')'# vaspberry_version=1.6.3'
        write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
        write(96,'(A)')'# operator='//
      &  'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
        write(96,'(A)')'# berry_connection=A_i=i<u|d/dk_i u>'
        write(96,'(A)')'# occupation_weighting=NONE'
        write(96,'(A)')'# result_kind=ISOLATED_BUNDLE_TRACE'
-       write(96,'(A)')'# result_status=PASS'
+       write(96,'(A)')'# result_status=INCOMPLETE'
+       write(96,'(A,I0)')'# source_nkpoints=',nk
+       write(96,'(A,I0)')'# source_nspin=',ispin
+       write(96,'(A,I0)')'# expected_rows=',int(nk,8)*ispin
        write(96,'(A)')'# curvature=TRACE_OF_SELECTED_BUNDLE'
        write(96,'(A)')'# internal_transitions=EXCLUDED_ANALYTICALLY'
        write(96,'(A)')'# degeneracy_policy='//
@@ -4271,11 +4457,7 @@
         call vaspberry_fail
        endif
       enddo
-      close(96,iostat=ios)
-      if(ios.ne.0)then
-       write(0,*)'*** error - cannot close Kubo bundle CSV'
-       call vaspberry_fail
-      endif
+      call finish_kubo_csv(path,isp.eq.ispin)
       end subroutine write_kubo_bundle_csv
 
 ! Undivided Cartesian Kubo numerators for all unordered source-band pairs.
@@ -4324,39 +4506,24 @@
      &     int(nk,8)*(nband+1_8)*int(isp-1,8)
       if(cached)then
        do n=1,nband
-        read(10,rec=irec+n,iostat=ios)(cache(i,n),i=1,np)
-        if(ios.ne.0)then
-         write(0,*)'*** error - cannot read Kubo pair coefficients'
-         call vaspberry_fail
-        endif
+        call read_kubo_coefficients(coeff,np,isp,ik,n,nk,nband)
+        cache(1:np,n)=coeff(1:np)
        enddo
-       if(.not.all(ieee_is_finite(real(cache(1:np,:)))).or.
-     &    .not.all(ieee_is_finite(aimag(cache(1:np,:)))))then
-        write(0,*)'*** error - nonfinite Kubo pair coefficients'
-        call vaspberry_fail
-       endif
+
       endif
       ip=0
       do n=1,nband-1
        if(cached)then
         coeffn(1:np)=cache(1:np,n)
        else
-        read(10,rec=irec+n,iostat=ios)(coeff(i),i=1,np)
-        if(ios.ne.0)then
-         write(0,*)'*** error - cannot read Kubo pair coefficients'
-         call vaspberry_fail
-        endif
+        call read_kubo_coefficients(coeff,np,isp,ik,n,nk,nband)
         coeffn(1:np)=coeff(1:np)
        endif
        do m=n+1,nband
         if(cached)then
          coeffm(1:np)=cache(1:np,m)
         else
-         read(10,rec=irec+m,iostat=ios)(coeff(i),i=1,np)
-         if(ios.ne.0)then
-          write(0,*)'*** error - cannot read Kubo pair coefficients'
-          call vaspberry_fail
-         endif
+         call read_kubo_coefficients(coeff,np,isp,ik,m,nk,nband)
          coeffm(1:np)=coeff(1:np)
         endif
         p=(0d0,0d0)
@@ -4430,20 +4597,10 @@
        call vaspberry_fail
       endif
       if(myrank.eq.0)then
-       if(isp.eq.1)then
-        open(96,file=trim(path),status='new',action='write',iostat=ios)
-       else
-        open(96,file=trim(path),status='old',position='append',
-     &       action='write',iostat=ios)
-       endif
-       if(ios.ne.0)then
-        write(0,*)'*** error - cannot open new Kubo pairs CSV: ',
-     &            trim(path)
-        call vaspberry_fail
-       endif
+       call open_kubo_csv(path,isp.eq.1)
        if(isp.eq.1)then
         write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_PAIRS_V1'
-        write(96,'(A)')'# vaspberry_version=1.6.2'
+        write(96,'(A)')'# vaspberry_version=1.6.3'
         write(96,'(A)')'# result_kind=UNORDERED_INTERBAND_NUMERATORS'
         write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
         write(96,'(A)')'# operator='//
@@ -4528,18 +4685,7 @@
        endif
       enddo
       if(myrank.eq.0)then
-! A partial/failed export never carries a successful completion marker.
-       if(isp.eq.ispin)write(96,'(A)',iostat=ios)
-     &                 '# result_status=PASS'
-       if(ios.ne.0)then
-        write(0,*)'*** error - cannot finish Kubo pairs CSV'
-        call vaspberry_fail
-       endif
-       close(96,iostat=ios)
-       if(ios.ne.0)then
-        write(0,*)'*** error - cannot close Kubo pairs CSV'
-        call vaspberry_fail
-       endif
+       call finish_kubo_csv(path,isp.eq.ispin)
       endif
       deallocate(values,ener,gathered,energies)
       end subroutine write_kubo_pairs_csv
@@ -5286,8 +5432,13 @@
       endif
       irec=3+(k-1)*(nband+1)+nk*(nband+1)*(isp-1)  !record addres for "k"-point
 !    !write(6,*)'mmm'
-      read(10,rec=irec) xnplane,(wk(i),i=1,3),
+      read(10,rec=irec,iostat=iost) xnplane,(wk(i),i=1,3),
      &(cener(nn),occ(nn),nn=1,nband)
+      if(iost.ne.0)then
+       write(0,*)'*** error - cannot read WAVECAR energy record: ',
+     &           'spin,k = ',isp,k
+       call vaspberry_fail
+      endif
 !    !write(6,*)'qqq'
       nplane=nint(xnplane);ener=real(cener)
       return
@@ -5301,8 +5452,13 @@
       real*8 occ(nband)
       real*8 ener(nband)
       irec=3+(k-1)*(nband+1)+nk*(nband+1)*(isp-1)  !record addres for "k"-point
-      read(10,rec=irec) xnplane,(wk(i),i=1,3),
+      read(10,rec=irec,iostat=iost) xnplane,(wk(i),i=1,3),
      &(cener(nn),occ(nn),nn=1,nband)
+      if(iost.ne.0)then
+       write(0,*)'*** error - cannot read WAVECAR energy record: ',
+     &           'spin,k = ',isp,k
+       call vaspberry_fail
+      endif
       ener=real(cener)
 !      write(6,*) 'check: nn=1 energies',real(cener(1)),ener(1),cener(1)
       return
@@ -5463,6 +5619,8 @@
       integer cli_ios,cli_j,cli_delim,cli_values(3)
       integer task_kubo,task_cd,task_vel,task_z2
       logical modern_cli,modern_option,task_seen
+      logical modern_bands,per_band_seen,modern_kubo
+      integer per_band
       integer iarg,narg,ia,nkx,nky,ispinor,iskp,ine,ng(3)
       integer ikubo_bundle
       dimension rs(3)
@@ -5504,12 +5662,27 @@
       kubo_pairs=""
       pair_band_selection=.false.
       ikubo_bundle=0
+      per_band=0
+      per_band_seen=.false.
+      modern_bands=.false.
       task=""
       task_seen=.false.
       modern_cli=.false.
       do cli_j=1,iarg
        call getarg(cli_j,option)
        if(option(1:2).eq.'--')modern_cli=.true.
+      enddo
+! Removed selectors must fail even if their value was omitted. Inspect only
+! option slots: a filename equal to an old selector is still a filename.
+      do cli_j=1,iarg,2
+       call getarg(cli_j,option)
+       if(trim(option).eq.'--bundle'.or.
+     &    trim(option).eq.'-kubo_bundle')then
+        write(0,*)'*** error - --bundle/-kubo_bundle was removed; ',
+     &   'use --task kubo --bands FIRST:LAST for the selected-space ',
+     &   'trace, or add --per-band 1 for individual bands'
+        call vaspberry_fail
+       endif
       enddo
       if(iarg.eq.1)then
        call getarg(1,option)
@@ -5630,6 +5803,7 @@
            if(cli_values(1).gt.cli_values(2))goto 910
            nini=cli_values(1);nmax=cli_values(2)
            pair_band_selection=.true.
+           modern_bands=.true.
           end select
           cycle
          case('--wavecar')
@@ -5643,7 +5817,7 @@
           option='-kubo_pairs'
          case('--spinor')
           option='-s'
-         case('--bundle','--wavefunction-band',
+         case('--per-band','--wavefunction-band',
      &        '--kpoint','--imaginary')
           do cli_j=1,len_trim(value)
            if(index('0123456789',value(cli_j:cli_j)).eq.0)goto 910
@@ -5651,9 +5825,11 @@
           read(value,*,iostat=cli_ios)cli_values(1)
           if(cli_ios.ne.0)goto 910
           select case(trim(option))
-          case('--bundle')
+          case('--per-band')
            if(cli_values(1).lt.0.or.cli_values(1).gt.1)goto 910
-           option='-kubo_bundle'
+           per_band=cli_values(1)
+           per_band_seen=.true.
+           cycle
           case('--imaginary')
            if(cli_values(1).lt.0.or.cli_values(1).gt.1)goto 910
            option='-im'
@@ -5750,8 +5926,6 @@
             kubo_csv=trim(value)
            else if(option == "-kubo_pairs") then
             kubo_pairs=trim(value)
-           else if(option == "-kubo_bundle") then
-            read(value,*) ikubo_bundle
            else if(option == "-nn") then
             pair_band_selection=.true. ! band index nn
             read(value,*) nn
@@ -5829,6 +6003,23 @@
         call vaspberry_fail
        endif
       endif
+      modern_kubo=task_seen.and.(task.eq.'kubo'.or.
+     &            task.eq.'kubo-line'.or.task.eq.'kubo-integral')
+      if(per_band_seen.and.(.not.modern_kubo.or.
+     &   len_trim(kubo_pairs).ne.0))then
+       write(0,*)'*** error - --per-band requires --task kubo, ',
+     &  'kubo-line or kubo-integral; incompatible with pair export'
+       call vaspberry_fail
+      endif
+! Explicit modern selections choose the whole subspace by default.
+! Pure legacy selectors and omitted band selection retain per-band behavior.
+      if((modern_kubo.or.modern_bands).and.ikubo.gt.0.and.
+     &   pair_band_selection.and.nmax.ne.999999.and.
+     &   nmax.gt.nini.and.per_band.eq.0.and.
+     &   len_trim(kubo_pairs).eq.0)then
+       ikubo_bundle=1
+       if(len_trim(kubo_csv).eq.0)kubo_csv='KUBO.csv'
+      endif
       if(spinkubo_sum_max.gt.0.and.spinchern_task.ne.2)then
        write(0,*)'*** error - --sum-bands is only for --task spin-kubo'
        call vaspberry_fail
@@ -5850,14 +6041,6 @@
        write(0,*) '*** error - Kubo option must be 0, 1 or 2'
        call vaspberry_fail
       endif
-      if(ikubo_bundle.lt.0.or.ikubo_bundle.gt.1)then
-       write(0,*) '*** error - -kubo_bundle must be 0 or 1'
-       call vaspberry_fail
-      endif
-      if(ikubo_bundle.eq.1.and.len_trim(kubo_csv).eq.0)then
-       write(0,*) '*** error - -kubo_bundle needs -kubo_csv PATH'
-       call vaspberry_fail
-      endif
       if(len_trim(kubo_csv).gt.0)then
        if(ikubo.eq.0.or.icd.ne.0.or.ivel.ne.0.or.iz.ne.0.or.
      &    iwf.ne.0.or.ixt.ne.0.or.it.ne.0)then
@@ -5877,7 +6060,7 @@
        endif
        if(ikubo_bundle.ne.0.or.len_trim(kubo_csv).gt.0)then
         write(0,*)'*** error - -kubo_pairs is exclusive with ',
-     &            '-kubo_bundle and -kubo_csv'
+     &            'selected-space curvature and -kubo_csv'
         call vaspberry_fail
        endif
        if(pair_band_selection)then
@@ -5958,79 +6141,117 @@
 
 !!$*  subroutine for reading basic information
       subroutine inforead(irecl,ispin,nk,nband,ecut,a1,a2,a3,filename)
-      use, intrinsic :: ieee_arithmetic
-      implicit real*8(a-h,o-z)
+      use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+      implicit none
       character*256 filename
-      dimension a1(3),a2(3),a3(3)
-
-! The WAVECAR header stores VASP's logical direct-access record length.
-! VASPBERRY must use the same RECL unit as the VASP writer.
-! With Intel ifx/ifort, byte RECL requires -assume byterecl.
-      irecl=24
-      open(unit=10,file=filename,access='direct',
-     & form='unformatted',recl=irecl,action='read',
-     & iostat=iost,status='old')
-      if (iost .ne. 0)then
-       write(0,*) '*** error - WAVECAR header open, iostat =',iost
+      integer irecl,ispin,nk,nband,iost,ic,nvalid,unit_bytes
+      integer*8 file_bytes,stride,logical_recl,nrecords,candidate(2)
+      real*8 first(3),header(12),chosen(12),volume
+      real*8 ecut,a1(3),a2(3),a3(3),cross(3)
+      logical print_header
+! The stream header always uses physical bytes. Supported builds use byte
+! direct-access RECL; detect files written with either byte or word4 RECL.
+      inquire(iolength=unit_bytes)first
+      if(unit_bytes.ne.24)then
+       write(0,*)'*** error - byte RECL compiler mode is required; ',
+     &           'use Intel -assume byterecl'
        call vaspberry_fail
       endif
-
-      read(10,rec=1,iostat=iost)xirecl,xispin,xiprec
+      open(unit=10,file=filename,access='stream',
+     & form='unformatted',action='read',iostat=iost,status='old')
+      if(iost.ne.0)then
+       write(0,*)'*** error - WAVECAR header open, iostat =',iost
+       call vaspberry_fail
+      endif
+      inquire(unit=10,size=file_bytes,iostat=iost)
+      if(iost.ne.0.or.file_bytes.lt.24_8)then
+       write(0,*)'*** error - truncated/unreadable WAVECAR header'
+       call vaspberry_fail
+      endif
+      read(10,pos=1,iostat=iost)first
       if(iost.ne.0)then
        write(0,*)'*** error - WAVECAR header read'
        call vaspberry_fail
       endif
-      if(.not.ieee_is_finite(xirecl).or.
-     &   .not.ieee_is_finite(xispin).or.
-     &   .not.ieee_is_finite(xiprec))then
+      if(.not.all(ieee_is_finite(first)))then
        write(0,*)'*** error - nonfinite WAVECAR header'
        call vaspberry_fail
       endif
-      if(xirecl.lt.96d0.or.xirecl.gt.dble(huge(irecl)).or.
-     &   (xispin.ne.1d0.and.xispin.ne.2d0))then
+      if(first(1).lt.1d0.or.first(1).gt.dble(huge(irecl)).or.
+     &   (first(2).ne.1d0.and.first(2).ne.2d0))then
        write(0,*)'*** error - invalid WAVECAR RECL/ISPIN'
        call vaspberry_fail
       endif
-      if(xiprec.ne.45200d0)then
-       write(0,*)'*** error - unsupported WAVECAR RTAG; expected',
-     &           ' full-complex 45200, found:',xiprec
+      if(first(1).ne.dble(nint(first(1))))then
+       write(0,*)'*** error - WAVECAR RECL must be an integer'
        call vaspberry_fail
       endif
-      close(10)
-      irecl=nint(xirecl);ispin=nint(xispin);iprec=nint(xiprec) ! set to integer
+      if(first(3).ne.45200d0)then
+       write(0,*)'*** error - unsupported WAVECAR RTAG; expected',
+     &           ' full-complex 45200, found:',first(3)
+       call vaspberry_fail
+      endif
+      logical_recl=int(first(1),8);ispin=int(first(2))
+      candidate=(/logical_recl,4_8*logical_recl/)
+      nvalid=0
+      do ic=1,2
+       stride=candidate(ic)
+       if(stride.lt.96_8.or.stride.gt.int(huge(irecl),8))cycle
+       if(stride.gt.file_bytes-96_8)cycle
+       read(10,pos=stride+1_8,iostat=iost)header
+       if(iost.ne.0)cycle
+       if(.not.all(ieee_is_finite(header)))cycle
+       if(header(1).lt.1d0.or.header(1).gt.dble(huge(nk)).or.
+     &    header(2).lt.1d0.or.
+     &    header(2).gt.dble((stride/8_8-4_8)/3_8).or.
+     &    header(3).le.0d0)cycle
+       if(header(1).ne.dble(nint(header(1))).or.
+     &    header(2).ne.dble(nint(header(2))))cycle
+       a1=header(4:6);a2=header(7:9);a3=header(10:12)
+       cross(1)=a2(2)*a3(3)-a2(3)*a3(2)
+       cross(2)=a2(3)*a3(1)-a2(1)*a3(3)
+       cross(3)=a2(1)*a3(2)-a2(2)*a3(1)
+       volume=dot_product(a1,cross)
+       if(.not.ieee_is_finite(volume).or.abs(volume).lt.1d-12)cycle
+! These bounds precede integer conversion/allocation and record products.
+       nrecords=2_8+int(ispin,8)*int(header(1),8)*
+     &                         (int(header(2),8)+1_8)
+       if(nrecords.gt.int(huge(nk),8))cycle
+       if(nrecords.gt.file_bytes/stride)cycle
+       nvalid=nvalid+1
+       irecl=int(stride)
+       chosen=header
+      enddo
+      close(10,iostat=iost)
+      if(iost.ne.0)then
+       write(0,*)'*** error - cannot close WAVECAR header stream'
+       call vaspberry_fail
+      endif
+      if(nvalid.ne.1)then
+       write(0,*)'*** error - invalid/truncated WAVECAR layout: ',
+     &  'cannot identify a unique byte/word4 RECL stride; ',
+     &  'valid candidates = ',nvalid
+       call vaspberry_fail
+      endif
+      nk=int(chosen(1));nband=int(chosen(2));ecut=chosen(3)
+      a1=chosen(4:6);a2=chosen(7:9);a3=chosen(10:12)
+      call vaspberry_help_rank(print_header)
+      if(print_header)then
+       write(6,'(A,I0,A,I0)')'# WAVECAR logical_RECL=',logical_recl,
+     &                     ' physical_stride_bytes=',irecl
+       if(int(irecl,8).eq.logical_recl)then
+        write(6,'(A)')'# WAVECAR RECL_layout=byte'
+       else
+        write(6,'(A)')'# WAVECAR RECL_layout=word4'
+       endif
+      endif
       open(unit=10,file=filename,access='direct',
      & form='unformatted',recl=irecl,action='read',
      & iostat=iost,status='old')
-      if (iost.ne.0)then
-       write(0,*) '*** error - WAVECAR data open, iostat =',iost
-       call vaspberry_fail
-      endif
-      read(10,rec=2,iostat=iost) xnk,xnband,ecut,
-     &(a1(j),j=1,3),(a2(j),j=1,3),(a3(j),j=1,3)       !A1(3),A2(3),A3(3)
       if(iost.ne.0)then
-       write(0,*)'*** error - WAVECAR lattice header read'
+       write(0,*)'*** error - WAVECAR data open, iostat =',iost
        call vaspberry_fail
       endif
-      if(.not.ieee_is_finite(xnk).or.
-     &   .not.ieee_is_finite(xnband))then
-       write(0,*)'*** error - nonfinite WAVECAR dimensions'
-       call vaspberry_fail
-      endif
-      if(xnk.lt.1d0.or.xnk.gt.dble(huge(nk)).or.
-     &   xnband.lt.1d0.or.xnband.gt.dble((irecl/8-4)/3))then
-       write(0,*)'*** error - invalid WAVECAR dimensions'
-       call vaspberry_fail
-      endif
-      nk=nint(xnk)
-      nband=nint(xnband)
-      if(xirecl.ne.dble(irecl).or.xnk.ne.dble(nk).or.
-     &   xnband.ne.dble(nband).or.
-     &   dble(ispin)*nk*(nband+1)+2d0.gt.dble(huge(nk)))then
-       write(0,*)'*** error - invalid WAVECAR record dimensions'
-       call vaspberry_fail
-      endif
-
-      return
       end subroutine inforead
 
       subroutine creditinfo(ver_tag)
@@ -6349,15 +6570,20 @@
       write(6,*)"  --output PREFIX          -o PREFIX (not a directory)"
       write(6,*)"  --curvature-csv PATH     -kubo_csv PATH"
       write(6,*)"  --pairs-csv PATH         -kubo_pairs PATH"
-      write(6,*)"  --bundle 0|1             -kubo_bundle 0|1"
-      write(6,*)"                           1 needs --curvature-csv PATH"
+      write(6,*)"  --per-band 0|1          individual Kubo bands (default 0)"
+      write(6,*)"  Selected ranges use the whole subspace by default."
+      write(6,*)"  Default trace CSV: KUBO.csv."
+      write(6,*)"  Applies to --task kubo + selected range, or --bands."
+      write(6,*)"  Pure legacy -kubo -ii/-if keeps individual bands."
+      write(6,*)"  Omitted bands keep inference and individual output."
+      write(6,*)"  Specify --bands explicitly for the new range rule."
       write(6,*)"  --wavefunction-band N    -wf N"
       write(6,*)"  --kpoint N               -k N"
       write(6,*)"  --real-grid NX,NY,NZ     -ng NX,NY,NZ"
       write(6,*)"  --imaginary 0|1          -im 0|1"
       write(6,*)"  --theta DEG --phi DEG    -theta DEG -phi DEG"
       write(6,*)"  --help [TOPIC]          short overview or topic help"
-      write(6,*)"  All legacy flags remain accepted (details below)."
+      write(6,*)"  Legacy band selectors remain accepted."
       write(6,*)" "
       write(6,*)"*Outputs and reusable results:"
       write(6,*)"  CSV options name exact files; parent dirs must exist."
@@ -6519,12 +6745,14 @@
       write(6,*)"                  : Separate from -kubo_csv/bundle."
       write(6,*)"                  : PATH must be new; a final PASS"
       write(6,*)"                  : marker means export completed."
-      write(6,*)" -kubo_bundle 1   : Trace curvature for bands -ii:-if."
+      write(6,*)" Selected Kubo range: trace of the full selected space."
       write(6,*)"                  : Excludes internal transitions;"
       write(6,*)"                  : internal degeneracies are allowed."
       write(6,*)"                  : External gaps must exceed 1e-5 eV."
-      write(6,*)"                  : Requires -kubo 1/2 -kubo_csv PATH."
-      write(6,*)"                  : Writes bundle CSV only; default 0."
+      write(6,*)"                  : --task kubo --bands FIRST:LAST."
+      write(6,*)"                  : --curvature-csv changes KUBO.csv."
+      write(6,*)"                  : --per-band 1 requests each band."
+      write(6,*)"                  : Each band gap must exceed 1e-5 eV."
       write(6,*)"                  : Empty external space gives zero"
       write(6,*)"                  : in the truncated WAVECAR basis."
       write(6,*)" -kubo_csv PATH   : Opt-in band/bundle CSV, full"
@@ -6597,19 +6825,16 @@
       write(6,*)" Intel: make ifx; make ifx-mpi"
       write(6,*)" Classic: make ifort; make ifort-mpi (manual only)"
       write(6,*)"*WAVECAR compatibility:"
-      write(6,*)" VASP and VASPBERRY must use the same direct-access"
-      write(6,*)" RECL unit. Byte RECL is recommended."
-      write(6,*)" With Intel ifx/ifort, compile reader and writer using"
-      write(6,*)" '-assume byterecl'. The supplied gfortran version"
-      write(6,*)" uses byte RECL."
-      write(6,*)" A RECL mismatch may leave the first WAVECAR header"
-      write(6,*)" valid, but give zero/invalid NKPOINT, NBANDS,"
-      write(6,*)" ENCUT, or NaN lattice vectors."
-      write(6,*)" Preferred fix: rebuild VASP with byte RECL and"
-      write(6,*)" regenerate WAVECAR."
-      write(6,*)" A VASPBERRY built without '-assume byterecl' may"
-      write(6,*)" read such a legacy WAVECAR, but use it only for"
-      write(6,*)" files written with that same RECL convention."
+      write(6,*)" Full-complex RTAG=45200. Builds use byte RECL."
+      write(6,*)" Intel targets retain -assume byterecl."
+      write(6,*)" Native input detects byte or word4 producer RECL;"
+      write(6,*)" logical RECL and physical byte stride are reported."
+      write(6,*)" Invalid, ambiguous or truncated layouts are rejected"
+      write(6,*)" before allocation. No source file is rewritten."
+      write(6,*)" Kubo CSVs stage to PATH.partial. Final PATH appears"
+      write(6,*)" only after every spin/row and file close succeeds."
+      write(6,*)" Trace V2 and band V3 declare expected source counts"
+      write(6,*)" and end with result_status=PASS."
       endif
 #ifdef MPI_USE
       call MPI_INITIALIZED(mpi_is_initialized,ierr)

@@ -49,10 +49,11 @@ def source_options(args):
 
 def record_provenance(args, meta):
     meta['provenance'] = {
-        'vaspberry_version': '1.6.2',
+        'vaspberry_version': '1.6.3',
         'command': {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
         'implementation_sha256': {name: sha256(Path(__file__).with_name(name)) for name in
-                                 ('kubo_hall_workflow.py', 'kubo_pairs.py', 'berry_data.py', 'vaspberry_transport.py')},
+                                 ('kubo_hall_workflow.py', 'kubo_pairs.py', 'native_kubo_csv.py',
+                                  'berry_data.py', 'vaspberry_transport.py')},
     }
     if getattr(args, 'regions', None):
         meta['provenance']['regions_sha256'] = sha256(args.regions)
@@ -130,7 +131,7 @@ def add_commands(sub):
     imp.add_argument('--csv', type=Path, required=True)
     pair = sub.add_parser('pair-hall', help='cached unordered Kubo pairs -> mu/T charge sheet Hall')
     pair.add_argument('--pairs-dir', type=Path, required=True)
-    bundle = sub.add_parser('bundle-hall', help='occupied bundle CSV + WAVECAR -> insulating T=0 charge sheet Hall')
+    bundle = sub.add_parser('bundle-hall', help='postprocess occupied-trace CSV + WAVECAR into insulating T=0 charge sheet Hall; no native calculation mode')
     bundle.add_argument('--csv', type=Path, required=True)
     bundle.add_argument('--occupied', type=int, required=True)
     wave = sub.add_parser('wavecar-hall', help='WAVECAR -> native Kubo export -> cache -> charge sheet Hall in one command')

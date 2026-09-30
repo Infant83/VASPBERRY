@@ -52,7 +52,8 @@ class CompiledKuboTests(unittest.TestCase):
         cls.term.argtypes = [ctypes.POINTER(Complex16), ctypes.POINTER(Complex16),
                              ctypes.POINTER(ctypes.c_double)]
         helpers = kernel + "\n".join(routine(source, name) for name in (
-            "kubo_berry_curvature", "mpi_job_distribution_chain",
+            "kubo_berry_curvature", "mpi_job_distribution_chain", "read_kubo_coefficients",
+            "open_kubo_csv", "finish_kubo_csv",
             "write_kubo_metadata", "write_kubo_band_csv",
         ))
         (cls.work / "production.f").write_text(helpers)
@@ -131,6 +132,9 @@ class CompiledKuboTests(unittest.TestCase):
             line for line in text.splitlines() if not line.startswith("#")))))
         self.assertEqual([(int(r["spin"]), int(r["k_index"]), int(r["band"])) for r in rows],
                          [(1, 1, 1), (1, 1, 2)])
+        self.assertIn("# schema=VASPBERRY_BARE_MOMENTUM_KUBO_V3", text)
+        self.assertIn("# expected_rows=2", text)
+        self.assertTrue(text.endswith("# result_status=PASS\n"))
         self.assertEqual([float(r["energy_eV"]) for r in rows], [0, 2])
         self.assertEqual([float(r["min_gap_eV"]) for r in rows], [2, 2])
         self.assertAlmostEqual(float(rows[0]["omega_z_A2"]), -float(rows[1]["omega_z_A2"]), delta=1e-12)

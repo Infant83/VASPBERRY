@@ -310,20 +310,20 @@ Hall transport.
 
 ## Native curvature of a band bundle
 
-Select `-kubo_bundle 1` to calculate the trace curvature of a separated group
-of bands directly from WAVECAR. For the eighteen occupied SOC bands in the
+For native `--task kubo`, `kubo-line` or `kubo-integral`, select a multi-band
+range to calculate its trace curvature directly from WAVECAR. For the eighteen occupied SOC bands in the
 MoS₂ example:
 
 ```bash
 build/vaspberry --task kubo --wavecar WAVECAR \
-  --bands 1:18 --bundle 1 --curvature-csv KUBO_BUNDLE.csv
+  --bands 1:18 --curvature-csv KUBO_BUNDLE.csv
 ```
 
-Choose `-ii` and `-if` for the physical subspace in your own material. The
-same options work with the MPI binary. `-kubo 2` preserves the input point
-order and performs no Brillouin-zone integral for a Chern number. `-kubo 1` also prints the finite-mesh
-bundle integral using the existing mesh parameters; it requires the full
-uniform mesh with the correct `-kx` and `-ky` values.
+Choose `--bands FIRST:LAST` for the physical subspace in your own material.
+The same options work with the MPI binary. `--task kubo` and `kubo-line`
+preserve the input point order without a Brillouin-zone integral.
+`--task kubo-integral` also prints the finite-mesh trace integral; it requires
+the full uniform mesh and matching `--mesh NX,NY`.
 
 For a selected group $`I`$, let $`D_{\alpha,nm}`$ denote the matrix
 element of $`\partial_{k_\alpha}H`$. Its eigenstate representation is
@@ -348,13 +348,33 @@ the sampled points and available source states; k and `NBANDS` convergence
 remain necessary. The native operator retains the existing bare-momentum
 approximation.
 
-The required `-kubo_csv` path must be new. Bundle mode writes a
+The `--curvature-csv` path must be new; without it, a multi-band trace writes
+`KUBO.csv` in the working directory. The trace writes a
 [bundle CSV](OUTPUT_FORMAT.md#native-kubo-bundle-csv) with the selected range,
 source band count and external gaps; it produces no legacy `.dat` files.
-Without `-kubo_bundle 1`, the existing band calculation and outputs are
-unchanged. The bundle has unit occupation throughout its selected subspace.
+Trace CSV V2 starts as INCOMPLETE and records the expected source spin/k
+coverage. Only the final PASS marks successful completion. The readers
+reject truncated, duplicate or nonfinite results. Historical V1 inputs
+remain readable as legacy-unverified data, with their original provenance.
+The bundle has unit occupation throughout its selected subspace.
 It cannot replace band energies and occupation weights in an arbitrary
 chemical-potential or temperature scan.
+
+Use `--bands N` for one isolated band. To request several separate band
+curvatures, use, for example, `--bands 18:19 --per-band 1`. Each selected band
+must be separated from every other stored band by more than 1e-5 eV at every
+sampled k point and spin channel. These calculations write legacy DAT files
+and, when requested with `--curvature-csv`, an individual-band CSV containing
+band IDs and energies. They reject unresolved degeneracies before producing
+results; use the trace of an externally isolated group when internal band
+degeneracies are present.
+
+The removed native `--bundle` and `-kubo_bundle` flags give an error with
+migration guidance. A named Kubo task uses the new range semantics even with
+legacy `-ii`/`-if` endpoints. A command using only legacy `-kubo` and band
+flags retains individual-band output with the same isolation check. The
+Python `bundle-hall` command remains a separate integration of an already
+computed native trace CSV; it does not select the native calculation mode.
 
 The remainder of this guide describes the generic matrix and point-curvature
 interfaces. They require the actual exported operator/curvature data specified
@@ -491,7 +511,7 @@ source-energy check does not prove isolation from states absent from the source
 or between sampled k points. Internally
 degenerate groups require an appropriate separated-subspace calculation; this
 single-band matrix command is not a general non-Abelian bundle algorithm.
-The native `-kubo_bundle 1` route above explicitly supports an internally
+The native multi-band trace route above explicitly supports an internally
 degenerate, externally separated selected group.
 
 An empty isolated band's unit-occupation Chern number is a valid geometric question.

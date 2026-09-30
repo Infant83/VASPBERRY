@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TASKS = ("chern", "spin-chern", "spin-kubo", "z2", "kubo", "kubo-integral",
          "kubo-pairs", "optical", "spectrum", "wavefunction", "velocity")
 OPTIONS = ("bands", "mesh", "wavecar", "spinor", "output", "curvature-csv",
-           "pairs-csv", "bundle", "spin-axis", "outcar", "energy-gap-tol",
+           "pairs-csv", "per-band", "spin-axis", "outcar", "energy-gap-tol",
            "spin-gap-tol", "sum-bands", "wavefunction-band", "kpoint",
            "real-grid", "imaginary", "theta", "phi")
 
@@ -116,7 +116,7 @@ class NativeHelpTests(HelpAssertions, unittest.TestCase):
 
     def test_kubo_help_describes_input_output_and_degeneracy(self):
         text = self.request("--help", "kubo").stdout
-        for item in ("WAVECAR", "--bands", "--curvature-csv", "--bundle",
+        for item in ("WAVECAR", "--bands", "--curvature-csv", "--per-band",
                      "curvature.csv", "Kubo", "PAW"):
             self.assertIn(item, text)
         self.assertIn("degenera", text.lower())
@@ -148,9 +148,20 @@ class NativeHelpTests(HelpAssertions, unittest.TestCase):
         for keyword in ("all", "legacy"):
             with self.subTest(keyword=keyword):
                 result = self.request("--help", keyword)
-                for text in ("-ii", "-kubo_bundle", "-kubo_pairs", "-assume byterecl"):
+                for text in ("-ii", "--per-band", "-kubo_pairs", "-assume byterecl"):
                     self.assertIn(text, result.stdout)
                 self.assertGreater(len(result.stdout.splitlines()), 100)
+
+    def test_removed_option_help_and_preflight(self):
+        text = self.request("--help", "bundle").stdout
+        self.assertIn("removed", text)
+        self.assertIn("--per-band 1", text)
+        for binary in (self.binary, self.legacy):
+            for flag in ("--bundle", "-kubo_bundle"):
+                for suffix in ((), ("0",), ("1",)):
+                    result = self.request(flag, *suffix, binary=binary, success=False)
+                    self.assertIn("removed", result.stderr)
+                    self.assertNotIn("Error opening", result.stdout + result.stderr)
 
     def test_bad_keyword_does_not_silently_fall_back(self):
         for keyword in ("typo-topic", "", "k" * 400):
@@ -217,6 +228,13 @@ class MpiHelpTests(HelpAssertions, unittest.TestCase):
                           ("--help", "all")):
             with self.subTest(arguments=arguments):
                 self.request(*arguments, prefix=self.prefix)
+
+    def test_removed_selectors_fail_once_before_input_on_all_ranks(self):
+        for arguments in (("--bundle",), ("--bundle", "0"),
+                          ("--task", "kubo", "-kubo_bundle", "1")):
+            result = self.request(*arguments, success=False, prefix=self.prefix)
+            self.assertEqual(result.stderr.count("was removed"), 1, result.stderr)
+            self.assertNotIn("Error opening", result.stdout + result.stderr)
 
     def test_invalid_help_does_not_hang_or_start_a_calculation(self):
         for arguments in (("--help", "typo-topic"),

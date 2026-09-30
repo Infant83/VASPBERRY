@@ -10,7 +10,7 @@
 
 [^present-address]: Present address: LG Display, Republic of Korea. Affiliations 1 and 2 refer to the institutions where the initial code development was carried out; the author was an Alexander von Humboldt Fellow at Forschungszentrum Jülich.
 
-Based on VASPBERRY 1.6.1.
+Based on VASPBERRY 1.6.3.
 
 ## Abstract
 
@@ -300,7 +300,17 @@ The current repository build provides the following `--task` selectors:
 For example, `build/vaspberry --task kubo` selects the native pointwise
 calculation; supply the WAVECAR and band options listed in the
 [usage guide ↗](../README.md#usage) and [worked examples ↗](../examples/README.md).
-Legacy short flags remain supported. The
+For the native Kubo tasks, one selected band gives its isolated-band
+curvature; a multi-band range gives the subspace trace. Add `--per-band 1`
+for separate band curves. The trace writes `KUBO.csv` by default, or the
+explicit `--curvature-csv` path. Every individual band must be separated
+from all other source bands by more than 1e-5 eV; the trace requires this
+gap only to excluded bands. These source-interface changes preserve the
+formulas and saved numerical results below. Native WAVECAR input detects
+byte and legacy four-byte-word record lengths without modifying the file.
+Current Kubo curvature CSVs record expected coverage and mark PASS only
+after all finite results are written; incomplete files are not results.
+The
 [hands-on guide ↗](HANDS_ON.md) and [report-to-example map ↗](../examples/REPORT_REPRODUCTION.md)
 give the input files, commands and expected outputs for each example.
 
@@ -438,8 +448,9 @@ the bundle curve.
 The occupied-bundle curvature is approximately **−13.18 Å² at K** and
 **+13.18 Å² at K′**. The occupied space stays separated from the empty states
 by at least **1.674 eV** on both samplings, so every mesh and path point is
-valid for the bundle calculation. The native option `-kubo_bundle 1` performs
-the external-band sum directly, avoiding large cancelling internal terms.
+valid for the bundle calculation. In VASPBERRY 1.6.3,
+`--task kubo --bands 1:18` performs the external-band sum directly, avoiding
+large cancelling internal terms.
 
 Figures 1 and 2 describe the same occupied band space. Their numerical
 values need not coincide at this resolution: the Fukui method gives finite-plaquette

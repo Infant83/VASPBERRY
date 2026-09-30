@@ -41,7 +41,7 @@
     },
     {
       "id": "kubo-curvature",
-      "title": "MoS2 band-path canonical-momentum Kubo curvature",
+      "title": "MoS2 occupied-space band-path canonical-momentum Kubo trace",
       "default_mode": "vasp_wavecar_calculation",
       "dataset": "mos2",
       "requires_fortran": true,
@@ -50,6 +50,7 @@
       "readme": "features/kubo-curvature/README.md",
       "input": "1H-MoS2/KPATH/2.band/WAVECAR",
       "reference": "features/kubo-curvature/reference",
+      "reference_scope": "Historical individual-band17:18 output; current runner computes occupied1:18 trace",
       "required_outputs": [
         "result.json",
         "summary.csv",

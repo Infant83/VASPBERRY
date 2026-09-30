@@ -4,6 +4,41 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+## [1.6.3] - 2026-09-30
+
+### Native Kubo band selection
+
+- Remove native `--bundle` and `-kubo_bundle`; rejected uses explain how to
+  migrate. Named `kubo`, `kubo-line` and `kubo-integral` tasks calculate one
+  selected band or the trace of a multi-band range by default. Add
+  `--per-band 1` for separate band curvatures.
+- Default multi-band trace output to `KUBO.csv` when no explicit curvature
+  path is supplied. Keep its numerical columns and the separate Python
+  `bundle-hall` integration workflow.
+- Reject unresolved individual-band degeneracies before producing output:
+  every selected band must be separated from every other stored band by
+  more than 1e-5 eV. Multi-band traces retain their external-gap check and
+  permit internal degeneracies. Pure legacy `-kubo` invocations retain
+  individual-band selection with the same stricter gap check.
+- Update native walkthroughs, output descriptions and the technical report;
+  preserve original result metadata and historical release instructions.
+
+### WAVECAR compatibility and result validity
+
+- Detect byte and legacy four-byte-word RECL layouts automatically, without
+  modifying the WAVECAR. Reject malformed or ambiguous record layouts.
+- Reject nonfinite Kubo inputs/results and incomplete coefficient reads.
+  Write trace CSV schema V2 and individual-band CSV schema V3 with source
+  dimensions, expected row counts and an initial INCOMPLETE status. Write
+  terminal PASS only after every selected spin/k/band result is complete.
+- Stage curvature and pair CSVs as `.partial` files and publish their final
+  names only after successful output completion; preserve existing files.
+- Validate finite values and complete row coverage in the Python readers.
+  Retain older trace V1 and individual-band V2 files as legacy-unverified
+  inputs; their original data and producer metadata are not rewritten.
+- Use the maintainer-selected version 1.6.3 for this update; removed flags
+  and changed multi-band defaults require the documented command migration.
+
 ## [1.6.2] - 2026-09-29
 
 ### Native command help

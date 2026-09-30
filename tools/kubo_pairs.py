@@ -17,6 +17,7 @@ from berry_data import CONDUCTANCE_QUANTUM_S, regions_from_spec, require
 from exported_matrix_kubo import sha256
 from vaspberry_transport import fermi_dirac
 from wavecar_fukui import Wavecar, infer_uniform_grid
+from native_kubo_csv import read_curvature_csv
 
 SCHEMA = 'vaspberry.kubo-pairs'
 NATIVE_SCHEMA = 'VASPBERRY_BARE_MOMENTUM_KUBO_PAIRS_V1'
@@ -44,12 +45,23 @@ class PairData:
 def metadata_lines(path):
     """Read comments through the end: native completion is a final footer."""
     result = {}
+    last = ""
+    statuses = []
     with Path(path).open() as handle:
         for line in handle:
+            if line.strip():
+                last = line.strip()
             if line.startswith('#') and '=' in line:
-                key, value = line[1:].strip().split('=', 1)
-                require(key not in result or result[key] == value, 'conflicting metadata: '+key)
+                key, value = (part.strip() for part in line[1:].split('=', 1))
+                if key == 'result_status':
+                    statuses.append(value)
+                require(key == 'result_status' or key not in result or result[key] == value,
+                        'conflicting metadata: '+key)
                 result[key] = value
+    if result.get('schema') == NATIVE_SCHEMA:
+        require(last == '# result_status=PASS', 'complete native pair CSV requires terminal result_status=PASS')
+        require(statuses in (['PASS'], ['INCOMPLETE', 'PASS']),
+                'native pair result_status must certify completion only at the end')
     return result
 
 
@@ -381,25 +393,28 @@ def bundle_hall_spectrum(csv_path, wavecar_path, mus, *, occupied, spin=1, spino
     spinor_components = w.spinor_components
     spin_multiplicity = w.resolve_spin_multiplicity(spin_multiplicity)
     nk, nb = w.energies.shape
-    require(0 < occupied < nb and source.get('schema') == 'VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1',
+    source, all_rows = read_curvature_csv(csv_path, kind='trace')
+    require(0 < occupied < nb,
             'native occupied bundle with stored empty states required')
+    if source['completion_validation'] == 'terminal_pass_and_full_coverage':
+        require(int(source['source_nkpoints']) == nk and int(source['source_nspin']) == w.header.ispin,
+                'bundle source dimensions disagree with WAVECAR')
     require(tuple(int(source[k]) for k in ('band_min', 'band_max', 'band_rank', 'source_nbands'))
             == (1, occupied, occupied, nb), 'bundle must contain exactly the occupied leading bands')
     require(source.get('intermediate_bands') == 'EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS',
             'bundle external-state convention required')
     omega = np.full(nk, np.nan); seen = set()
-    with Path(csv_path).open() as f:
-        for row in csv.DictReader(line for line in f if not line.startswith('#')):
-            if int(row['spin']) != spin:
-                continue
-            k = int(row['k_index'])-1
-            require(0 <= k < nk and k not in seen, 'duplicate/out-of-range bundle point')
-            q = np.array([float(row['k'+a+'_frac']) for a in 'xyz'])
-            require(np.allclose(q, w.kpoints[k], atol=1e-8, rtol=0), 'bundle coordinates disagree with WAVECAR')
-            gap = float(np.min(abs(w.energies[k, :occupied, None]-w.energies[k, None, occupied:])))
-            require(gap > 1e-5 and np.isclose(float(row['min_external_gap_eV']), gap, atol=1e-7, rtol=0),
-                    'bundle external gap disagrees with WAVECAR or is unresolved')
-            omega[k] = float(row['omega_z_A2']); seen.add(k)
+    for row in all_rows:
+        if int(row['spin']) != spin:
+            continue
+        k = int(row['k_index'])-1
+        require(0 <= k < nk and k not in seen, 'duplicate/out-of-range bundle point')
+        q = np.array([float(row['k'+a+'_frac']) for a in 'xyz'])
+        require(np.allclose(q, w.kpoints[k], atol=1e-8, rtol=0), 'bundle coordinates disagree with WAVECAR')
+        gap = float(np.min(abs(w.energies[k, :occupied, None]-w.energies[k, None, occupied:])))
+        require(gap > 1e-5 and np.isclose(float(row['min_external_gap_eV']), gap, atol=1e-7, rtol=0),
+                'bundle external gap disagrees with WAVECAR or is unresolved')
+        omega[k] = float(row['omega_z_A2']); seen.add(k)
     require(len(seen) == nk and np.isfinite(omega).all(), 'complete finite bundle grid required')
     vbm, cbm = float(w.energies[:, :occupied].max()), float(w.energies[:, occupied:].min())
     requested = np.r_[mus, mu_reference]

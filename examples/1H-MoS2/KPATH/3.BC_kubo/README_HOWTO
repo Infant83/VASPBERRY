@@ -1,3 +1,21 @@
+# Current calculation: occupied-space trace on the supplied path
+
+From this folder, run:
+
+../../../../build/vaspberry --wavecar ../2.band/WAVECAR \
+  --task kubo --bands 1:18
+
+The explicit range selects the full trace and writes KUBO.csv automatically.
+Its occupied-to-empty gap is finite at every stored point, including Gamma.
+For a plotted example, follow examples/features/kubo-curvature/README.md.
+
+# Historical command (retained for interpreting the archived BERRYCURV files)
+
+The command below used the earlier individual-band behavior. The occupied
+bands touch internally at Gamma; current single/per-band calculation rejects
+those unresolved points instead of producing values and masking them later.
+It is not a current reproduction command for the occupied-space trace.
+
 # 1. copy WAVECAR file from ../2.band/WAVECAR
 
 # 2. run berry curvature calculation with -kubo option

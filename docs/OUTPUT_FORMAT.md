@@ -16,6 +16,7 @@ The Intel and GNU executables write the same numerical formats. The
 | File | Contains | Calculation still needed? | Typical plot |
 |---|---|---|---|
 | Native bundle `KUBO.csv` | k coordinates and computed Ωxy in `omega_z_A2` (Å²), selected-bundle gap (eV) | None for a curvature plot | Ω versus path samples; a full-mesh Ω map with the matching lattice |
+| Native individual-band CSV | Band ID, energy, coordinates, Ωxy and minimum gap for each selected isolated band | None for a curvature plot | Separate band curves, filtered by `band` and `spin` |
 | Native `SPIN_CHERN.csv`, `SPIN_BERRY.csv`, `SPIN_SPECTRUM.csv` | Projected-spin sector invariants, plaquette flux and spin spectrum | None for plotting | Sector flux maps, spin-gap maps and mesh comparisons; [spin Chern number guide](SPIN_CHERN.md) |
 | Native `SPIN_KUBO.csv`, `SPIN_KUBO_SPECTRUM.csv`, optional `SPIN_KUBO_INTEGRAL.csv` | Positive/negative/parent point curvature, its decomposition and raw explicit-mesh integrals | None for plotting; use separate `spin-chern` for geometric integers | Spin-sector curves on a k path and full-mesh maps; [spin-sector Kubo-formula guide](SPIN_KUBO.md) |
 | Native `PAIRS.csv` | Undivided interband products `numerator_*_eV2_A2`, two band energies and gap | Yes: occupations, squared-gap denominators and BZ integration | Intermediate pair analysis; it is not a conductivity table |
@@ -262,6 +263,9 @@ Comments declare the real and reciprocal lattices, source dimensions,
 component order, units, normalization and operator. No occupation, spin
 multiplicity or denominator is included in the numerators. Only a final
 `result_status=PASS` footer certifies that the native exporter completed.
+The pair schema remains V1. Native pair export writes `PATH.partial` and
+publishes `PATH` only after successful completion, flush and close; existing
+final or partial paths are refused.
 The importer additionally verifies every selected-spin row against WAVECAR;
 a partial export is not an integration input.
 
@@ -351,13 +355,50 @@ Internal occupied/empty degeneracies require no individual-band curvature.
 schema `vaspberry.wannier-bands` version 1 and records path labels, source,
 units and output formats. See [the workflow guide](WANNIER_TRANSPORT.md).
 
+## Native Kubo individual-band CSV
+
+For `--task kubo`, `kubo-line` or `kubo-integral`, select `--bands N` for one
+band, or `--bands FIRST:LAST --per-band 1` for separate bands. Add
+`--curvature-csv PATH` to save the full-precision CSV as well as the legacy
+DAT outputs; this individual-band CSV has no automatic filename.
+Its schema is `VASPBERRY_BARE_MOMENTUM_KUBO_V3`, with columns:
+
+```text
+spin,k_index,band,kx_frac,ky_frac,kz_frac,energy_eV,omega_z_A2,min_gap_eV
+```
+
+IDs are one-based. Coordinates are fractional in the source reciprocal
+basis, energy and gap are in eV, and `omega_z_A2` is Cartesian Ωxy in Å².
+Every selected band must be isolated from every other stored band by more
+than 1e-5 eV at all source k points and spin channels. The program checks
+this before writing numerical results. A multi-band trace has the distinct
+schema below and does not contain separate band energies or curves.
+
+Version 3 records `source_nkpoints`, `source_nspin`, `source_nbands`,
+`band_min`, `band_max`, `band_rank` and `expected_rows`. The expected count is the number of source k points
+× spin channels × selected bands. The header starts with
+`result_status=INCOMPLETE`; only a terminal `result_status=PASS` after all
+successful writes marks completion. Readers check complete, unique coverage
+and finite numerical values. Older V2 files retain their original metadata
+and are accepted as `legacy_unverified`, without this completion guarantee.
+
+The exporter writes `PATH.partial` while calculating and publishes the final
+`PATH` only after successful completion, flush and close. An existing final
+or partial filename is refused. A leftover partial file is a failed-run
+artifact, not a numerical result; inspect its log before rerunning elsewhere.
+
 ## Native Kubo bundle CSV
 
-Native `-kubo_bundle 1 -kubo_csv PATH` writes
-`VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1`. It contains one row per spin channel
+Native `--task kubo --bands FIRST:LAST --curvature-csv PATH`, with two or
+more selected bands and no `--per-band 1`, writes
+`VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V2`. It contains one row per spin channel
 and source k point, with comment metadata followed by a CSV header. The
-file stores the trace curvature of bands `-ii` through `-if`, with unit
+file stores the trace curvature of the selected band range, with unit
 occupation. It has no per-band energy column or legacy `.dat` companion.
+The default trace filename is `KUBO.csv` when `--curvature-csv` is omitted.
+The numerical columns and physical bundle meaning are unchanged. Version 2
+adds explicit completion and coverage metadata; the removed native
+`--bundle` flag is not needed to produce this format.
 
 | Column | Meaning |
 |---|---|
@@ -370,7 +411,8 @@ occupation. It has no per-band energy column or legacy `.dat` companion.
 | Metadata | Meaning |
 |---|---|
 | `result_kind` | `ISOLATED_BUNDLE_TRACE` |
-| `result_status` | `PASS` after the spin/k isolation check |
+| `result_status` | Initial `INCOMPLETE`; terminal `PASS` only after all spin/k results are written successfully |
+| `source_nkpoints`, `source_nspin`, `expected_rows` | Source dimensions and required row count; trace rows = k points × spin channels |
 | `normalization` | `STANDARD_MINUS_TWO_IM`, with `A_i=i<u\|d/dk_i u>` |
 | `operator` | `WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY` |
 | `band_min`, `band_max`, `band_rank` | Selected one-based contiguous range and its size |
@@ -387,6 +429,15 @@ run. Selecting all retained source bands produces zero in that truncated
 basis, with `min_external_gap_eV=NA` and
 `zero_trace_scope=TRUNCATED_WAVECAR_BASIS`. This is not evidence that omitted
 higher states make no physical contribution.
+
+Readers require the complete expected spin/k coverage, unique row IDs,
+finite coordinates/curvature and a terminal PASS. The `NA` external-gap
+sentinel is reserved for the declared all-source-band trace above. Older
+trace V1 files remain readable as `legacy_unverified`; an old header PASS
+cannot establish that all records were successfully produced. Preserve the
+original files and rerun when the V2 guarantee is required.
+Trace export uses the same `.partial` staging and final-publication rule as
+the individual-band exporter above.
 
 Keep the matching POSCAR or WAVECAR to recover the reciprocal lattice for
 Cartesian plots. This CSV does not carry energies, integration weights or
@@ -620,7 +671,8 @@ curve = sorted((float(r['mu_eV']), float(r['sigma_e2_over_h']))
 
 For native `PAIRS.csv` or bundle CSV, skip `#` comment lines before passing
 rows to a CSV reader. Retain and inspect those comments separately: they
-identify the operator and require a final `result_status=PASS`. Pair
+identify the operator. Current schemas require terminal `result_status=PASS`;
+older curvature schemas remain explicitly legacy-unverified. Pair
 numerators are not curvature or conductivity until occupations and energy
 denominators have been applied. `import-pairs` and `pair-hall` perform those
 validated numerical stages before plotting.

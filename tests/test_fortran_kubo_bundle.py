@@ -48,7 +48,8 @@ class CompiledBundleTests(unittest.TestCase):
         helpers = routine(source, "kubo_interband_term", "function")
         helpers += "\n".join(routine(source, name) for name in (
             "kubo_bundle_gap", "check_kubo_bundle_gaps", "kubo_bundle_curvature",
-            "write_kubo_bundle_csv", "kubo_berry_curvature", "mpi_job_distribution_chain",
+            "write_kubo_bundle_csv", "kubo_berry_curvature", "mpi_job_distribution_chain", "read_kubo_coefficients",
+            "open_kubo_csv", "finish_kubo_csv",
         ))
         (cls.work / "production.f").write_text(helpers)
         flags = ["-cpp", "-O2", "-fcheck=all", "-ffixed-line-length-none"]
@@ -100,10 +101,11 @@ class CompiledBundleTests(unittest.TestCase):
         case = self.execute("degenerate")
         meta, rows = csv_rows(case / "bundle.csv")
         expected = {
-            "schema": "VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1",
+            "schema": "VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V2",
             "normalization": "STANDARD_MINUS_TWO_IM", "band_min": "1", "band_max": "2",
             "band_rank": "2", "source_nbands": "3", "gap_threshold_eV": "1e-5",
             "result_kind": "ISOLATED_BUNDLE_TRACE", "result_status": "PASS",
+            "source_nkpoints": "3", "source_nspin": "2", "expected_rows": "6",
             "no_external_states": "false", "internal_transitions": "EXCLUDED_ANALYTICALLY",
         }
         for key, value in expected.items():
@@ -120,7 +122,7 @@ class CompiledBundleTests(unittest.TestCase):
         original = (case / "bundle.csv").read_bytes()
         failed = self.run_command([str(self.work / "bundle"), "degenerate"], case, False)
         self.assertNotEqual(failed.returncode, 0)
-        self.assertIn("cannot open new Kubo bundle CSV", failed.stderr)
+        self.assertIn("cannot open new Kubo CSV", failed.stderr)
         self.assertEqual((case / "bundle.csv").read_bytes(), original)
 
     def test_external_gap_rejection_happens_before_csv_for_all_spins(self):
@@ -133,6 +135,22 @@ class CompiledBundleTests(unittest.TestCase):
                 self.assertIn("Kubo bundle is not isolated", failed.stderr)
                 self.assertFalse((case / "bundle.csv").exists())
 
+    def test_coefficient_io_and_nonfinite_result_fail_without_completion(self):
+        for mode, message in (("truncated", "cannot read Kubo coefficients"),
+                              ("overflow-result", "nonfinite local Kubo trace"),
+                              ("band-overflow", "nonfinite local Kubo curvature")):
+            for mpi in (False, True):
+                if mpi and not self.has_mpi:
+                    continue
+                case = self.work / f"guard-{mode}-{mpi}";case.mkdir()
+                command = [str(self.work / ("bundle-mpi" if mpi else "bundle")), mode]
+                if mpi:
+                    command = ["mpiexec", "-n", "2", *command]
+                result = self.run_command(command, case, False)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(message, result.stderr)
+                self.assertFalse((case / "bundle.csv").exists())
+
     def test_mpi_reduces_same_three_k_points_as_serial(self):
         if not self.has_mpi:
             self.skipTest("mpifort and mpiexec required")
@@ -141,19 +159,12 @@ class CompiledBundleTests(unittest.TestCase):
         self.assertEqual((serial / "bundle.csv").read_bytes(), (parallel / "bundle.csv").read_bytes())
         self.assertEqual((serial / "all.csv").read_bytes(), (parallel / "all.csv").read_bytes())
 
-    def test_parser_requires_kubo_only_and_csv_without_changing_default(self):
-        invalid = [(["-kubo_bundle", "1"], "needs -kubo_csv"),
-                   (["-kubo_bundle", "2"], "must be 0 or 1"),
-                   (["-kubo_bundle", "1", "-kubo_csv", "x.csv"], "requires Kubo-only"),
-                   (["-kubo_bundle", "1", "-kubo", "2", "-kubo_csv", "x.csv", "-z2", "1"],
-                    "requires Kubo-only")]
-        for args, message in invalid:
-            with self.subTest(args=args):
-                result = self.run_command([str(self.work / "parse"), *args], self.work, False)
-                self.assertNotEqual(result.returncode, 0)
-                self.assertIn(message, result.stderr)
-        self.run_command([str(self.work / "parse"), "-kubo", "2", "-kubo_bundle", "1",
-                          "-ii", "1", "-if", "2", "-kubo_csv", "x.csv"], self.work)
+    def test_parser_rejects_removed_selector_and_accepts_automatic_trace(self):
+        for flag in ("--bundle", "-kubo_bundle"):
+            result = self.run_command([str(self.work / "parse"), flag, "1"], self.work, False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("removed", result.stderr)
+        self.run_command([str(self.work / "parse"), "--task", "kubo", "--bands", "1:2"], self.work)
 
 
 if __name__ == "__main__":

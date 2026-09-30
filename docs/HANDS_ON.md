@@ -4,7 +4,7 @@ The main workflow is **VASP → WAVECAR → VASPBERRY execution with Intel MPI �
 
 For routine Hall and PROCAR analysis, start with the [single-file postprocessing guide](POSTPROCESSING.md) and [public Bi example](../examples/features/simple-postprocess/README.md): `python3 tools/vaspberry_post.py run analysis.ini` executes VASPBERRY and performs the requested numerical postprocessing and `python3 tools/vaspberry_post.py plot results/run01` draws them. An optional `python3 tools/vaspberry_post.py check analysis.ini` checks the inputs before running. The [settings reference](POSTPROCESSING_REFERENCE.md) lists the same input, output and naming conventions. The explicit stages below explain the native outputs and provide advanced controls.
 
-Use VASPBERRY 1.6.2 for this walkthrough. Start in the repository root in Bash on a Linux host with Intel oneAPI Fortran, oneMKL and Intel MPI available. The following uses four MPI ranks; select the rank count allowed by your cluster allocation. Choose a fresh output directory when repeating a calculation.
+Use VASPBERRY 1.6.3 for this walkthrough. See the [migration guide](MIGRATION.md#native-kubo-band-selection) when updating older commands. Start in the repository root in Bash on a Linux host with Intel oneAPI Fortran, oneMKL and Intel MPI available. The following uses four MPI ranks; select the rank count allowed by your cluster allocation. Choose a fresh output directory when repeating a calculation.
 
 ```bash
 source /opt/intel/oneapi/setvars.sh
@@ -15,7 +15,7 @@ vb_bin="$repo_dir/build/vaspberry-ifx-mpi"
 mpiexec -n 4 "$vb_bin" --help
 ```
 
-Use your site's oneAPI setup path or modules when they differ. A retained Intel Classic installation can use `make ifort-mpi` and `vb_bin="$repo_dir/build/vaspberry-ifort-mpi"`. [Build details and GNU alternatives](BUILD.md) include the byte-RECL input requirement and compiler validation status. [Native commands](NATIVE_COMMANDS.md) explain arguments; the [report-to-example map](../examples/REPORT_REPRODUCTION.md) links material inputs and figures.
+Use your site's oneAPI setup path or modules when they differ. A retained Intel Classic installation can use `make ifort-mpi` and `vb_bin="$repo_dir/build/vaspberry-ifort-mpi"`. [Build details and GNU alternatives](BUILD.md) describe automatic byte/word RECL detection and compiler validation status. [Native commands](NATIVE_COMMANDS.md) explain arguments; the [report-to-example map](../examples/REPORT_REPRODUCTION.md) links material inputs and figures.
 
 Explore the native help before the first calculation:
 
@@ -48,7 +48,7 @@ mkdir -p results/first-kubo
   cd results/first-kubo
   mpiexec -n 4 "$vb_bin" --task kubo \
     --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-    --bands 1:18 --bundle 1 --curvature-csv KUBO.csv \
+    --bands 1:18 --curvature-csv KUBO.csv \
     > vaspberry.log 2> vaspberry.err
 )
 ```
@@ -57,10 +57,17 @@ mkdir -p results/first-kubo
 |---|---|
 | `--task kubo` | Calculate point curvature at the k points already in WAVECAR |
 | `--wavecar` | Read this VASP wavefunction file |
-| `--bands 1:18 --bundle 1` | Trace the isolated group as a whole, allowing internal degeneracies |
+| `--bands 1:18` | Trace the isolated group as a whole, allowing internal degeneracies |
 | `--curvature-csv KUBO.csv` | Save the numerical table separately from the console log |
 
 The input WAVECAR supplies eigenvalues, plane-wave coefficients, k points and the lattice. VASPBERRY detects its spinor components automatically. `results/first-kubo/KUBO.csv` contains 48 rows, with `spin,k_index,kx_frac,ky_frac,kz_frac,omega_z_A2,min_external_gap_eV`. Here `omega_z_A2` is the already calculated occupied-bundle Ωxy in Å²; the gap is in eV. Comment lines beginning `#` record the operator, normalization, band selection and PASS status. Keep the CSV and native log.
+
+A multi-band range selects the whole subspace by default. Its gap to every excluded
+source band must exceed 1e-5 eV, while internal degeneracies are allowed.
+The trace filename defaults to `KUBO.csv` if `--curvature-csv` is omitted.
+For one band use `--bands N`; for several separate bands use
+`--bands FIRST:LAST --per-band 1`. Each separate band must satisfy the same
+gap threshold against every other stored band, including selected neighbors.
 
 This input is a line path: it supports a curvature-versus-path-sample plot. A full-zone map or Hall integral needs the separately supplied full-mesh recipe.
 

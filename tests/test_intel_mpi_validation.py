@@ -4,6 +4,7 @@ import importlib.util
 import math
 from pathlib import Path
 import subprocess
+import struct
 import tempfile
 import unittest
 
@@ -68,16 +69,44 @@ class IntelMPIValidationTests(unittest.TestCase):
     def test_read_export_requires_final_pass_and_version(self):
         text = ("# schema=VASPBERRY_BARE_MOMENTUM_KUBO_PAIRS_V1\n"
                 "# normalization=STANDARD_MINUS_TWO_IM\n# vaspberry_version=1.2.3\n"
-                "x,y\n1,2\n# result_status=PASS\n")
+                "# source_nkpoints=1\n# source_nspin=1\n# source_nbands=2\n# expected_rows=1\n"
+                "spin,k_index,n_band,m_band\n1,1,1,2\n# result_status=PASS\n")
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "pairs.csv"
             path.write_text(text)
-            self.assertEqual(check.read_export(path, "PAIRS", "1.2.3"), [{"x": 1., "y": 2.}])
+            self.assertEqual(check.read_export(path, "PAIRS", "1.2.3"),
+                             [dict(spin=1.,k_index=1.,n_band=1.,m_band=2.)])
             with self.assertRaisesRegex(ValueError, "vaspberry_version"):
                 check.read_export(path, "PAIRS", "9.9.9")
             path.write_text(text.replace("# result_status=PASS\n", ""))
             with self.assertRaisesRegex(ValueError, "result_status"):
                 check.read_export(path, "PAIRS", "1.2.3")
+            path.write_text(text + "# data appended after completion\n")
+            with self.assertRaisesRegex(ValueError, "terminal"):
+                check.read_export(path, "PAIRS", "1.2.3")
+
+    def test_synthetic_layout_fixtures_differ_only_in_logical_stride(self):
+        with tempfile.TemporaryDirectory() as directory:
+            paths = [Path(directory)/name for name in ("byte", "word4")]
+            for path, word4 in zip(paths, (False, True)):
+                check.write_synthetic_wavecar(path, word4=word4)
+            byte, word4 = [path.read_bytes() for path in paths]
+            self.assertEqual(len(byte), 18432)
+            self.assertEqual(struct.unpack_from("<d", byte)[0],1024.)
+            self.assertEqual(struct.unpack_from("<d", word4)[0],256.)
+            self.assertEqual(byte[8:],word4[8:])
+            for corruption in ("truncated", "nan", "inf", "dimensions"):
+                path=Path(directory)/corruption
+                check.write_synthetic_wavecar(path,corruption=corruption)
+                self.assertNotEqual(path.read_bytes(),byte)
+                if corruption=="truncated":
+                    self.assertEqual(path.read_bytes(),byte[:-1024])
+
+    def test_harness_help_needs_only_the_python_standard_library(self):
+        import sys
+        result=subprocess.run([sys.executable,"-S",str(ROOT/"tests/run_intel_mpi_validation.py"),"--help"],
+                              capture_output=True,text=True,check=True)
+        self.assertIn("--serial",result.stdout)
 
     def test_make_checks_use_matching_wrapper_and_intel_launcher(self):
         for compiler in ("ifx", "ifort"):

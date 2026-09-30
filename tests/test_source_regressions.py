@@ -54,7 +54,7 @@ class FortranSourceRegressionTests(unittest.TestCase):
             self.source.replace(" ", "").lower(),
         )
 
-    def test_fortran_existing_options_are_preserved_with_opt_in_bundle(self):
+    def test_fortran_legacy_options_preserved_except_removed_bundle(self):
         expected_options = {
             "-atlist",
             "-cd",
@@ -102,11 +102,11 @@ class FortranSourceRegressionTests(unittest.TestCase):
                 self.parse,
             )
         )
-        # Keep every existing switch and review additions explicitly. The new
-        # bundle calculation must not change the default individual-band path.
+        # Keep the original legacy switches; the later bundle switch is removed.
+        # Modern explicit ranges choose the subspace, legacy ranges keep per-band output.
         self.assertTrue(expected_options.issubset(actual_options),
                         f"removed options: {expected_options - actual_options}")
-        self.assertEqual(actual_options - expected_options, {"-kubo_bundle", "-kubo_pairs"})
+        self.assertEqual(actual_options - expected_options, {"-kubo_pairs"})
         self.assertRegex(self.parse, r"(?im)^\s*ikubo_bundle\s*=\s*0\s*$")
         self.assertNotRegex(self.parse, r"(?i)transport|hall|ahc")
 
@@ -685,7 +685,8 @@ class FortranSourceRegressionTests(unittest.TestCase):
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
             source = source_path.read_text(encoding="utf-8", errors="strict")
             with self.subTest(source=source_path.name):
-                self.assertEqual(compact_fortran(source).count(expected_open), 2)
+                self.assertEqual(compact_fortran(source).count(expected_open),
+                                 1 if source_path == SOURCE_PATH else 2)
 
     def test_mpi_spin_index_write_does_not_depend_on_column_73(self):
         lines = [line for line in self.source.splitlines() if "SPIN INDEX s=" in line]
@@ -735,8 +736,8 @@ class FortranSourceRegressionTests(unittest.TestCase):
         for source_path in (SOURCE_PATH, GFORTRAN_SOURCE_PATH):
             source = source_path.read_text(encoding="utf-8", errors="strict")
             with self.subTest(source=source_path.name):
-                self.assertIn("PROGRAM VASPBERRY Version 1.6.2", source)
-                self.assertIn("# VASPBERRY (Ver 1.6.2)", source)
+                self.assertIn("PROGRAM VASPBERRY Version 1.6.3", source)
+                self.assertIn("# VASPBERRY (Ver 1.6.3)", source)
 
 
 if __name__ == "__main__":

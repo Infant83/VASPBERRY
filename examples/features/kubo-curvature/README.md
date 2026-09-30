@@ -63,26 +63,32 @@ mkdir -p results/mos2-kubo-mesh results/mos2-kubo-path
   cd results/mos2-kubo-mesh
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/mos2-fullmesh-vasp/WAVECAR" \
-    --task kubo --bundle 1 --bands 1:18 \
+    --task kubo --bands 1:18 \
     --curvature-csv KUBO.csv > vaspberry.log
 )
 (
   cd results/mos2-kubo-path
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/mos2-path-vasp/WAVECAR" \
-    --task kubo --bundle 1 --bands 1:18 \
+    --task kubo --bands 1:18 \
     --curvature-csv KUBO.csv > vaspberry.log
 )
 ```
 
 Both calculations read the VASP wavefunctions directly. No Wannierization
 or fitted Hamiltonian is required. `--task kubo` uses every stored point and
-creates no new sampling. `--bundle 1` writes one trace-curvature row per
-k point and spin, including the minimum gap to excluded states. It rejects
+creates no new sampling. A range such as `--bands 1:18` automatically writes
+one trace-curvature row per k point and spin, including the minimum gap to
+excluded states. `KUBO.csv` is the default output for a multi-band trace. It rejects
 external gaps ≤10⁻⁵ eV before creating the CSV; internal valence-band
 degeneracies are allowed. The native outputs are
 `results/mos2-kubo-mesh/KUBO.csv` and `results/mos2-kubo-path/KUBO.csv`.
 See the [output format](../../../docs/OUTPUT_FORMAT.md) for their columns.
+
+For a single isolated band, use `--bands 18`. To request separate curves
+for multiple bands, add `--per-band 1`; every selected band must remain
+separated from all other stored bands by more than 10⁻⁵ eV. The
+[valley example](valleys/) provides such a region for bands 17 and 18.
 
 For MPI, build with `make mpi` and replace the executable with
 `mpiexec -n 2 "$repo_dir/build/vaspberry-mpi"` in each command.
@@ -101,8 +107,9 @@ python3 tools/plot_berry_panels.py \
   --title '1H-MoS2' --output results/mos2-kubo-panels/figure.png
 ```
 
-This Python step reads the two native curvature tables and the stored VASP
-band energies; it does not recalculate curvature. It writes the figure,
+Here `--method kubo-bundle` selects the plotting reader for a trace CSV; it
+is not a native calculation option. This Python step reads the two native
+curvature tables and the stored VASP band energies; it does not recalculate curvature. It writes the figure,
 plotted path values and an unchanged-energy band table. Use a PDF output
 suffix for a vector figure.
 
@@ -167,8 +174,9 @@ python3 examples/features/kubo-curvature/run_fullmesh.py \
   --output-dir results/mos2-kubo-checked
 ```
 
-Its defaults are `--mode bundle --map-style smooth`. Use the native commands
-above when selecting another material, band bundle or sampling.
+The helper selects `--bands 1:18` and uses `--map-style smooth` by default.
+There is no separate bundle mode. Use the native commands above when selecting
+another material, band range or sampling.
 
 ## A meaningful single-band example
 
@@ -179,10 +187,12 @@ band structure and numerical reference files. This region supports an
 individual-band interpretation; Γ does not because its partners touch there.
 
 The earlier whole-zone band-18 [cell map](reference/map-path/figure.png)
-and [raw results](reference/map-path/result.json) remain available. To
-reproduce that version, add `--mode band --map-style cells` to the runner
-above. It masks unresolved individual bands and is not the occupied-bundle
-quantity used in the main figure.
+and [raw results](reference/map-path/result.json) remain as historical data.
+Those old calculations retained unresolved individual-band rows and masked
+them during plotting. Current native calculations reject a selected single
+band or a `--per-band 1` request when any band gap is ≤10⁻⁵ eV; they do not
+enlarge the selected band range. Use the local valley example for separate
+band curves, or the isolated occupied range for a full path or mesh trace.
 
 ## Supplied 32-band path example
 
@@ -194,7 +204,7 @@ occupied bundle so that its internal degeneracy at Γ is handled correctly:
 mkdir -p results/mos2-path
 build/vaspberry --task kubo \
   --wavecar examples/1H-MoS2/KPATH/2.band/WAVECAR \
-  --bands 1:18 --bundle 1 \
+  --bands 1:18 \
   --curvature-csv results/mos2-path/KUBO.csv
 ```
 
@@ -204,31 +214,31 @@ map/path calculation above. Inspect the native CSV directly. The composite
 plotter above requires a full mesh and a matching path, so it is not a
 standalone plotting command for this line file.
 
-### Historical band-resolved path reference
-
-The earlier band-17/18 calculation and its numerical reference remain
-available. Its explicit native command is:
+To calculate and draw this supplied path in one step:
 
 ```bash
-repo_dir="$PWD"
-mkdir -p results/mos2-kubo-supplied-path
-(
-  cd results/mos2-kubo-supplied-path
-  "$repo_dir/build/vaspberry" \
-    --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-    --task kubo --bands 17:18 --curvature-csv KUBO.csv --output BERRYCURV \
-    > vaspberry.log
-)
+python3 examples/features/kubo-curvature/run.py \
+  --binary build/vaspberry --output-dir results/mos2-kubo-supplied-path
 ```
 
-Here the output is band-resolved, and unresolved individual-band points
-must remain marked. The optional `examples/features/kubo-curvature/run.py`
-helper calculates this path again in a new `--output-dir` and produces its
-reference figure; it is not a plot-only command.
+The helper checks all 48 trace rows against the WAVECAR coordinates and the
+occupied-to-empty gap. It plots bands 17–19 for energy context and the
+occupied-space trace curvature, including the two stored Γ points.
+
+### Historical band-resolved path reference
 
 [Original path figure](reference/figure.png) · [PDF](reference/figure.pdf) ·
 [Summary](reference/summary.csv) · [Native Kubo CSV](reference/KUBO.csv).
-It gives band-18 valley values about ±6.67 Å² with intermediate bands 1–32.
-That stored result is separate from the matched 26-band map/path shown above.
-A band path alone cannot determine a Brillouin-zone Chern number or Hall
-conductivity; see the [Bi Hall example](../hall-valley/) for a full occupied-space integral.
+The archived calculation contains bands 17 and 18 separately: each has 44
+isolated points and four unresolved points on the supplied 48-point path.
+Its band-18 valley values are about ±6.67 Å² with intermediate bands 1–32.
+The saved raw CSV and execution provenance remain unchanged; they are not
+outputs of the current helper and are not a benchmark for its different,
+occupied-space trace. Current `--per-band 1` correctly rejects this whole
+path at the unresolved points. See the valley tutorial for valid individual
+band calculations.
+
+The supplied 32-band path and the matched 26-band map/path above are separate
+VASP inputs. A band path alone cannot determine a Brillouin-zone Chern number
+or Hall conductivity; see the [Bi Hall example](../hall-valley/) for a full
+occupied-space integral.

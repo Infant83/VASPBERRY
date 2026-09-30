@@ -48,15 +48,15 @@ make help
 ```
 
 To install the fixed release instead, download **Source code (tar.gz)** or
-**Source code (zip)** from the [v1.6.2 release page](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.2),
-extract it, and enter `VASPBERRY-1.6.2`. The same Makefile commands work without
+**Source code (zip)** from the [v1.6.3 release page](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.3),
+extract it, and enter `VASPBERRY-1.6.3`. The same Makefile commands work without
 Git metadata. For example:
 
 ```bash
-curl -fL https://github.com/Infant83/VASPBERRY/archive/refs/tags/v1.6.2.tar.gz \
-  -o VASPBERRY-1.6.2.tar.gz
-tar -xzf VASPBERRY-1.6.2.tar.gz
-cd VASPBERRY-1.6.2
+curl -fL https://github.com/Infant83/VASPBERRY/archive/refs/tags/v1.6.3.tar.gz \
+  -o VASPBERRY-1.6.3.tar.gz
+tar -xzf VASPBERRY-1.6.3.tar.gz
+cd VASPBERRY-1.6.3
 make help
 ```
 
@@ -133,7 +133,7 @@ mkdir results-intel-kubo-01
   cd results-intel-kubo-01
   mpiexec.hydra -n 4 "$repo_dir/build/vaspberry-ifx-mpi" --task kubo \
     --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
-    --bands 1:18 --bundle 1 --curvature-csv KUBO.csv \
+    --bands 1:18 --curvature-csv KUBO.csv \
     > vaspberry.log 2> vaspberry.err
 )
 ```
@@ -373,7 +373,7 @@ remove the legacy-interface flag merely to silence compiler diagnostics.
 | MPI starts incorrectly, reports rank/PMI errors, or hangs | Check the linked MPI, wrapper, and launcher come from the same installation; use the scheduler's allocation and launcher. Do not launch an Intel MPI binary with Open MPI or vice versa. |
 | MPI reports too few slots | Request enough scheduler ranks or reduce `-n`. Local Open MPI smoke tests can use the documented `--oversubscribe` override. |
 | Compiler changes appear to leave an old executable | Use a fresh `BUILD_DIR`; command/flag changes are tracked, but replacement software under the same path may require rebuilding explicitly. |
-| WAVECAR headers or record reads are invalid | Check the native byte-RECL input contract below and that the file is a complete WAVECAR, not a Git LFS pointer. This is an input-format issue, not a reason to change numerical thresholds. |
+| WAVECAR headers or record reads are invalid | Check automatic RECL detection below and that the file is a complete WAVECAR, not a Git LFS pointer. This is an input-format issue, not a reason to change numerical thresholds. |
 
 ## What the MPI check covers
 
@@ -438,23 +438,20 @@ VASPBERRY output names are fixed during each run.
 
 ## WAVECAR record length and numerical-library ABI
 
-VASPBERRY reads `WAVECAR` with unformatted direct access. The writer and reader
-must therefore agree on the meaning of `RECL`. GNU Fortran uses byte file
-storage units for this build. The supplied Intel targets also use
-`-assume byterecl` for this byte-RECL input contract; without it, the same
-integer record length may be interpreted in four-byte units.
-The source explicitly opens both header and data views with
-`FORM='UNFORMATTED'` and `ACTION='READ'`.
+The native reader detects whether the WAVECAR header's `RECL` value counts
+bytes or legacy four-byte words, then reads the corresponding byte offsets.
+It checks the candidate headers and record layout and rejects malformed or
+ambiguous inputs. No file conversion or manual layout option is needed;
+the original WAVECAR remains unchanged.
+The native log reports the header's logical RECL, physical byte stride and
+detected layout so the input convention can be retained with the calculation.
 
-A record-length mismatch can leave the first header partly plausible while
-making `NKPOINT`, `NBANDS`, `ENCUT`, or lattice data invalid. The sound fix is
-to match the reader to the writer's record convention or regenerate the
-`WAVECAR` with the byte convention used by the supplied builds. Historical
-four-byte-word-RECL files need a matching validated Intel build or a regenerated
-byte-RECL input; the native GNU executable does not autodetect that convention.
-The Python WAVECAR reader identifies both layouts, which does not change the
-native executable's file contract. Do not tune scientific thresholds around
-corrupt input.
+GNU targets use byte file-storage units. Supplied Intel targets retain
+`-assume byterecl` so that the reader's internal byte offsets have the same
+meaning. Keep that flag even when reading a word-RECL source file. The reader
+still requires a complete supported WAVECAR (`RTAG=45200`); automatic RECL
+detection does not make unsupported coefficient formats or corrupt records
+valid. Preserve the original VASP/compiler provenance and the native log.
 
 The source calls `ZGESVD` and `ZGETRF` with default 32-bit Fortran integers.
 Use the LP64 BLAS/LAPACK interface. Do not add GNU

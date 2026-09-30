@@ -35,7 +35,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-__version__ = "1.6.2"
+__version__ = "1.6.3"
 KB_EV_PER_K = 8.617333262145e-5
 TWO_PI = 2.0 * math.pi
 

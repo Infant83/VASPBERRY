@@ -11,8 +11,10 @@ method**, called the **Fukui method** below. Z₂ uses the distinct **Fukui–Ha
 Build with `make serial` and run `build/vaspberry --help` for the native CLI.
 The older executable name `build/vaspberry-gfortran` and short flags remain
 supported; the guides use descriptive task and option names. Use VASPBERRY
-1.6.1 for the complete set of commands below, including `spin-chern`,
-`spin-kubo` and its optional `--sum-bands` control.
+1.6.3 for the complete commands below, including automatic Kubo subspace
+selection and `--per-band 1` for separate bands. The
+[migration guide](../docs/MIGRATION.md#native-kubo-band-selection) lists the
+removed native flags and their replacements.
 
 The core guides follow the same sequence: **VASP input → VASPBERRY execution →
 output file → postprocessing and figure**. The [technical report](../docs/TECHNICAL_REPORT.md)
@@ -128,7 +130,7 @@ mkdir -p results/mos2-kubo-mpi
   cd results/mos2-kubo-mpi
   mpiexec -np 2 ../../build/vaspberry-mpi \
     --wavecar ../../examples/1H-MoS2/KPATH/2.band/WAVECAR \
-    --task kubo --bundle 1 --bands 1:18 --curvature-csv KUBO.csv
+    --task kubo --bands 1:18 --curvature-csv KUBO.csv
 )
 ```
 
