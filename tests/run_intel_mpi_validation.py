@@ -141,9 +141,11 @@ def run_recorded(command, directory, *, expected_success=True, diagnostic=None):
             raise RuntimeError(f"native command failed ({result.returncode}); see {directory}")
         if not expected_success and result.returncode != 1:
             raise ValueError(f"expected controlled exit 1, got {result.returncode}; see {directory}")
-        if diagnostic and diagnostic.lower() not in ((directory / "stdout.log").read_text()
-                                                     + (directory / "stderr.log").read_text()).lower():
-            raise ValueError(f"expected diagnostic {diagnostic!r}; see {directory}")
+        if diagnostic:
+            logs = "\n".join((directory / name).read_text() for name in ("stdout.log", "stderr.log"))
+            # List-directed Fortran output may wrap a diagnostic across lines.
+            if " ".join(diagnostic.lower().split()) not in " ".join(logs.lower().split()):
+                raise ValueError(f"expected diagnostic {diagnostic!r}; see {directory}")
         if not expected_success:
             for path in directory.glob("*.csv*"):
                 if path.read_text().strip().endswith("# result_status=PASS"):

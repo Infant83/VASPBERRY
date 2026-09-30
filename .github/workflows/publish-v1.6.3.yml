@@ -3,6 +3,7 @@ name: Publish VASPBERRY 1.6.3
 on:
   # Adding or explicitly updating this workflow is the automatic release intent.
   # Ordinary VERSION, documentation and CI changes must not restart old publishers.
+  # Revalidate the candidate with compiler-independent diagnostic matching.
   push:
     branches: [master]
     paths: ['.github/workflows/publish-v1.6.3.yml']

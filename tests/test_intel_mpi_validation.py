@@ -1,10 +1,12 @@
 """Failure guards for the real-input Intel MPI numerical release check."""
 import copy
 import importlib.util
+import json
 import math
 from pathlib import Path
 import subprocess
 import struct
+import sys
 import tempfile
 import unittest
 
@@ -13,8 +15,52 @@ SPEC = importlib.util.spec_from_file_location("intel_mpi_check", ROOT / "tests/r
 check = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(check)
 
+# Identical stderr captured from hosted ifx/ifort runs on the public MoS2 path.
+INTEL_WRAPPED_GAP_STDERR = (
+    " *** error - individual Kubo band is not \n"
+    " isolated: spin,k_index,band,other_band,min_gap_eV =            1          23\n"
+    "          17          18  4.666991826107747E-006\n"
+    " *** requires all gaps > 1e-5 eV; explicitly \n"
+    " choose a separated --bands FIRST:LAST subspace \n"
+    " without --per-band 1; selection was not enlarged\n"
+    "1\n"
+)
+
 
 class IntelMPIValidationTests(unittest.TestCase):
+    def diagnostic_command(self, stderr, exit_code=1):
+        return [sys.executable, "-c", f"import sys; sys.stderr.write({stderr!r}); sys.exit({exit_code})"]
+
+    def test_recorded_rejection_accepts_intel_wrapped_diagnostic(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for compiler in ("ifx", "ifort"):
+                output=Path(directory)/compiler
+                check.run_recorded(self.diagnostic_command(INTEL_WRAPPED_GAP_STDERR),output,
+                                   expected_success=False,diagnostic="not isolated")
+                record=json.loads((output/"command.json").read_text())
+                self.assertEqual(record["exit_code"],1)
+                self.assertEqual(record["status"],"EXPECTED_REJECTION")
+                self.assertEqual((output/"stderr.log").read_text(),INTEL_WRAPPED_GAP_STDERR)
+
+    def test_recorded_rejection_still_requires_the_requested_diagnostic(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output=Path(directory)/"wrong-diagnostic"
+            with self.assertRaisesRegex(ValueError,"expected diagnostic"):
+                check.run_recorded(self.diagnostic_command("*** error - cannot open WAVECAR\n"),output,
+                                   expected_success=False,diagnostic="not isolated")
+            self.assertEqual(json.loads((output/"command.json").read_text())["status"],"FAIL")
+
+    def test_wrapped_diagnostic_does_not_override_wrong_exit_status(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for exit_code, error in ((0,RuntimeError),(2,ValueError)):
+                output=Path(directory)/f"exit-{exit_code}"
+                with self.subTest(exit_code=exit_code),self.assertRaises(error):
+                    check.run_recorded(self.diagnostic_command(INTEL_WRAPPED_GAP_STDERR,exit_code),output,
+                                       expected_success=False,diagnostic="not isolated")
+                record=json.loads((output/"command.json").read_text())
+                self.assertEqual(record["exit_code"],exit_code)
+                self.assertEqual(record["status"],"FAIL")
+
     @classmethod
     def setUpClass(cls):
         cls.pairs, cls.bundle = [], []
