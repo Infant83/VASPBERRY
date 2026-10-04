@@ -178,6 +178,30 @@ end subroutine
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('input', result.stderr)
 
+    def test_directory_probe_accepts_directory_links_and_rejects_file_links(self):
+        base = self.work / 'directory probe'
+        base.mkdir()
+        (base / 'valid input').mkdir()
+        (base / 'directory alias').symlink_to('valid input', target_is_directory=True)
+        (base / 'regular file').write_text('not a directory')
+        (base / 'file alias').symlink_to('regular file')
+        (base / 'broken alias').symlink_to('missing')
+        valid = ('.', 'directory probe/valid input', 'directory probe/directory alias')
+        invalid = ('directory probe/regular file', 'directory probe/file alias',
+                   'directory probe/missing', 'directory probe/broken alias')
+        for binary in (self.binary, self.legacy_parser):
+            for path in (*valid, *invalid):
+                with self.subTest(binary=binary.name, path=path):
+                    result = subprocess.run([str(binary), '--input-dir', path,
+                                             '-f', 'explicit.wave'], cwd=self.work,
+                                            capture_output=True, text=True)
+                    if path in valid:
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        self.assertEqual(result.stdout.splitlines()[0], 'explicit.wave')
+                    else:
+                        self.assertNotEqual(result.returncode, 0)
+                        self.assertIn('must be an existing directory', result.stderr)
+
     def test_selected_range_defaults_to_trace_and_per_band_is_explicit(self):
         trace = ["--task", "kubo", "--bands", "1:18"]
         for equivalent in (["--bands", "1:18", "-kubo", "2"],

@@ -20,6 +20,19 @@ def sha(path):
     return result.hexdigest()
 
 
+def adapt_example_config(source, *, wavecar, binary, output):
+    """Keep input paths valid when copying a public INI into a CI result folder."""
+    config = configparser.ConfigParser(interpolation=None)
+    config.read(source)
+    wavecar = Path(wavecar).resolve()
+    # input_dir is relative to the INI location, independently of --wavecar.
+    # The copied INI must explicitly name the supplied input's real directory.
+    config['run'].update(input_dir=str(wavecar.parent), wavecar=str(wavecar),
+                         binary=str(Path(binary).resolve()),
+                         output=str(Path(output).resolve()), mpi_procs='1')
+    return config
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--wavecar', type=Path, required=True)
@@ -32,13 +45,10 @@ def main():
         'wavecar': sha(args.wavecar), 'binary': sha(args.binary)})
     try:
         for name in ('bi', 'bi-rescan'):
-            config = configparser.ConfigParser(interpolation=None)
             source = ROOT / f'examples/features/simple-postprocess/{name}.ini'
-            config.read(source)
             receipt['inputs'][name+'.ini'] = sha(source)
-            config['run'].update(wavecar=str(args.wavecar.resolve()),
-                                 binary=str(args.binary.resolve()),
-                                 output=str(output/name), mpi_procs='1')
+            config = adapt_example_config(source, wavecar=args.wavecar,
+                                          binary=args.binary, output=output/name)
             settings = output/(name+'.ini')
             with settings.open('w') as stream:
                 config.write(stream)

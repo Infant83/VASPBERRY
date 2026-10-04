@@ -214,6 +214,27 @@ def contract_checks(prefix, mode, output, public_wavecar, fixtures, version):
             directory = output / f"{mode}-{layout}-{label}"
             run_recorded(prefix + ["--wavecar", str(fixtures[layout]), "--spinor", "1", *flags], directory)
             tables[layout][kind] = read_export(directory / filename, kind, version)
+    # Directory INQUIRE semantics differ between GNU and Intel. Exercise the
+    # real source-directory route on every serial/MPI compiler, including spaces,
+    # and ensure explicit file overrides never waive a bad directory.
+    source_directory = output / f"{mode} input directory"
+    source_directory.mkdir()
+    shutil.copyfile(fixtures["byte"], source_directory / "WAVECAR")
+    directory = output / f"{mode}-input-directory"
+    run_recorded(prefix + ["--input-dir", str(source_directory), "--spinor", "1",
+                          "--task", "kubo", "--kubo-source", "wavecar", "--bands", "1:2"], directory)
+    selected = read_export(directory / "KUBO.csv", "BUNDLE", version)
+    checks["input_directory_with_spaces"] = compare_rows(
+        selected, tables["byte"]["BUNDLE"], label="input directory versus explicit WAVECAR")
+    for label, bad_directory in (("missing", output / f"{mode}-missing-input"),
+                                  ("regular-file", fixtures["byte"])):
+        directory = output / f"{mode}-input-directory-{label}"
+        run_recorded(prefix + ["--input-dir", str(bad_directory), "--wavecar", str(fixtures["byte"]),
+                              "--spinor", "1", "--task", "kubo", "--kubo-source", "wavecar", "--bands", "1:2"],
+                     directory, expected_success=False, diagnostic="must be an existing directory")
+        if list(directory.glob("*.csv")):
+            raise ValueError(f"directory rejection must precede output: {directory}")
+        checks[f"input_directory_{label}"] = "EXPECTED_REJECTION_BEFORE_OUTPUT"
     for kind in ("BUNDLE", "FULLTRACE", "BAND", "PAIRS"):
         checks[f"byte_vs_word4_{kind.lower()}"] = compare_rows(tables["byte"][kind], tables["word4"][kind], label=kind)
     for corruption in ("truncated", "nan", "inf", "dimensions"):

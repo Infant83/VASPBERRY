@@ -36,13 +36,22 @@ commands passed, including disjoint `--bands 1:2,4`, six weighted μ/T points,
 and native mesh integration. Its plot records the selected contribution and
 band IDs in both the visible title and checksum-bound metadata.
 
-The release-wide local suite passed **1,000 tests with no skips** on macOS.
+The release-wide local suite passed **1,002 tests with no skips** on macOS.
 GNU serial/MPI build and runtime checks passed. The real standard optical
 6×6 selected μ/T calculation was repeated and matched the independent
 direct-column reference within 7.47×10⁻¹⁴ e²/h; the existing occupied-space
 serial/MPI results were unchanged. The 34-page PDF was rendered again:
 four changed pages passed visual inspection, and the other thirty page
 renders matched the previously reviewed report.
+
+The first remote candidate exposed a compiler-dependent directory check
+in the Intel MPI runs and an input-directory override missing from the
+relocated-INI example harness. Both were corrected before publication.
+The final native directory probe passed 25 focused CLI tests, and the
+expanded serial/MPI validation driver passed locally with GNU on actual
+MoS₂ data. The relocated public Bi example also passed calculation, cached
+rescan and plot generation. Final Intel results are required from the
+exact-commit remote checks below.
 
 Exact-commit remote receipts are recorded in the publication body after
 the required checks finish. No unexecuted compiler or workflow job is

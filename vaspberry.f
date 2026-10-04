@@ -5632,6 +5632,8 @@
      &    klist_fname,sw_fname,atlist_fname,flag_atom_project,
      &    theta,phi,kubo_csv,ikubo_bundle,kubo_pairs)
       use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+      use, intrinsic :: iso_c_binding, only: c_char,c_ptr,c_int,
+     &   c_null_char,c_associated
       implicit real*8(a-h,o-z)
       character*256 filename,foname,fbz,ver_tag,vdirec
       character*256 foname_base
@@ -5643,6 +5645,23 @@
       character*256 input_dir
       character*257 input_prefix
       logical wavecar_seen,input_dir_exists
+      character(kind=c_char) dir_cpath(len(input_dir)+1)
+      type(c_ptr) dir_resolved
+      integer dir_length,dir_i
+      integer(c_int) dir_status
+      interface
+       function cli_opendir(path) bind(C,name='opendir') result(pointer)
+        import c_char,c_ptr
+        character(kind=c_char),intent(in)::path(*)
+        type(c_ptr) pointer
+       end function cli_opendir
+       function cli_closedir(pointer) bind(C,name='closedir')
+     & result(status)
+        import c_ptr,c_int
+        type(c_ptr),value::pointer
+        integer(c_int) status
+       end function cli_closedir
+      end interface
       integer task_kubo,task_cd,task_vel,task_z2
       logical modern_cli,modern_option,task_seen
       logical modern_bands,per_band_seen,modern_kubo
@@ -6067,9 +6086,21 @@
       enddo
 ! The input directory only supplies omitted known input filenames. It never
 ! changes cwd, explicit relative paths, outputs, or auxiliary path lists.
-      inquire(file=trim(input_dir)//'/.',exist=input_dir_exists,
-     &        iostat=cli_ios)
-      if(cli_ios.ne.0.or..not.input_dir_exists)then
+! INQUIRE(FILE=directory) is compiler-dependent: Intel treats a directory
+! as a non-file. POSIX opendir tests the directory itself on supported
+! Linux/macOS hosts; close it immediately without reading entries or chdir.
+      dir_length=len_trim(input_dir)
+      dir_cpath=c_null_char
+      do dir_i=1,dir_length
+       dir_cpath(dir_i)=input_dir(dir_i:dir_i)
+      enddo
+      dir_resolved=cli_opendir(dir_cpath)
+      input_dir_exists=c_associated(dir_resolved)
+      if(input_dir_exists)then
+       dir_status=cli_closedir(dir_resolved)
+       input_dir_exists=dir_status.eq.0
+      endif
+      if(.not.input_dir_exists)then
        write(0,*)'*** error - --input-dir must be an existing directory: ',
      &   trim(input_dir)
        call vaspberry_fail

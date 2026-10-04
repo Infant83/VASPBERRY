@@ -30,6 +30,8 @@ original producer versions.
   relative INI paths stay relative to their configuration file.
 - Retain mutually exclusive `--run-dir` chunk compatibility and the
   WAVEDER-only `optical_run_dir` INI alias. Standard INIs may omit `wavecar`.
+- Validate native input directories consistently with GNU and Intel
+  compilers. Preserve the input location when CI relocates an example INI.
 
 ### WAVEDER standard Kubo protocol
 
