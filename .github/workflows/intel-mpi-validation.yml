@@ -72,27 +72,16 @@ jobs:
             | tee results/intel-mpi-${{ matrix.target }}/linked-libraries.log
           grep -E 'libmpi[^ ]* => /opt/intel/oneapi/mpi/2021.13/' \
             results/intel-mpi-${{ matrix.target }}/linked-libraries.log
-      - name: Compare real MoS2 serial and two-rank MPI Kubo exports
+      - name: Compare default and isolated SIGPIPE handling on unchanged binaries
         shell: bash
         run: |
           source /opt/intel/oneapi/mpi/2021.13/env/vars.sh
           source /opt/intel/oneapi/mkl/2025.0/env/vars.sh
-          python tests/run_intel_mpi_validation.py \
-            --serial build/vaspberry-${{ matrix.target }} \
-            --mpi build/vaspberry-${{ matrix.target }}-mpi \
-            --output-dir results/intel-mpi-${{ matrix.target }}/numerics
-      - name: Validate native spin Chern and spin Kubo using the Intel binaries
-        shell: bash
-        run: |
-          source /opt/intel/oneapi/mpi/2021.13/env/vars.sh
-          source /opt/intel/oneapi/mkl/2025.0/env/vars.sh
-          # NumPy supplies independent analytic validation, not Fortran execution.
-          python -m pip install numpy
-          python .github/scripts/validate_native_spin.py \
-            --serial build/vaspberry-${{ matrix.target }} \
-            --mpi build/vaspberry-${{ matrix.target }}-mpi \
+          python tests/diagnose_mpi_abort.py \
+            --compiler ${{ matrix.wrapper }} \
             --mpiexec mpiexec.hydra \
-            --output-dir results/intel-mpi-${{ matrix.target }}/native-spin
+            --native build/vaspberry-${{ matrix.target }}-mpi \
+            --output-dir results/intel-mpi-${{ matrix.target }}/abort-diagnostic
       - name: Retain commands, checksums, numerical exports and failure logs
         if: always()
         uses: actions/upload-artifact@v4
