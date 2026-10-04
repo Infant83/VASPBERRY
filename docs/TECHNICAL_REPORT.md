@@ -10,7 +10,8 @@
 
 [^present-address]: Present address: LG Display, Republic of Korea. Affiliations 1 and 2 refer to the institutions where the initial code development was carried out; the author was an Alexander von Humboldt Fellow at Forschungszentrum Jülich.
 
-Based on VASPBERRY 1.6.5. Existing material reference data retain their original producer versions.
+Based on VASPBERRY 1.6.6. Existing material reference data retain their original producer versions.
+Numerical reproduction rechecked on 2026-10-04; see [Appendix C](#appendix-c-numerical-reproduction-check-of-2026-10-04).
 
 ## Abstract
 
@@ -462,9 +463,9 @@ at all 49 path points. Internal valence-band degeneracies do not interrupt
 the bundle curve.
 
 The occupied-bundle curvature is approximately **−13.18 Å² at K** and
-**+13.18 Å² at K′**. The occupied space stays separated from the empty states
-by at least **1.674 eV** on both samplings, so every mesh and path point is
-valid for the bundle calculation. To reproduce this canonical calculation in VASPBERRY 1.6.5,
+**+13.18 Å² at K′**. The minimum occupied-to-empty separation is approximately
+**1.674 eV** on both samplings, so every mesh and path point is
+valid for the bundle calculation. To reproduce this canonical calculation in VASPBERRY 1.6.6,
 `--task kubo --kubo-source wavecar --bands 1:18` performs the external-band sum directly, avoiding
 large cancelling internal terms.
 
@@ -515,7 +516,7 @@ post-processing applies occupations and integrates their contribution over
 the full zone and the specified regions. The 61-point scan covers $`E_v-0.20`$ to $`E_v+0.10`$ eV at 0 and 300 K.
 We define $`\Delta\sigma(\mu)=\sigma(\mu)-\sigma(\mu_{\rm ref})`$ with a midgap
 reference, and the valley difference as $`\Delta\sigma_K-\Delta\sigma_{K'}`$.
-The total charge response remains below **$`2.24\times10^{-9}\,e^2/h`$**,
+The maximum magnitude of the total charge response is approximately **$`2.24\times10^{-9}\,e^2/h`$**,
 consistent with time-reversal symmetry. Numerical tables also give absolute
 conductivities and carrier counts.
 
@@ -1377,6 +1378,52 @@ provides the actual inputs, VASPBERRY commands and outputs. The independent
 external reference is retained separately. This input route requires both
 Wannier operators; it does not infer missing PAW/nonlocal/SOC velocity terms
 from a WAVECAR alone.
+
+## Appendix C. Numerical reproduction check of 2026-10-04
+
+The VASPBERRY and associated analysis calculations underlying Figures 1–16
+and Section 3.6 were repeated from
+retained electronic-state, operator and Wannier-model inputs. The check used
+the 1.6.5 source with the subsequent CLI validation and documentation
+corrections, now packaged as VASPBERRY 1.6.6.
+Numerical arrays, integration tables and regenerated plots were compared
+with their original references. Original producer versions remain recorded.
+
+| Report results | Repeated calculation |
+|---|---|
+| Figures 1–4, 6 and 8 | MoS₂ WAVECAR calculations, all eight Hall mesh/cutoff cases from newly exported pairs, and four stacking WAVEDER spectra |
+| Figure 5 | Canonical pairs from WAVECAR and full-velocity pairs reconstructed from the retained producer output; all four Hall curves |
+| Figures 7 and 9–13 | Native topology and spin-sector calculations, all 34 Bi convergence rows, and 146-point/50-point local graphene diagnostics |
+| Figure 14 | Bi physical-matrix Hall integrations and mesh/band controls; retained raw operator streams independently decoded |
+| Figures 15–16 | Fixed-model bulk bands, Bi strips and all five MnBi₂Te₄ Hall quadratures; one independent postw90 calculation rerun |
+| Section 3.6 | Complete-mesh native Fukui calculation and standard optical integration from six matched WAVEDER chunks |
+
+The MoS₂ comparison reproduced all numerical values in 42 CSV tables;
+the numerical contents of 63 native topology/spin tables also matched exactly.
+The five numerical result tables were recalculated; the task/output and
+material/settings tables were checked against the executed workflows and
+their corresponding input records. Independently computed
+quantities used their documented tolerances and printed precision. The
+four-state model values in Section 1.2.1, the analytic PROCAR example and the
+selected-WAVEDER example were also recalculated. These synthetic checks
+remain separate from material results.
+
+The audit corrected the attribution of eight conditioning-diagnostic cells
+in four 12×12 Bi rows from a 48-band source: each now uses that source's
+wavefunctions rather than the previous 64-band fallback. Chern numbers, Kubo integrals
+and the curves in Figure 12 were unaffected. Two rounded values in Sections
+3.2 and 3.2.2 are now described as approximate values rather than strict
+bounds. Figure 2 was redrawn with a fully visible operator label.
+
+This is reproduction of downstream calculations from the same inputs. No
+new VASP SCF/NSCF calculation, operator-producer run or Wannier localization
+was performed. External reference points not explicitly rerun retain their
+historical provenance. The canonical-momentum figures remain explicit
+WAVECAR approximations, and the existing unresolved mesh, band-window and
+operator limitations remain. In particular, reproducing an unconverged
+integral does not establish physical convergence. The
+[figure-by-figure input and command guide ↗](../examples/REPORT_REPRODUCTION.md)
+distinguishes distributed inputs from those requiring VASP regeneration.
 
 ## References
 

@@ -76,7 +76,11 @@ build/vaspberry --task kubo --input-dir path/to/optics \
 ```
 
 Band indices are one-based; comma-separated singletons and inclusive ranges
-form the target set. The virtual index still runs over **all source NBANDS**.
+form the target set. Prefer one `--bands` selector. Later modern selections
+replace earlier settings with a warning; legacy `-ii`, `-if` and `-is`
+can still override scalar/range settings, but cannot modify an earlier
+comma-separated list. Inspect the effective band IDs when an override warns.
+The virtual index still runs over **all source NBANDS**.
 Selecting `31:32` does not restrict the intermediate sum to those two bands.
 The default is the trace of the selected space; `--per-band 1` asks for each
 band separately and rejects an unresolved individual state. A trace may
@@ -87,7 +91,10 @@ transitive connections within the producer's **2 meV** threshold.
 The default output name is `KUBO_WAVEDER.csv`. It contains source k points,
 the Cartesian `omega_z_A2` trace curvature in Å² and the minimum external
 gap, with selected-band, operator/source/completion metadata. It does not
-write canonical per-band DAT companions. A path gives only point curvature.
+write canonical per-band DAT companions. A path gives only point curvature
+at every stored k point. Modern WAVEDER Kubo tasks reject unrelated controls
+such as `--kpoint`, optical angles or spectral broadening; these do not
+select points or alter this response.
 For integration, supply the actual complete uniform mesh:
 
 ```bash

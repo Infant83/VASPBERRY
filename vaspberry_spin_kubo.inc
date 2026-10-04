@@ -338,8 +338,8 @@
        open(u,file=trim(paths(j)),status='new',action='write',iostat=ios)
        if(ios.ne.0)call spinkubo_error('cannot create output',0)
        write(u,'(A)')'# schema=VASPBERRY_SPIN_SECTOR_KUBO_V1'
-       write(u,'(A)')'# producer=VASPBERRY 1.6.5'
-       write(u,'(A)')'# build_status=RELEASE_1.6.5'
+       write(u,'(A)')'# producer=VASPBERRY 1.6.6'
+       write(u,'(A)')'# build_status=RELEASE_1.6.6'
        write(u,'(A)')'# derivative=CANONICAL_MOMENTUM_DERIVATIVE_PROXY'
        write(u,'(A)')'# representation=PSEUDO_GRAM'
        write(u,'(A)')'# physical_paw_validated=false'

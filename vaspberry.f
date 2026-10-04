@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.6.5 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.6.6 (f77) for VASP
 ! Written by Hyun-Jung Kim
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -64,6 +64,8 @@
 ! version 1.6.4 standard WAVEDER Kubo and explicit WAVECAR opt-in
 !               : 2026. Oct. 02.
 ! version 1.6.5 selected WAVEDER release and consistent public help
+!               : 2026. Oct. 04.
+! version 1.6.6 CLI validation and report reproduction corrections
 !               : 2026. Oct. 04.
 ! last update and bug fixes : 2026. Oct. 04.
 
@@ -158,7 +160,7 @@
       mpi_comm_earth = 0
 #endif
 
-      ver_tag="# VASPBERRY (Ver 1.6.5), by Hyun-Jung Kim."//
+      ver_tag="# VASPBERRY (Ver 1.6.6), by Hyun-Jung Kim."//
      &        " 2026. Oct. 04."
       call vaspberry_help_request(ver_tag,.false.)
 #ifdef MPI_USE
@@ -1697,7 +1699,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.6.5'
+      write(94,'(A)')'# vaspberry_version=1.6.6'
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
@@ -1897,7 +1899,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.6.5'
+      write(94,'(A)')'# vaspberry_version=1.6.6'
       if(fieldok)then
        write(94,'(A)')'# result_status=PASS'
       else
@@ -4172,7 +4174,7 @@
       else
        write(iunit,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_V2'
       endif
-      write(iunit,'(A)')'# vaspberry_version=1.6.5'
+      write(iunit,'(A)')'# vaspberry_version=1.6.6'
       write(iunit,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
       write(iunit,'(A)')'# operator='//
      & 'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
@@ -4435,7 +4437,7 @@
       call open_kubo_csv(path,isp.eq.1)
       if(isp.eq.1)then
        write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V2'
-       write(96,'(A)')'# vaspberry_version=1.6.5'
+       write(96,'(A)')'# vaspberry_version=1.6.6'
        write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
        write(96,'(A)')'# operator='//
      &  'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
@@ -4623,7 +4625,7 @@
        call open_kubo_csv(path,isp.eq.1)
        if(isp.eq.1)then
         write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_PAIRS_V1'
-        write(96,'(A)')'# vaspberry_version=1.6.5'
+        write(96,'(A)')'# vaspberry_version=1.6.6'
         write(96,'(A)')'# result_kind=UNORDERED_INTERBAND_NUMERATORS'
         write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
         write(96,'(A)')'# operator='//
@@ -5667,7 +5669,7 @@
       logical modern_bands,per_band_seen,modern_kubo
       integer per_band,band_start,band_end,band_colon
       integer kubo_selection_explicit
-      character*256 kubo_band_spec,band_token
+      character*256 kubo_band_spec,band_token,kubo_ignored_option
       common /kubo_selection_ints/ kubo_selection_explicit
       common /kubo_selection_chars/ kubo_band_spec
       integer iarg,narg,ia,nkx,nky,ispinor,iskp,ine,ng(3)
@@ -5724,6 +5726,7 @@
       pair_band_selection=.false.
       kubo_selection_explicit=0
       kubo_band_spec=''
+      kubo_ignored_option=''
       ikubo_bundle=0
       per_band=0
       per_band_seen=.false.
@@ -5763,6 +5766,16 @@
          call getarg(2*ia-1,option)
          call getarg(2*ia,value)
          raw_option=option
+! Retain explicitly supplied controls until task/source resolution. Modern
+! standard Kubo returns before the legacy wavefunction/optical/folding code;
+! accepting these flags there would silently change the user's intent.
+         select case(trim(option))
+         case('--kpoint','-k','--real-grid','-ng','--imaginary','-im',
+     &        '-ishift','--theta','-theta','--phi','-phi','-ien','-fen',
+     &        '-nediv','-sigma','-kp','-skp')
+          if(len_trim(kubo_ignored_option).eq.0)
+     &     kubo_ignored_option=trim(option)
+         end select
          if(option.eq.'--input-dir'.or.option.eq.'--wavecar'.or.
      &      option.eq.'-f'.or.option.eq.'--waveder'.or.
      &      option.eq.'--incar'.or.option.eq.'--outcar')then
@@ -5851,6 +5864,11 @@
           task_seen=.true.
           cycle
          case('--bands')
+          if(pair_band_selection)then
+           write(0,*)'*** WARNING: repeated/mixed band selectors; ',
+     &      'later --bands replaces the previous selection. ',
+     &      'Prefer one --bands selection and inspect effective band IDs'
+          endif
           call get_command_argument(2*ia,length=cli_pathlen)
           if(cli_pathlen.gt.len(value))goto 910
           kubo_band_spec=trim(value)
@@ -5993,6 +6011,11 @@
      &         'legacy band selectors'
              call vaspberry_fail
             endif
+            if(modern_bands)then
+             write(0,*)'*** WARNING: repeated/mixed band selectors; ',
+     &        'later settings follow historical scalar/range precedence. ',
+     &        'Prefer one --bands selection and inspect effective band IDs'
+            endif
             kubo_band_spec=''
             pair_band_selection=.true.
             read(value,*) nini
@@ -6002,6 +6025,11 @@
      &         'legacy band selectors'
              call vaspberry_fail
             endif
+            if(modern_bands)then
+             write(0,*)'*** WARNING: repeated/mixed band selectors; ',
+     &        'later settings follow historical scalar/range precedence. ',
+     &        'Prefer one --bands selection and inspect effective band IDs'
+            endif
             kubo_band_spec=''
             pair_band_selection=.true.
             read(value,*) nmax
@@ -6010,6 +6038,11 @@
              write(0,*)'*** error - do not combine comma-list and ',
      &         'legacy band selectors'
              call vaspberry_fail
+            endif
+            if(modern_bands)then
+             write(0,*)'*** WARNING: repeated/mixed band selectors; ',
+     &        'later settings follow historical scalar/range precedence. ',
+     &        'Prefer one --bands selection and inspect effective band IDs'
             endif
             kubo_band_spec=''
             pair_band_selection=.true.
@@ -6055,6 +6088,11 @@
            else if(option == "-kubo_pairs") then
             kubo_pairs=trim(value)
            else if(option == "-nn") then
+            if(modern_bands)then
+             write(0,*)'*** WARNING: repeated/mixed band selectors; ',
+     &        'later settings follow historical scalar/range precedence. ',
+     &        'Prefer one --bands selection and inspect effective band IDs'
+            endif
             pair_band_selection=.true. ! band index nn
             read(value,*) nn
            else if(option == "-vel") then
@@ -6195,6 +6233,13 @@
       endif
       if(ikubo.gt.0.or.spinchern_task.eq.2)then
        if(trim(kubo_source).eq.'waveder')then
+        if(modern_kubo.and.len_trim(kubo_ignored_option).gt.0)then
+         write(0,*)'*** error - ',trim(kubo_ignored_option),
+     &    ' is not used by standard WAVEDER Kubo; remove it. ',
+     &    'Wavefunction/optical controls do not select Kubo k points, ',
+     &    'weights, broadening or integration; see --help kubo'
+         call vaspberry_fail
+        endif
         if(trim(foname).ne.'BERRYCURV')then
          write(0,*)'*** error - WAVEDER Kubo writes a curvature CSV; ',
      &     'use --curvature-csv PATH instead of --output/-o'
@@ -6794,7 +6839,7 @@
       write(6,*)" "
       write(6,*)"  The Fukui-Hatsugai-Suzuki (FHS) method is referred to"
       write(6,*)"  below as the Fukui method."
-      write(6,*)"*Kubo source policy (1.6.5):"
+      write(6,*)"*Kubo source policy (from 1.6.5):"
       write(6,*)"  --kubo-source waveder|wavecar  default: waveder"
       write(6,*)"  Standard: same-run WAVEDER, WAVECAR, INCAR, OUTCAR."
       write(6,*)"  --waveder PATH --incar PATH --outcar PATH"
@@ -6802,7 +6847,7 @@
       write(6,*)"  Omitted WAVECAR/WAVEDER/INCAR/OUTCAR use that directory."
       write(6,*)"  Explicit file paths override only that file; relative to cwd."
       write(6,*)"  --wavecar never redirects the auxiliary input defaults."
-      write(6,*)"  Selected geometry or occupied T0 trace; audited VASP 5.4.4."
+      write(6,*)"  Selected geometry or occupied T0 trace; standard VASP 5.4.4."
       write(6,*)"  Full-source 0.002 eV clusters; required pair coverage checked."
       write(6,*)"  Missing/unsupported input stops; never silent fallback."
       write(6,*)"  Canonical/pair/spin Kubo requires explicit wavecar;"
@@ -6849,7 +6894,8 @@
       write(6,*)" "
       write(6,*)"*Readable aliases (each takes a separate value):"
       write(6,*)"  --wavecar PATH            -f PATH"
-      write(6,*)"  --mesh NX,NY              -kx NX -ky NY"
+      write(6,*)"  --mesh NX,NY              -kx NX -ky NY (mesh sizes only)"
+      write(6,*)"  WAVEDER/spin Kubo integration requires explicit --mesh."
       write(6,*)"  --bands FIRST:LAST or N   -ii FIRST -if LAST or -is N"
       write(6,*)"  --spinor auto|1|2         -s auto|1|2 (default auto)"
       write(6,*)"  --output PREFIX          -o PREFIX (not a directory)"
@@ -6869,6 +6915,8 @@
       write(6,*)"  --theta DEG --phi DEG    -theta DEG -phi DEG"
       write(6,*)"  --help [TOPIC]          short overview or topic help"
       write(6,*)"  Legacy band selectors remain accepted."
+      write(6,*)"  Prefer one --bands. Repeated/mixed selectors warn; historical"
+      write(6,*)"  scalar/range overrides remain. -ii/-if/-is cannot modify a comma-list."
       write(6,*)" "
       write(6,*)"*Outputs and reusable results:"
       write(6,*)"  CSV options name exact files; parent dirs must exist."

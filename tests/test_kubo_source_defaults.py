@@ -154,6 +154,43 @@ temperatures = 0
             native.assert_not_called()
             self.assertFalse(args.output_dir.exists())
 
+    def test_waveder_cli_rejects_unsupported_mu_batch_control_before_output(self):
+        for value in ('1', '0', '-1', '64'):
+            args = self.cli_args(extra=['--mu-chunk', value])
+            with self.subTest(value=value), patch.object(workflow.subprocess, 'run') as native, \
+                 self.assertRaisesRegex(ValueError, '--mu-chunk applies only'):
+                workflow.kubo_hall_command(args)
+            native.assert_not_called()
+            self.assertFalse(args.output_dir.exists())
+
+    def test_check_reports_optical_evaluation_and_resolved_inputs_without_writing(self):
+        settings = self.settings()
+        with patch.object(post.subprocess, 'run') as native, \
+             contextlib.redirect_stdout(io.StringIO()) as stdout:
+            self.assertEqual(post.main(['check', str(self.root/'study.ini')]), 0)
+        native.assert_not_called()
+        self.assertFalse(Path(settings['run']['output']).exists())
+        text = stdout.getvalue()
+        for name in ('WAVECAR', 'WAVEDER', 'INCAR', 'OUTCAR'):
+            self.assertIn(name+': '+str((self.fixture.run/name).resolve()), text)
+        self.assertIn('requested WAVEDER response checked', text)
+        self.assertIn('no result files were written', text)
+        self.assertIn('Resolved spin mode: spinor', text)
+        self.assertNotIn('Numerical validity is checked during calculation.', text)
+
+    def test_cli_scan_count_matches_ini_contract_and_does_not_collapse_silently(self):
+        from waveder_hall import command as standalone_command
+        for name, handler in (('unified', workflow.kubo_hall_command),
+                              ('standalone', standalone_command)):
+            args = self.cli_args(name, extra=['--mu-min', '0', '--mu-max', '0', '--mu-num', '3'])
+            with self.subTest(command=name), self.assertRaisesRegex(ValueError, 'N = 1'):
+                handler(args)
+            self.assertFalse(args.output_dir.exists())
+            args.mu_num = 1
+            handler(args)
+            with np.load(args.output_dir/'conductivity.npz') as actual:
+                self.assertEqual(actual['mu_eV'][actual['region'] == 'total'].tolist(), [0.])
+
     def test_waveder_settings_do_not_ignore_native_execution_controls(self):
         for key, value in (('binary', '/not-used'), ('mpi_procs', 2),
                            ('mpi_launcher', 'custom-mpiexec')):

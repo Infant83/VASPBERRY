@@ -33,7 +33,7 @@ from vasp_spin_export import add_arguments as add_spin_export_arguments, command
 from spin_assembly import add_command as add_spin_merge, command as spin_merge_command
 from velocity_pairs import add_command as add_velocity_pairs, command as velocity_pairs_command
 
-__version__ = '1.6.5'
+__version__ = '1.6.6'
 
 
 def sampling(args):
@@ -153,8 +153,10 @@ def import_legacy(args):
 
 def hall_command(args):
     data = read_curvature(args.curvature)
-    require(args.mu_num >= 1 and np.isfinite([args.mu_min,args.mu_max]).all() and args.mu_max >= args.mu_min
-            and (args.mu_num > 1 or args.mu_min == args.mu_max), 'valid mu range and positive number required')
+    require(args.mu_num >= 1 and np.isfinite([args.mu_min,args.mu_max]).all()
+            and ((args.mu_num == 1 and args.mu_min == args.mu_max)
+                 or (args.mu_num > 1 and args.mu_min < args.mu_max)),
+            'valid mu range required: MIN < MAX with N > 1, or MIN = MAX with N = 1')
     mus = np.unique(np.r_[np.linspace(args.mu_min,args.mu_max,args.mu_num),args.mu_reference])
     spec = json.loads(args.regions.read_text()) if args.regions else None
     differences = []

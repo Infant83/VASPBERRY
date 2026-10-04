@@ -224,8 +224,12 @@ def settings_summary(settings):
     print('Input directory: ' + run['input_dir'])
     print('Kubo matrix source: ' + run.get('kubo_source', 'waveder'))
     if run.get('kubo_source', 'waveder') == 'waveder':
+        for name in ('waveder', 'incar', 'outcar'):
+            print(name.upper() + ': ' + run[name])
         print('Optical run: ' + run['optical_run_dir'] + ('; selected bands '+str(hall['bands'])
               if hall.get('bands') is not None else '; insulating occupied bundle at T=0'))
+        if hall.get('bands') is not None:
+            print('Hall scope: selected Fermi-weighted contribution; not automatically total AHC.')
     print('Output:  ' + run['output'])
     mode = run.get('resolved_spin_mode', run['spin_mode'])
     print(f"Source: {mode}; full {run['mesh'][0]} x {run['mesh'][1]} mesh")
@@ -423,9 +427,9 @@ def parser():
     result = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     result.add_argument('--version', action='version', version='VASPBERRY ' + (ROOT / 'VERSION').read_text().strip())
     sub = result.add_subparsers(dest='command', required=True)
-    for name, help_text in [('check', 'check settings and source paths without running calculations'),
+    for name, help_text in [('check', 'validate settings and inputs without writing results; WAVEDER also evaluates the requested response'),
                             ('run', 'standard WAVEDER Hall; native WAVECAR approximation only with explicit settings opt-in')]:
-        command = sub.add_parser(name, help=help_text)
+        command = sub.add_parser(name, help=help_text, description=help_text)
         command.add_argument('settings', type=Path, help='commented INI settings file')
         command.add_argument('--reuse', type=Path, metavar='PREVIOUS_RUN',
                              help='reuse a pair cache only with [run] kubo_source=wavecar; preserves its approximation')
@@ -451,7 +455,13 @@ def main(argv=None):
             settings_summary(settings)
             if args.command == 'check':
                 preflight(settings, args.reuse)
-                print('Settings and source paths checked. Numerical validity is checked during calculation.')
+                print('Resolved spin mode: ' + settings['run']['resolved_spin_mode'])
+                if settings['run']['kubo_source'] == 'waveder':
+                    print('Settings, optical inputs and requested WAVEDER response checked; '
+                          'no result files were written. This does not establish material convergence.')
+                else:
+                    print('Settings, source identity and mesh checked; no result files were written. '
+                          'Matrix and response checks continue during run; material convergence is not established.')
             else:
                 run_calculation(settings, args.reuse)
     except (ValueError, OSError, KeyError, TypeError) as exc:

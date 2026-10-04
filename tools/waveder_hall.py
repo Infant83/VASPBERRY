@@ -542,10 +542,15 @@ def add_arguments(p):
     p.add_argument('--spinor-components', type=int, choices=[1, 2], help='optional WAVECAR layout assertion; default auto')
     p.add_argument('--spin-multiplicity', type=int, choices=[1, 2], help='default: 2 for scalar degenerate states, otherwise 1')
     p.add_argument('--mesh', type=int, nargs=2, required=True)
-    p.add_argument('--plane-axes', type=int, nargs=2, default=[0, 1])
-    p.add_argument('--energy-reference', required=True)
-    p.add_argument('--mu-min', type=float, required=True); p.add_argument('--mu-max', type=float, required=True)
-    p.add_argument('--mu-num', type=int, default=241); p.add_argument('--mu-reference', type=float, required=True)
+    p.add_argument('--plane-axes', type=int, nargs=2, default=[0, 1],
+                   help='ordered zero-based reciprocal axes for the sheet plane (default: 0 1)')
+    p.add_argument('--energy-reference', required=True, help='description of the unchanged source energy zero')
+    p.add_argument('--mu-min', type=float, required=True, help='lower scan endpoint in eV, in the unchanged source energy zero')
+    p.add_argument('--mu-max', type=float, required=True, help='upper scan endpoint in eV')
+    p.add_argument('--mu-num', type=int, default=241,
+                   help='number of scan points (default: 241); equal endpoints require 1')
+    p.add_argument('--mu-reference', type=float, required=True,
+                   help='reference mu in eV for delta response; does not shift input energies')
     p.add_argument('--temperatures', nargs='+', type=float, default=[0.], help='selected-band response temperatures in K; default 0')
     p.add_argument('--regions', type=Path); p.add_argument('--difference', action='append', default=[])
     p.add_argument('--formats', nargs='+', choices=['csv', 'dat', 'npz'], default=['csv', 'dat', 'npz'])
@@ -560,8 +565,10 @@ def add_command(subparsers):
 
 def command(args):
     require(not args.output_dir.exists(), 'output directory exists; choose a new directory')
-    require(args.mu_num >= 1 and np.isfinite([args.mu_min, args.mu_max]).all() and args.mu_max >= args.mu_min
-            and (args.mu_num > 1 or args.mu_min == args.mu_max), 'valid chemical-potential scan required')
+    require(args.mu_num >= 1 and np.isfinite([args.mu_min, args.mu_max]).all()
+            and ((args.mu_num == 1 and args.mu_min == args.mu_max)
+                 or (args.mu_num > 1 and args.mu_min < args.mu_max)),
+            'valid chemical-potential scan required: MIN < MAX with N > 1, or MIN = MAX with N = 1')
     differences = [tuple(value.split(':')) for value in args.difference]
     require(all(len(v) == 3 for v in differences), 'difference syntax is NAME:LEFT:RIGHT')
     runs, paths = resolve_cli_inputs(args)

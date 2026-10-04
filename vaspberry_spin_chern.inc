@@ -478,8 +478,8 @@
        if(ios.ne.0)call spinchern_error('cannot create new output',0)
        write(u,'(A)',iostat=ios)'# schema=VASPBERRY_SPIN_CHERN_V1'
        if(ios.ne.0)call spinchern_error('output write failed',0)
-       write(u,'(A)')'# producer=VASPBERRY 1.6.5'
-       write(u,'(A)')'# build_status=RELEASE_1.6.5'
+       write(u,'(A)')'# producer=VASPBERRY 1.6.6'
+       write(u,'(A)')'# build_status=RELEASE_1.6.6'
        write(u,'(A)')'# representation=WAVECAR_PSEUDO_GRAM'
        write(u,'(A)')'# physical_paw_validated=false'
        write(u,'(A)')'# scope=selected_subspace'

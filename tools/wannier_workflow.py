@@ -103,7 +103,9 @@ def hall_command(args):
     require(bool(args.formats) and len(set(args.formats)) == len(args.formats)
             and set(args.formats) <= {'csv','dat','npz'}, 'choose distinct CSV, DAT or NPZ formats')
     require(args.mu_num >= 1 and np.isfinite([args.mu_min, args.mu_max, args.mu_reference]).all()
-            and args.mu_max >= args.mu_min and (args.mu_num > 1 or args.mu_min == args.mu_max), 'invalid mu scan')
+            and ((args.mu_num == 1 and args.mu_min == args.mu_max)
+                 or (args.mu_num > 1 and args.mu_min < args.mu_max)),
+            'invalid mu scan: require MIN < MAX with N > 1, or MIN = MAX with N = 1')
     source_hashes = {name:sha256(args.operators/name) for name in ('operators.npz','operators.json')}
     data = read_operators(args.operators)
     require(all(sha256(args.operators/name) == digest for name,digest in source_hashes.items()),

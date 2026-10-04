@@ -160,7 +160,7 @@
       call open_kubo_csv(csvpath,.true.)
       write(96,'(A)')'# schema=VASPBERRY_WAVEDER_KUBO_OCCUPIED_V1'
       write(96,'(A)')'# kubo_source=WAVEDER'
-      write(96,'(A)')'# vaspberry_version=1.6.5'
+      write(96,'(A)')'# vaspberry_version=1.6.6'
       write(96,'(A)')'# source_operator=VASP_5.4.4_LONGITUDINAL_PAW_OPTICAL'
       write(96,'(A)')'# result_kind=T0_INSULATING_OCCUPIED_BUNDLE_TRACE'
       write(96,'(A)')'# complete_occupied_bundle=true'
@@ -413,7 +413,7 @@
        write(96,'(A)')'# intermediate_bands=EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS'
       endif
       write(96,'(A)')'# kubo_source=WAVEDER'
-      write(96,'(A)')'# vaspberry_version=1.6.5'
+      write(96,'(A)')'# vaspberry_version=1.6.6'
       write(96,'(A)')'# source_operator=VASP_5.4.4_LONGITUDINAL_PAW_OPTICAL'
       write(96,'(A)')'# representation=VASP longitudinal PAW optical connection C; Angstrom; source convention retained'
       write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'

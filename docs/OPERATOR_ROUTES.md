@@ -2,7 +2,7 @@
 
 For charge Kubo calculations, begin with the same-run standard `WAVEDER`,
 `WAVECAR`, `INCAR` and `OUTCAR` from a supported standard VASP optical calculation.
-Version 1.6.5 selects this route by default. An explicit
+Version 1.6.6 selects this route by default. An explicit
 `--kubo-source wavecar` selects the canonical-momentum approximation and
 prints a warning. Missing or unsupported optical input never selects it
 automatically. Other operator files enable separately validated observables.
@@ -66,7 +66,7 @@ include multi-run mesh assembly. The supplied [MnBi₂Te₄ optical example](../
 illustrates this unmodified-VASP route.
 
 For a PAW charge-Hall calculation within this scope, this is the default
-route in 1.6.5. Native `--task kubo` writes point curvature; `kubo-hall`
+route in 1.6.6. Native `--task kubo` writes point curvature; `kubo-hall`
 provides Hall tables. Use `--input-dir DIR` to select the source directory;
 omission means the invocation working directory. Each per-file option changes
 only that file, so a WAVECAR override never redirects the optical inputs.

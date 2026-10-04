@@ -6,7 +6,7 @@
 source. Clone it with `git clone https://github.com/Infant83/VASPBERRY.git`.
 Update a clean checkout with `git pull --ff-only`.
 
-This edition targets release tag `v1.6.5`. Use the fixed tag when reproducing a
+This edition targets release tag `v1.6.6`. Use the fixed tag when reproducing a
 published calculation, and record the version plus `git rev-parse HEAD` in
 the calculation record. `git describe --tags --always --dirty` also identifies
 changes after a release. A development branch is not the default download.
@@ -123,3 +123,18 @@ from the remaining remote compiler and archive checks. After the candidate
 has been committed and its remote checks have passed, explicitly dispatch
 this workflow on `master` only when publication is requested. Retain the
 publication receipt and verify a fresh version-pinned checkout afterwards.
+
+## Version 1.6.6 publication
+
+The manual-only `publish-v1.6.6.yml` workflow preserves the published
+`v1.6.5` commit `511aac3c16d787ac37979a4b49b37dfa5d92e37a`. It requires
+all thirteen jobs from the same four validation workflows on the exact
+candidate commit, repeats the latest-attempt checks immediately before
+publication, and refuses to move a tag or rewrite an existing release.
+Its required-file checks also include the report reproduction guide,
+chemical-potential scan contract tests, and corrected Bi diagnostic inputs.
+
+The [1.6.6 validation record](VALIDATION_1.6.6.md) separates the prior
+report-wide numerical reproduction from the release commit's own checks.
+Publication receipts identify the final commit and successful remote runs;
+verify a fresh version-pinned source archive afterwards.

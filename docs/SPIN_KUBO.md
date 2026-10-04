@@ -1,6 +1,6 @@
 <a id="spin-sector-kubo-curvature-on-a-path-and-a-full-mesh"></a>
 
-In 1.6.5 this projected-spin approximation requires explicit
+In 1.6.6 this projected-spin approximation requires explicit
 `--kubo-source wavecar`; the standard WAVEDER charge route does not provide
 the required spin matrices. Existing reference data retain their original
 operator and producer metadata.

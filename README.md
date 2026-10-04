@@ -22,7 +22,7 @@ band plots provide context for the calculated topology and response.
 [Hands-on commands](docs/HANDS_ON.md) · [Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
 [Postprocessing guide](docs/POSTPROCESSING.md) · [Output formats](docs/OUTPUT_FORMAT.md)
 
-**VASPBERRY 1.6.5 — WAVEDER is the standard Kubo input.**
+**VASPBERRY 1.6.6 — WAVEDER is the standard Kubo input.**
 `--task kubo` uses same-run `WAVEDER`, `WAVECAR`, `INCAR` and `OUTCAR` by
 default. Select a single band, a range or a list for geometric curvature, or
 use occupation-weighted Python integration for a selected contribution. The
@@ -33,9 +33,12 @@ The previous canonical-momentum approximation requires the explicit
 [standard calculation protocol](docs/WAVEDER_KUBO_PROTOCOL.md) and
 [migration guide](docs/MIGRATION.md#waveder-default-kubo-input-in-165).
 
+Version 1.6.6 aligns command validation and examples and records the
+[numerical report reproduction](docs/TECHNICAL_REPORT.md#appendix-c-numerical-reproduction-check-of-2026-10-04).
+
 The native `--bundle` and `-kubo_bundle` flags have been removed. See the
 [short migration guide](docs/MIGRATION.md#native-kubo-band-selection),
-[release notes](docs/releases/v1.6.5.md), [validation scope](docs/VALIDATION_1.6.5.md),
+[release notes](docs/releases/v1.6.6.md), [validation scope](docs/VALIDATION_1.6.6.md),
 [changelog](CHANGELOG.md) and [version policy](docs/RELEASING.md).
 
 ## Install and run VASPBERRY
@@ -72,11 +75,11 @@ make help
 ```
 
 For the fixed source corresponding to this guide, use
-[v1.6.5](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.5):
+[v1.6.6](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.6):
 
 ```bash
-git clone --branch v1.6.5 --depth 1 https://github.com/Infant83/VASPBERRY.git VASPBERRY-1.6.5
-cd VASPBERRY-1.6.5
+git clone --branch v1.6.6 --depth 1 https://github.com/Infant83/VASPBERRY.git VASPBERRY-1.6.6
+cd VASPBERRY-1.6.6
 make serial
 ```
 
@@ -146,14 +149,14 @@ Environment creation and package installation follow your site's usual practice.
 
 ## Features
 
-| Task | Native command | Actual VASP example and results |
+| Task | Command / route | Examples and results |
 |---|---|---|
 | Berry flux and Chern number of an isolated band or bundle using the Fukui method | `--task chern` | [MoS₂ BZ map](examples/features/fukui-berry-curvature/), [Bi occupied bundle](examples/features/fukui-chern/) |
 | Projected-spin sector Chern numbers | `--task spin-chern` | [Graphene with intrinsic SOC](examples/materials/graphene-spin-chern/); `SPIN_CHERN.csv`, plaquette flux and spin spectra |
 | Spin-sector Kubo-formula Berry curvature | `--task spin-kubo` | [Path and mesh guide](docs/SPIN_KUBO.md); native sector curvature CSVs and explicitly approximate mesh integrals |
 | 2D Z₂ invariant and n-field using the FH method | `--task z2` | [MoS₂ (Z₂ = 0) and Bi (Z₂ = 1)](examples/features/z2/comparison/) |
 | Kubo-formula Berry curvature on a BZ mesh or symmetry path | `--task kubo` | [MoS₂ occupied bundle and isolated-band maps, paths and bands](examples/features/kubo-curvature/) |
-| Intrinsic charge Hall response versus chemical potential and temperature | `--task kubo-pairs`, then occupation-weighted postprocessing | [MoS₂ Hall and valley-region curves](examples/features/kubo-hall/) |
+| Intrinsic charge Hall response versus chemical potential and temperature | Python `kubo-hall` with standard WAVEDER input; select `--bands` for a contribution or `--occupied` for insulating T=0 | [Standard protocol](docs/WAVEDER_KUBO_PROTOCOL.md), [selected-band commands](examples/features/waveder-selected/); [MoS₂ curves](examples/features/kubo-hall/) retain the explicit WAVECAR approximation |
 | Circular optical selectivity and transition spectra | `--task optical` / `--task spectrum` | [MoS₂ circular dichroism](examples/features/circular-dichroism/) |
 | Real-space wavefunction at Γ | `--task wavefunction` | [MoS₂ wavefunction](examples/features/wavefunction/) |
 

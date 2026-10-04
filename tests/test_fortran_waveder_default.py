@@ -181,6 +181,31 @@ class NativeWavederTests(unittest.TestCase):
         self.assertAlmostEqual(float(metadata['sheet_hall_e2_over_h']), -target_chern, delta=1e-13)
         self.assertEqual(metadata['physical_spin_multiplicity'], '2')
 
+    def test_legacy_mesh_sizes_do_not_request_standard_integration(self):
+        path, _ = self.case('legacy-sizes')
+        self.run_case(path, ['--bands', '1:2', '-kx', '2', '-ky', '1'])
+        metadata, rows = table(path/'KUBO_WAVEDER.csv')
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(metadata['integration'], 'NONE; source k-point selected geometry only')
+        self.assertNotIn('total_chern', metadata)
+        integral, _ = self.case('integral-needs-modern-mesh')
+        result = self.invoke([str(self.binary), '--task', 'kubo-integral',
+                              '--bands', '1:2', '-kx', '2', '-ky', '1'], integral, success=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('requires explicit --mesh', result.stderr)
+        self.assertFalse((integral/'KUBO_WAVEDER.csv').exists())
+
+    def test_standard_ignored_controls_fail_before_reading_source_or_writing_output(self):
+        path = self.work/self._testMethodName
+        path.mkdir()
+        for flag, value in (('--kpoint', '2'), ('--theta', '90'), ('-sigma', '0.1')):
+            result = self.invoke([str(self.binary), '--task', 'kubo',
+                                  '--bands', '1:2', flag, value], path, success=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('not used by standard WAVEDER Kubo', result.stderr)
+            self.assertNotIn('Error opening', result.stdout + result.stderr)
+            self.assertFalse(list(path.iterdir()))
+
     def test_two_spin_channels_have_complete_distinct_rows(self):
         path, expected = self.case('collinear', components=1, channels=2)
         self.run_case(path, ['--mesh', '2,1'])

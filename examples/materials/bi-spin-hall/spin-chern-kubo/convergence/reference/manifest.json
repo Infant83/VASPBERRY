@@ -6,16 +6,16 @@
       "sha256": "d480fc73df7acfa473454bcb27fe4a996b98d8559521dab4330d170d7a043fcf"
     },
     "README.md": {
-      "bytes": 8553,
-      "sha256": "895e116fd6829227c14e001605ebdf0f2cc72d38184ccb0905756670f393bbdb"
+      "bytes": 9444,
+      "sha256": "a0c60e95a5bba15ea0bf5cc80f62ab290a7eaa3a5fc1dba1623b8deebea67968"
     },
     "reference/provenance.json": {
-      "bytes": 51647,
-      "sha256": "8055ad8fdb46629f739f0026bfbf96a554c7727541140ab6fb52983bc9b113dd"
+      "bytes": 55223,
+      "sha256": "8fc63a31717a3a8762f8e02589f97cf230d55c14b016600414b053744c069cd9"
     },
     "reference/plotting.json": {
-      "bytes": 596,
-      "sha256": "428baa1bc5e4ad644c23ce5e3056c672801d2f57c66488d34b46e9bee0fce913"
+      "bytes": 995,
+      "sha256": "c7579536e88f82ad6702d4387806ad724c6b9e712b0ea703d499266c59cb3c78"
     },
     "reference/native-oracle-flux-comparison.json": {
       "bytes": 648,
@@ -26,8 +26,8 @@
       "sha256": "c30cfe4f64982f88e2a058446ebc162d78c344aedd56b9709dcb9c9073813cbf"
     },
     "reference/convergence.csv": {
-      "bytes": 9693,
-      "sha256": "ebfe97e64337f27fad32409f02f770cbd6aa5f7b49b822fc6578b4bc7972e012"
+      "bytes": 9691,
+      "sha256": "d18dd8555f509ef3808a4f02434f39770f8a9af8ad66570982e61b6cbc8194de"
     },
     "reference/source-quality.json": {
       "bytes": 43434,
@@ -256,6 +256,23 @@
     "reference/native-mesh12-restart/occupied-spin-kubo-cap64/run.json": {
       "bytes": 828,
       "sha256": "64b26b6e09e3fc4bf828b1bc463e87d0a8b4bd64b6ac7b928b104a5cc470bd03"
+    },
+    "reference/mesh12-source48-occupied-oracle/summary.json": {
+      "bytes": 1099,
+      "sha256": "a97e3e280160796c4cecddbdff741ac7050e1b216a8f96aa04c40bebd6453324"
+    },
+    "reference/mesh12-source48-occupied-oracle/oracle.npz": {
+      "bytes": 21275,
+      "sha256": "ef1bb8e68708f68cbb605cfd7d5a4549c0b131447999293baa322fbd396aab9d"
+    },
+    "reference/mesh12-source48-pair-oracle/summary.json": {
+      "bytes": 1069,
+      "sha256": "4e874e1a5c36444f630bf73a926db0991c114cf149c358845a90cb589c297793"
+    },
+    "reference/mesh12-source48-pair-oracle/oracle.npz": {
+      "bytes": 8706,
+      "sha256": "6dae65fefdfa995b60a0e3fb0c0093dd091c418f5cfd0799918b90f7a271f93f"
     }
-  }
+  },
+  "source48_diagnostic_correction_date": "2026-10-04"
 }

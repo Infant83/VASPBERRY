@@ -33,7 +33,7 @@ def main():
     p.add_argument("--binary", type=Path, default=ROOT / "build/vaspberry-gfortran")
     p.add_argument("--mesh", type=int, help="square mesh size; inferred from WAVECAR when omitted")
     p.add_argument("--mpi-procs", type=int, default=1)
-    p.add_argument("--pair-band-max", type=int, help="optional intermediate-band cap within the stored source bands")
+    p.add_argument("--pair-band-max", type=int, help="optional retained pair-band window; both endpoints must be at or below this band")
     p.add_argument("--output-dir", type=Path, required=True)
     a = p.parse_args()
     if a.output_dir.exists():

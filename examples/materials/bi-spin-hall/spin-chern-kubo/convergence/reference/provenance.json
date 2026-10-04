@@ -1355,5 +1355,84 @@
     "run": "native-mesh12-restart/vasp-run.json",
     "comparison": "native-restart-comparison.json",
     "flux_comparison": "native-oracle-flux-comparison.json"
+  },
+  "source48_diagnostic_correction": {
+    "date": "2026-10-04",
+    "reason": "The original packaging fallback reused source64 geometric diagnostics for four source48 rows. Rerunning independent overlap diagnostics on the exact source48 WAVECAR supplies the source-specific values.",
+    "scope": "Only two Fukui conditioning columns in four 12x12/source48 rows change. Chern numbers, Kubo quantities, report tables and Figure12 plotted data are unchanged; no new VASP run.",
+    "original_convergence_csv_sha256": "ebfe97e64337f27fad32409f02f770cbd6aa5f7b49b822fc6578b4bc7972e012",
+    "corrected_convergence_csv_sha256": "d18dd8555f509ef3808a4f02434f39770f8a9af8ad66570982e61b6cbc8194de",
+    "changes": [
+      {
+        "case": "mesh12-source48-occupied-all",
+        "column": "Fukui_min_link_sv",
+        "before": 0.6416980663642268,
+        "after": 0.6416980651416001
+      },
+      {
+        "case": "mesh12-source48-occupied-all",
+        "column": "Fukui_max_abs_flux_rad",
+        "before": 1.4074852145674046,
+        "after": 1.4074852162534037
+      },
+      {
+        "case": "mesh12-source48-occupied-cap48",
+        "column": "Fukui_min_link_sv",
+        "before": 0.6416980663642268,
+        "after": 0.6416980651416001
+      },
+      {
+        "case": "mesh12-source48-occupied-cap48",
+        "column": "Fukui_max_abs_flux_rad",
+        "before": 1.4074852145674046,
+        "after": 1.4074852162534037
+      },
+      {
+        "case": "mesh12-source48-pair-all",
+        "column": "Fukui_min_link_sv",
+        "before": 0.18228450808828436,
+        "after": 0.18228450432166354
+      },
+      {
+        "case": "mesh12-source48-pair-all",
+        "column": "Fukui_max_abs_flux_rad",
+        "before": 1.1483861026102056,
+        "after": 1.148386115959296
+      },
+      {
+        "case": "mesh12-source48-pair-cap48",
+        "column": "Fukui_min_link_sv",
+        "before": 0.18228450808828436,
+        "after": 0.18228450432166354
+      },
+      {
+        "case": "mesh12-source48-pair-cap48",
+        "column": "Fukui_max_abs_flux_rad",
+        "before": 1.1483861026102056,
+        "after": 1.148386115959296
+      }
+    ],
+    "sources": [
+      {
+        "selection": "occupied",
+        "source_wavecar_sha256": "388af65deabea328595677d3693094a535ed1ffd72a98c5cf8c423d72a9c45f9",
+        "spin_frame_outcar_sha256": "7d6c906de57e5254d73bf0c3858e522e64b5032578522f85b894153c27c77663",
+        "oracle_json": "reference/mesh12-source48-occupied-oracle/summary.json",
+        "oracle_npz": "reference/mesh12-source48-occupied-oracle/oracle.npz",
+        "oracle_json_sha256": "a97e3e280160796c4cecddbdff741ac7050e1b216a8f96aa04c40bebd6453324",
+        "oracle_npz_sha256": "ef1bb8e68708f68cbb605cfd7d5a4549c0b131447999293baa322fbd396aab9d"
+      },
+      {
+        "selection": "pair",
+        "source_wavecar_sha256": "388af65deabea328595677d3693094a535ed1ffd72a98c5cf8c423d72a9c45f9",
+        "spin_frame_outcar_sha256": "7d6c906de57e5254d73bf0c3858e522e64b5032578522f85b894153c27c77663",
+        "oracle_json": "reference/mesh12-source48-pair-oracle/summary.json",
+        "oracle_npz": "reference/mesh12-source48-pair-oracle/oracle.npz",
+        "oracle_json_sha256": "4e874e1a5c36444f630bf73a926db0991c114cf149c358845a90cb589c297793",
+        "oracle_npz_sha256": "6dae65fefdfa995b60a0e3fb0c0093dd091c418f5cfd0799918b90f7a271f93f"
+      }
+    ],
+    "oracle_script_sha256": "193d13dc77c57474faae6d4dcfaaa544fbc0ece411f3cbd699c02739f321bf8b",
+    "current_reader_sha256": "f48363080f4563413ef39a29932ecc19cc9dcffb4bea8622dded4a84c8609aba"
   }
 }

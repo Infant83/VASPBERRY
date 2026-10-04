@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_VERSION = "1.6.5"
+EXPECTED_VERSION = "1.6.6"
 ARCHIVED_V1_DOI = "10.5281/zenodo.1402593"
 
 
@@ -43,6 +43,7 @@ class VersionMetadataTests(unittest.TestCase):
 
     def test_changelog_records_scientific_release_boundaries(self):
         changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        self.assertIn("## [1.6.6] - 2026-10-04", changelog)
         self.assertIn("## [1.6.5] - 2026-10-04", changelog)
         self.assertIn("locally prepared 1.6.4 candidate", changelog)
         self.assertIn("which was never published", changelog)

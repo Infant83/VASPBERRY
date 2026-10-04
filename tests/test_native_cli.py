@@ -241,6 +241,57 @@ end subroutine
                 result = self.run_parser([*args, "--per-band", value], False)
                 self.assertIn("--per-band requires", result.stderr)
 
+    def test_modern_band_overrides_warn_and_preserve_effective_selection(self):
+        cases = [(['--bands', '1:2', '--bands', '1:2'], (1, 2)),
+                 (['--bands', '1:2', '--bands', '3'], (3, 3)),
+                 (['--bands', '1:2', '-ii', '2'], (2, 2)),
+                 (['--bands', '1:2', '-if', '3'], (1, 3)),
+                 (['--bands', '1:2', '-is', '3'], (3, 3)),
+                 (['-ii', '3', '-if', '4', '--bands', '1:2'], (1, 2)),
+                 (['-is', '3', '--bands', '1:2'], (1, 2))]
+        for source in ('waveder', 'wavecar'):
+            for selectors, expected in cases:
+                with self.subTest(source=source, selectors=selectors):
+                    result = self.run_parser(['--task', 'kubo', '--kubo-source', source,
+                                              *selectors])
+                    self.assertIn('WARNING: repeated/mixed band selectors', result.stderr)
+                    self.assertIn('Prefer one --bands', result.stderr)
+                    values = result.stdout.splitlines()[-3].split()
+                    self.assertEqual(tuple(map(int, values[9:11])), expected)
+            # The historical endpoint pair is one selection and has no override warning.
+            for selectors in (['-ii', '1', '-if', '2'], ['-if', '2', '-ii', '1']):
+                result = self.run_parser(['--task', 'kubo', '--kubo-source', source, *selectors])
+                self.assertNotIn('repeated/mixed band selectors', result.stderr)
+        # Preserve the published comma-list directionality: a later complete modern
+        # selection can replace a legacy one; a legacy endpoint cannot edit a list.
+        result = self.run_parser(['--task', 'kubo', '--kubo-source', 'waveder',
+                                  '-is', '2', '--bands', '1,3'])
+        self.assertIn('WARNING: repeated/mixed band selectors', result.stderr)
+        for flag in ('-ii', '-if', '-is'):
+            result = self.run_parser(['--task', 'kubo', '--kubo-source', 'waveder',
+                                      '--bands', '1,3', flag, '2'], False)
+            self.assertIn('comma-list', result.stderr)
+
+    def test_modern_waveder_kubo_rejects_ignored_task_controls(self):
+        controls = [('--kpoint', '2'), ('-k', '2'), ('--real-grid', '8,8,8'),
+                    ('-ng', '8,8,8'), ('--imaginary', '0'), ('-im', '0'),
+                    ('-ishift', '0,0,0'), ('--theta', '0'), ('-theta', '0'),
+                    ('--phi', '0'), ('-phi', '0'), ('-ien', '0'), ('-fen', '10'),
+                    ('-nediv', '1000'), ('-sigma', '0.01'), ('-kp', '1'), ('-skp', '0')]
+        for task in ('kubo', 'kubo-line', 'kubo-integral'):
+            base = ['--task', task, '--kubo-source', 'waveder', '--mesh', '2,2', '--bands', '1:2']
+            for flag, value in controls:
+                for arguments in ([flag, value, *base], [*base, flag, value]):
+                    with self.subTest(task=task, arguments=arguments):
+                        result = self.run_parser(arguments, False)
+                        self.assertIn(flag, result.stderr)
+                        self.assertIn('not used by standard WAVEDER Kubo', result.stderr)
+                        self.assertNotIn('Error opening', result.stdout + result.stderr)
+        # Retain the explicit canonical and unrelated historical parser behavior.
+        self.run_parser(['--task', 'kubo', '--kubo-source', 'wavecar', '--theta', '0'])
+        self.run_parser(['--task', 'wavefunction', '--wavefunction-band', '1', '--kpoint', '2'])
+        self.run_parser(['--task', 'optical', '--theta', '0'])
+
     def test_wavefunction_and_angle_aliases(self):
         self.equivalent(["--task", "wavefunction", "--wavefunction-band", "18",
                          "--kpoint", "2", "--real-grid", "8,10,12", "--imaginary", "1"],

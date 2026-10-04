@@ -207,7 +207,7 @@ the example commands. Keep the same cache when changing the following:
 |---|---|
 | Response versus chemical potential or temperature | `--mu-min`, `--mu-max`, `--mu-num`, `--mu-reference`, `--temperatures` |
 | Different valleys, pockets or sampled patches | `--regions`; optionally `--difference NAME:LEFT:RIGHT` |
-| Intermediate-state cutoff on the same eigenstates | `--pair-band-max`, keeping complete occupied and degenerate groups |
+| Retained pair-band window on the same eigenstates (both endpoints) | `--pair-band-max`, keeping the complete occupied window and unresolved degenerate groups; this tests intermediate-state convergence only while the occupied contribution stays complete |
 | Smaller temporary memory use | `--mu-chunk`; this does not change the physical model |
 
 Changing the Hamiltonian, structure, density, k mesh or available source

@@ -31,8 +31,9 @@ def sampling(args):
 
 def scan_options(args):
     require(args.mu_num >= 1 and np.isfinite([args.mu_min, args.mu_max]).all()
-            and args.mu_max >= args.mu_min and (args.mu_num > 1 or args.mu_min == args.mu_max),
-            'valid mu range and positive number required')
+            and ((args.mu_num == 1 and args.mu_min == args.mu_max)
+                 or (args.mu_num > 1 and args.mu_min < args.mu_max)),
+            'valid mu range required: MIN < MAX with N > 1, or MIN = MAX with N = 1')
     # The kernel evaluates the reference internally; keep output on the
     # requested scan rather than adding a distant point that stretches plots.
     mus = np.unique(np.linspace(args.mu_min, args.mu_max, args.mu_num))
@@ -161,6 +162,9 @@ def kubo_hall_command(args):
     require(args.binary is None and args.mpi_procs == 1 and args.mpi_launcher == 'mpiexec',
             '--binary and native MPI options apply only to --kubo-source wavecar; '
             'the standard WAVEDER route evaluates optical matrices directly in Python')
+    require(args.mu_chunk == 32,
+            '--mu-chunk applies only to cached pairs or --kubo-source wavecar; '
+            'omit it for the standard WAVEDER route')
     require((args.occupied is None) != (args.bands is None), '--occupied or --bands is required for WAVEDER')
     if args.occupied is not None:
         require(args.temperatures == [0.], 'WAVEDER occupied mode supports only insulating T=0; use --bands for a selected mu/T contribution')
@@ -214,26 +218,33 @@ def add_commands(sub):
         p.add_argument('--spin-multiplicity', type=int, choices=[1, 2],
                        help='default: 2 for scalar spin-degenerate states, otherwise 1')
         p.add_argument('--mesh', nargs=2, type=int, required=True, metavar=('NX', 'NY'))
-        p.add_argument('--plane-axes', nargs=2, type=int, default=[0, 1])
+        p.add_argument('--plane-axes', nargs=2, type=int, default=[0, 1],
+                       help='ordered zero-based reciprocal axes for the sheet plane (default: 0 1)')
         p.add_argument('--energy-reference', required=True, help='description of unchanged input energy zero')
     for p in (pair, bundle, wave, standard):
-        p.add_argument('--mu-min', type=float, required=True)
-        p.add_argument('--mu-max', type=float, required=True)
-        p.add_argument('--mu-num', type=int, default=241)
-        p.add_argument('--mu-reference', type=float, required=True)
-        p.add_argument('--temperatures', nargs='+', type=float, default=[0.])
+        p.add_argument('--mu-min', type=float, required=True, help='lower scan endpoint in eV, in the unchanged source energy zero')
+        p.add_argument('--mu-max', type=float, required=True, help='upper scan endpoint in eV')
+        p.add_argument('--mu-num', type=int, default=241,
+                       help='number of scan points (default: 241); equal endpoints require 1')
+        p.add_argument('--mu-reference', type=float, required=True, help='reference mu in eV for delta response; does not shift input energies')
+        p.add_argument('--temperatures', nargs='+', type=float, default=[0.], help='distinct nonnegative temperatures in K (default: 0)')
         p.add_argument('--regions', type=Path, help='optional named periodic circles or full-mesh k-ID sets')
         p.add_argument('--difference', action='append', default=[], metavar='NAME:LEFT:RIGHT')
         p.add_argument('--formats', nargs='+', choices=['csv', 'dat', 'npz'], default=['csv', 'dat', 'npz'],
                        help='independently selectable numerical formats; JSON metadata always included')
     for p in (pair, wave, standard):
-        p.add_argument('--degeneracy-threshold-eV', type=float, default=1e-7)
+        p.add_argument('--degeneracy-threshold-eV', type=float, default=1e-7,
+                       help='cached-pair/WAVECAR threshold only; WAVEDER uses its producer cluster threshold')
         p.add_argument('--degeneracy-policy', choices=['error', 'coalesce'], default='error',
-                       help='coalesce explicitly approximates numerical energy groups by their mean; records shifts')
-        p.add_argument('--allow-partial-bands', action='store_true')
-        p.add_argument('--mu-chunk', type=int, default=32)
+                       help='cached-pair/WAVECAR only: coalesce approximates numerical energy groups by their mean and records shifts')
+        p.add_argument('--allow-partial-bands', action='store_true',
+                       help='acknowledge incomplete occupied response for cached pairs/WAVECAR; WAVEDER --bands already declares selection')
+        p.add_argument('--mu-chunk', type=int, default=32,
+                       help='mu batch size for cached pairs or the WAVECAR route only; omit for WAVEDER')
         p.add_argument('--pair-band-max', type=int,
-                       help='optional upper pair-band limit for virtual-state convergence on one larger WAVECAR; source bands remain recorded')
+                       help='retain pairs with both band IDs <= M on the same source states; '
+                            'valid as a virtual-sum convergence test only when the occupied window stays inside; '
+                            'cached pairs/WAVECAR only')
     for p in (imp, pair, bundle, wave, standard):
         p.add_argument('--output-dir', type=Path, required=True)
 

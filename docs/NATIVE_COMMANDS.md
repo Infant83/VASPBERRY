@@ -1,9 +1,9 @@
 # VASPBERRY command reference
 
-**1.6.5 input policy:** the standard charge-Kubo route uses WAVEDER. This
-guide retains the WAVECAR canonical-momentum approximation and explicitly
-selects `--kubo-source wavecar` (or INI `kubo_source = wavecar`) to reproduce
-its existing results. See the [standard protocol](WAVEDER_KUBO_PROTOCOL.md)
+**1.6.6 input policy:** the standard charge-Kubo route uses WAVEDER. Examples
+that retain the WAVECAR canonical-momentum approximation explicitly select
+`--kubo-source wavecar` (or INI `kubo_source = wavecar`) to reproduce their
+existing results. See the [standard protocol](WAVEDER_KUBO_PROTOCOL.md)
 for PAW optical selected bands, required-pair checks and occupied compatibility.
 
 The VASPBERRY executable reads VASP WAVECAR and writes numerical results for
@@ -11,7 +11,7 @@ analysis and plotting. These examples use **Intel oneAPI Fortran and Intel MPI**
 the commands below execute VASPBERRY directly, without a Python script. The
 [hands-on guide](HANDS_ON.md) follows the saved files through transport and plots.
 
-This guide follows VASPBERRY 1.6.5. Its Kubo range selection replaces the
+This guide follows VASPBERRY 1.6.6. Its Kubo range selection replaces the
 native `--bundle`/`-kubo_bundle` flags; see the
 [migration guide](MIGRATION.md#native-kubo-band-selection) when updating from 1.6.2.
 
@@ -129,6 +129,18 @@ instead select the initial/final transition; `spectrum` uses the selected band
 window and source occupied boundary. `velocity` uses the first selected band,
 so specify a single band.
 
+Prefer one `--bands` selector. For compatibility, a later `--bands` replaces
+an earlier selection, and legacy `-ii`, `-if` or `-is` after a scalar/range
+selection retain their historical endpoint/single-band overrides. These
+overrides print a warning; inspect the effective band IDs. Legacy selectors
+cannot modify an earlier comma-separated list; a later modern `--bands`
+can replace earlier legacy settings. A legacy `-ii FIRST -if LAST` pair also
+remains available by itself. Modern standard WAVEDER Kubo tasks reject controls
+from unrelated tasks, including `--kpoint`, real-space grid/imaginary controls,
+optical angles and spectral broadening/energy-grid controls. They evaluate
+every k point stored in the supplied source; no unrelated flag selects a
+single point or changes the Kubo response.
+
 ## A small set of common arguments
 
 | Argument | Meaning |
@@ -143,7 +155,7 @@ so specify a single band.
 | `--spin-axis z` | Cartesian analysis axis for both spin-sector tasks: `x`, `y`, `z` or a comma-separated unit vector, e.g. `0,0,1`. Default z; OUTCAR defines the source spin frame. |
 | `--energy-gap-tol VALUE` / `--spin-gap-tol VALUE` | Both spin-sector tasks: default 1e-8 eV for the selected energy subspace and 1e-6 for the dimensionless projected-Pauli distance from zero. |
 | `--spinor auto` / `--spinor 1` / `--spinor 2` | Default `auto`: detect the component count from WAVECAR. Explicit `1` or `2` checks the file layout; it is not a spin-degeneracy factor. |
-| `--mesh NX,NY` | Mesh dimensions for mesh-based algorithms. It does not generate k points, interpolate, or convert a path into a mesh. |
+| `--mesh NX,NY` | Mesh dimensions for mesh-based algorithms. For standard WAVEDER Kubo, this explicitly requests full-grid validation and integration; legacy `-kx`/`-ky` alone only set dimensions. It does not generate k points, interpolate, or convert a path into a mesh. |
 | `--bands FIRST:LAST` / `--bands N` | Inclusive one-based range or singleton. WAVEDER Kubo also accepts a comma-separated list such as `31,33:34`; it selects a geometric trace unless `--per-band 1`. |
 | `--per-band 1` | Native `kubo`, `kubo-line` and `kubo-integral` only: calculate separate isolated bands rather than the multi-band trace. |
 | `--curvature-csv PATH` / `--pairs-csv PATH` | Exact CSV output filename. Parent directory must already exist. |
@@ -197,8 +209,11 @@ Legacy labels are retained for compatibility: `--output sample` produces
 `VEL_EXPT.sample.dat` for velocity. Individual-band Kubo adds `.EIG-N`, and
 its sum has the base label. Scalar `ISPIN=2` DAT outputs add `.UP`/`.DN`.
 Wavefunction filenames are selected by k and band; `--output` does not rename
-them. A multi-band trace uses `--curvature-csv PATH`, or `KUBO.csv` when the
-path is omitted. Pair export requires its explicit CSV path.
+them. `--curvature-csv PATH` chooses an exact filename for either charge-Kubo
+source. If omitted, standard WAVEDER uses `KUBO_WAVEDER.csv` for occupied,
+selected-trace and separate-band results. The explicit WAVECAR approximation
+defaults to `KUBO.csv` for a multi-band trace; its separate-band CSV needs
+an explicit path. Pair export requires its explicit CSV path.
 
 The native program currently stores most paths in 256-character fields.
 Prefer short working paths. The CSV interfaces are the preferred precision
@@ -210,7 +225,7 @@ operator assumptions, and the NPZ/JSON caches used by postprocessing.
 
 | Native output | Contents | Next use |
 |---|---|---|
-| Multi-band trace `KUBO.csv` | `spin,k_index,kx_frac,ky_frac,kz_frac,omega_z_A2,min_external_gap_eV` | Plot the computed Ωxy in Å² against k index/path position, or use the lattice for a BZ map |
+| Native trace CSV: `KUBO_WAVEDER.csv` by default for standard WAVEDER, `KUBO.csv` for the explicit WAVECAR approximation | `spin,k_index,kx_frac,ky_frac,kz_frac,omega_z_A2,min_external_gap_eV` | Plot the computed Ωxy in Å² against k index/path position, or use the lattice for a BZ map; retain the operator metadata |
 | Individual-band curvature CSV | k/band IDs, fractional k, band energy, gap and `omega_z_A2` | Plot energy and curvature for the selected isolated band |
 | `PAIRS.csv` | k/spin and n/m IDs, two energies, gap and three `numerator_*_eV2_A2` columns | Integrate occupations and squared energy denominators to obtain Hall response |
 
@@ -227,7 +242,23 @@ lists their exact columns and units.
 
 ## Charge transport and reusable figures
 
-The main charge-Hall workflow is:
+The standard charge-Hall workflow reads the optical matrix elements directly:
+
+```text
+Same-run full-mesh WAVEDER + WAVECAR + INCAR + OUTCAR
+  -> Python kubo-hall: validated optical connections, occupations and BZ integration
+  -> conductivity.csv / .dat / .npz + .json
+  -> plot_hall.py or your preferred plotting program
+```
+
+Use `kubo-hall --bands SELECTOR` for an occupation-weighted selected
+contribution, or `--occupied N` for the insulating T=0 response. These
+selectors are mutually exclusive. The [standard protocol](WAVEDER_KUBO_PROTOCOL.md)
+gives complete commands and required inputs. The INI `run` command selects
+the same backend by default. A selected sum over the `total` k-space region
+still denotes the selected bands' contribution, not certified total AHC.
+
+The explicitly requested WAVECAR approximation retains a reusable pair cache:
 
 ```text
 VASP full-mesh WAVECAR
@@ -241,8 +272,8 @@ Pair export does not use source occupations or divide by energy gaps;
 k-dependent metallic/smeared occupations therefore need no manual `-ne`
 override. Postprocessing supplies μ, temperature, spin multiplicity and
 regions. Its complete, uniform 2D mesh and degeneracy checks still apply.
-Once the cache exists, varying μ, temperature, regions or the retained
-intermediate-band cutoff does not require another VASPBERRY execution.
+Once this canonical cache exists, varying μ, temperature, regions or the
+retained pair-band window does not require another VASPBERRY execution.
 `import-pairs` checks and reorganizes the native output. `pair-hall` performs
 the occupation-weighted transport integral. `plot_hall.py` only reads the
 finished conductivity table and draws figures. The optional `wavecar-hall`

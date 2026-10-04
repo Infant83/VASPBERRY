@@ -260,7 +260,9 @@ def plot_panels(*, method, input_path, poscar_path, bands_csv, output_path,
         bundle_label = ("Selected bands " + ",".join(map(str, bundle_ids)) if method == "kubo-bundle"
                         and selected_optical else f"Occupied bands 1–{occupied}")
         quantity = "Kubo formula: " + bundle_label.lower() if method == "kubo-bundle" else rf"Kubo formula: band {band}"
-        quantity += " (PAW optical)" if paw_trace else " (WAVECAR approximation)"
+        # Keep the operator visible without letting the map title run beyond
+        # the figure boundary at the default three-panel layout size.
+        quantity += "\n(PAW optical)" if paw_trace else "\n(WAVECAR approximation)"
         curve_label = bundle_label if method == "kubo-bundle" else rf"Band {band}"
     else:
         raise ValueError("method must be fukui, kubo or kubo-bundle")

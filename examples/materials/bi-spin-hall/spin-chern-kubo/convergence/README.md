@@ -156,3 +156,16 @@ wavefunction metric, while the curvature proxy still needs its own sampling,
 source-state and operator-approximation checks. The pair invariant describes
 bands 9–10 and is not the occupied system's Z2 index. See the full
 [method and output contract](../../../../../docs/SPIN_KUBO.md).
+
+## Reference diagnostic correction (2026-10-04)
+
+The four 12×12/source48 rows in `reference/convergence.csv` now use their own
+occupied/pair overlap diagnostics. The original packaging fallback had reused
+source64 minimum-link and maximum-flux diagnostics. The exact source48 WAVECAR
+SHA256 is `388af65deabea328595677d3693094a535ed1ffd72a98c5cf8c423d72a9c45f9`.
+The new [occupied oracle](reference/mesh12-source48-occupied-oracle/summary.json)
+and [pair oracle](reference/mesh12-source48-pair-oracle/summary.json) record the
+source identities; [provenance](reference/provenance.json) preserves all eight
+before/after cells. Chern numbers, Kubo results, the report tables and Figure12
+are unchanged. This is a diagnostic attribution correction using retained
+wavefunctions, not a new VASP calculation.

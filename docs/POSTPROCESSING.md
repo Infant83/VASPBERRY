@@ -6,7 +6,7 @@ write JSON files or assemble the individual Python stages.
 
 | Command | What it does | What you get |
 |---|---|---|
-| `check analysis.ini` | Check settings, input files and mesh before running. | A summary or an actionable error; no calculation directory. |
+| `check analysis.ini` | Validate settings and inputs; the WAVEDER route also evaluates the requested μ/T spectrum to check matrix coverage and weights. | A summary or an actionable error; no result directory or saved conductivity table. |
 | `run analysis.ini` | Calculate Hall tables from WAVEDER, or execute the explicitly selected native WAVECAR approximation. | Numerical data in the INI's `output` directory, with operator and contribution scope. |
 | `plot results/run01` | Read a completed result and draw it. | PNG, PDF and SVG figures; no new wavefunction calculation. |
 
@@ -23,8 +23,12 @@ Only an explicit `[run] kubo_source = wavecar` launches the compiled
 **VASPBERRY executable** named by `[run] binary`, then postprocesses its
 canonical-momentum pair data. This approximation prints a warning. `run`
 also performs the checks, so the separate `check` is useful when preparing
-an input. Numerical validity checks continue during `run`; this preliminary
-check does not establish convergence.
+an input. For WAVEDER, `check` performs the requested spectrum calculation
+without saving its results and can take comparable time to `run`. For the
+explicit WAVECAR route, it checks the input/header/grid and configured
+execution tools without running the native pair calculation; further
+numerical validity checks occur during `run`. Neither preflight establishes
+physical mesh or band convergence.
 
 **Choose a starting point:** [selected WAVEDER software example](../examples/features/waveder-selected/),
 [public Bi approximation](#start-with-the-public-bi-example),
@@ -116,7 +120,7 @@ mkdir results/mos2-direct-kubo && (
 )
 ```
 
-This command uses VASPBERRY 1.6.5 with explicit WAVECAR opt-in; see the
+This command uses VASPBERRY 1.6.6 with explicit WAVECAR opt-in; see the
 [migration guide](MIGRATION.md#native-kubo-band-selection) for older commands.
 It executes **VASPBERRY through MPI** without a Python helper. It reads
 the supplied SOC MoS₂ WAVECAR and creates
@@ -142,7 +146,7 @@ and postprocessing commands in the [hands-on guide](HANDS_ON.md).
 ## Use your own VASP calculation
 
 For the standard PAW optical calculation, start with the
-[WAVEDER INI protocol](WAVEDER_KUBO_PROTOCOL.md#3-calculate-and-plot-the-insulating-hall-response).
+[WAVEDER INI protocol](WAVEDER_KUBO_PROTOCOL.md#3-apply-occupations-and-calculate-a-selected-charge-contribution).
 The following example deliberately selects the WAVECAR approximation for a
 general μ/T scan; it does not supply PAW/nonlocal velocity terms.
 
@@ -285,11 +289,13 @@ shows a physically specified K/K′ partition and its regional contrast.
 | What changed? | What to do |
 |---|---|
 | Only the figure: saved temperature, σ versus Δσ, or saved group/band to display | Use `plot` with an override and a new figure directory. |
-| μ range, temperature grid, region, or group definition/name | Edit the INI, choose a new `output`, then `run ... --reuse PREVIOUS_RESULT`; plot that new result. |
-| VASP electronic structure, geometry or WAVECAR | Execute VASPBERRY again with a fresh `run` and new output directory. |
+| WAVEDER μ range, temperature grid, target bands or region | Edit the INI, choose a new `output`, then `run analysis-next.ini`; the optical inputs are reread and the new response is calculated. |
+| Explicit WAVECAR approximation: μ range, temperature grid, region or projection group | Edit the INI, choose a new `output`, then `run ... --reuse PREVIOUS_RESULT`; plot that new result. |
+| VASP electronic structure, geometry or source files | Use matching new source files and a fresh `run` with a new output directory. The explicit WAVECAR route executes the native pair calculation again. |
 
-For a new numerical scan, copy `analysis.ini` to `analysis-next.ini` in the
-same directory, change the desired settings and set `output = results/run02`:
+For a new numerical scan in the **explicit WAVECAR approximation**, copy
+`analysis.ini` to `analysis-next.ini` in the same directory, change the desired
+settings and set `output = results/run02`:
 
 ```bash
 python3 tools/vaspberry_post.py check analysis-next.ini --reuse results/run01
@@ -297,7 +303,8 @@ python3 tools/vaspberry_post.py run analysis-next.ini --reuse results/run01
 python3 tools/vaspberry_post.py plot results/run02
 ```
 
-`--reuse` skips VASPBERRY execution, verifies the same WAVECAR/source
+`--reuse` is rejected for the standard WAVEDER route; omit it in that route.
+For the WAVECAR approximation it skips VASPBERRY execution, verifies the same WAVECAR/source
 conventions and recalculates the postprocessing. Keep WAVECAR available;
 projection also needs matching PROCAR/OUTCAR. Follow the
 [ready-to-run Bi rescan](../examples/features/simple-postprocess/README.md#4-reuse-the-pairs-for-a-second-scan)

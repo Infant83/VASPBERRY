@@ -4,6 +4,37 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+## [1.6.6] - 2026-10-04
+
+This patch retains the 1.6.5 WAVEDER input protocol and packages the
+CLI-consistency fixes and report reproduction corrections below. Historical
+material reference data retain their original producer versions.
+
+### Report reproduction
+
+- Recalculate the technical-report figures and numerical controls from
+  retained inputs, and record the dated reproduction scope separately from
+  electronic-structure regeneration and physical convergence.
+- Correct source-specific Bi conditioning diagnostics in four reference
+  rows, retaining the original records and unchanged Chern/Kubo values.
+- Clarify rounded report values and the Hall example's pair-window help;
+  wrap Kubo plot operator labels to prevent clipping.
+
+### Command-line clarity and validation
+
+- Reject wavefunction, optical and folding controls that modern standard
+  WAVEDER Kubo tasks do not use. Warn when a later band selector overrides
+  an earlier one, preserving the supported historical precedence.
+- Keep native `--mesh` integration distinct from legacy mesh-size settings.
+  Reject nondefault `--mu-chunk` on the WAVEDER route, where it has no effect.
+- Match CLI and INI chemical-potential scans: equal endpoints require one
+  point; a multi-point scan requires increasing endpoints.
+- Explain that INI `check` evaluates the requested WAVEDER response without
+  writing results, show every resolved optical input, and distinguish this
+  validation from material convergence.
+- Correct standard/canonical output filenames, rescan and cache-reuse
+  guidance, protocol navigation and the two-endpoint pair-band cutoff label.
+
 ## [1.6.5] - 2026-10-04
 
 This release incorporates and supersedes the locally prepared 1.6.4 candidate,

@@ -6,5 +6,11 @@
     "figure.pdf": "8af42d47a6b09d358faeea8d3d52bf5ef5e9da88155b90e464c66b64fef71fd7",
     "figure.png": "0477dccd9716dec994cc0497e4b157d43fe9bc51c9426daf53a641aef475850b"
   },
-  "scope": "Display of saved tables; straight segments connect actual mesh/cutoff tests. No interpolation model or new physical calculation."
+  "scope": "Display of saved tables; straight segments connect actual mesh/cutoff tests. No interpolation model or new physical calculation.",
+  "source48_diagnostic_correction": {
+    "date": "2026-10-04",
+    "corrected_input_sha256": "d18dd8555f509ef3808a4f02434f39770f8a9af8ad66570982e61b6cbc8194de",
+    "figure_inputs_unchanged": true,
+    "note": "The original input_sha256 binds the plotted 2026-09-27 table. Only conditioning columns unused by this figure were corrected; all plotted quantities and figure files are unchanged."
+  }
 }

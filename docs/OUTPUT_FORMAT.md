@@ -8,7 +8,7 @@ method, also called the Fukui method, for Chern numbers. The
 `VASPBERRY_Z2_FIELD` format belongs to the separate Fukui–Hatsugai (FH)
 Z₂ n-field method and is also unchanged.
 
-## Standard native WAVEDER curvature (1.6.5)
+## Standard native WAVEDER curvature (from 1.6.5)
 
 `--task kubo` now defaults to optical connections. With `--bands` omitted its schema is
 `VASPBERRY_WAVEDER_KUBO_OCCUPIED_V1`, default file `KUBO_WAVEDER.csv`, with
@@ -51,7 +51,7 @@ The Intel and GNU executables write the same numerical formats. The
 
 | File | Contains | Calculation still needed? | Typical plot |
 |---|---|---|---|
-| Native bundle `KUBO.csv` | k coordinates and computed Ωxy in `omega_z_A2` (Å²), selected-bundle gap (eV) | None for a curvature plot | Ω versus path samples; a full-mesh Ω map with the matching lattice |
+| Native trace CSV (`KUBO_WAVEDER.csv` for standard WAVEDER; `KUBO.csv` for the explicit WAVECAR approximation) | k coordinates and computed Ωxy in `omega_z_A2` (Å²), selected-bundle gap (eV); metadata identifies the operator | None for a curvature plot | Ω versus path samples; a full-mesh Ω map with the matching lattice |
 | Native individual-band CSV | Band ID, energy, coordinates, Ωxy and minimum gap for each selected isolated band | None for a curvature plot | Separate band curves, filtered by `band` and `spin` |
 | Native `SPIN_CHERN.csv`, `SPIN_BERRY.csv`, `SPIN_SPECTRUM.csv` | Projected-spin sector invariants, plaquette flux and spin spectrum | None for plotting | Sector flux maps, spin-gap maps and mesh comparisons; [spin Chern number guide](SPIN_CHERN.md) |
 | Native `SPIN_KUBO.csv`, `SPIN_KUBO_SPECTRUM.csv`, optional `SPIN_KUBO_INTEGRAL.csv` | Positive/negative/parent point curvature, its decomposition and raw explicit-mesh integrals | None for plotting; use separate `spin-chern` for geometric integers | Spin-sector curves on a k path and full-mesh maps; [spin-sector Kubo-formula guide](SPIN_KUBO.md) |

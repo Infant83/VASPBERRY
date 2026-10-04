@@ -12,7 +12,7 @@ method**, called the **Fukui method** below. Z₂ uses the distinct **Fukui–Ha
 Build with `make serial` and run `build/vaspberry --help` for the native CLI.
 The older executable name `build/vaspberry-gfortran` and short flags remain
 supported; the guides use descriptive task and option names. Use VASPBERRY
-1.6.5 for the complete commands below, including automatic Kubo subspace
+1.6.6 for the complete commands below, including automatic Kubo subspace
 selection and `--per-band 1` for separate bands. The
 [migration guide](../docs/MIGRATION.md#native-kubo-band-selection) lists the
 removed native flags and their replacements.
@@ -25,7 +25,7 @@ figure to its calculation, numerical files and input-regeneration requirements.
 Start with the [hands-on commands](../docs/HANDS_ON.md); use the compact
 [native command reference](../docs/NATIVE_COMMANDS.md) when changing task options.
 
-## Standard charge Kubo calculation (1.6.5)
+## Standard charge Kubo calculation (1.6.6)
 
 Follow the [WAVEDER protocol](../docs/WAVEDER_KUBO_PROTOCOL.md): generate
 same-run WAVEDER/WAVECAR/INCAR/OUTCAR and run `--task kubo` or `kubo-hall`.

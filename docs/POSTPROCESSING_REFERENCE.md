@@ -54,7 +54,7 @@ WAVECAR route and are rejected with WAVEDER.
 | `[run] energy_reference` | Descriptive text recording the WAVECAR energy convention, e.g. `unchanged VASP eigenvalue zero`. It does not shift any energy. |
 | `[hall] mu` | `MIN MAX N`: N equally spaced chemical potentials in eV, including endpoints. Use `MIN < MAX` and integer `N >= 2`, or `MIN = MAX` and `N = 1` for a single Hall-response point. |
 | `[hall] reference` | Reference chemical potential in eV for Δσ and the plot's horizontal origin. Uses the same energy zero as `mu` and WAVECAR; need not be a sampled `mu` value. |
-| `[hall] temperatures` | Distinct nonnegative temperatures. WAVEDER `occupied` mode requires `0`; selected `bands` mode checks all requested weighted pairs, including finite-temperature tails. |
+| `[hall] temperatures` | Distinct nonnegative temperatures in K. WAVEDER `occupied` mode requires `0`; selected `bands` mode checks all requested weighted pairs, including finite-temperature tails. |
 | `[hall] occupied` | WAVEDER insulating compatibility selector; μ/reference strictly inside the global gap, T=0. Mutually exclusive with `bands`; rejected with WAVECAR source. |
 | `[hall] bands` | WAVEDER target selector, e.g. `31`, `31:32` or `31,33:34`; mutually exclusive with `occupied`. All source intermediate bands remain included. Gives a selected contribution, not certified total AHC; rejected with WAVECAR source. |
 
@@ -224,7 +224,7 @@ and the [hands-on guide](HANDS_ON.md).
 
 | Command | Input dependencies and action |
 |---|---|
-| `check analysis.ini` | Checks settings, a new output path and WAVECAR/header/grid. WAVEDER also validates same-run optical files, requested weighted pairs and producer clusters. The explicit WAVECAR route checks its executable/launcher and any projection inputs. Creates no result directory. |
+| `check analysis.ini` | Checks settings, a new output path and WAVECAR/header/grid. WAVEDER validates same-run optical files and evaluates the requested μ/T spectrum to check weighted pairs and producer clusters, without saving the spectrum; it may take comparable time to `run`. The explicit WAVECAR route checks its executable/launcher and any projection inputs without executing the native pair calculation. Creates no result directory. |
 | `run analysis.ini` | Performs the checks and computes Hall tables. WAVEDER contracts optical connections directly; the explicit WAVECAR route executes VASPBERRY to write `native/PAIRS.csv` (with MPI when configured), then imports the pairs and any character attribution. Saves settings, source/operator scope, logs and table checksums. |
 | `check analysis-next.ini --reuse results/run01` | Requires a completed previous front-end run, its intact pair cache and the same WAVECAR. Checks compatibility without calculating. Executable and launcher availability are not needed. |
 | `run analysis-next.ini --reuse results/run01` | Copies the verified pair cache into a new output directory and recalculates the requested postprocessing. Requires source PROCAR/OUTCAR again if projection is enabled. |

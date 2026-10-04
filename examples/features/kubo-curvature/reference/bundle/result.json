@@ -139,8 +139,8 @@
     "KUBO_path.csv": "9466e45bc1c5d96d2472fdb56e91f536a2fafad146596f21bfd8de2107338a9d",
     "bands.csv": "e7082383919d9cbb79fac30f653ba3e42726d61fdc941305f0dad3b0d415454f",
     "path_curvature.csv": "b98d9b6b0e7c65caf3d43100aa2099cdab2f8784a190ba34491e735658a622ff",
-    "figure.png": "28d75e3fc7945968f2838424ccb0e844d888d51d29021f88715e9a8afd9b42c4",
-    "figure.pdf": "693154b4200f972720e77482f963b055e5f4fd94012a37f2330f4420afaa7b20"
+    "figure.png": "d027096bbcd32181f7de6e89a03f1d21df4393cf728d5b9747085462413484da",
+    "figure.pdf": "9f9b7603e5ee9133163e4389c88d8ed88779eeef1f0560179a1cac3c94996eda"
   },
   "provenance": {
     "status": "PASS",
@@ -227,5 +227,20 @@
     "description": "Direct complex128 WAVECAR momentum contraction with native SI constants and pi convention",
     "shared_mesh_path_points": 18,
     "max_abs_error_A2": 3.552713678800501e-14
+  },
+  "display_refresh": {
+    "date": "2026-10-04",
+    "purpose": "Wrap the explicit WAVECAR approximation label onto a second title line so it remains inside the three-panel figure.",
+    "numerical_data_changed": false,
+    "numerical_reference_sha256": {
+      "bands.csv": "e7082383919d9cbb79fac30f653ba3e42726d61fdc941305f0dad3b0d415454f",
+      "KUBO_mesh.csv": "8a80fdb7430e509511a0e7df8bf3f7bb61a59904714aea361b8711c0c65546e8",
+      "path_curvature.csv": "b98d9b6b0e7c65caf3d43100aa2099cdab2f8784a190ba34491e735658a622ff",
+      "KUBO_path.csv": "9466e45bc1c5d96d2472fdb56e91f536a2fafad146596f21bfd8de2107338a9d"
+    },
+    "plotter_sha256": "717ac13811fcb8063fa78701c3fe68871831207b9df13c4a15d3b982f9585d94",
+    "source_numeric_reproduction": "All native mesh/path CSV values and band energies were recalculated from matching retained WAVECAR inputs and matched the original numerical references exactly.",
+    "label": "Kubo formula: occupied bands 1\u201318\n(WAVECAR approximation)",
+    "historical_producer_records": "Unchanged; display refresh is separate from original numerical calculation provenance."
   }
 }

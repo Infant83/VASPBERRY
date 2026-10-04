@@ -140,6 +140,17 @@ class NativeHelpTests(HelpAssertions, unittest.TestCase):
         self.assertIn('-f PATH', text)
         self.assertIn('outputs stay in cwd', text)
 
+    def test_mesh_and_band_help_distinguish_explicit_control_requests(self):
+        mesh = self.request('--help', 'mesh').stdout
+        self.assertIn('only explicit --mesh requests integration', mesh)
+        self.assertIn('legacy -kx/-ky alone', mesh)
+        bands = self.request('--help', 'bands').stdout
+        self.assertIn('Prefer one --bands selection', bands)
+        self.assertIn('historical endpoint/singleton precedence', bands)
+        kubo = self.request('--help', 'kubo').stdout
+        self.assertIn('rejects wavefunction/optical/folding controls', kubo)
+        self.assertIn('-sigma', kubo)
+
     def test_pairs_help_points_to_executable_postprocessor(self):
         for topic in ("kubo-pairs", "outputs"):
             text = self.request("--help", topic).stdout

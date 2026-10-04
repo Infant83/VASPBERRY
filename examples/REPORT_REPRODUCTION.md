@@ -28,10 +28,10 @@ calculation. Keep mesh and path WAVECARs in separate directories.
 | §3.5 / Fig. 8: Γ-state density | [Wavefunction guide](features/wavefunction/) — native `wavefunction`, then `--postprocess-only` | `reference/raw-output.tar.gz`, `summary.csv`; bundled 48-point MoS₂ WAVECAR | Complete native calculation, Fourier check and figure reproduction without VASP. |
 | §3.6: MnBi₂Te₄ Chern number | [Magnetic-film guide](materials/mnbi2te4-qah/) — native `chern --mesh 6,6 --bands 1:123` | `reference/native-fukui/BERRYCURV.dat`, stdout and plaquette comparison | Inspect/replot occupied flux. Recalculate after ordinary SOC+U VASP from the supplied SCF density. The separate coarse WAVEDER integral is explicitly unconverged. |
 | §3.7 / Fig. 9: graphene spin Chern number | [Graphene guide](materials/graphene-spin-chern/) — ordinary SOC VASP, then native `spin-chern --bands 1:8` | `SPIN_CHERN.csv`, `SPIN_BERRY.csv`, `SPIN_SPECTRUM.csv`, band and convergence tables in `reference/` | Redraw from saved native tables. Fresh calculation needs licensed VASP and the matching C potential; the preparation helper preserves exact structure metadata in the charge restart. |
-| §3.8 / Fig. 10: graphene spin-sector Kubo | [Graphene Kubo guide](materials/graphene-spin-chern/kubo/) — native `spin-kubo --bands 1:8` on a path, with `--mesh 12,12` for the mesh | Native point/spectrum/integral CSVs, independent Chern-number and FHS plaquette data, rejected pair link and `comparison.csv` | Draw all panels with the example `plot.py`. Fresh wavefunctions use the parent graphene preparation guide; the coarse Kubo integral is explicitly unconverged. |
-| §3.9 / Fig. 11: Bi occupied/pair spin sectors | [Bi Kubo guide](materials/bi-spin-hall/spin-chern-kubo/) — native `spin-kubo` / `spin-chern`, `--bands 1:10` or `9:10` | Native path/mesh CSVs and Chern numbers evaluated with the Fukui method for both groups | Draw all panels with the shared plotter. Fresh ordinary VASP mesh/path commands are supplied; different selected spaces have different discrete Chern numbers. |
-| §3.10.1 / Fig. 12: Bi mesh and band controls | [Bi convergence](materials/bi-spin-hall/spin-chern-kubo/convergence/) — fixed-source `spin-kubo --sum-bands`, independent full-mesh Chern numbers (FHS) | Native-derived point data, `convergence.csv`, source-quality checks and figure | Redraw from portable tables. Full regeneration separates mesh, retained sum cutoff and VASP source eigenstate quality. |
-| §3.10.2 / Fig. 13: graphene local SOC peak | [Graphene local convergence](materials/graphene-spin-chern/kubo/convergence/) — ordinary local VASP, native `spin-kubo`, independent overlap diagnostics | Native curvature, actual-WAVECAR polygon flux, local quadrature and energy-fit diagnostics | Redraw from saved tables. Local flux and diagnostic fits are not full-BZ Chern integrals. |
+| §3.8 / Fig. 10: graphene spin-sector Kubo | [Graphene Kubo guide](materials/graphene-spin-chern/kubo/) — native `spin-kubo --kubo-source wavecar --bands 1:8` on a path, with `--mesh 12,12` for the mesh | Native point/spectrum/integral CSVs, independent Chern-number and FHS plaquette data, rejected pair link and `comparison.csv` | Draw all panels with the example `plot.py`. Fresh wavefunctions use the parent graphene preparation guide; the coarse Kubo integral is explicitly unconverged. |
+| §3.9 / Fig. 11: Bi occupied/pair spin sectors | [Bi Kubo guide](materials/bi-spin-hall/spin-chern-kubo/) — native `spin-kubo --kubo-source wavecar` / `spin-chern`, `--bands 1:10` or `9:10` | Native path/mesh CSVs and Chern numbers evaluated with the Fukui method for both groups | Draw all panels with the shared plotter. Fresh ordinary VASP mesh/path commands are supplied; different selected spaces have different discrete Chern numbers. |
+| §3.10.1 / Fig. 12: Bi mesh and band controls | [Bi convergence](materials/bi-spin-hall/spin-chern-kubo/convergence/) — fixed-source `spin-kubo --kubo-source wavecar --sum-bands`, independent full-mesh Chern numbers (FHS) | Native-derived point data, `convergence.csv`, source-quality checks and figure | Redraw from portable tables. Full regeneration separates mesh, retained sum cutoff and VASP source eigenstate quality. |
+| §3.10.2 / Fig. 13: graphene local SOC peak | [Graphene local convergence](materials/graphene-spin-chern/kubo/convergence/) — ordinary local VASP, native `spin-kubo --kubo-source wavecar`, independent overlap diagnostics | Native curvature, actual-WAVECAR polygon flux, local quadrature and energy-fit diagnostics | Redraw from saved tables. Local flux and diagnostic fits are not full-BZ Chern integrals. |
 | Appendix A.3 / Fig. 14: optional Bi spin Hall | [Bi guide](materials/bi-spin-hall/) — `restore_matrices.py`, `spin-hall` | Public 6×6 and 12×12 physical matrices; conductivity and convergence tables | Recalculate the supplied matrix cases and redraw the whole convergence figure. New mesh/source calculations need licensed VASP and the supported PAW producer. |
 | Appendix B.2 / Fig. 15: optional Bi ideal edges | [Bi guide](materials/bi-spin-hall/#4-confirm-the-bulk-z₂-result-with-an-ideal-edge) — `wannier-bands`, `wannier-edge` | Public Hamiltonian/position operators; bulk/edge reference arrays | Recalculate the finite model and redraw figures. This supporting model is separate from native Z₂ and PAW spin Hall. |
 | Appendix B.3 / Fig. 16: optional MnBi₂Te₄ finite model | [Native Wannier guide](materials/mnbi2te4-qah/NATIVE_WANNIER.md) | Public archived operators; five quadrature cases and direct-DFT sample bands | Recalculate the fixed model and redraw figures. It does not establish convergence of the coarse direct-VASP optical integral. |
@@ -54,9 +54,33 @@ report figures automatically.
 The additional [PROCAR character example](features/procar-character/) gives
 a small analytic fixture for the layer/orbital/spin-attribution commands in
 report §1.4. It supplements the report's workflow discussion; it is not an additional
-VASP material result or one of Figures 1–14. Transfer its `project`, `hall`
+VASP material result or one of Figures 1–16. Transfer its `project`, `hall`
 and `plot` stages to matching material files after defining the atom groups
 and choosing isolated bands and a spin axis.
+
+## Numerical recheck of 2026-10-04
+
+The VASPBERRY and associated analysis calculations underlying all sixteen
+report figures and Section 3.6 were repeated from retained electronic-state, physical-operator or
+Wannier-model inputs, as appropriate for each row above. This includes fresh
+native pair exports for all eight MoS₂ Hall cases, all 34 Bi spin-sector
+convergence rows and all five MnBi₂Te₄ model quadratures. One independent
+postw90 quadrature was also rerun. The exact four-state model, selected-WAVEDER
+and PROCAR fixtures remain explicitly synthetic checks.
+
+The audit found a source-attribution error in eight supplementary Bi
+conditioning values; the [dated correction](materials/bi-spin-hall/spin-chern-kubo/convergence/#reference-diagnostic-correction-2026-10-04)
+records the exact input and replacement values. Main Chern/Kubo results were
+unchanged. The report also corrects two rounded-value descriptions and a
+clipped operator label in Figure 2.
+
+This recheck used the 1.6.5 source with the subsequent CLI/documentation
+corrections, now packaged as VASPBERRY 1.6.6. It did not regenerate the VASP electronic structures, rerun the
+operator producer or relocalize the Wannier models. Some retained raw inputs
+are not distributed; the availability column above still applies. Reproduced
+finite-grid values do not certify material convergence. See
+[report Appendix C](../docs/TECHNICAL_REPORT.md#appendix-c-numerical-reproduction-check-of-2026-10-04)
+for the audited scope.
 
 For another material, retain numerical outputs and their units, band
 selection, operator identity and energy zero. The generic native CLI,

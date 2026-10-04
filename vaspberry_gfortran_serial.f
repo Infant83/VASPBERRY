@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.6.5 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.6.6 (f77) for VASP
 ! Written by Hyun-Jung Kim
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -40,6 +40,8 @@
 ! version 1.6.3 release metadata; historical calculation unchanged
 !               : 2026. Sep. 30.
 ! version 1.6.5 release metadata; historical calculation unchanged
+!               : 2026. Oct. 04.
+! version 1.6.6 release metadata; historical calculation unchanged
 !               : 2026. Oct. 04.
 ! last update and bug fixes : 2026. Oct. 04.
 ! NOTE: This version only support serial calculations and modified
@@ -85,7 +87,7 @@
       nprocs=1
       myrank=0
 
-      ver_tag="# VASPBERRY (Ver 1.6.5), by Hyun-Jung Kim."//
+      ver_tag="# VASPBERRY (Ver 1.6.6), by Hyun-Jung Kim."//
      &        " 2026. Oct. 04."
       call vaspberry_help_request(ver_tag,.true.)
       pi=4.*atan(1.)
@@ -1046,7 +1048,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.6.5'
+      write(94,'(A)')'# vaspberry_version=1.6.6'
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
@@ -1246,7 +1248,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.6.5'
+      write(94,'(A)')'# vaspberry_version=1.6.6'
       if(fieldok)then
        write(94,'(A)')'# result_status=PASS'
       else
