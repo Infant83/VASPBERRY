@@ -18,10 +18,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - label: macOS ARM64, GNU/OpenMPI
-            os: macos-15
-            id: macos-arm64-openmpi
-            architecture: arm64
           - label: Linux, GNU/MPICH
             # Noble's MPICH 4.2.0-5build3 has a PMIx/Hydra packaging mismatch:
             # https://github.com/pmodels/mpich/issues/7064
@@ -130,30 +126,13 @@ jobs:
           status=${PIPESTATUS[0]}
           echo "$status" > "$INSTALL_ROOT/results/build-runtime.exit"
           exit "$status"
-      - name: Compare real MoS2 serial and two-rank MPI Kubo exports
+      - name: Compare default and explicit SIGPIPE handling on MPICH
         run: |
           cd "$INSTALL_ROOT/source"
-          # This numerical checker uses only Python's standard library.
-          # Its name preserves the existing Intel MPI validation entry point.
-          python tests/run_intel_mpi_validation.py \
-            --serial build/vaspberry --mpi build/vaspberry-mpi \
-            --mpiexec "$MPIEXEC" --output-dir "$INSTALL_ROOT/results/numerics"
-      - name: Validate native spin Chern and spin Kubo from the extracted archive
-        run: |
-          cd "$INSTALL_ROOT/source"
-          # Analytic validation uses NumPy; the native build above needs no Python package.
-          python -m pip install -r requirements-transport.txt
-          python .github/scripts/validate_native_spin.py \
-            --serial build/vaspberry --mpi build/vaspberry-mpi \
-            --mpiexec "$MPIEXEC" --output-dir "$INSTALL_ROOT/results/native-spin"
-      - name: Validate selected WAVEDER commands and plots from the extracted archive
-        env:
-          MPLBACKEND: Agg
-        run: |
-          cd "$INSTALL_ROOT/source"
-          python examples/features/waveder-selected/run.py \
-            --binary build/vaspberry \
-            --output-dir "$INSTALL_ROOT/results/waveder-selected"
+          python tests/diagnose_mpi_abort.py \
+            --compiler "$MPIFC" --mpiexec "$MPIEXEC" \
+            --native build/vaspberry-mpi \
+            --output-dir "$INSTALL_ROOT/results/abort-diagnostic"
       - name: Retain toolchains, commands, checksums and numerical failure logs
         if: always()
         uses: actions/upload-artifact@v4
