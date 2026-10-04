@@ -19,6 +19,7 @@ VASP supplies the material's electronic structure. VASPBERRY postprocesses it;
 band plots provide context for the calculated topology and response.
 
 [Technical report](docs/TECHNICAL_REPORT.md) ([PDF](docs/TECHNICAL_REPORT.pdf)) ·
+[Feature poster (PDF)](docs/VASPBERRY_FEATURE_POSTER.pdf) ([figure notes](docs/VASPBERRY_FEATURE_POSTER.md)) ·
 [Hands-on commands](docs/HANDS_ON.md) · [Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
 [Postprocessing guide](docs/POSTPROCESSING.md) · [Output formats](docs/OUTPUT_FORMAT.md)
 
