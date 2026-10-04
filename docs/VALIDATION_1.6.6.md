@@ -53,7 +53,19 @@ supported an explicit SIGPIPE-ignore policy for the CI launch path. This
 stabilizes the tested launcher behavior without establishing the MPI runtime's
 internal cause. The revised harness still requires controlled exit 1,
 expected diagnostics and output guards; signal exits are not accepted as
-successful rejections. Native kernels and MPI error handling are unchanged.
+successful rejections. Native kernels and the existing MPI_ABORT call and
+error code are unchanged.
+
+A subsequent GNU/MPICH archive check returned the required error code but
+lost the expected native diagnostic. The native fatal-error routine now
+makes a best-effort flush of its diagnostic streams before the existing
+termination path. Flush status is captured without changing the error code;
+no MPI collective is added. For Linux MPICH archive validation, both MPI
+validation drivers explicitly use `--mpi-rank-logs` to retain per-process
+stdout/stderr files and include them in diagnostic checks. Exact rejection
+status, required diagnostic text and output guards remain enforced.
+Final compiler and archive checks must pass on this revised source; earlier
+successful runs do not substitute for them.
 
 Final release preparation rebuilds the versioned executable and reruns the
 appropriate local tests and examples. Exact-commit remote checks and the

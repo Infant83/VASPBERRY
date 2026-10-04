@@ -21,7 +21,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from mpi_validation_launcher import mpi_validation_command
+from mpi_validation_launcher import mpi_validation_command, mpi_payload_command, mpi_process_logs
 from native_kubo_csv import (BAND_SCHEMA, TRACE_SCHEMA, metadata, read_curvature_csv,
                              require_terminal_pass, positive_integer)
 INPUT_SHA256 = "33f8546512856d6c04ad0a80454b18ac9b60e2af4b98f2f85b376ec49b1a8d9f"
@@ -143,7 +143,8 @@ def run_recorded(command, directory, *, expected_success=True, diagnostic=None):
         if not expected_success and result.returncode != 1:
             raise ValueError(f"expected controlled exit 1, got {result.returncode}; see {directory}")
         if diagnostic:
-            logs = "\n".join((directory / name).read_text() for name in ("stdout.log", "stderr.log"))
+            log_paths = [directory / "stdout.log", directory / "stderr.log", *mpi_process_logs(directory)]
+            logs = "\n".join(path.read_text(errors="replace") for path in log_paths)
             # List-directed Fortran output may wrap a diagnostic across lines.
             if " ".join(diagnostic.lower().split()) not in " ".join(logs.lower().split()):
                 raise ValueError(f"expected diagnostic {diagnostic!r}; see {directory}")
@@ -156,6 +157,8 @@ def run_recorded(command, directory, *, expected_success=True, diagnostic=None):
         receipt.update(status="FAIL", error=str(exc))
         raise
     finally:
+        receipt["mpi_process_logs"] = {path.name: {"bytes": path.stat().st_size, "sha256": sha256(path)}
+                                       for path in mpi_process_logs(directory)}
         receipt["elapsed_seconds"] = time.monotonic() - started
         record_path.write_text(json.dumps(receipt, indent=2) + "\n")
 
@@ -256,6 +259,8 @@ def main():
     parser.add_argument("--mpi-flag", action="append", default=[])
     parser.add_argument("--mpi-ignore-sigpipe", action="store_true",
                         help="Intel Hydra validation: ignore SIGPIPE at launcher exec; keep real exit status")
+    parser.add_argument("--mpi-rank-logs", action="store_true",
+                        help="single-host MPI validation: capture process streams directly in per-process files")
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     serial, mpi = args.serial.resolve(), args.mpi.resolve()
@@ -270,7 +275,8 @@ def main():
     summary = {"status": "RUNNING", "input_sha256": INPUT_SHA256,
                "serial_sha256": sha256(serial), "mpi_sha256": sha256(mpi),
                "mpi_launcher": launcher, "ranks": 2, "checks": {},
-               "mpi_signal_policy": "ignore_sigpipe" if args.mpi_ignore_sigpipe else "default"}
+               "mpi_signal_policy": "ignore_sigpipe" if args.mpi_ignore_sigpipe else "default",
+               "mpi_output_policy": "direct_process_files" if args.mpi_rank_logs else "launcher_streams"}
     try:
         tables = {}
         version = (ROOT / "VERSION").read_text().strip()
@@ -281,7 +287,8 @@ def main():
             write_synthetic_wavecar(path, word4=name == "word4",
                                     corruption=None if name in ("byte", "word4") else name)
         for mode, prefix in (("serial", [str(serial)]),
-                             ("mpi", mpi_validation_command([launcher, *args.mpi_flag, "-n", "2", str(mpi)],
+                             ("mpi", mpi_validation_command([launcher, *args.mpi_flag, "-n", "2",
+                                                             *mpi_payload_command([str(mpi)], rank_logs=args.mpi_rank_logs)],
                                                              ignore_sigpipe=args.mpi_ignore_sigpipe))):
             tables[mode] = {}
             for task, kind, extra in (("kubo", "BUNDLE", ["--bands", "1:18"]),

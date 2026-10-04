@@ -38,8 +38,11 @@ material reference data retain their original producer versions.
 ### CI launcher validation
 
 - Stabilize Intel MPI CI launcher signal handling while retaining controlled
-  rejection status, expected diagnostics and output guards. Native kernels
-  and MPI error handling are unchanged.
+  rejection status, expected diagnostics and output guards.
+- Make a best-effort flush of diagnostic streams before fatal termination;
+  retain the existing MPI_ABORT call and error code without adding collectives
+  or changing numerical kernels. Linux MPICH archive validation explicitly
+  retains per-process diagnostic logs for its rejection checks.
 
 ## [1.6.5] - 2026-10-04
 

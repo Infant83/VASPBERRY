@@ -7183,6 +7183,13 @@
 #ifdef MPI_USE
       include 'mpif.h'
       integer ierr
+#endif
+      integer flush_status
+!     Preserve buffered diagnostics before abrupt MPI termination.
+!     Failed output must not prevent abort; rank-local errors cannot wait.
+      flush(0,iostat=flush_status)
+      flush(6,iostat=flush_status)
+#ifdef MPI_USE
       call MPI_ABORT(MPI_COMM_WORLD,1,ierr)
 #endif
       stop 1
