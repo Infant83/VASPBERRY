@@ -57,7 +57,7 @@ def main():
     out = a.output_dir.resolve()
     out.mkdir(parents=True)
     cli = ROOT / "tools/vaspberry_kubo.py"
-    command = [sys.executable, str(cli), "wavecar-hall", "--binary", str(a.binary.resolve()),
+    command = [sys.executable, str(cli), "wavecar-hall", "--kubo-source", "wavecar", "--binary", str(a.binary.resolve()),
         "--wavecar", str(a.wavecar.resolve()), "--spinor-components", "2", "--spin-multiplicity", "1",
         "--mesh", str(a.mesh), str(a.mesh), "--energy-reference", "unchanged VASP eigenvalue zero",
         "--mu-min", str(ev - .20), "--mu-max", str(ev + .10), "--mu-num", "61",

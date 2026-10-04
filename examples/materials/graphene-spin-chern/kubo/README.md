@@ -1,5 +1,10 @@
 # Graphene: projected-spin Kubo proxy and Chern numbers
 
+In 1.6.5 this projected-spin approximation requires explicit
+`--kubo-source wavecar`; the standard WAVEDER charge route does not provide
+the required spin matrices. Existing reference data retain their original
+operator and producer metadata.
+
 Use the real SOC graphene inputs from the [parent example](../README.md).
 This example compares the native **local differential curvature proxy** with
 native **spin-sector Chern numbers** of the same selected energy subspace,
@@ -25,10 +30,10 @@ WORK="$PWD/results/graphene-spin-chern"
 EXAMPLE="$PWD/examples/materials/graphene-spin-chern"
 
 # Any ordered k list or symmetry path: point curves, without a BZ integral.
-(cd "$WORK/path" && mpiexec -n 4 "$VB" --task spin-kubo --bands 1:8)
+(cd "$WORK/path" && mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:8)
 
 # Full periodic mesh: the same point calculation plus the raw mesh sum.
-(cd "$WORK/mesh12" && mpiexec -n 4 "$VB" --task spin-kubo --bands 1:8 --mesh 12,12)
+(cd "$WORK/mesh12" && mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:8 --mesh 12,12)
 
 # Independently evaluate the same occupied-sector Chern numbers with FHS.
 (cd "$WORK/mesh12" && mpiexec -n 4 "$VB" --task spin-chern --bands 1:8 --mesh 12,12)
@@ -96,8 +101,8 @@ physical response are separate requirements.
 The optional pair command is:
 
 ```sh
-(cd "$WORK/path" && mpiexec -n 4 "$VB" --task spin-kubo --bands 7:8 --output PAIR)
-(cd "$WORK/mesh12" && mpiexec -n 4 "$VB" --task spin-kubo --bands 7:8 --mesh 12,12 --output PAIR)
+(cd "$WORK/path" && mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 7:8 --output PAIR)
+(cd "$WORK/mesh12" && mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 7:8 --mesh 12,12 --output PAIR)
 ```
 
 At the stored points the pair is energy/spin separated and the local proxy

@@ -1,5 +1,10 @@
 # Bi: occupied and selected-pair spin sectors
 
+In 1.6.5 this projected-spin approximation requires explicit
+`--kubo-source wavecar`; the standard WAVEDER charge route does not provide
+the required spin matrices. Existing reference data retain their original
+operator and producer metadata.
+
 This example uses the same real buckled Bi geometry and self-consistent charge
 density as the [parent Bi example](../README.md). It compares the occupied
 space 1–10 with the selected top pair 9–10. Native `spin-kubo` produces local
@@ -54,12 +59,12 @@ changes from its ordinary full-mesh preparation.
 ## Compute curves and full-BZ comparisons with native MPI
 
 ```sh
-(cd "$WORK/path" && mpiexec -n 4 "$VB" --task spin-kubo --bands 1:10)
-(cd "$WORK/mesh6" && mpiexec -n 4 "$VB" --task spin-kubo --bands 1:10 --mesh 6,6)
+(cd "$WORK/path" && mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:10)
+(cd "$WORK/mesh6" && mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:10 --mesh 6,6)
 (cd "$WORK/mesh6" && mpiexec -n 4 "$VB" --task spin-chern --bands 1:10 --mesh 6,6)
 
-(cd "$WORK/path" && mpiexec -n 4 "$VB" --task spin-kubo --bands 9:10 --output PAIR)
-(cd "$WORK/mesh6" && mpiexec -n 4 "$VB" --task spin-kubo --bands 9:10 --mesh 6,6 --output PAIR)
+(cd "$WORK/path" && mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 9:10 --output PAIR)
+(cd "$WORK/mesh6" && mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 9:10 --mesh 6,6 --output PAIR)
 (cd "$WORK/mesh6" && mpiexec -n 4 "$VB" --task spin-chern --bands 9:10 --mesh 6,6 --output PAIR)
 ```
 

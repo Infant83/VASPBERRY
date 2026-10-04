@@ -152,10 +152,10 @@ class CompiledPairTests(unittest.TestCase):
             self.assertEqual((serial/name).read_bytes(),(parallel/name).read_bytes())
 
     def test_parser_pair_export_is_explicit_and_exclusive(self):
-        valid=["-kubo","2","-kubo_pairs","pairs.csv"]
+        valid=["-kubo","2","-kubo_pairs","pairs.csv","--kubo-source","wavecar"]
         self.run_command([str(self.work/"parse"),*valid],self.work)
         invalid=[(["-kubo_pairs","pairs.csv"],"requires Kubo-only mode 2"),
-                 (["-kubo","1","-kubo_pairs","pairs.csv"],"requires Kubo-only mode 2"),
+                 (["-kubo","1","-kubo_pairs","pairs.csv","--kubo-source","wavecar"],"requires Kubo-only mode 2"),
                  ([*valid,"-kubo_csv","band.csv"],"exclusive"),
                  ([*valid,"-kubo_bundle","1","-kubo_csv","bundle.csv"],"removed"),
                  ([*valid,"-ii","1"],"omit -ii/-if/-is/-nn"),

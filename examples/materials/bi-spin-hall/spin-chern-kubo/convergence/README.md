@@ -36,9 +36,9 @@ for n in 6 12 18; do
     --nbands 64 --potcar "$BI_POTCAR" --output-dir "$WORK/mesh$n-source64"
   (cd "$WORK/mesh$n-source64" && "$VASP_NCL" > vasp.stdout 2> vasp.stderr)
   (cd "$WORK/mesh$n-source64" && mpiexec -n 4 "$VB" \
-    --task spin-kubo --bands 1:10 --sum-bands 48 --mesh "$n,$n" --output OCC48)
+    --task spin-kubo --kubo-source wavecar --bands 1:10 --sum-bands 48 --mesh "$n,$n" --output OCC48)
   (cd "$WORK/mesh$n-source64" && mpiexec -n 4 "$VB" \
-    --task spin-kubo --bands 9:10 --sum-bands 48 --mesh "$n,$n" --output PAIR48)
+    --task spin-kubo --kubo-source wavecar --bands 9:10 --sum-bands 48 --mesh "$n,$n" --output PAIR48)
   (cd "$WORK/mesh$n-source64" && mpiexec -n 4 "$VB" \
     --task spin-chern --bands 1:10 --mesh "$n,$n" --output OCC)
   (cd "$WORK/mesh$n-source64" && mpiexec -n 4 "$VB" \
@@ -62,9 +62,9 @@ python3 "$EXAMPLE/prepare_vasp.py" --stage wavecar --mesh 6 6 --nbands 80 \
 (cd "$WORK/mesh6-source80" && "$VASP_NCL" > vasp.stdout 2> vasp.stderr)
 for n in 16 24 32 48 64 80; do
   (cd "$WORK/mesh6-source80" && mpiexec -n 4 "$VB" \
-    --task spin-kubo --bands 1:10 --sum-bands "$n" --mesh 6,6 --output "OCC$n")
+    --task spin-kubo --kubo-source wavecar --bands 1:10 --sum-bands "$n" --mesh 6,6 --output "OCC$n")
   (cd "$WORK/mesh6-source80" && mpiexec -n 4 "$VB" \
-    --task spin-kubo --bands 9:10 --sum-bands "$n" --mesh 6,6 --output "PAIR$n")
+    --task spin-kubo --kubo-source wavecar --bands 9:10 --sum-bands "$n" --mesh 6,6 --output "PAIR$n")
 done
 ```
 

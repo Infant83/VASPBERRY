@@ -22,6 +22,7 @@ class MakefileTests(unittest.TestCase):
         (self.project / "vaspberry_spin_chern.inc").write_text("! native spin sectors\n")
         (self.project / "vaspberry_spin_kubo.inc").write_text("! native spin sectors\n")
         (self.project / "vaspberry_help.inc").write_text("! native help\n")
+        (self.project / "vaspberry_waveder.inc").write_text("! native optical Kubo\n")
         (self.project / "legacy.f").write_text("      end\n")
         os.utime(self.project / "legacy.f", (1, 1))
         (self.project / "tests/fortran").mkdir(parents=True)
@@ -119,7 +120,7 @@ class MakefileTests(unittest.TestCase):
         args = ("serial", "FC=" + self.compilers[0])
         self.make(*args)
         for count, name in enumerate(("vaspberry_spin_chern.inc", "vaspberry_spin_kubo.inc",
-                                      "vaspberry_help.inc"), 2):
+                                      "vaspberry_help.inc", "vaspberry_waveder.inc"), 2):
             include = self.project / name
             include.write_text("! changed projected-spin implementation\n")
             os.utime(include, (1, 1))

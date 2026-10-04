@@ -1,8 +1,11 @@
 # Choose the input operator for a VASPBERRY response calculation
 
-Begin with your material's VASP electronic structure and the ordinary
-WAVECAR workflow. Additional operator files provide optional comparisons or
-enable observables that require more information than WAVECAR contains.
+For charge Kubo calculations, begin with the same-run standard `WAVEDER`,
+`WAVECAR`, `INCAR` and `OUTCAR` from a supported standard VASP optical calculation.
+Version 1.6.5 selects this route by default. An explicit
+`--kubo-source wavecar` selects the canonical-momentum approximation and
+prints a warning. Missing or unsupported optical input never selects it
+automatically. Other operator files enable separately validated observables.
 VASP computes the electronic states; VASPBERRY evaluates their topology and
 response. A separately prepared Wannier representation is retained for optional
 supporting checks; it is not required by the native workflow.
@@ -11,8 +14,9 @@ supporting checks; it is not required by the native workflow.
 
 | Route | Input and approximation | Present scope | VASP source modification |
 |---|---|---|---|
-| Native `--task kubo` / `--task kubo-pairs` | Standard WAVECAR; canonical momentum of its pseudo-wavefunctions | Band or occupied-bundle curvature; charge response and regional contributions with chemical-potential and temperature scans | None |
-| `waveder-hall` | Same-run WAVEDER, WAVECAR, INCAR and OUTCAR; PAW longitudinal optical occupied–empty matrix elements | Gapped 2D occupied bundle at T=0; global and specified regional charge integrals | None; supported standard VASP 5.4.4 optical branch |
+| Native `--task kubo` (default) / `kubo-hall` | Same-run WAVEDER, WAVECAR, INCAR and OUTCAR; PAW longitudinal optical connections | Selected geometric band/bundle curvature and validated selected μ/T charge contributions; occupied T=0 compatibility | None; supported VASP 5.4.4 branch |
+| Explicit `--kubo-source wavecar` | WAVECAR canonical momentum of pseudo-wavefunctions | Historical band/bundle curvature and reusable pairs; approximate μ/T charge scans and spin-sector proxies | None |
+| `waveder-hall` | Same-run WAVEDER, WAVECAR, INCAR and OUTCAR; stored PAW longitudinal optical connections | Selected μ/T charge contributions with required-pair checks; occupied T=0 response and regional integrals | None; supported standard VASP 5.4.4 optical branch |
 | `waveder-optics` | Same standard optical files; complete initial and final degenerate groups | k-resolved circular transition strengths and spectra; paths are allowed, with no inferred BZ integral | None; the same supported standard optical branch |
 | Full velocity export / `velocity-pairs` → `pair-hall` | Audited full complex PAW velocity matrices, converted to reusable charge-response pairs | Charge and regional Hall response with chemical-potential and temperature scans | Optional instrumentation of the supported VASP 5.4.4 source copy |
 | Full velocity and spin export / `spin-hall` | Audited full complex PAW velocity and spin matrices from the same eigenstates | Conventional spin response and a companion charge response for a gapped 2D occupied bundle at T=0 | Same optional producer |
@@ -23,10 +27,11 @@ The [output guide](OUTPUT_FORMAT.md) specifies the CSV, DAT, NPZ and metadata
 formats. JSON stores configuration and provenance; it does not replace the
 VASP calculation with an analytic model.
 
-## 1. Ordinary WAVECAR: the starting point
+## 1. WAVECAR approximation: explicit opt-in
 
 Follow the [MoS₂ charge-Hall example](../examples/features/kubo-hall/) to
-prepare a full VASP mesh and run `--task kubo-pairs` with the Fortran
+prepare a full VASP mesh and run
+`--task kubo-pairs --kubo-source wavecar` with the Fortran
 executable, then `import-pairs` and `pair-hall` on the saved output. The
 [explicit commands](KUBO_TRANSPORT.md#native-pairs-to-charge-hall) separate
 wavefunction evaluation from postprocessing. The bundled Python stage applies occupations,
@@ -42,26 +47,47 @@ the results. An integer Chern number, or cancellation of the total Hall
 response by time reversal, is not by itself an accuracy test of local or
 regional curvature magnitudes.
 
-## 2. Optional standard optical calculation: no source patch
+## 2. Standard charge-Kubo protocol: WAVEDER, no source patch
 
 For a gapped T=0 occupied bundle, standard VASP `WAVEDER` already supplies
 PAW longitudinal optical transition elements. The supported route uses
 VASP 5.4.4 with `LOPTICS=.TRUE.`, `LPEAD=.FALSE.`, `LNABLA=.FALSE.`,
 `NSW=0`, `ISYM=-1` and `LREAL=.FALSE.`. Preserve WAVEDER, WAVECAR, INCAR and
-OUTCAR from that same completed run. The occupied–empty separation must
-exceed the producer's 2 meV threshold; internal occupied degeneracies are
-allowed.
+OUTCAR from that same completed run. Required non-canceling pairs must survive the producer's 2 meV treatment.
+A complete producer-degenerate group may be selected if its internal response
+weights are equal; an unresolved split or unequal weighting is rejected.
 
-Use `waveder-hall` with your actual occupied count, full mesh and a chemical
-potential inside the common gap. The [complete command and supported settings](KUBO_TRANSPORT.md#standard-waveder-insulating-paw-hall-response)
+Use `kubo-hall --bands SELECTOR` for an occupation-weighted selected-band
+contribution, with all source bands retained in the intermediate sum.
+`--occupied N` remains the separate insulating T=0 compatibility mode; its
+chemical potentials must lie inside the common gap. The two selectors are
+mutually exclusive. The [complete command and supported settings](KUBO_TRANSPORT.md#standard-waveder-insulating-paw-hall-response)
 include multi-run mesh assembly. The supplied [MnBi₂Te₄ optical example](../examples/materials/mnbi2te4-qah/)
 illustrates this unmodified-VASP route.
+
+For a PAW charge-Hall calculation within this scope, this is the default
+route in 1.6.5. Native `--task kubo` writes point curvature; `kubo-hall`
+provides Hall tables. Use `--input-dir DIR` to select the source directory;
+omission means the invocation working directory. Each per-file option changes
+only that file, so a WAVECAR override never redirects the optical inputs.
+The [protocol](WAVEDER_KUBO_PROTOCOL.md) gives both commands and path rules.
+The stored matrix may be rectangular. Every pair with unequal selected/
+occupation weights must be stored in at least one orientation; equal-weight
+internal pairs cancel. The adapter neither pads missing pairs nor truncates
+the intermediate sum to the target set. The PAW terms
+already enter VASP's matrix construction; the adapter does not add them again.
+If the requested filling or operator lies outside the supported scope, stop
+or choose a separately validated route. Do not silently substitute the
+WAVECAR canonical-momentum approximation. File acceptance alone also does
+not certify complete physical SOC/+U response terms.
 
 This file stores an interband optical connection with an energy denominator
 already applied. VASPBERRY does not divide by that denominator again. It
 does not reconstruct the diagonal or degenerate velocity blocks that this
-producer discards. The current `waveder-hall` command therefore does not
-support metallic occupations or a finite-temperature scan.
+producer discards. Selected metallic or finite-temperature scans are
+accepted only if their required matrix pairs and producer-cluster weights
+are resolvable. Their result is a selected contribution, not automatically
+the total AHC; the output records this distinction.
 
 For circular optical selection, the ordinary native `-cd 2` WAVECAR workflow
 also remains available. The optional [`waveder-optics` route](PAW_OPTICS.md)

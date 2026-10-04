@@ -65,7 +65,7 @@ define build_if_changed
     $(call shell_quote,OMPI_FC=$(OMPI_FC)) $(call shell_quote,OMPI_FCFLAGS=$(OMPI_FCFLAGS)) \
     $(call shell_quote,OMPI_LDFLAGS=$(OMPI_LDFLAGS)) $(call shell_quote,OMPI_LIBS=$(OMPI_LIBS)) \
     $(call shell_quote,MPICH_FC=$(MPICH_FC)) > "$$tmp"; \
-  cksum $(call shell_quote,$<) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(foreach file,$(MAKEFILE_LIST),$(call shell_quote,$(file))) >> "$$tmp"; \
+  cksum $(call shell_quote,$<) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc vaspberry_waveder.inc $(foreach file,$(MAKEFILE_LIST),$(call shell_quote,$(file))) >> "$$tmp"; \
   if [ ! -f "$@" ] || [ -n $(call shell_quote,$(filter-out force-build-config,$?)) ] || \
       ! cmp -s "$$tmp" "$(2)"; then \
     printf '%s\n' $(call shell_quote,$(1)); \
@@ -117,7 +117,7 @@ $(BUILD_DIR): | check-build-dir
 
 force-build-config:
 
-$(GNU_SERIAL_BIN): $(SERIAL_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
+$(GNU_SERIAL_BIN): $(SERIAL_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc vaspberry_waveder.inc $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
 	$(call build_if_changed,$(SERIAL_COMMAND),$(SERIAL_CONFIG))
 
 # Keep the old compiler-specific name without a second compiled binary.
@@ -126,7 +126,7 @@ force-serial-compat:
 $(GNU_SERIAL_COMPAT_BIN): $(GNU_SERIAL_BIN) force-serial-compat
 	ln -sf vaspberry "$@"
 
-$(GNU_MPI_BIN): $(MPI_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
+$(GNU_MPI_BIN): $(MPI_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc vaspberry_waveder.inc $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
 	$(call build_if_changed,$(MPI_COMMAND),$(MPI_CONFIG))
 
 $(MPI_RUNTIME_TEST): tests/fortran/test_mpi_runtime.f90 $(MAKEFILE_LIST) force-build-config | $(BUILD_DIR)
@@ -153,19 +153,19 @@ check-mpi-help: $(GNU_MPI_BIN)
 
 # Load the Intel compiler, MPI SDK and oneMKL environment before these targets.
 # The dedicated Intel MPI workflow exercises the default oneMKL link flags.
-ifx: $(SERIAL_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(MAKEFILE_LIST) | $(BUILD_DIR)
+ifx: $(SERIAL_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc vaspberry_waveder.inc $(MAKEFILE_LIST) | $(BUILD_DIR)
 	$(IFX) $(INTEL_FLAGS) $(FFLAGS) -o $(BUILD_DIR)/vaspberry-ifx \
 	  $(SERIAL_SOURCE) $(LDFLAGS) $(IFX_MKL_FLAGS)
 
-ifx-mpi: $(MPI_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(MAKEFILE_LIST) | $(BUILD_DIR)
+ifx-mpi: $(MPI_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc vaspberry_waveder.inc $(MAKEFILE_LIST) | $(BUILD_DIR)
 	$(MPIIFX) $(INTEL_FLAGS) -DMPI_USE $(FFLAGS) -o $(BUILD_DIR)/vaspberry-ifx-mpi \
 	  $(MPI_SOURCE) $(LDFLAGS) $(IFX_MKL_FLAGS)
 
-ifort: $(SERIAL_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(MAKEFILE_LIST) | $(BUILD_DIR)
+ifort: $(SERIAL_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc vaspberry_waveder.inc $(MAKEFILE_LIST) | $(BUILD_DIR)
 	$(IFORT) $(INTEL_FLAGS) $(FFLAGS) -o $(BUILD_DIR)/vaspberry-ifort \
 	  $(SERIAL_SOURCE) $(LDFLAGS) $(IFORT_MKL_FLAGS)
 
-ifort-mpi: $(MPI_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc $(MAKEFILE_LIST) | $(BUILD_DIR)
+ifort-mpi: $(MPI_SOURCE) vaspberry_spin_chern.inc vaspberry_spin_kubo.inc vaspberry_help.inc vaspberry_waveder.inc $(MAKEFILE_LIST) | $(BUILD_DIR)
 	$(MPIIFORT) $(INTEL_FLAGS) -DMPI_USE $(FFLAGS) \
 	  -o $(BUILD_DIR)/vaspberry-ifort-mpi \
 	  $(MPI_SOURCE) $(LDFLAGS) $(IFORT_MKL_FLAGS)

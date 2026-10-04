@@ -6,7 +6,7 @@
 source. Clone it with `git clone https://github.com/Infant83/VASPBERRY.git`.
 Update a clean checkout with `git pull --ff-only`.
 
-The current release tag is `v1.6.3`. Use the fixed tag when reproducing a
+This edition targets release tag `v1.6.5`. Use the fixed tag when reproducing a
 published calculation, and record the version plus `git rev-parse HEAD` in
 the calculation record. `git describe --tags --always --dirty` also identifies
 changes after a release. A development branch is not the default download.
@@ -27,6 +27,13 @@ Version 1.6.3 is a maintainer-selected exception: it removes the native
 bundle selector and changes multi-band Kubo defaults. Its
 [migration guide](MIGRATION.md#native-kubo-band-selection) explicitly documents
 these incompatible commands and the new CSV schema versions.
+
+Version 1.6.5 uses the maintainer-requested patch-number increment and
+supersedes the unpublished 1.6.4 candidate. It defaults supported Kubo charge
+calculations to WAVEDER; previous WAVECAR calculations require explicit
+`--kubo-source wavecar`. Its
+[migration guide](MIGRATION.md#waveder-default-kubo-input-in-165) and
+[standard protocol](WAVEDER_KUBO_PROTOCOL.md) define the changed input contract.
 
 Agree on the version with the maintainer before publishing. Do not create an
 additional release merely to renumber the same update, or reuse a version
@@ -99,3 +106,20 @@ the published release body records the exact commit and successful runs.
 After publication, verify the actual version-pinned archive against that
 source and replay the public examples. The report describes the current
 software while saved calculations retain their original producer metadata.
+
+## Version 1.6.5 publication
+
+The `publish-v1.6.5.yml` workflow is manual-only. Pushing its source does not
+publish a release. Its publisher preserves the verified `v1.6.3` commit
+`1d5d752da08b30aa53712cbdfc4278b6b51f7f21`, requires all thirteen jobs from
+the four validation workflows on the exact candidate commit, and refuses to
+move an existing tag or rewrite a release. The required files include the
+native WAVEDER reader, selected-band kernels/tests, executable example and
+standard protocol. The separate [1.6.4 candidate record](VALIDATION_1.6.4.md)
+retains the earlier local checks; that version was not published.
+
+The [1.6.5 validation record](VALIDATION_1.6.5.md) distinguishes local checks
+from the remaining remote compiler and archive checks. After the candidate
+has been committed and its remote checks have passed, explicitly dispatch
+this workflow on `master` only when publication is requested. Retain the
+publication receipt and verify a fresh version-pinned checkout afterwards.

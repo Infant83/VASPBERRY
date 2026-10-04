@@ -1,5 +1,10 @@
 <a id="spin-sector-kubo-curvature-on-a-path-and-a-full-mesh"></a>
 
+In 1.6.5 this projected-spin approximation requires explicit
+`--kubo-source wavecar`; the standard WAVEDER charge route does not provide
+the required spin matrices. Existing reference data retain their original
+operator and producer metadata.
+
 # Spin-sector Kubo-formula Berry curvature on a path and a full mesh
 
 Use native `--task spin-kubo` to calculate the Kubo-formula Berry-curvature approximation
@@ -34,13 +39,15 @@ Start with an ordinary VASP SOC/noncollinear calculation containing the desired
 k points. In that calculation's directory, with matching WAVECAR and OUTCAR:
 
 ```bash
-mpiexec -n 4 "$VB" --task spin-kubo --bands 1:10
+mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:10
 ```
 
 The example range `1:10` selects all ten occupied states of the Bi example;
 adapt it to the material. The defaults are `WAVECAR`, `OUTCAR`, Cartesian
-spin axis `z`, and output prefix `SPIN`. Paths are relative to the directory
-where the command runs. Add `--wavecar PATH --outcar PATH` for files elsewhere.
+spin axis `z`, and output prefix `SPIN`. `--input-dir DIR` selects the default
+WAVECAR/OUTCAR directory; omit it to use the invocation working directory.
+Add `--wavecar PATH` or `--outcar PATH` to override only that file. Explicit
+relative paths and outputs remain relative to the invocation working directory.
 OUTCAR supplies the source spin frame and matching dimensions/lattice;
 WAVECAR supplies the wavefunctions and automatic two-component detection.
 
@@ -72,7 +79,7 @@ Use a **separate full periodic VASP mesh**, with the same Hamiltonian, selected
 band space and analysis axis. In its directory:
 
 ```bash
-mpiexec -n 4 "$VB" --task spin-kubo --bands 1:10 --mesh 12,12
+mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:10 --mesh 12,12
 mpiexec -n 4 "$VB" --task spin-chern --bands 1:10 --mesh 12,12
 ```
 
@@ -97,7 +104,7 @@ even when the supplied points happen to form a mesh.
 ## Select a band pair or another spin axis
 
 ```bash
-mpiexec -n 4 "$VB" --task spin-kubo --bands 9:10 --output PAIR
+mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 9:10 --output PAIR
 ```
 
 In the Bi example this range selects a degenerate pair and gives rank-one
@@ -123,8 +130,8 @@ To test the intermediate-band sum without changing the VASP eigenstates,
 add `--sum-bands N`. For example, on an 80-band WAVECAR:
 
 ```bash
-mpiexec -n 4 "$VB" --task spin-kubo --bands 1:10 --mesh 6,6 --sum-bands 32 --output B32
-mpiexec -n 4 "$VB" --task spin-kubo --bands 1:10 --mesh 6,6 --sum-bands 64 --output B64
+mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:10 --mesh 6,6 --sum-bands 32 --output B32
+mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:10 --mesh 6,6 --sum-bands 64 --output B64
 ```
 
 This sums over stored bands **1 through N**, excluding the selected group;

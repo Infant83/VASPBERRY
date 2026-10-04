@@ -80,7 +80,7 @@ class NativeSpinorAutoTests(unittest.TestCase):
         case = self.work / (self._testMethodName + '-' + name)
         case.mkdir()
         write_wavecar(case / 'WAVECAR', components=components, channels=channels, **fixture)
-        command = [str(self.parallel if mpi else self.serial), '--task', 'kubo-pairs',
+        command = [str(self.parallel if mpi else self.serial), '--task', 'kubo-pairs', '--kubo-source', 'wavecar',
                    '--wavecar', 'WAVECAR', '--pairs-csv', 'PAIRS.csv', *flags]
         if mpi:
             command = ['mpiexec', '-n', '2', *command]

@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
-"""T=0 insulating sheet Hall response from a standard VASP 5.4.4 WAVEDER run.
+"""Selected-band or insulating occupied-bundle Hall from standard VASP 5.4.4 WAVEDER.
 
 Use WAVEDER, WAVECAR, INCAR and OUTCAR from the same completed static run.
+Inputs default to the invocation directory. --input-dir changes that directory;
+each --wavecar/--waveder/--incar/--outcar override changes only its own file.
 Several fixed-charge runs may be supplied when their union is a full mesh;
 their retained CHGCAR/POTCAR/POSCAR and physical settings must match.
 WAVEDER has no energies or k coordinates: consistency checks cannot authenticate
-its association with the other files. The supplied run directory asserts that
+its association with the other files. The selected source files assert that
 association, which is recorded together with automatically computed file hashes.
 
-Only the non-PEAD, longitudinal PAW optical branch is supported. Occupied-to-empty
-matrix elements form the occupied-bundle trace; internal degenerate occupied
-states never require division. This is not a metallic or finite-temperature path.
+Only the non-PEAD, longitudinal PAW optical branch is supported. --bands selects
+an occupation-weighted contribution at the requested mu/T, with all source bands
+in the virtual sum. --occupied retains the insulating T=0 occupied-bundle mode.
+Missing or producer-erased pairs are allowed only for equal response weights.
 """
 from __future__ import annotations
 
@@ -28,13 +31,51 @@ from exported_matrix_kubo import sha256
 from kubo_pairs import hall_metadata, integration_setup, result_rows
 from vasp_optical_export import read_waveder
 from wavecar_fukui import Wavecar, resolve_spin_multiplicity
+from waveder_selected import (parse_bands, optical_pairs, occupation_response, selected_mask,
+                              DENOMINATOR_THRESHOLD_EV)
 
 PRODUCER_THRESHOLD_EV = .002
 NUMBER = r'[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[EeDd][+-]?\d+)?'
-ASSOCIATION = ('The supplied run directory asserts a single unmodified standard VASP run. '
+ASSOCIATION = ('The selected input files assert a single unmodified standard VASP run. '
                'OUTCAR/WAVECAR consistency and WAVEDER dimensions are checked; WAVEDER has '
                'no energies, coordinates or producer hashes, so its same-run association '
                'cannot be independently authenticated from these files.')
+SOURCE_NAMES = ('WAVEDER', 'WAVECAR', 'INCAR', 'OUTCAR')
+
+
+def resolve_source_paths(input_dir=None, source_paths=None):
+    """Resolve one input directory and independent file overrides without chdir."""
+    directory = Path.cwd() if input_dir is None else Path(input_dir).expanduser()
+    directory = directory.resolve()
+    require(directory.is_dir(), 'input directory does not exist: '+str(directory))
+    overrides = {} if source_paths is None else source_paths
+    require(not set(overrides)-set(SOURCE_NAMES), 'unknown optical input file override')
+    paths = {name: Path(overrides.get(name, directory/name)).expanduser().resolve()
+             for name in SOURCE_NAMES}
+    return directory, paths
+
+
+def resolve_cli_inputs(args):
+    """Legacy chunk directories stay explicit; an override never selects a base."""
+    input_dir = getattr(args, 'input_dir', None)
+    supplied_runs = getattr(args, 'run_dir', None)
+    overrides = {name: getattr(args, name.lower()) for name in SOURCE_NAMES
+                 if getattr(args, name.lower(), None) is not None}
+    require(not (input_dir is not None and supplied_runs is not None),
+            '--input-dir and --run-dir are mutually exclusive')
+    if supplied_runs is not None:
+        runs = [Path(p).expanduser().resolve() for p in supplied_runs]
+        require(bool(runs), 'nonempty --run-dir list required')
+        require(len(runs) == 1 or not overrides,
+                'per-file overrides cannot be used with multiple --run-dir directories')
+        if len(runs) > 1:
+            for run in runs:
+                require(run.is_dir(), 'input directory does not exist: '+str(run))
+            return runs, None
+        directory, paths = resolve_source_paths(runs[0], overrides)
+    else:
+        directory, paths = resolve_source_paths(input_dir, overrides)
+    return [directory], paths
 
 
 def number(value):
@@ -49,14 +90,19 @@ def boolean(value):
 def incar_values(text):
     values = {}
     for line in text.splitlines():
+        previous_tag = None
         for part in re.split('[;]', re.split('[!#]', line, maxsplit=1)[0]):
             if not part.strip():
                 continue
             match = re.fullmatch(r'\s*([A-Za-z_][A-Za-z_0-9]*)\s*=\s*(.*?)\s*', part)
+            if match is None and previous_tag == 'SYSTEM' and '=' not in part:
+                values['SYSTEM'] += '; '+part.strip()
+                continue
             require(match is not None, 'unsupported/ambiguous INCAR assignment')
             name, value = match.group(1).upper(), match.group(2).strip()
             require(value and (name not in values or values[name] == value), 'conflicting INCAR tag '+name)
             values[name] = value
+            previous_tag = name
     return values
 
 
@@ -72,7 +118,7 @@ def outcar_value(text, name, convert):
 
 
 def read_run_settings(incar_text, outcar_text):
-    """Restrict operator semantics to the audited standard optical branch."""
+    """Restrict operator semantics to the supported standard optical branch."""
     versions = re.findall(r'^\s*vasp\.(\d+\.\d+\.\d+)\b', outcar_text, re.M)
     require(versions and set(versions) == {'5.4.4'}, 'only standard VASP 5.4.4 WAVEDER is supported')
     require('General timing and accounting informations for this job:' in outcar_text
@@ -165,16 +211,17 @@ def occupied_curvature(connection, occupied):
                      for a, b in ((1, 2), (2, 0), (0, 1))], axis=1)
 
 
-def read_validated_optical_states(run_dir, *, spin=1, spinor_components=None, energy_reference):
+def read_validated_optical_states(run_dir, *, spin=1, spinor_components=None, energy_reference,
+                                  source_paths=None):
     """Shared same-run checks, without Hall filling, weight or mesh assumptions.
 
-    WAVEDER has no coordinates or energies. The directory association remains
+    WAVEDER has no coordinates or energies. The selected files' association remains
     an explicit user assertion even after the independently checkable fields
     agree. Returned OUTCAR weights retain their printed precision.
     """
-    run = Path(run_dir)
-    paths = {name: run/name for name in ('WAVEDER', 'WAVECAR', 'INCAR', 'OUTCAR')}
-    require(all(p.is_file() for p in paths.values()), 'run directory requires WAVEDER, WAVECAR, INCAR and OUTCAR')
+    run, paths = resolve_source_paths(run_dir, source_paths)
+    for name, path in paths.items():
+        require(path.is_file(), name+' input is missing or not a file: '+str(path))
     hashes = {name: sha256(p) for name, p in paths.items()}
     text = paths['OUTCAR'].read_text()
     settings = read_run_settings(paths['INCAR'].read_text(), text)
@@ -213,10 +260,10 @@ def read_validated_optical_states(run_dir, *, spin=1, spinor_components=None, en
 
 
 def read_validated_run(run_dir, mus, *, occupied, spin=1, spinor_components=None, spin_multiplicity=None,
-                       energy_reference, mu_reference):
+                       energy_reference, mu_reference, source_paths=None):
     """Read genuine per-run states and optical curvature without a mesh assumption."""
     state = read_validated_optical_states(run_dir, spin=spin, spinor_components=spinor_components,
-                                         energy_reference=energy_reference)
+                                         energy_reference=energy_reference, source_paths=source_paths)
     run, paths, hashes, settings = state.run, state.paths, state.hashes, state.settings
     w, waves, source = state.wave, state.waves, state.source
     spinor_components = w.spinor_components
@@ -254,7 +301,8 @@ def read_validated_run(run_dir, mus, *, occupied, spin=1, spinor_components=None
                          'coverage': 'selected occupied kets to all stored empty bras; no internal occupied terms'},
         producer_settings=settings, producer_cluster_threshold_eV=PRODUCER_THRESHOLD_EV,
         same_run_association={'status': 'user_supplied_run_directory_consistency_checked', 'limitation': ASSOCIATION},
-        source_sha256=hashes, validation_tolerances={'OUTCAR_energy_eV': 5.1e-5, 'OUTCAR_occupation': 5.1e-6},
+        source_sha256=hashes, source_paths={name: str(path) for name, path in paths.items()},
+        validation_tolerances={'OUTCAR_energy_eV': 5.1e-5, 'OUTCAR_occupation': 5.1e-6},
         source_occupations='Consistency checked including smearing; T=0 response uses explicit insulating filling.',
         physical_spin_factor_for_NELECT=physical_spin_factor, occupied_counts_by_spin=fillings,
         run_directory=str(run.resolve()))
@@ -293,16 +341,27 @@ def shared_chunk_inputs(runs):
     return records
 
 
-def waveder_hall_spectrum(run_dir, mus, *, occupied, spin=1, spinor_components=None, spin_multiplicity=None,
-                         sampling, energy_reference, mu_reference, region_spec=None, differences=()):
+def waveder_hall_spectrum(run_dir, mus, *, occupied=None, bands=None, temperatures=(0.,), spin=1, spinor_components=None, spin_multiplicity=None,
+                         sampling, energy_reference, mu_reference, region_spec=None, differences=(),
+                         source_paths=None):
     """Integrate one full run or a validated union of genuine fixed-charge runs."""
+    require((occupied is None) != (bands is None), 'choose exactly one of occupied or bands')
+    if bands is not None:
+        return selected_hall_spectrum(run_dir, mus, temperatures, bands=bands, spin=spin,
+            spinor_components=spinor_components, spin_multiplicity=spin_multiplicity,
+            sampling=sampling, energy_reference=energy_reference, mu_reference=mu_reference,
+            region_spec=region_spec, differences=differences, source_paths=source_paths)
+    require(list(temperatures) == [0.], 'occupied-bundle WAVEDER mode supports only insulating T=0')
     runs = [Path(run_dir)] if isinstance(run_dir, (str, Path)) else [Path(v) for v in run_dir]
     require(bool(runs) and len({p.resolve() for p in runs}) == len(runs), 'distinct nonempty run directories required')
+    require(len(runs) == 1 or source_paths is None,
+            'per-file overrides cannot be used with multiple run directories')
     mus = np.asarray(mus, dtype=float)
     require(mus.ndim == 1 and len(mus) and np.isfinite(mus).all(), 'finite chemical-potential array required')
     chunk_inputs = shared_chunk_inputs(runs) if len(runs) > 1 else None
     chunks = [read_validated_run(run, mus, occupied=occupied, spin=spin, spinor_components=spinor_components,
-        spin_multiplicity=spin_multiplicity, energy_reference=energy_reference, mu_reference=mu_reference) for run in runs]
+        spin_multiplicity=spin_multiplicity, energy_reference=energy_reference, mu_reference=mu_reference,
+        source_paths=source_paths) for run in runs]
     first = chunks[0]
     spin_multiplicity = first.metadata['spin_multiplicity']
     common_settings = {k: v for k, v in first.metadata['producer_settings'].items() if k != 'NKPTS'}
@@ -318,7 +377,7 @@ def waveder_hall_spectrum(run_dir, mus, *, occupied, spin=1, spinor_components=N
     omega = np.concatenate([c.omega_A2 for c in chunks])
     metadata = dict(first.metadata, sampling=sampling, source_nkpoints=nk, source_run_count=len(runs))
     if len(runs) > 1:
-        metadata.pop('source_sha256'); metadata.pop('run_directory')
+        metadata.pop('source_sha256'); metadata.pop('source_paths'); metadata.pop('run_directory')
         metadata.pop('source_ndbands')
         metadata['source_ndbands_by_run'] = [c.metadata['source_ndbands'] for c in chunks]
         metadata['producer_settings'] = dict(common_settings, NKPTS=nk)
@@ -356,11 +415,129 @@ def waveder_hall_spectrum(run_dir, mus, *, occupied, spin=1, spinor_components=N
     return rows, meta
 
 
+
+def selected_hall_spectrum(run_dir, mus, temperatures, *, bands, spin=1,
+                           spinor_components=None, spin_multiplicity=None, sampling,
+                           energy_reference, mu_reference, region_spec=None, differences=(), source_paths=None):
+    """Occupation-aware selected contribution; no common insulating gap required."""
+    runs = [Path(run_dir)] if isinstance(run_dir, (str, Path)) else [Path(v) for v in run_dir]
+    require(bool(runs) and len({p.resolve() for p in runs}) == len(runs), 'distinct nonempty run directories required')
+    require(len(runs) == 1 or source_paths is None, 'per-file overrides cannot be used with multiple run directories')
+    chunk_inputs = shared_chunk_inputs(runs) if len(runs) > 1 else None
+    states = [read_validated_optical_states(run, spin=spin, spinor_components=spinor_components,
+              energy_reference=energy_reference, source_paths=source_paths) for run in runs]
+    first = states[0]; wave = first.wave
+    nb = first.settings['NBANDS']; chosen = selected_mask(bands, nb)
+    bands = (np.flatnonzero(chosen)+1).tolist()
+    mult = resolve_spin_multiplicity(wave.header.ispin, wave.spinor_components, spin_multiplicity)
+    common = {k: v for k, v in first.settings.items() if k != 'NKPTS'}
+    pairs = []; sources = []
+    for state in states:
+        w = state.wave
+        require({k: v for k, v in state.settings.items() if k != 'NKPTS'} == common,
+                'chunk effective settings, spin channels or band counts disagree')
+        require(np.allclose(w.header.lattice, wave.header.lattice, atol=1e-9, rtol=0)
+                and np.allclose(w.header.reciprocal, wave.header.reciprocal, atol=1e-9, rtol=0),
+                'chunk lattice/reciprocal geometry mismatch')
+        require(np.allclose(state.grid[:, 3], 1/len(w.kpoints), atol=.00051, rtol=0),
+                'OUTCAR full-grid weights are not uniform')
+        pairs.append(optical_pairs(state.source.C_A[spin-1], w.energies))
+        sources.append(dict(source_sha256=state.hashes,
+            source_paths={name: str(path) for name, path in state.paths.items()},
+            run_directory=str(state.run), source_ndbands=state.source.C_A.shape[4],
+            producer_settings=state.settings))
+    q = np.concatenate([s.wave.kpoints for s in states]); nk = len(q)
+    metadata = dict(sampling=sampling, source_nspin=wave.header.ispin, spinor_components=wave.spinor_components,
+        spin_channel_1based=spin, spin_multiplicity=mult, energy_reference=energy_reference,
+        source_nbands=nb, source_nkpoints=nk, source_run_count=len(runs), selected_band_ids=bands,
+        intermediate_band_ids=list(range(1, nb+1)),
+        source_precision='complex64 WAVEDER; complex128 accumulation',
+        source_operator={'kind': 'vasp_longitudinal_paw_optical_selected_weighted_pairs',
+            'accuracy_status': 'supported_operator_scope; convergence_not_established',
+            'coverage': 'either stored orientation of each unequal-weight pair; no square reconstruction'},
+        producer_cluster_threshold_eV=PRODUCER_THRESHOLD_EV,
+        producer_denominator_threshold_eV=DENOMINATOR_THRESHOLD_EV,
+        same_run_association={'status': 'selected_files_consistency_checked', 'limitation': ASSOCIATION},
+        source_occupations='Source consistency checked; response uses fixed-state Fermi-Dirac mu/T occupations.')
+    if len(runs) == 1:
+        metadata.update(sources[0])
+    else:
+        metadata.update(source_runs=sources, source_ndbands_by_run=[p.ndbands for p in pairs],
+            producer_settings=dict(common, NKPTS=nk), chunk_input_records=chunk_inputs,
+            chunk_combination='Validated genuine fixed-charge runs; uniform weights after full union mesh validation.')
+    data = SimpleNamespace(metadata=metadata, k_ids=np.arange(1, nk+1), kpoints_fractional=q,
+        weights=np.full(nk, 1/nk), lattice_A=wave.header.lattice, reciprocal_inv_A=wave.header.reciprocal,
+        energies_eV=np.concatenate([s.wave.energies for s in states]))
+    mus, ts, area, normal, regions = integration_setup(data, mus, temperatures, mu_reference, region_spec, differences)
+    all_mus = np.unique(np.r_[mus, mu_reference])
+    values = np.zeros((len(ts), len(regions), len(all_mus), 4))
+    required = [np.zeros(p.gaps.shape, bool) for p in pairs]
+    # Integrate sheet Hall directly in e^2/h: no cell-height multiplier.
+    # mu/T changes only postprocessing occupations of these fixed states;
+    # it does not perform a new self-consistent VASP calculation.
+    factor = -area/(2*np.pi)*mult*data.weights
+    for ti, temperature in enumerate(ts):
+        for mi, mu in enumerate(all_mus):
+            responses = []
+            for ci, pair in enumerate(pairs):
+                response = occupation_response(pair, bands, mu, temperature, mu_reference)
+                required[ci] |= response[4]; responses.append(response)
+            omega = np.concatenate([r[0] for r in responses])@normal
+            delta = np.concatenate([r[1] for r in responses])@normal
+            count = np.concatenate([r[2] for r in responses])
+            delta_count = np.concatenate([r[3] for r in responses])
+            for ri, mask in enumerate(regions.values()):
+                values[ti, ri, mi] = [np.sum(factor*mask*omega),
+                    np.sum(mult*data.weights*mask*count), np.sum(factor*mask*delta),
+                    np.sum(mult*data.weights*mask*delta_count)]
+    rows = result_rows(values, mus, ts, all_mus, regions, mu_reference)
+    meta = hall_metadata(data, area, normal, region_spec, differences, regions, mu_reference)
+    meta.update(method='standard_waveder_selected_weighted_pairs', scope='selected_band_contribution',
+        selected_band_ids=bands, intermediate_band_ids=list(range(1, nb+1)),
+        selected_weight='w_n=1[n in selected bands]*f(E_n,mu,T)',
+        formula='sigma/(e^2/h)=-A_BZ/(2*pi)*g_s*sum_k w_k sum_i<j (w_i-w_j) K_ij; K_ij=-2 Im conj(C_a_ji)*C_b_ji',
+        delta_formula='same pair contraction using selected [f(mu,T)-f(mu_reference,T)] differences',
+        total_AHC_certified=False, total_delta_AHC_certified=False,
+        finite_basis_empty_complement=bool(chosen.all()),
+        rectangular_coverage={'policy': 'either orientation required only for unequal physical weights',
+            'required_pairs_by_run': [int(v.sum()) for v in required],
+            'missing_pairs_canceled_by_run': [int(np.sum(~p.stored[None, :] & ~v)) for p, v in zip(pairs, required)],
+            'producer_erased_pairs_canceled_by_run': [int(np.sum(p.erased & ~v)) for p, v in zip(pairs, required)],
+            'max_required_D_hermitian_residual_over_tolerance': max(float(p.residual_ratio[v].max(initial=0.)) for p, v in zip(pairs, required))},
+        producer_cluster_checks='full-source transitive adjacent gaps <=0.002 eV; required erased pairs rejected',
+        finite_temperature_coverage='analytic weight equality; no tail cutoff, rounding or underflow can waive a required pair',
+        integer_rounding_applied=False)
+    for state in states:
+        require(all(sha256(path) == state.hashes[name] for name, path in state.paths.items()),
+                'source files changed during selected response calculation')
+    if chunk_inputs is not None:
+        for run, record in zip(runs, chunk_inputs):
+            require(all(sha256(run/name) == value for name, value in
+                        {**record['input_sha256'], **record['validation_record_sha256']}.items()),
+                    'chunk source files changed during validation')
+    return rows, meta
+
+
+def add_input_arguments(p, *, include_wavecar=True):
+    directories = p.add_mutually_exclusive_group()
+    directories.add_argument('--input-dir', type=Path,
+        help='input directory (default: invocation cwd); file overrides never change this directory')
+    directories.add_argument('--run-dir', type=Path, nargs='+',
+        help='explicit compatibility alternative: one optical run or fixed-charge chunks; multiple runs disallow file overrides')
+    for name in SOURCE_NAMES:
+        if name == 'WAVECAR' and not include_wavecar:
+            continue
+        p.add_argument('--'+name.lower(), type=Path,
+            help=name+' only; explicit relative paths resolve from invocation cwd')
+    return p
+
+
 def add_arguments(p):
     """Shared argument contract for the standalone and composable commands."""
-    p.add_argument('--run-dir', type=Path, nargs='+', required=True,
-                   help='one full optical run, or fixed-charge chunks whose union is the full mesh')
-    p.add_argument('--occupied', type=int, required=True)
+    add_input_arguments(p)
+    selection = p.add_mutually_exclusive_group(required=True)
+    selection.add_argument('--occupied', type=int, help='leading occupied bundle; insulating T=0 only')
+    selection.add_argument('--bands', type=parse_bands, help='selected IDs/ranges, e.g. 31,33:34; all virtual bands retained')
     p.add_argument('--spin', type=int, default=1)
     p.add_argument('--spinor-components', type=int, choices=[1, 2], help='optional WAVECAR layout assertion; default auto')
     p.add_argument('--spin-multiplicity', type=int, choices=[1, 2], help='default: 2 for scalar degenerate states, otherwise 1')
@@ -369,6 +546,7 @@ def add_arguments(p):
     p.add_argument('--energy-reference', required=True)
     p.add_argument('--mu-min', type=float, required=True); p.add_argument('--mu-max', type=float, required=True)
     p.add_argument('--mu-num', type=int, default=241); p.add_argument('--mu-reference', type=float, required=True)
+    p.add_argument('--temperatures', nargs='+', type=float, default=[0.], help='selected-band response temperatures in K; default 0')
     p.add_argument('--regions', type=Path); p.add_argument('--difference', action='append', default=[])
     p.add_argument('--formats', nargs='+', choices=['csv', 'dat', 'npz'], default=['csv', 'dat', 'npz'])
     p.add_argument('--output-dir', type=Path, required=True)
@@ -377,7 +555,7 @@ def add_arguments(p):
 
 def add_command(subparsers):
     return add_arguments(subparsers.add_parser('waveder-hall',
-        help='standard VASP 5.4.4 optical run -> insulating T=0 PAW sheet Hall', description=__doc__))
+        help='standard VASP optical run -> selected-band or occupied-bundle PAW sheet Hall', description=__doc__))
 
 
 def command(args):
@@ -386,14 +564,21 @@ def command(args):
             and (args.mu_num > 1 or args.mu_min == args.mu_max), 'valid chemical-potential scan required')
     differences = [tuple(value.split(':')) for value in args.difference]
     require(all(len(v) == 3 for v in differences), 'difference syntax is NAME:LEFT:RIGHT')
-    rows, meta = waveder_hall_spectrum(args.run_dir, np.unique(np.linspace(args.mu_min, args.mu_max, args.mu_num)),
-        occupied=args.occupied, spin=args.spin, spinor_components=args.spinor_components,
+    runs, paths = resolve_cli_inputs(args)
+    rows, meta = waveder_hall_spectrum(runs, np.unique(np.linspace(args.mu_min, args.mu_max, args.mu_num)),
+        occupied=args.occupied, bands=getattr(args, 'bands', None),
+        temperatures=getattr(args, 'temperatures', [0.]), spin=args.spin, spinor_components=args.spinor_components,
         spin_multiplicity=args.spin_multiplicity, sampling={'kind': 'uniform_full_2d', 'mesh': args.mesh,
         'plane_axes': args.plane_axes}, energy_reference=args.energy_reference, mu_reference=args.mu_reference,
-        region_spec=json.loads(args.regions.read_text()) if args.regions else None, differences=differences)
-    meta['provenance'] = {'command': {k: [str(p) for p in v] if k == 'run_dir' else
+        region_spec=json.loads(args.regions.read_text()) if args.regions else None, differences=differences,
+        source_paths=paths)
+    meta['provenance'] = {'command': {k: [str(p) for p in v] if k == 'run_dir' and v is not None else
                                     str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
-                          'adapter_sha256': sha256(Path(__file__))}
+                          'adapter_sha256': sha256(Path(__file__)),
+                          'vaspberry_version': (Path(__file__).resolve().parents[1]/'VERSION').read_text().strip(),
+                          'implementation_sha256': {name: sha256(Path(__file__).with_name(name)) for name in
+                              ('waveder_hall.py', 'waveder_selected.py', 'band_selection.py', 'kubo_pairs.py',
+                               'berry_data.py', 'vaspberry_transport.py', 'vasp_optical_export.py', 'wavecar_fukui.py')}}
     return write_hall(args.output_dir, rows, meta, formats=args.formats)
 
 

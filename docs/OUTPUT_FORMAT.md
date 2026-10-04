@@ -8,6 +8,42 @@ method, also called the Fukui method, for Chern numbers. The
 `VASPBERRY_Z2_FIELD` format belongs to the separate Fukui–Hatsugai (FH)
 Z₂ n-field method and is also unchanged.
 
+## Standard native WAVEDER curvature (1.6.5)
+
+`--task kubo` now defaults to optical connections. With `--bands` omitted its schema is
+`VASPBERRY_WAVEDER_KUBO_OCCUPIED_V1`, default file `KUBO_WAVEDER.csv`, with
+columns `spin,k_index,kx_frac,ky_frac,kz_frac,omega_z_A2,min_external_gap_eV`.
+Coordinates are fractional; `omega_z_A2` is Cartesian Ωxy in Å².
+Comments record `source_operator=VASP_5.4.4_LONGITUDINAL_PAW_OPTICAL`,
+`complete_occupied_bundle=true`, `occupied_bands_spin_N`, source counts and
+completion status. The same numerical trace columns do not make this the
+same physical operator as the canonical trace schema. When a
+full mesh is explicitly supplied and validated, `total_chern` and
+`sheet_hall_e2_over_h` report unrounded integrals. The latter is the negative
+physical-spin-weighted Chern integral, in e²/h. A path has no integral.
+An explicit `--bands` singleton, range or list always writes selected
+geometry, even when the selection equals the occupied space:
+
+| Native schema | Columns | Interpretation |
+|---|---|---|
+| `VASPBERRY_WAVEDER_KUBO_BUNDLE_V1` | The seven occupied-trace columns above | Selected geometric trace, one row per source k/spin. |
+| `VASPBERRY_WAVEDER_KUBO_BAND_V1` | `spin,k_index,band,kx_frac,ky_frac,kz_frac,energy_eV,omega_z_A2,min_gap_eV` | Separate selected bands with explicit `--per-band 1`, when individually resolvable. |
+
+Selected metadata records `band_ids`, rank, all source NBANDS, the stored
+NDBANDS rectangle, required-pair/producer-cluster checks, and
+`occupation_weighting=NONE`. Its explicit full-mesh integrals are
+`selected_chern_spin_N` and `selected_chern_sum`, with unit geometric weights;
+physical spin multiplicity is recorded but is not applied. There is no
+`sheet_hall_e2_over_h` total-Hall claim. Missing or producer-erased pairs
+with unequal selection weights stop the calculation. If all source bands
+are selected, the zero trace is labeled `zero_trace_scope=TRUNCATED_WAVEDER_BASIS`;
+it is not an infinite-basis material invariant. Output readers preserve these
+scopes and plot labels use the actual selected IDs.
+
+No legacy canonical DAT companion is produced. The historical band/bundle
+and pair schemas below apply to the explicit `--kubo-source wavecar` route.
+Preserve the metadata to distinguish operators; do not relabel old CSVs.
+
 ## Read the file that matches your question
 
 The Intel and GNU executables write the same numerical formats. The
@@ -272,7 +308,7 @@ a partial export is not an integration input.
 The three real pair numerators are not the full complex velocity matrices.
 For an isolated band, curvature includes `Nab/(E_n-E_m)^2`; occupation-weighted
 pair transport additionally uses `f_n-f_m` and the k/BZ weights. The separate
-native `--task kubo --curvature-csv KUBO.csv` mode has already performed the
+native `--task kubo --kubo-source wavecar --curvature-csv KUBO.csv` mode has already performed the
 curvature sum, which is why its Å² column is directly plottable.
 
 `import-pairs` writes `pairs.npz` and `pairs.json`, schema
@@ -310,12 +346,23 @@ and final numerical results in `hall/`. Its `workflow.json` records overall
 status and an error on failure; native subprocess logs give execution details.
 A failed workflow does not create a valid Hall result.
 
-`waveder-hall` also uses the Hall-spectrum schema. Its method is
-`standard_waveder_occupied_bundle_T0`; metadata identifies the longitudinal
+`kubo-hall` and `waveder-hall` also use the Hall-spectrum schema.
+With `--occupied N` the method is `standard_waveder_occupied_bundle_T0`;
+metadata identifies the longitudinal
 PAW optical operator, producer settings, occupied count, stored empty-band
 coverage, source files and checked gap. These tables describe a constant
-zero-temperature response within the same global insulating gap. They do
-not contain a metallic or finite-temperature extension of WAVEDER.
+zero-temperature response within the same global insulating gap.
+
+With `--bands` the method is `standard_waveder_selected_weighted_pairs` and
+`scope=selected_band_contribution`. Metadata includes `selected_band_ids`,
+all `intermediate_band_ids`, `rectangular_coverage`, `producer_cluster_checks`,
+and `total_AHC_certified=false`, `total_delta_AHC_certified=false`. Requested
+μ/T values are accepted only if every noncanceling pair is available and
+not erased by the producer. Finite-temperature tails cannot waive coverage.
+The `total` region means the full sampled reciprocal region of the selected
+contribution; it does not mean total material AHC. `plot_hall.py` checks the
+table hash against the selected metadata and labels exported figures
+`Selected-band contribution: ...`; `plot.json` retains that scope and IDs.
 
 ## Full-connection Wannier operators and results
 
@@ -357,7 +404,8 @@ units and output formats. See [the workflow guide](WANNIER_TRANSPORT.md).
 
 ## Native Kubo individual-band CSV
 
-For `--task kubo`, `kubo-line` or `kubo-integral`, select `--bands N` for one
+For explicit `--kubo-source wavecar` with `--task kubo`, `kubo-line` or
+`kubo-integral`, select `--bands N` for one
 band, or `--bands FIRST:LAST --per-band 1` for separate bands. Add
 `--curvature-csv PATH` to save the full-precision CSV as well as the legacy
 DAT outputs; this individual-band CSV has no automatic filename.
@@ -389,7 +437,7 @@ artifact, not a numerical result; inspect its log before rerunning elsewhere.
 
 ## Native Kubo bundle CSV
 
-Native `--task kubo --bands FIRST:LAST --curvature-csv PATH`, with two or
+Native `--task kubo --kubo-source wavecar --bands FIRST:LAST --curvature-csv PATH`, with two or
 more selected bands and no `--per-band 1`, writes
 `VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V2`. It contains one row per spin channel
 and source k point, with comment metadata followed by a CSV header. The

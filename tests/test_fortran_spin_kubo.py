@@ -68,7 +68,7 @@ class NativeSpinKuboTests(unittest.TestCase):
         case=self.work/(self._testMethodName+'-'+name)
         if mode=='response':response_fixture(case)
         else:fixture(case,n=4,mode=mode)
-        cmd=[str(self.parallel if mpi else self.serial),'--task','spin-kubo','--bands','1:2',*flags]
+        cmd=[str(self.parallel if mpi else self.serial),'--task','spin-kubo', '--kubo-source', 'wavecar','--bands','1:2',*flags]
         if mpi:cmd=['mpiexec','-n','2',*cmd]
         p=self.invoke(cmd,case,success)
         if not success:
@@ -138,7 +138,7 @@ class NativeSpinKuboTests(unittest.TestCase):
                     start=(rec+4)*recl;data[start:start+8*nc]=bytes(8*nc)
             path.write_bytes(data)
             args=['--sum-bands','3'] if name=='partial' else []
-            self.invoke([str(self.serial),'--task','spin-kubo','--bands','1:2',*args],case)
+            self.invoke([str(self.serial),'--task','spin-kubo', '--kubo-source', 'wavecar','--bands','1:2',*args],case)
             cases[name]=case
         change=0.
         for sector in ('plus','minus','parent'):
@@ -177,7 +177,7 @@ class NativeSpinKuboTests(unittest.TestCase):
         outcar=(tilted/'OUTCAR').read_text().splitlines()
         for i,row in enumerate(lattice):outcar[2+i]=' '.join(f'{x:.12f}' for x in row)+' 0 0 0'
         (tilted/'OUTCAR').write_text('\n'.join(outcar)+'\n')
-        self.invoke([str(self.serial),'--task','spin-kubo','--bands','1:2','--mesh','4,4'],tilted)
+        self.invoke([str(self.serial),'--task','spin-kubo', '--kubo-source', 'wavecar','--bands','1:2','--mesh','4,4'],tilted)
         for sector in ('plus','minus','parent'):
             expected=np.array([self.values(normal,f'omega_{sector}_{x}_A2') for x in ('yz','zx','xy')]).T@rot.T
             observed=np.array([self.values(tilted,f'omega_{sector}_{x}_A2') for x in ('yz','zx','xy')]).T
@@ -196,7 +196,7 @@ class NativeSpinKuboTests(unittest.TestCase):
         for mode,message in [('closed-energy','energy isolated'),('closed-spin','zero gap'),('singular-gram','Gram metric')]:
             _,p=self.execute(mode,mode=mode,success=False);self.assertIn(message,p.stderr)
         case=self.work/(self._testMethodName+'-scalar');case.mkdir();write_wavecar(case/'WAVECAR',components=1)
-        p=self.invoke([str(self.serial),'--task','spin-kubo','--bands','1'],case,False)
+        p=self.invoke([str(self.serial),'--task','spin-kubo', '--kubo-source', 'wavecar','--bands','1'],case,False)
         self.assertNotEqual(p.returncode,0);self.assertIn('two-component spinors',p.stderr)
 
     def test_exact_degenerate_gauge_rotation(self):
@@ -211,7 +211,7 @@ class NativeSpinKuboTests(unittest.TestCase):
             for n in range(4):
                 a=c[:,n].astype(np.complex64);start=(rec+n+1)*recl;data[start:start+a.nbytes]=a.tobytes()
         path.write_bytes(data)
-        self.invoke([str(self.serial),'--task','spin-kubo','--bands','1:2'],rot)
+        self.invoke([str(self.serial),'--task','spin-kubo', '--kubo-source', 'wavecar','--bands','1:2'],rot)
         for sector in ('plus','minus','parent'):
             for component in ('yz','zx','xy'):
                 np.testing.assert_allclose(self.values(case,f'omega_{sector}_{component}_A2'),self.values(rot,f'omega_{sector}_{component}_A2'),rtol=2e-5,atol=1e-7)

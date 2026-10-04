@@ -15,10 +15,10 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 TASKS = ("chern", "spin-chern", "spin-kubo", "z2", "kubo", "kubo-integral",
          "kubo-pairs", "optical", "spectrum", "wavefunction", "velocity")
-OPTIONS = ("bands", "mesh", "wavecar", "spinor", "output", "curvature-csv",
+OPTIONS = ("bands", "mesh", "input-dir", "wavecar", "spinor", "output", "curvature-csv",
            "pairs-csv", "per-band", "spin-axis", "outcar", "energy-gap-tol",
            "spin-gap-tol", "sum-bands", "wavefunction-band", "kpoint",
-           "real-grid", "imaginary", "theta", "phi")
+           "real-grid", "imaginary", "theta", "phi", "kubo-source", "waveder", "incar")
 
 
 def compile_executable(work, compiler, name, source="vaspberry.f", mpi=False):
@@ -117,10 +117,28 @@ class NativeHelpTests(HelpAssertions, unittest.TestCase):
     def test_kubo_help_describes_input_output_and_degeneracy(self):
         text = self.request("--help", "kubo").stdout
         for item in ("WAVECAR", "--bands", "--curvature-csv", "--per-band",
-                     "curvature.csv", "Kubo", "PAW"):
+                     "KUBO_WAVEDER.csv", "Kubo", "PAW"):
             self.assertIn(item, text)
         self.assertIn("degenera", text.lower())
         self.assertIn("path", text.lower())
+
+    def test_kubo_source_help_requires_explicit_approximation(self):
+        source = self.request("--help", "kubo-source").stdout
+        for term in ("waveder", "wavecar", "--kubo-source"):
+            self.assertIn(term, source.lower())
+        self.assertIn("approx", source.lower())
+        self.assertIn("default", source.lower())
+
+    def test_input_directory_help_describes_independent_cwd_relative_overrides(self):
+        for topic in ('input-dir', 'kubo', 'wavecar', 'waveder', 'incar', 'outcar'):
+            text = self.request('--help', topic).stdout
+            self.assertIn('--input-dir', text)
+            self.assertIn('cwd', text.lower())
+            self.assertNotIn('siblings of --wavecar', text)
+            self.assertNotIn('beside --wavecar', text)
+        text = self.request('--help', 'input-dir', binary=self.legacy).stdout
+        self.assertIn('-f PATH', text)
+        self.assertIn('outputs stay in cwd', text)
 
     def test_pairs_help_points_to_executable_postprocessor(self):
         for topic in ("kubo-pairs", "outputs"):
@@ -156,6 +174,9 @@ class NativeHelpTests(HelpAssertions, unittest.TestCase):
         text = self.request("--help", "bundle").stdout
         self.assertIn("removed", text)
         self.assertIn("--per-band 1", text)
+        self.assertIn("For either source", text)
+        self.assertIn("--bands 31,33:34", text)
+        self.assertNotIn("Individual output requires --kubo-source wavecar", text)
         for binary in (self.binary, self.legacy):
             for flag in ("--bundle", "-kubo_bundle"):
                 for suffix in ((), ("0",), ("1",)):

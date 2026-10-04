@@ -208,6 +208,8 @@ def validate(args, output):
             case = output / f"{name}-{mode}"
             generate(case)
             command = [binary, "--task", task, "--bands", "1:2", *flags]
+            if task == "spin-kubo":
+                command += ["--kubo-source", "wavecar"]
             if mode == "mpi":
                 command = [launcher, *args.mpi_arg, "-n", "2", *command]
             invoke(command, case, expected_error, args.timeout)

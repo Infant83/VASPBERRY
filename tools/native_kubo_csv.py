@@ -11,6 +11,11 @@ import math
 from pathlib import Path
 
 TRACE_SCHEMA = "VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V2"
+PAW_TRACE_SCHEMA = "VASPBERRY_WAVEDER_KUBO_OCCUPIED_V1"
+PAW_BUNDLE_SCHEMA = "VASPBERRY_WAVEDER_KUBO_BUNDLE_V1"
+PAW_BAND_SCHEMA = "VASPBERRY_WAVEDER_KUBO_BAND_V1"
+PAW_SCHEMAS = (PAW_TRACE_SCHEMA, PAW_BUNDLE_SCHEMA, PAW_BAND_SCHEMA)
+WAVEDER_OPERATOR = "VASP_5.4.4_LONGITUDINAL_PAW_OPTICAL"
 LEGACY_TRACE_SCHEMA = "VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V1"
 BAND_SCHEMA = "VASPBERRY_BARE_MOMENTUM_KUBO_V3"
 LEGACY_BAND_SCHEMA = "VASPBERRY_BARE_MOMENTUM_KUBO_V2"
@@ -52,6 +57,18 @@ def positive_integer(value, name):
     return result
 
 
+def selected_band_ids(meta):
+    """Read the explicit, sorted native selection without filling holes."""
+    value = meta.get("band_ids", "")
+    ids = [positive_integer(item, "band_ids") for item in value.split(",")]
+    nb = positive_integer(meta.get("source_nbands"), "source_nbands")
+    first, last, rank = [positive_integer(meta.get(name), name) for name in
+                         ("band_min", "band_max", "band_rank")]
+    if ids != sorted(set(ids)) or ids[0] != first or ids[-1] != last or len(ids) != rank or last > nb:
+        raise ValueError("native band_ids must match the exact sorted selected band set")
+    return ids
+
+
 def read_curvature_csv(path, *, kind):
     """Return metadata and all finite rows, with exact current-schema coverage."""
     lines = Path(path).read_text().splitlines()
@@ -61,9 +78,11 @@ def read_curvature_csv(path, *, kind):
         raise ValueError("native curvature kind must be trace or band")
     current = TRACE_SCHEMA if trace else BAND_SCHEMA
     legacy = LEGACY_TRACE_SCHEMA if trace else LEGACY_BAND_SCHEMA
-    if meta.get("schema") not in (current, legacy):
+    selected_optical = meta.get("schema") == (PAW_BUNDLE_SCHEMA if trace else PAW_BAND_SCHEMA)
+    optical = (trace and meta.get("schema") == PAW_TRACE_SCHEMA) or selected_optical
+    if meta.get("schema") not in (current, legacy) and not optical:
         raise ValueError("unsupported native " + kind + " CSV schema")
-    strict = meta["schema"] == current
+    strict = meta["schema"] == current or optical
     if strict:
         require_terminal_pass(lines)
     elif trace and meta.get("result_status") != "PASS":
@@ -74,7 +93,15 @@ def read_curvature_csv(path, *, kind):
     gap_name = "min_external_gap_eV" if trace else "min_gap_eV"
     # An empty external space has no gap to report. NA is a defined absence,
     # not a NaN escape hatch, and the finite-basis trace must be exactly zero.
-    if trace:
+    ids = selected_band_ids(meta) if selected_optical else None
+    if trace and selected_optical:
+        no_external = (meta.get("no_external_states") == "true"
+                       and meta.get("zero_trace_scope") == "TRUNCATED_WAVEDER_BASIS"
+                       and len(ids) == positive_integer(meta.get("source_nbands"), "source_nbands"))
+        if (len(ids) == int(meta["source_nbands"])) != no_external or (
+                not no_external and meta.get("no_external_states") != "false"):
+            raise ValueError("WAVEDER empty-complement metadata disagrees with the selected bands")
+    elif trace and not optical:
         no_external = (meta.get("no_external_states") == "true"
                        and meta.get("zero_trace_scope") == "TRUNCATED_WAVECAR_BASIS"
                        and meta.get("band_min") == "1"
@@ -106,10 +133,46 @@ def read_curvature_csv(path, *, kind):
     if strict:
         nk, ns, count = [positive_integer(meta.get(name), name) for name in
                          ("source_nkpoints", "source_nspin", "expected_rows")]
-        first, last, rank, nb = [positive_integer(meta.get(name), name) for name in
-                                ("band_min", "band_max", "band_rank", "source_nbands")]
-        if ns not in (1, 2) or last < first or rank != last-first+1 or last > nb:
-            raise ValueError("invalid native spin count or selected band range")
+        if optical:
+            nb, nd, components, mult = [positive_integer(meta.get(name), name) for name in
+                ("source_nbands", "source_ndbands", "spinor_components", "physical_spin_multiplicity")]
+            if (ns not in (1, 2) or components not in (1, 2) or (ns == 2 and components != 1)
+                    or mult != (2 if ns == 1 and components == 1 else 1) or nd > nb):
+                raise ValueError("invalid WAVEDER source dimensions or physical spin multiplicity")
+            if (meta.get("kubo_source") != "WAVEDER" or meta.get("source_operator") != WAVEDER_OPERATOR
+                    or meta.get("producer_cluster_threshold_eV") != "0.002"):
+                raise ValueError("unsupported WAVEDER operator metadata")
+            if not no_external and any(row[gap_name] is None or row[gap_name] <= .002 for row in rows):
+                raise ValueError("WAVEDER required gap must exceed the producer 0.002 eV threshold")
+            if selected_optical:
+                expected_kind = "ISOLATED_SELECTED_BUNDLE_TRACE" if trace else "ISOLATED_SELECTED_BAND_CURVATURE"
+                intermediate = ("EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS" if trace
+                                else "ALL_SOURCE_BANDS_EXCEPT_SELF")
+                if (meta.get("result_kind") != expected_kind or meta.get("occupation_weighting") != "NONE"
+                        or meta.get("required_pair_coverage") != "PASS"
+                        or meta.get("intermediate_bands") != intermediate):
+                    raise ValueError("unsupported WAVEDER selected-band metadata")
+                high = set(range(nd+1, nb+1))
+                selected_high = high.intersection(ids)
+                if (trace and selected_high and selected_high != high) or (
+                        not trace and selected_high and len(high) > 1):
+                    raise ValueError("WAVEDER selection requires missing high-high matrix pairs")
+                first, last, rank = ids[0], ids[-1], len(ids)
+            else:
+                occupations = [positive_integer(meta.get("occupied_bands_spin_"+str(s)), "occupied bands")
+                               for s in range(1, ns+1)]
+                if any(value >= nb or value > nd for value in occupations):
+                    raise ValueError("WAVEDER occupied-ket coverage or stored empty bands are incomplete")
+                if (meta.get("result_kind") != "T0_INSULATING_OCCUPIED_BUNDLE_TRACE"
+                        or meta.get("complete_occupied_bundle") != "true"):
+                    raise ValueError("unsupported WAVEDER occupied-bundle operator metadata")
+                # Different collinear channels may have different occupied ranks.
+                first, last, rank = 1, max(occupations), max(occupations)
+        else:
+            first, last, rank, nb = [positive_integer(meta.get(name), name) for name in
+                                    ("band_min", "band_max", "band_rank", "source_nbands")]
+            if ns not in (1, 2) or last < first or rank != last-first+1 or last > nb:
+                raise ValueError("invalid native spin count or selected band range")
         expected = nk * ns * (1 if trace else rank)
         if count != expected or len(rows) != expected:
             raise ValueError("native expected_rows or complete row count disagrees")
@@ -122,10 +185,11 @@ def read_curvature_csv(path, *, kind):
         if ns not in (1, 2) or len(rows) != expected:
             raise ValueError("legacy curvature needs complete visible spin/k/band coverage")
     seen = set()
+    allowed_bands = set(ids) if ids is not None else range(first, last+1)
     for row in rows:
         key = (row["spin"], row["k_index"]) + (() if trace else (row["band"],))
         if (not 1 <= key[0] <= ns or not 1 <= key[1] <= nk
-                or (not trace and not first <= key[2] <= last) or key in seen):
+                or (not trace and key[2] not in allowed_bands) or key in seen):
             raise ValueError("native curvature needs unique complete spin/k/band coverage")
         seen.add(key)
     # Count, bounds and uniqueness imply every declared index is covered.

@@ -193,8 +193,8 @@ def contract_checks(prefix, mode, output, public_wavecar, fixtures, version):
     """Exercise the release interface on each compiler/MPI build with bounded inputs."""
     checks, tables = {}, {}
     for label, flags, diagnostic in (
-            ("per-band-gap", ["--task", "kubo", "--bands", "17:18", "--per-band", "1"], "not isolated"),
-            ("single-gap", ["--task", "kubo", "--bands", "18"], "not isolated"),
+            ("per-band-gap", ["--task", "kubo", "--kubo-source", "wavecar", "--bands", "17:18", "--per-band", "1"], "not isolated"),
+            ("single-gap", ["--task", "kubo", "--kubo-source", "wavecar", "--bands", "18"], "not isolated"),
             ("removed-modern", ["--bundle", "1"], "removed"),
             ("removed-legacy", ["-kubo_bundle", "1"], "removed")):
         directory = output / f"{mode}-{label}"
@@ -206,11 +206,11 @@ def contract_checks(prefix, mode, output, public_wavecar, fixtures, version):
     for layout in ("byte", "word4"):
         tables[layout] = {}
         for label, kind, flags, filename in (
-                ("trace", "BUNDLE", ["--task", "kubo", "--bands", "1:2"], "KUBO.csv"),
-                ("full-trace", "FULLTRACE", ["--task", "kubo", "--bands", "1:3"], "KUBO.csv"),
-                ("per-band", "BAND", ["--task", "kubo", "--bands", "1:2", "--per-band", "1",
+                ("trace", "BUNDLE", ["--task", "kubo", "--kubo-source", "wavecar", "--bands", "1:2"], "KUBO.csv"),
+                ("full-trace", "FULLTRACE", ["--task", "kubo", "--kubo-source", "wavecar", "--bands", "1:3"], "KUBO.csv"),
+                ("per-band", "BAND", ["--task", "kubo", "--kubo-source", "wavecar", "--bands", "1:2", "--per-band", "1",
                                        "--curvature-csv", "BAND.csv"], "BAND.csv"),
-                ("pairs", "PAIRS", ["--task", "kubo-pairs", "--pairs-csv", "PAIRS.csv"], "PAIRS.csv")):
+                ("pairs", "PAIRS", ["--task", "kubo-pairs", "--kubo-source", "wavecar", "--pairs-csv", "PAIRS.csv"], "PAIRS.csv")):
             directory = output / f"{mode}-{layout}-{label}"
             run_recorded(prefix + ["--wavecar", str(fixtures[layout]), "--spinor", "1", *flags], directory)
             tables[layout][kind] = read_export(directory / filename, kind, version)
@@ -220,7 +220,7 @@ def contract_checks(prefix, mode, output, public_wavecar, fixtures, version):
         for label, flags in (("trace", []), ("per-band", ["--per-band", "1", "--curvature-csv", "BAND.csv"])):
             directory = output / f"{mode}-{corruption}-{label}"
             run_recorded(prefix + ["--wavecar", str(fixtures[corruption]), "--spinor", "1",
-                                  "--task", "kubo", "--bands", "1:2", *flags], directory,
+                                  "--task", "kubo", "--kubo-source", "wavecar", "--bands", "1:2", *flags], directory,
                          expected_success=False)
             checks[f"{corruption}-{label}"] = "EXPECTED_REJECTION_WITHOUT_COMPLETED_CSV"
     return checks
@@ -262,7 +262,7 @@ def main():
                                       ("kubo-pairs", "PAIRS", [])):
                 directory = output / f"{mode}-{task}"
                 destination = directory / ("KUBO.csv" if task == "kubo" else "PAIRS.csv")
-                command = prefix + ["--task", task, "--wavecar", str(wavecar), "--spinor", "2",
+                command = prefix + ["--task", task, "--kubo-source", "wavecar", "--wavecar", str(wavecar), "--spinor", "2",
                                     *extra] + ([] if task == "kubo" else ["--pairs-csv", str(destination)])
                 run_recorded(command, directory)
                 tables[mode][kind] = read_export(destination, kind, version)

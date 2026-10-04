@@ -48,15 +48,15 @@ make help
 ```
 
 To install the fixed release instead, download **Source code (tar.gz)** or
-**Source code (zip)** from the [v1.6.3 release page](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.3),
-extract it, and enter `VASPBERRY-1.6.3`. The same Makefile commands work without
+**Source code (zip)** from the [v1.6.5 release page](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.5),
+extract it, and enter `VASPBERRY-1.6.5`. The same Makefile commands work without
 Git metadata. For example:
 
 ```bash
-curl -fL https://github.com/Infant83/VASPBERRY/archive/refs/tags/v1.6.3.tar.gz \
-  -o VASPBERRY-1.6.3.tar.gz
-tar -xzf VASPBERRY-1.6.3.tar.gz
-cd VASPBERRY-1.6.3
+curl -fL https://github.com/Infant83/VASPBERRY/archive/refs/tags/v1.6.5.tar.gz \
+  -o VASPBERRY-1.6.5.tar.gz
+tar -xzf VASPBERRY-1.6.5.tar.gz
+cd VASPBERRY-1.6.5
 make help
 ```
 
@@ -131,7 +131,7 @@ repo_dir="$PWD"
 mkdir results-intel-kubo-01
 (
   cd results-intel-kubo-01
-  mpiexec.hydra -n 4 "$repo_dir/build/vaspberry-ifx-mpi" --task kubo \
+  mpiexec.hydra -n 4 "$repo_dir/build/vaspberry-ifx-mpi" --task kubo --kubo-source wavecar \
     --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
     --bands 1:18 --curvature-csv KUBO.csv \
     > vaspberry.log 2> vaspberry.err

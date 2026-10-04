@@ -46,7 +46,7 @@ def main():
         native = output / "native"
         native.mkdir()
         # An explicit range requests its trace. KUBO.csv is the native default.
-        run_command([binary, "--task", "kubo", "--wavecar", wavecar,
+        run_command([binary, "--task", "kubo", "--kubo-source", "wavecar", "--wavecar", wavecar,
                      "--bands", "1:18"], native, output, record, wavecar)
         checks = validate_bundle(native / "KUBO.csv", w)
         q, omega, gaps = read_bundle(native / "KUBO.csv", occupied=OCCUPIED, threshold=GAP_THRESHOLD_EV)

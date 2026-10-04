@@ -19,6 +19,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def run_legacy_contract(command, *args, **kwargs):
+    """These regressions test the retained WAVECAR operator, explicitly selected.
+
+    Standard WAVEDER dispatch and its no-fallback guards have independent
+    full-executable coverage in test_fortran_waveder_default.py.
+    """
+    kubo_task = any(command[i] == '--task' and command[i+1].startswith('kubo')
+                    for i in range(len(command)-1))
+    if (kubo_task or '-kubo' in command) and '--kubo-source' not in command:
+        command = [*command, '--kubo-source', 'wavecar']
+    return subprocess.run(command, *args, **kwargs)
+
+
+
 @unittest.skipUnless(shutil.which("gfortran"), "gfortran required for native parser")
 class NativeCliTests(unittest.TestCase):
     @classmethod
@@ -31,8 +45,13 @@ class NativeCliTests(unittest.TestCase):
             raise AssertionError("production parser not found")
         (cls.work / "parse.f").write_text(match.group(0) + "\n")
         driver = (ROOT / "tests/fortran/test_kubo_parser.f90").read_text()
+        driver = driver.replace("  logical flag_atom_project", """
+  character(256) spinchern_outcar
+  common /spinchern_chars/ spinchern_outcar
+  logical flag_atom_project
+""")
         driver = driver.replace("  write(*,'(A)')trim(foname)", """
-  write(*,'(A)')trim(filename),trim(foname),trim(kubo_csv),trim(kubo_pairs)
+  write(*,'(A)')trim(filename),trim(foname),trim(kubo_csv),trim(kubo_pairs),trim(spinchern_outcar)
   write(*,*)nkx,nky,ispinor,icd,ixt,ivel,ikubo,iz,ihf,nini,nmax,nn,kperiod,it,iskp,ine
   write(*,*)iwf,ikwf,ng,imag,nediv,ikubo_bundle
   write(*,*)theta,phi,init_e,fina_e,sigma,rs
@@ -40,9 +59,41 @@ class NativeCliTests(unittest.TestCase):
         driver = driver.replace("  stop 1", "  print *, 'HELP'\n  stop 0")
         (cls.work / "driver.f90").write_text(driver)
         cls.binary = cls.work / "parser"
-        built = subprocess.run(["gfortran", "-cpp", "-O0", "-fcheck=all",
+        built = run_legacy_contract(["gfortran", "-cpp", "-O0", "-fcheck=all",
                                 "-ffixed-line-length-none", "parse.f", "driver.f90",
                                 "-o", str(cls.binary)], cwd=cls.work, capture_output=True, text=True)
+        if built.returncode:
+            raise AssertionError(built.stdout + built.stderr)
+
+        legacy_source = (ROOT / "vaspberry_gfortran_serial.f").read_text()
+        legacy_parse = re.search(r"(?ims)^ {6}subroutine parse\b.*?^ {6}end subroutine parse\s*$", legacy_source)
+        if not legacy_parse:
+            raise AssertionError("historical production parser not found")
+        (cls.work / "legacy-parse.f").write_text(legacy_parse.group(0) + "\n")
+        legacy_driver = """program test_legacy_input
+ implicit none
+ character(75) filename,foname,fbz,ver_tag
+ integer nx,ny,spin,cd,ext,vel,z2,hf,first,last,kperiod,it,skip,ne
+ integer wf,k,ng(3),imag
+ real(8) rs(3)
+ nx=2;ny=2;spin=2;kperiod=1;ver_tag='legacy parser'
+ call parse(filename,foname,nx,ny,spin,cd,ext,fbz, &
+  vel,z2,hf,first,last,kperiod,it,skip,ne,ver_tag,wf,k,ng,rs,imag)
+ write(*,'(A)')trim(filename),trim(foname)
+end program
+subroutine help(tag)
+ character(*) tag
+ stop 1
+end subroutine
+subroutine vaspberry_fail
+ stop 2
+end subroutine
+"""
+        (cls.work / "legacy-driver.f90").write_text(legacy_driver)
+        cls.legacy_parser = cls.work / "legacy-parser"
+        built = subprocess.run(["gfortran", "-O0", "-fcheck=all", "-ffixed-line-length-none",
+                                "legacy-parse.f", "legacy-driver.f90", "-o", str(cls.legacy_parser)],
+                               cwd=cls.work, capture_output=True, text=True)
         if built.returncode:
             raise AssertionError(built.stdout + built.stderr)
 
@@ -51,7 +102,7 @@ class NativeCliTests(unittest.TestCase):
         cls.temp.cleanup()
 
     def run_parser(self, arguments, success=True):
-        result = subprocess.run([str(self.binary), *arguments], cwd=self.work,
+        result = run_legacy_contract([str(self.binary), *arguments], cwd=self.work,
                                 capture_output=True, text=True)
         if success:
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -84,6 +135,48 @@ class NativeCliTests(unittest.TestCase):
                         ["-f", "/tmp/a b/WAVECAR", "-kx", "12", "-ky", "16",
                          "-ii", "1", "-if", "18", "-s", "1", "-o", "sample"])
         self.equivalent(["--bands", "18"], ["-is", "18"])
+
+    def test_input_directory_applies_to_non_kubo_defaults_without_changing_other_paths(self):
+        directory = self.work/'input directory';directory.mkdir()
+        for task in ('chern', 'velocity', 'optical', 'spin-chern'):
+            flags = ['--task', task, '--bands', '1:2', '--input-dir', str(directory)]
+            result = self.run_parser(flags)
+            self.assertEqual(result.stdout.splitlines()[0], str(directory/'WAVECAR'))
+            if task == 'spin-chern':
+                self.assertIn(str(directory/'OUTCAR'), result.stdout)
+                for order in (0, 1):
+                    override = ['--outcar', 'explicit.outcar']
+                    actual = self.run_parser([*override, *flags] if order else [*flags, *override])
+                    self.assertIn('explicit.outcar', actual.stdout)
+                    self.assertNotIn(str(directory/'OUTCAR'), actual.stdout)
+            for override in (['--wavecar', 'relative.wave'], ['-f', 'relative.wave']):
+                for order in (0, 1):
+                    actual = self.run_parser([*override, *flags] if order else [*flags, *override])
+                    self.assertEqual(actual.stdout.splitlines()[0], 'relative.wave')
+        self.equivalent(['--task', 'chern', '--input-dir', str(directory),
+                         '--wavecar', 'custom', '--output', 'result'],
+                        ['--task', 'chern', '--wavecar', 'custom', '--output', 'result'])
+
+    def test_historical_parser_input_directory_and_explicit_legacy_file(self):
+        directory = self.work/'old-input';directory.mkdir()
+        commands = [(['--input-dir', 'old-input'], 'old-input/WAVECAR'),
+                    (['--input-dir', 'old-input/', '-o', 'result'], 'old-input/WAVECAR'),
+                    (['--input-dir', 'old-input', '-f', 'override.wave'], 'override.wave'),
+                    (['-f', 'override.wave', '--input-dir', 'old-input'], 'override.wave')]
+        for args, filename in commands:
+            result = subprocess.run([str(self.legacy_parser), *args], cwd=self.work,
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout.splitlines()[0], filename)
+            self.assertEqual(result.stdout.splitlines()[1], 'BERRYCURV.result' if '-o' in args else 'BERRYCURV')
+        (self.work/'regular-input-file').write_text('not a directory')
+        for args in (['--input-dir', 'missing', '-f', 'override.wave'],
+                     ['--input-dir', 'regular-input-file'], ['--input-dir', ''],
+                     ['-f', ''], ['--input-dir', 'a'*76], ['-f', 'a'*76]):
+            result = subprocess.run([str(self.legacy_parser), *args], cwd=self.work,
+                                    capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('input', result.stderr)
 
     def test_selected_range_defaults_to_trace_and_per_band_is_explicit(self):
         trace = ["--task", "kubo", "--bands", "1:18"]
@@ -179,9 +272,10 @@ class NativeCliTests(unittest.TestCase):
         (project / "vaspberry_spin_chern.inc").write_text("! build prerequisite fixture\n")
         (project / "vaspberry_spin_kubo.inc").write_text("! build prerequisite fixture\n")
         (project / "vaspberry_help.inc").write_text("! build prerequisite fixture\n")
+        (project / "vaspberry_waveder.inc").write_text("! build prerequisite fixture\n")
         command = ["make", "serial", "FC=gfortran", "GNU_FLAGS=-O0", "GNU_LIBS="]
         for attempt in range(2):
-            result = subprocess.run(command, cwd=project, capture_output=True, text=True)
+            result = run_legacy_contract(command, cwd=project, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             canonical = project / "build/vaspberry"
             compatibility = project / "build/vaspberry-gfortran"
@@ -212,7 +306,7 @@ class NativeExecutionTests(unittest.TestCase):
         cls.temp = tempfile.TemporaryDirectory(prefix="vaspberry-native-pair-occupations-")
         cls.work = Path(cls.temp.name)
         cls.binary = cls.work / "vaspberry"
-        built = subprocess.run([
+        built = run_legacy_contract([
             "gfortran", "-cpp", "-O0", "-fcheck=all", "-ffixed-line-length-none",
             "-fallow-argument-mismatch", str(ROOT / "vaspberry.f"),
             "-llapack", "-lblas", "-o", str(cls.binary),
@@ -274,7 +368,7 @@ class NativeExecutionTests(unittest.TestCase):
         case = self.work / name
         case.mkdir()
         self.write_gap_fixture(case / "WAVECAR", energies)
-        result = subprocess.run([*prefix, str(binary or self.binary), "--spinor", "1", *flags],
+        result = run_legacy_contract([*prefix, str(binary or self.binary), "--spinor", "1", *flags],
                                 cwd=case, capture_output=True, text=True, timeout=30,
                                 env=dict(os.environ, OMPI_ALLOW_RUN_AS_ROOT="1",
                                          OMPI_ALLOW_RUN_AS_ROOT_CONFIRM="1",
@@ -333,18 +427,18 @@ class NativeExecutionTests(unittest.TestCase):
             total = sum(float(b["omega_z_A2"]) for b in bands if b["k_index"] == row["k_index"])
             self.assertAlmostEqual(float(row["omega_z_A2"]), total, delta=1e-12)
         before = (trace / "KUBO.csv").read_bytes()
-        result = subprocess.run([str(self.binary), "--spinor", "1", "--task", "kubo", "--bands", "1:2"],
+        result = run_legacy_contract([str(self.binary), "--spinor", "1", "--task", "kubo", "--bands", "1:2"],
                                 cwd=trace, capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual((trace / "KUBO.csv").read_bytes(), before)
 
     @unittest.skipUnless(shutil.which("mpifort") and shutil.which("mpiexec"), "MPI tools required")
     def test_mpi_trace_and_gap_rejection_exit_without_partial_files(self):
-        wrapper = subprocess.run(["mpifort", "--version"], capture_output=True, text=True)
+        wrapper = run_legacy_contract(["mpifort", "--version"], capture_output=True, text=True)
         if "GNU Fortran" not in wrapper.stdout + wrapper.stderr:
             self.skipTest("GNU MPI wrapper required")
         binary = self.work / "vaspberry-mpi"
-        built = subprocess.run(["mpifort", "-cpp", "-DMPI_USE", "-O0", "-fcheck=all",
+        built = run_legacy_contract(["mpifort", "-cpp", "-DMPI_USE", "-O0", "-fcheck=all",
                                 "-ffixed-line-length-none", "-fallow-argument-mismatch",
                                 str(ROOT / "vaspberry.f"), "-llapack", "-lblas", "-o", str(binary)],
                                capture_output=True, text=True)
@@ -374,7 +468,7 @@ class NativeExecutionTests(unittest.TestCase):
         env = dict(os.environ, OMPI_ALLOW_RUN_AS_ROOT="1", OMPI_ALLOW_RUN_AS_ROOT_CONFIRM="1",
                    OMPI_MCA_rmaps_base_oversubscribe="1")
         command = [*prefix, str(binary), "--spinor", "1", "--task", "kubo", "--bands", "1:2"]
-        result = subprocess.run(command, cwd=case, capture_output=True, text=True, timeout=30, env=env)
+        result = run_legacy_contract(command, cwd=case, capture_output=True, text=True, timeout=30, env=env)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual((serial / "KUBO.csv").read_bytes(), (case / "KUBO.csv").read_bytes())
         for corrupt in ("nan", "inf", "truncate"):
@@ -386,7 +480,7 @@ class NativeExecutionTests(unittest.TestCase):
             else:
                 struct.pack_into("<f", data, 17 * 1024, float(corrupt))
             (case / "WAVECAR").write_bytes(data)
-            result = subprocess.run(command, cwd=case, capture_output=True, text=True, timeout=30, env=env)
+            result = run_legacy_contract(command, cwd=case, capture_output=True, text=True, timeout=30, env=env)
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse((case / "KUBO.csv").exists())
             for partial in case.glob("*.csv.partial"):
@@ -415,7 +509,7 @@ class NativeExecutionTests(unittest.TestCase):
                 self.write_gap_fixture(case / "WAVECAR", energies)
                 if word:
                     self.word_recl_copy(case / "WAVECAR")
-                run = subprocess.run([str(self.binary), "--spinor", "1", *flags],
+                run = run_legacy_contract([str(self.binary), "--spinor", "1", *flags],
                                      cwd=case, capture_output=True, text=True, timeout=30)
                 self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
                 self.assertIn("RECL_layout=" + ("word4" if word else "byte"), run.stdout)
@@ -446,7 +540,7 @@ class NativeExecutionTests(unittest.TestCase):
                 # Last source spin, last k, last band's real/imaginary coefficient.
                 struct.pack_into("<f", data, 17 * 1024 + component * 4, value)
                 (case / "WAVECAR").write_bytes(data)
-                run = subprocess.run([str(self.binary), "--spinor", "1", *flags],
+                run = run_legacy_contract([str(self.binary), "--spinor", "1", *flags],
                                      cwd=case, capture_output=True, text=True, timeout=30)
                 self.assertNotEqual(run.returncode, 0)
                 self.assertIn("nonfinite Kubo coefficients", run.stderr)
@@ -474,7 +568,7 @@ class NativeExecutionTests(unittest.TestCase):
             self.write_gap_fixture(case / "WAVECAR", clear)
             data = bytearray((case / "WAVECAR").read_bytes());mutate(data)
             (case / "WAVECAR").write_bytes(data)
-            run = subprocess.run([str(self.binary), "--task", "kubo", "--bands", "1:2"],
+            run = run_legacy_contract([str(self.binary), "--task", "kubo", "--bands", "1:2"],
                                  cwd=case, capture_output=True, text=True, timeout=30)
             self.assertNotEqual(run.returncode, 0, run.stdout + run.stderr)
             self.assertNotIn("TOTAL RECORD LENGTH", run.stdout)
@@ -486,7 +580,7 @@ class NativeExecutionTests(unittest.TestCase):
             struct.pack_into("<12d", data, stride, 1., 1., 120.,
                              1., 0., 0., 0., 1., 0., 0., 0., 1.)
         (case / "WAVECAR").write_bytes(data)
-        run = subprocess.run([str(self.binary), "--task", "kubo", "--bands", "1"],
+        run = run_legacy_contract([str(self.binary), "--task", "kubo", "--bands", "1"],
                              cwd=case, capture_output=True, text=True, timeout=30)
         self.assertNotEqual(run.returncode, 0)
         self.assertIn("valid candidates =", run.stderr)
@@ -503,7 +597,7 @@ class NativeExecutionTests(unittest.TestCase):
             struct.pack_into("<7d", data, 1024, 1., 0., 0., 0., -1., 0., 2.)
             struct.pack_into("<2f", data, 1536, float("nan") if corrupt else 1., 0.)
             (case / "WAVECAR").write_bytes(data)
-            run = subprocess.run([str(self.binary), "--spinor", "1", "--task", "kubo", "--bands", "1",
+            run = run_legacy_contract([str(self.binary), "--spinor", "1", "--task", "kubo", "--bands", "1",
                                   "--curvature-csv", "BAND.csv"],
                                  cwd=case, capture_output=True, text=True, timeout=30)
             self.assertEqual(run.returncode == 0, not corrupt, run.stdout + run.stderr)
@@ -515,7 +609,7 @@ class NativeExecutionTests(unittest.TestCase):
         case = self.work / "existing-partial";case.mkdir()
         self.write_gap_fixture(case / "WAVECAR", [[[-2., -1., 1.], [-2., -1., 1.]]])
         partial = case / "KUBO.csv.partial";partial.write_text("previous interrupted run")
-        run = subprocess.run([str(self.binary), "--spinor", "1", "--task", "kubo", "--bands", "1:2"],
+        run = run_legacy_contract([str(self.binary), "--spinor", "1", "--task", "kubo", "--bands", "1:2"],
                              cwd=case, capture_output=True, text=True, timeout=30)
         self.assertNotEqual(run.returncode, 0)
         self.assertFalse((case / "KUBO.csv").exists())
@@ -527,7 +621,7 @@ class NativeExecutionTests(unittest.TestCase):
             case = self.work / ("variable" if variable else "uniform")
             case.mkdir()
             self.write_fixture(case / "WAVECAR", variable)
-            result = subprocess.run([
+            result = run_legacy_contract([
                 str(self.binary), "--task", "kubo-pairs", "--wavecar", "WAVECAR",
                 "--spinor", "2", "--pairs-csv", "PAIRS.csv",
             ], cwd=case, capture_output=True, text=True)
@@ -537,7 +631,7 @@ class NativeExecutionTests(unittest.TestCase):
             self.assertTrue(outputs[-1].endswith(b"# result_status=PASS\n"))
         self.assertEqual(outputs[0], outputs[1])
         # Pair independence must not loosen the occupied-subspace validation.
-        result = subprocess.run([
+        result = run_legacy_contract([
             str(self.binary), "--task", "chern", "--mesh", "2,1", "--bands", "1",
         ], cwd=self.work / "variable", capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
@@ -552,7 +646,7 @@ class NativeExecutionTests(unittest.TestCase):
         case = self.work / f"velocity-{spinor}"
         case.mkdir()
         self.write_fixture(case / "WAVECAR", False, spinor_components=spinor)
-        result = subprocess.run([
+        result = run_legacy_contract([
             str(self.binary), "--task", "velocity", "--bands", "1",
             "--spinor", str(spinor), "--mesh", "2,1", "-kp", "1",
         ], cwd=case, capture_output=True, text=True)

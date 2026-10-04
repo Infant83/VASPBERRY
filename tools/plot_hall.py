@@ -38,6 +38,24 @@ def read_table(path):
     return arrays
 
 
+def selected_scope(path):
+    """Carry a hash-bound selected-contribution label into exported figures."""
+    sidecar = Path(path).with_name('conductivity.json')
+    if not sidecar.is_file():
+        return None
+    meta = json.loads(sidecar.read_text())
+    if meta.get('scope') != 'selected_band_contribution':
+        return None
+    require(meta.get('schema') == 'vaspberry.hall-spectrum' and meta.get('complete') is True,
+            'complete selected Hall metadata required')
+    require(meta.get('output_sha256', {}).get(Path(path).name) == sha256(path),
+            'selected Hall table does not match its metadata hash')
+    ids = meta.get('selected_band_ids')
+    require(isinstance(ids, list) and bool(ids) and all(type(n) is int and n > 0 for n in ids)
+            and ids == sorted(set(ids)), 'exact sorted selected bands required for plot label')
+    return dict(scope=meta['scope'], selected_band_ids=ids, metadata_sha256=sha256(sidecar))
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('input', type=Path)
@@ -53,6 +71,7 @@ def main(argv=None):
         require(not args.output_dir.exists(), 'output directory exists; choose a new directory')
         require(len(set(args.formats)) == len(args.formats), 'duplicate figure format')
         d = read_table(args.input)
+        selection = selected_scope(args.input)
         ts = args.temperatures if args.temperatures is not None else np.unique(d['temperature_K'])
         require(len(ts) and len(set(ts)) == len(ts) and np.isfinite(ts).all(), 'distinct finite temperatures required')
         require(len(set(args.regions)) == len(args.regions), 'duplicate region')
@@ -80,6 +99,10 @@ def main(argv=None):
             ax.axhline(0, color='0.7', linewidth=.6, zorder=0)
             ax.set(xlabel=args.energy_label or xlabel,
                    ylabel=(r'$\sigma_{xy}$' if args.quantity == 'sigma' else r'$\Delta\sigma_{xy}$')+r' ($e^2/h$)')
+            if selection is not None:
+                ids = selection['selected_band_ids']
+                label = ', '.join(map(str, ids)) if len(ids) <= 8 else f'{len(ids)} bands'
+                ax.set_title('Selected-band contribution: ' + label, fontsize=10)
             ax.legend(frameon=False); ax.tick_params(direction='in', top=True, right=True)
             args.output_dir.mkdir(parents=True)
             for fmt in args.formats:
@@ -88,6 +111,7 @@ def main(argv=None):
             plt.close(fig)
         (args.output_dir/'plot.json').write_text(json.dumps(dict(
             source_sha256=sha256(args.input), command={k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
+            selected_contribution=selection,
             output_sha256={f'hall.{fmt}': sha256(args.output_dir/f'hall.{fmt}') for fmt in args.formats}), indent=2)+'\n')
     except (ValueError, OSError, KeyError, TypeError, StopIteration) as exc:
         p.error(str(exc))

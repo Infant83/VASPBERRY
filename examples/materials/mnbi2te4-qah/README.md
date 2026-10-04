@@ -111,7 +111,33 @@ The `--task` aliases above use the current repository version; the immutable
 v1.3.0 release retains the older `-f`, `-kx`, `-ky`, `-s`, `-ii` and `-if`
 spelling.
 
-### Optional optical diagnostic and independent overlap check
+### Standard Kubo route from the same optical run (1.6.5)
+
+The standard Kubo source is WAVEDER; no SH.LEE patch is needed. For the
+complete occupied bundle of this actual source, omit `--bands` to infer
+bands 1–123 and retain the physical insulating T=0 integral:
+
+```sh
+make serial
+mkdir -p work/mbt3-kubo-standard
+build/vaspberry --task kubo-integral \
+  --input-dir work/mbt3-optics --mesh 6,6 \
+  --curvature-csv work/mbt3-kubo-standard/KUBO.csv
+```
+
+All four source files are read from the explicit `work/mbt3-optics` input
+directory. Omitting `--input-dir` uses the invocation working directory.
+`--wavecar` would override only WAVECAR and would not redirect the remaining
+inputs. The CSV output remains at the explicitly requested path. It labels the
+PAW longitudinal optical source, complete occupied count and PASS status.
+This command requests the same coarse sampling as the retained optical
+reference; it does not establish a converged material Hall response.
+Missing optical files or unsupported settings stop. Explicit
+`--kubo-source wavecar` would instead request the canonical-momentum
+approximation and print a warning; it is a different operator.
+See the [full protocol](../../../docs/WAVEDER_KUBO_PROTOCOL.md).
+
+### Optical Hall tables and independent overlap check
 
 The following helper evaluates the same WAVECAR with the general
 [Python wavefunction-FHS tool](../../../tools/wavecar_fukui.py) and runs

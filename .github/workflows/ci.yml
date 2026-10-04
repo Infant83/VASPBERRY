@@ -91,6 +91,13 @@ jobs:
           python tests/run_simple_postprocess_example.py
           --wavecar results/inputs/bi/WAVECAR --binary build/vaspberry
           --output-dir results/feature-examples/simple-postprocess
+      - name: Validate selected WAVEDER curvature, Hall response and rejection barriers
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python examples/features/waveder-selected/run.py
+          --binary build/vaspberry
+          --output-dir results/feature-examples/waveder-selected
       - name: Retain example results and failure logs
         if: always()
         uses: actions/upload-artifact@v4

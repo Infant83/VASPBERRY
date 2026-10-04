@@ -1,5 +1,11 @@
 # Single-band curvature near the MoS₂ valleys
 
+**1.6.5 input policy:** the standard charge-Kubo route uses WAVEDER. This
+guide retains the WAVECAR canonical-momentum approximation and explicitly
+selects `--kubo-source wavecar` (or INI `kubo_source = wavecar`) to reproduce
+its existing results. See the [standard protocol](../../../../docs/WAVEDER_KUBO_PROTOCOL.md)
+for the PAW optical selected-band route and its required-pair checks.
+
 The upper valence band of nonmagnetic SOC MoS₂ touches its partner at Γ,
 so it is not an isolated band over the whole Brillouin zone. Near K and K′,
 however, the spin–orbit splitting makes its **individual-band Berry curvature**
@@ -46,7 +52,7 @@ mkdir -p results/mos2-valleys-native
   cd results/mos2-valleys-native
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/mos2-valleys-vasp/WAVECAR" \
-    --task kubo --bands 17:18 --per-band 1 \
+    --task kubo --kubo-source wavecar --bands 17:18 --per-band 1 \
     --curvature-csv KUBO.csv --output BERRYCURV > vaspberry.log
 )
 ```

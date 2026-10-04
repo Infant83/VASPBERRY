@@ -46,6 +46,8 @@ class PostprocessWorkflowTests(unittest.TestCase):
 
     def settings(self, name='result', *, projection=False, auto=False):
         text = '''[run]
+kubo_source = wavecar
+input_dir = input files
 wavecar = input files/WAVECAR
 binary = native executable
 output = NAME

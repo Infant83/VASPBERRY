@@ -91,7 +91,7 @@ def validate_bundle(csv_path, wavecar):
 def run_native(binary, wavecar, name, output, record):
     directory = output / name
     directory.mkdir()
-    command = [str(binary), "--task", "kubo", "--wavecar", str(wavecar),
+    command = [str(binary), "--task", "kubo", "--kubo-source", "wavecar", "--wavecar", str(wavecar),
                "--bands", "1:18"]
     stage = {"argv": command, "cwd": str(directory), "timeout_s": 180}
     record["commands"].append(stage)

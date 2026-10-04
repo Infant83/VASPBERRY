@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import time
 
 import numpy as np
@@ -13,6 +14,15 @@ from berry_data import require, write_hall
 from exported_matrix_kubo import sha256
 from kubo_pairs import (bundle_hall_spectrum, import_native_pairs, pair_hall_spectrum,
                         read_pairs, write_pairs)
+
+
+WAVECAR_WARNING = ('WAVECAR-only canonical momentum approximation explicitly selected; '
+                  'PAW optical matrix elements in WAVEDER are not used. This is not '
+                  'equivalent to the standard WAVEDER Kubo route.')
+
+
+def warn_wavecar_approximation():
+    print('WARNING: ' + WAVECAR_WARNING, file=sys.stderr, flush=True)
 
 
 def sampling(args):
@@ -49,7 +59,7 @@ def source_options(args):
 
 def record_provenance(args, meta):
     meta['provenance'] = {
-        'vaspberry_version': '1.6.3',
+        'vaspberry_version': (Path(__file__).resolve().parents[1]/'VERSION').read_text().strip(),
         'command': {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
         'implementation_sha256': {name: sha256(Path(__file__).with_name(name)) for name in
                                  ('kubo_hall_workflow.py', 'kubo_pairs.py', 'native_kubo_csv.py',
@@ -83,15 +93,25 @@ def bundle_hall_command(args):
 
 def wavecar_hall_command(args):
     """One user command, separate native export, reusable cache and integration."""
+    require(getattr(args, 'kubo_source', 'waveder') == 'wavecar',
+            'WAVECAR-only execution requires explicit --kubo-source wavecar; '
+            'use kubo-hall for the default WAVEDER protocol')
+    warn_wavecar_approximation()
     mus, options = scan_options(args)
     require(args.mpi_procs >= 1, 'MPI process count must be positive')
+    require(args.binary is not None, '--binary is required for --kubo-source wavecar')
     binary = Path(args.binary).expanduser().resolve()
-    wavecar = args.wavecar.expanduser().resolve()
-    require(binary.is_file() and wavecar.is_file(), 'native binary and WAVECAR must exist')
+    from waveder_hall import resolve_source_paths
+    directory, paths = resolve_source_paths(getattr(args, 'input_dir', None),
+        {'WAVECAR': args.wavecar} if args.wavecar is not None else None)
+    wavecar = paths['WAVECAR']
+    require(binary.is_file(), 'native binary does not exist: '+str(binary))
+    require(wavecar.is_file(), 'WAVECAR input is missing or not a file: '+str(wavecar))
     out = args.output_dir.resolve()
     require(not out.exists(), 'output directory exists; choose a new directory')
     raw = out/'native'
-    argv = [str(binary), '--task', 'kubo-pairs', '--wavecar', str(wavecar), '--pairs-csv', 'PAIRS.csv']
+    argv = [str(binary), '--task', 'kubo-pairs', '--kubo-source', 'wavecar',
+            '--wavecar', str(wavecar), '--pairs-csv', 'PAIRS.csv']
     if args.spinor_components is not None:
         argv += ['--spinor', str(args.spinor_components)]
     if args.mpi_procs > 1:
@@ -101,7 +121,9 @@ def wavecar_hall_command(args):
     raw.mkdir(parents=True)
     manifest = dict(schema='vaspberry.wavecar-hall-run', version=1, complete=False,
                     status='RUNNING', native_argv=argv, native_cwd=str(raw),
-                    binary_sha256=sha256(binary), wavecar_sha256=sha256(wavecar))
+                    binary_sha256=sha256(binary), wavecar_sha256=sha256(wavecar),
+                    input_directory=str(directory), source_paths={'WAVECAR': str(wavecar)},
+                    kubo_source='wavecar', approximation_warning=WAVECAR_WARNING)
     def save():
         (out/'workflow.json').write_text(json.dumps(manifest, indent=2, allow_nan=False)+'\n')
     save(); start = time.monotonic()
@@ -126,20 +148,66 @@ def wavecar_hall_command(args):
         raise
 
 
+def kubo_hall_command(args):
+    """Choose an explicit physical input route; never fall back on file errors."""
+    if args.kubo_source == 'wavecar':
+        require(args.run_dir is None and args.occupied is None and args.bands is None
+                and all(getattr(args, key, None) is None for key in ('waveder', 'incar', 'outcar')),
+                '--run-dir/--occupied/--bands/--waveder/--incar/--outcar apply to the WAVEDER route; '
+                'WAVECAR approximation uses input-dir/WAVECAR or --wavecar and the requested mu/T scan')
+        return wavecar_hall_command(args)
+    from waveder_hall import command
+
+    require(args.binary is None and args.mpi_procs == 1 and args.mpi_launcher == 'mpiexec',
+            '--binary and native MPI options apply only to --kubo-source wavecar; '
+            'the standard WAVEDER route evaluates optical matrices directly in Python')
+    require((args.occupied is None) != (args.bands is None), '--occupied or --bands is required for WAVEDER')
+    if args.occupied is not None:
+        require(args.temperatures == [0.], 'WAVEDER occupied mode supports only insulating T=0; use --bands for a selected mu/T contribution')
+        require(args.occupied > 0, '--occupied must be positive')
+    require(args.pair_band_max is None and not args.allow_partial_bands
+            and args.degeneracy_policy == 'error' and args.degeneracy_threshold_eV == 1e-7,
+            'pair truncation/coalescing and redundant partial acknowledgment are unsupported for WAVEDER; --bands declares selection')
+    return command(args)
+
+
 def add_commands(sub):
     imp = sub.add_parser('import-pairs', help='native PAIRS.csv + WAVECAR -> reusable unordered-pair NPZ cache')
     imp.add_argument('--csv', type=Path, required=True)
     pair = sub.add_parser('pair-hall', help='cached unordered Kubo pairs -> mu/T charge sheet Hall')
     pair.add_argument('--pairs-dir', type=Path, required=True)
-    bundle = sub.add_parser('bundle-hall', help='postprocess occupied-trace CSV + WAVECAR into insulating T=0 charge sheet Hall; no native calculation mode')
+    bundle = sub.add_parser('bundle-hall', help='postprocess saved canonical occupied-trace CSV + WAVECAR (approximation)',
+        description='Read saved canonical WAVECAR occupied-trace CSVs at insulating T=0. '
+                    'PAW WAVEDER trace CSVs require kubo-hall --input-dir with the original optical run '
+                    'for same-run validation; no operator relabelling is performed.')
     bundle.add_argument('--csv', type=Path, required=True)
     bundle.add_argument('--occupied', type=int, required=True)
-    wave = sub.add_parser('wavecar-hall', help='WAVECAR -> native Kubo export -> cache -> charge sheet Hall in one command')
+    wave = sub.add_parser('wavecar-hall', help='explicit WAVECAR-only approximation (requires --kubo-source wavecar)',
+        description='Legacy canonical momentum approximation. Explicit --kubo-source wavecar is required; '
+                    'use kubo-hall for the standard WAVEDER protocol.')
     wave.add_argument('--binary', type=Path, required=True, help='serial or MPI VASPBERRY executable')
-    wave.add_argument('--mpi-procs', type=int, default=1, help='native export only; use an MPI build when >1')
-    wave.add_argument('--mpi-launcher', default='mpiexec')
-    for p in (imp, bundle, wave):
-        p.add_argument('--wavecar', type=Path, required=True)
+    wave.add_argument('--input-dir', type=Path,
+                      help='input directory (default: invocation cwd); --wavecar overrides only WAVECAR')
+    standard = sub.add_parser('kubo-hall', help='standard WAVEDER Kubo charge Hall; WAVECAR approximation requires opt-in',
+        description='WAVEDER is the default Kubo matrix source. The validated standard VASP 5.4.4 '
+                    'optical route supports selected --bands mu/T contributions or insulating --occupied T=0 scans. Missing or invalid '
+                    'WAVEDER never triggers fallback. --kubo-source wavecar explicitly selects the '
+                    'canonical momentum approximation and prints a warning.')
+    standard.add_argument('--binary', type=Path, help='native executable; required only for --kubo-source wavecar')
+    from waveder_hall import add_input_arguments
+    add_input_arguments(standard, include_wavecar=False)
+    from band_selection import parse_bands
+    selection = standard.add_mutually_exclusive_group()
+    selection.add_argument('--occupied', type=int, help='leading occupied bundle; insulating T=0 only')
+    selection.add_argument('--bands', type=parse_bands, help='WAVEDER selected IDs/ranges, e.g. 31,33:34; all virtual bands retained')
+    for p in (wave, standard):
+        p.add_argument('--kubo-source', choices=['waveder', 'wavecar'], default='waveder',
+                       help='default: waveder; wavecar explicitly opts into the canonical momentum approximation')
+        p.add_argument('--mpi-procs', type=int, default=1, help='WAVECAR native export only; use an MPI build when >1')
+        p.add_argument('--mpi-launcher', default='mpiexec')
+    for p in (imp, bundle, wave, standard):
+        p.add_argument('--wavecar', type=Path, required=p in (imp, bundle),
+                       help='WAVECAR only; explicit relative paths resolve from invocation cwd')
         p.add_argument('--spin', type=int, default=1)
         p.add_argument('--spinor-components', type=int, choices=[1, 2],
                        help='optional assertion; default detects the WAVECAR layout')
@@ -148,7 +216,7 @@ def add_commands(sub):
         p.add_argument('--mesh', nargs=2, type=int, required=True, metavar=('NX', 'NY'))
         p.add_argument('--plane-axes', nargs=2, type=int, default=[0, 1])
         p.add_argument('--energy-reference', required=True, help='description of unchanged input energy zero')
-    for p in (pair, bundle, wave):
+    for p in (pair, bundle, wave, standard):
         p.add_argument('--mu-min', type=float, required=True)
         p.add_argument('--mu-max', type=float, required=True)
         p.add_argument('--mu-num', type=int, default=241)
@@ -158,7 +226,7 @@ def add_commands(sub):
         p.add_argument('--difference', action='append', default=[], metavar='NAME:LEFT:RIGHT')
         p.add_argument('--formats', nargs='+', choices=['csv', 'dat', 'npz'], default=['csv', 'dat', 'npz'],
                        help='independently selectable numerical formats; JSON metadata always included')
-    for p in (pair, wave):
+    for p in (pair, wave, standard):
         p.add_argument('--degeneracy-threshold-eV', type=float, default=1e-7)
         p.add_argument('--degeneracy-policy', choices=['error', 'coalesce'], default='error',
                        help='coalesce explicitly approximates numerical energy groups by their mean; records shifts')
@@ -166,9 +234,10 @@ def add_commands(sub):
         p.add_argument('--mu-chunk', type=int, default=32)
         p.add_argument('--pair-band-max', type=int,
                        help='optional upper pair-band limit for virtual-state convergence on one larger WAVECAR; source bands remain recorded')
-    for p in (imp, pair, bundle, wave):
+    for p in (imp, pair, bundle, wave, standard):
         p.add_argument('--output-dir', type=Path, required=True)
 
 
 COMMANDS = {'import-pairs': import_pairs_command, 'pair-hall': pair_hall_command,
-            'bundle-hall': bundle_hall_command, 'wavecar-hall': wavecar_hall_command}
+            'bundle-hall': bundle_hall_command, 'wavecar-hall': wavecar_hall_command,
+            'kubo-hall': kubo_hall_command}

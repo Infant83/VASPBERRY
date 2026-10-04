@@ -135,7 +135,7 @@ def main():
         if not np.allclose(w.kpoints,expected,atol=1e-12,rtol=0):raise ValueError("WAVECAR coordinates do not match the valley sampling")
         if abs(w.header.encut_ev-400)>1e-10:raise ValueError("reference setup requires ENCUT=400 eV")
         native=output/"native";native.mkdir()
-        command=[str(binary),"--wavecar",str(source),"--task","kubo",
+        command=[str(binary),"--wavecar",str(source),"--task","kubo", "--kubo-source", "wavecar",
                  "--bands","17:18","--per-band","1",
                  "--curvature-csv","KUBO.csv","--output","BERRYCURV"]
         record["command"]=["vaspberry", "--wavecar", "WAVECAR", *command[3:]]

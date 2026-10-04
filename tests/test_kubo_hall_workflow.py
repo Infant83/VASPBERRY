@@ -71,13 +71,14 @@ class HallWorkflowTests(unittest.TestCase):
                 '--mu-reference', '.75', '--temperatures', '0', '300']
 
     def wave_args(self, name='run', extra=()):
-        return cli.parser().parse_args(['wavecar-hall', '--binary', str(self.binary),
+        return cli.parser().parse_args(['wavecar-hall', '--kubo-source', 'wavecar', '--binary', str(self.binary),
             *self.source_arguments(), *self.scan_arguments(), '--output-dir', str(self.root/name), *extra])
 
     def native_process(self, *, returncode=0, footer=True, omit_csv=False):
         def run(argv, *, cwd, stdout, stderr, check):
             self.assertFalse(check)
             self.assertEqual(argv[argv.index('--task')+1], 'kubo-pairs')
+            self.assertEqual(argv[argv.index('--kubo-source')+1], 'wavecar')
             self.assertEqual(argv[argv.index('--pairs-csv')+1], 'PAIRS.csv')
             stdout.write('native diagnostic retained\n')
             stderr.write('STOP 0\n' if not footer else '')
@@ -85,6 +86,25 @@ class HallWorkflowTests(unittest.TestCase):
                 (Path(cwd)/'PAIRS.csv').write_text(self.native_csv(footer))
             return SimpleNamespace(returncode=returncode)
         return run
+
+    def test_wavecar_command_requires_acknowledgement_before_native_execution(self):
+        args = self.wave_args()
+        args.kubo_source = 'waveder'
+        with patch.object(workflow.subprocess, 'run') as native, \
+             self.assertRaisesRegex(ValueError, 'explicit --kubo-source wavecar'):
+            workflow.wavecar_hall_command(args)
+        native.assert_not_called()
+        self.assertFalse(args.output_dir.exists())
+
+    def test_explicit_wavecar_choice_warns_and_remains_labelled_in_manifest(self):
+        args = self.wave_args()
+        with patch.object(workflow.subprocess, 'run', side_effect=self.native_process()), \
+             contextlib.redirect_stderr(io.StringIO()) as stderr:
+            workflow.wavecar_hall_command(args)
+        self.assertIn('WARNING: WAVECAR-only canonical momentum approximation', stderr.getvalue())
+        manifest = json.loads((args.output_dir/'workflow.json').read_text())
+        self.assertEqual(manifest['kubo_source'], 'wavecar')
+        self.assertIn('not equivalent', manifest['approximation_warning'])
 
     def run_success(self, name='run', extra=()):
         args = self.wave_args(name, extra)
@@ -299,3 +319,17 @@ class HallPlotTests(unittest.TestCase):
             plot_hall.main([str(self.root/'duplicates/conductivity.npz'), '--output-dir', str(self.root/'bad-plot')])
         self.assertEqual(exc.exception.code, 2)
         self.assertFalse((self.root/'bad-plot').exists())
+
+    def test_selected_contribution_label_is_bound_to_table_and_preserved_in_figure(self):
+        source=self.root/'selected'
+        write_hall(source,self.rows,dict(schema='vaspberry.hall-spectrum',version=1,complete=True,
+            scope='selected_band_contribution',selected_band_ids=[2,4]),formats=['csv'])
+        out=self.root/'selected-plot'
+        plot_hall.main([str(source/'conductivity.csv'),'--output-dir',str(out),'--formats','svg'])
+        manifest=json.loads((out/'plot.json').read_text())
+        self.assertEqual(manifest['selected_contribution']['selected_band_ids'],[2,4])
+        self.assertIn('Selected-band contribution: 2, 4',(out/'hall.svg').read_text())
+        table=source/'conductivity.csv';table.write_text(table.read_text()+'\n')
+        with contextlib.redirect_stderr(io.StringIO()),self.assertRaises(SystemExit):
+            plot_hall.main([str(table),'--output-dir',str(self.root/'changed')])
+        self.assertFalse((self.root/'changed').exists())

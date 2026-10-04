@@ -2,7 +2,8 @@
 
 Use the [step-by-step guide](POSTPROCESSING.md) first. This page lists the
 accepted settings for `tools/vaspberry_post.py`; optional settings can simply
-be omitted. Start from the working [Bi example](../examples/features/simple-postprocess/README.md)
+be omitted. Start from the [selected WAVEDER software example](../examples/features/waveder-selected/)
+or the canonical [Bi example](../examples/features/simple-postprocess/README.md)
 and its [initial scan](../examples/features/simple-postprocess/bi.ini) or
 [rescan](../examples/features/simple-postprocess/bi-rescan.ini).
 
@@ -10,9 +11,13 @@ and its [initial scan](../examples/features/simple-postprocess/bi.ini) or
 
 - Sections and keys are case-sensitive. Use `key = value`, space-separated
   lists, and `#` or `;` comments. Inline comments need preceding whitespace.
-- Paths in the INI are relative to that INI's directory. Absolute paths and
+- Explicit relative paths in the INI are relative to that INI's directory,
+  including `input_dir` and individual file overrides. Absolute paths and
   `~` work; shell variables, commands and quoted shell syntax are not expanded.
   Write a path containing spaces without adding quotes.
+- Omitted `[run] input_dir` means the invocation working directory, not the
+  INI directory or the parent of a `wavecar` override. Input-directory selection
+  never changes how output paths are resolved.
 - Each section and key may appear once. Unknown keys, empty values and
   `[DEFAULT]` are rejected. Merge additions into an existing `[plot]` section.
 - Group, region and difference names begin with an ASCII letter, followed by
@@ -24,18 +29,34 @@ and its [initial scan](../examples/features/simple-postprocess/bi.ini) or
 
 ## Required settings
 
-Both `[run]` and `[hall]` are required, including when using `--reuse`.
+Both `[run]` and `[hall]` are required. From 1.6.5 the default is
+`[run] kubo_source = waveder`. Same-run optical input is mandatory for that
+route; missing files or unsupported calculations stop. Set `kubo_source =
+wavecar` explicitly to run the warned canonical-momentum approximation.
+The [protocol](WAVEDER_KUBO_PROTOCOL.md) supplies a standard INI example.
+WAVEDER requires exactly one `[hall] bands` or `occupied` selector. The
+selected route rejects missing nonzero-weight pairs and unequal weights
+inside producer-erased groups. A finite-temperature selection remains a
+contribution; it does not become the total AHC.
+`--reuse`, pair cutoffs and PROCAR attribution belong to the explicit
+WAVECAR route and are rejected with WAVEDER.
 
 | Section / key | Value and meaning |
 |---|---|
-| `[run] wavecar` | Path to the source WAVECAR. Its k points must form a complete uniform 2D mesh, not an irreducible mesh or band path. |
-| `[run] binary` | Path to the compiled VASPBERRY executable; a path, not a command with arguments. Required in the file even for `--reuse`, where the executable is not used. |
+| `[run] input_dir` | Directory for default source filenames. Optional; defaults to the invocation working directory. Explicit relative values are relative to the INI. |
+| `[run] wavecar` | Optional override of only WAVECAR; default `input_dir/WAVECAR`. Its k points must form a complete uniform 2D mesh, not an irreducible mesh or path. |
+| `[run] waveder`, `incar`, `outcar` | Optional per-file optical overrides, resolved relative to the INI when relative. Each changes only its named file; defaults are those filenames in `input_dir`. WAVEDER route only. |
+| `[run] kubo_source` | `waveder` (default) or explicit `wavecar`. The latter prints an approximation warning. |
+| `[run] optical_run_dir` | Legacy WAVEDER-only alias for `input_dir`. Mutually exclusive with `input_dir`; rejected with the WAVECAR approximation. No directory is inferred from WAVECAR. |
+| `[run] binary` | Compiled VASPBERRY path, required only for the explicit WAVECAR route, including its `--reuse` configuration. Rejected by the Python WAVEDER backend; omit it for that route. |
 | `[run] output` | New result directory. An existing directory is rejected, including an empty one. |
 | `[run] mesh` | `NX NY`, two integers at least 2. Their product equals the source k-point count; coordinates must match that uniform grid. |
 | `[run] energy_reference` | Descriptive text recording the WAVECAR energy convention, e.g. `unchanged VASP eigenvalue zero`. It does not shift any energy. |
-| `[hall] mu` | `MIN MAX N`: N equally spaced chemical potentials in eV, including endpoints. Use `MIN < MAX` and integer `N >= 2`, or `MIN = MAX` and `N = 1` for a single total-Hall point. |
+| `[hall] mu` | `MIN MAX N`: N equally spaced chemical potentials in eV, including endpoints. Use `MIN < MAX` and integer `N >= 2`, or `MIN = MAX` and `N = 1` for a single Hall-response point. |
 | `[hall] reference` | Reference chemical potential in eV for Δσ and the plot's horizontal origin. Uses the same energy zero as `mu` and WAVECAR; need not be a sampled `mu` value. |
-| `[hall] temperatures` | Distinct nonnegative temperatures in K, e.g. `0 100 300`. |
+| `[hall] temperatures` | Distinct nonnegative temperatures. WAVEDER `occupied` mode requires `0`; selected `bands` mode checks all requested weighted pairs, including finite-temperature tails. |
+| `[hall] occupied` | WAVEDER insulating compatibility selector; μ/reference strictly inside the global gap, T=0. Mutually exclusive with `bands`; rejected with WAVECAR source. |
+| `[hall] bands` | WAVEDER target selector, e.g. `31`, `31:32` or `31,33:34`; mutually exclusive with `occupied`. All source intermediate bands remain included. Gives a selected contribution, not certified total AHC; rejected with WAVECAR source. |
 
 `[run] spin_mode` is optional and defaults to `auto`.
 
@@ -67,12 +88,13 @@ temperatures = 0 300
 The CSV retains `mu_eV` and `mu_minus_reference_eV`; figures use the latter
 on the horizontal axis. `sigma` shows σ(μ,T), while `delta-sigma` shows
 σ(μ,T) − σ(reference,T), evaluated using occupation differences. Changing
-`reference` requires a new numerical run, which can reuse the pair cache.
+`reference` requires a new numerical run; the explicit WAVECAR route can
+reuse its pair cache. The standard WAVEDER route rereads its optical inputs.
 Changing `energy_reference` text alone does not perform an energy conversion.
 
 ## Common optional settings
 
-### Executing VASPBERRY with MPI
+### Executing the explicit WAVECAR approximation with MPI
 
 | `[run]` key | Default | Meaning |
 |---|---|---|
@@ -94,8 +116,8 @@ and at least one `[group NAME]`. Groups also require `[projection]`.
 |---|---|---|
 | `bands` | Required | Unique 1-based band IDs, e.g. `12 13`. These select the bands included with their occupations in the character-weighted Hall sum; the virtual-state sum still uses all stored pair bands. |
 | `axis` | Required | Three Cartesian components of a unit spin-analysis vector, e.g. `0 0 1`. It must already have unit norm; no automatic normalization. |
-| `procar` | `PROCAR` beside WAVECAR | Matching noncollinear projection file. |
-| `outcar` | `OUTCAR` beside WAVECAR | Matching completed static-run output, including the SAXIS-to-Cartesian transformation. |
+| `procar` | `input_dir/PROCAR` | Matching noncollinear projection file. |
+| `outcar` | `input_dir/OUTCAR` | Matching completed static-run output, including the SAXIS-to-Cartesian transformation. |
 | `mu` | `[hall] mu` | Same `MIN MAX N` syntax, but requires `MIN < MAX` and `N >= 2`. |
 | `reference` | `[hall] reference` | Reference μ in eV for the character-weighted response. |
 | `temperatures` | `[hall] temperatures` | Distinct nonnegative temperatures in K. |
@@ -182,10 +204,10 @@ the Hall reference; the accompanying Hall curves do.
 | Section / key | Default | Meaning |
 |---|---|---|
 | `[run] plane_axes` | `0 1` | Two distinct reciprocal-basis indices from `0 1 2`. `mesh` sizes follow this order; the remaining fractional coordinate is fixed. The ordered cross product sets the oriented integration normal. |
-| `[hall] pair_band_max` | All stored bands | Integer from 2 through the source band count. Both endpoints of retained pairs lie in bands `1..pair_band_max`. Does not reduce the VASPBERRY pair export or the virtual-state sum in character-weighted Hall. |
+| `[hall] pair_band_max` | All stored bands | WAVECAR approximation only; rejected for WAVEDER. Integer from 2 through the source band count. Both endpoints of retained pairs lie in bands `1..pair_band_max`. Does not reduce the VASPBERRY pair export or the virtual-state sum in character-weighted Hall. |
 
 The compact front end uses the strict numerical defaults of the underlying
-tools. In total Hall, pairs with gaps at or below 10⁻⁷ eV must have equal
+tools. In the explicit WAVECAR pair-Hall route, pairs with gaps at or below 10⁻⁷ eV must have equal
 occupations at every requested μ/T and the reference. A retained-band
 cutoff must not split an unresolved group, and its highest band must be
 unoccupied within the numerical tolerance (10⁻⁸). These checks do not
@@ -202,13 +224,14 @@ and the [hands-on guide](HANDS_ON.md).
 
 | Command | Input dependencies and action |
 |---|---|
-| `check analysis.ini` | Parses settings, checks a new output path, WAVECAR/header/grid, executable and (for multiple ranks) launcher availability. With projection, also checks PROCAR/OUTCAR existence and band ranges. Does not execute numerical stages. |
-| `run analysis.ini` | Same preflight, then executes VASPBERRY to write `native/PAIRS.csv`, with MPI when configured. Imports that output and computes total Hall and optional character/Hall tables. Saves settings, logs and table checksums. |
+| `check analysis.ini` | Checks settings, a new output path and WAVECAR/header/grid. WAVEDER also validates same-run optical files, requested weighted pairs and producer clusters. The explicit WAVECAR route checks its executable/launcher and any projection inputs. Creates no result directory. |
+| `run analysis.ini` | Performs the checks and computes Hall tables. WAVEDER contracts optical connections directly; the explicit WAVECAR route executes VASPBERRY to write `native/PAIRS.csv` (with MPI when configured), then imports the pairs and any character attribution. Saves settings, source/operator scope, logs and table checksums. |
 | `check analysis-next.ini --reuse results/run01` | Requires a completed previous front-end run, its intact pair cache and the same WAVECAR. Checks compatibility without calculating. Executable and launcher availability are not needed. |
 | `run analysis-next.ini --reuse results/run01` | Copies the verified pair cache into a new output directory and recalculates the requested postprocessing. Requires source PROCAR/OUTCAR again if projection is enabled. |
 | `plot results/run01` | Uses a completed `run.json` and its intact saved Hall tables; with projection, also the saved character and character-Hall data. Requires no source WAVECAR, PROCAR, OUTCAR, VASPBERRY executable or MPI launcher. |
 
-`--reuse` requires an identical WAVECAR hash and unchanged mesh, plane axes,
+`--reuse` is available only for the explicit WAVECAR approximation. It requires
+an identical WAVECAR hash and unchanged mesh, plane axes,
 spin convention and `energy_reference` text. Paths may change if the file
 content is identical. Scan values, groups, regions and projection selections
 can change; these are recalculated. Reuse skips VASPBERRY execution and

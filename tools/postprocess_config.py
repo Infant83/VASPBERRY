@@ -1,7 +1,8 @@
 """Strict, standard-library reader for commented postprocessing study inputs.
 
-Lists are whitespace-separated. Paths are relative to the input file; only
-``~`` is expanded. Full-line and whitespace-prefixed ``#``/``;`` comments are
+Lists are whitespace-separated. Explicit paths are relative to the settings
+file; only ``~`` is expanded. Omitted input_dir defaults to invocation cwd.
+Full-line and whitespace-prefixed ``#``/``;`` comments are
 accepted. Names and keys are case-sensitive. No shell or expression is run.
 """
 from __future__ import annotations
@@ -11,6 +12,7 @@ from fractions import Fraction
 import math
 from pathlib import Path
 import re
+from band_selection import parse_bands
 
 
 _NAME = re.compile(r'[A-Za-z][A-Za-z0-9_.-]*\Z')
@@ -125,10 +127,25 @@ def load_settings(path):
     _require('run' in parser and 'hall' in parser, '[run] and [hall] are required')
     base = path.parent
     src = parser['run']
-    _keys(src, {'wavecar', 'binary', 'output', 'mesh', 'spin_mode', 'energy_reference',
-                'mpi_procs', 'mpi_launcher', 'plane_axes'},
-          {'wavecar', 'binary', 'output', 'mesh', 'energy_reference'})
-    run = {key: _path(src[key], base) for key in ('wavecar', 'binary', 'output')}
+    _keys(src, {'wavecar', 'waveder', 'incar', 'outcar', 'input_dir', 'binary', 'output',
+                'mesh', 'spin_mode', 'energy_reference', 'mpi_procs', 'mpi_launcher',
+                'plane_axes', 'kubo_source', 'optical_run_dir'},
+          {'output', 'mesh', 'energy_reference'})
+    run = {'output': _path(src['output'], base)}
+    run['kubo_source'] = src.get('kubo_source', 'waveder')
+    _require(run['kubo_source'] in ('waveder', 'wavecar'), '[run] kubo_source: use waveder or wavecar')
+    _require(run['kubo_source'] == 'waveder' or 'optical_run_dir' not in src,
+             '[run] optical_run_dir applies only to kubo_source = waveder')
+    _require(not ('input_dir' in src and 'optical_run_dir' in src),
+             '[run] input_dir and optical_run_dir are mutually exclusive')
+    _require(run['kubo_source'] == 'waveder' or not set(src) & {'waveder', 'incar', 'outcar'},
+             '[run] waveder/incar/outcar overrides apply only to kubo_source = waveder')
+    run['binary'] = _path(src['binary'], base) if 'binary' in src else None
+    directory_key = 'input_dir' if 'input_dir' in src else 'optical_run_dir'
+    run['input_dir'] = _path(src[directory_key], base) if directory_key in src else str(Path.cwd().resolve())
+    run['optical_run_dir'] = run['input_dir']  # Recorded compatibility alias, never inferred from WAVECAR.
+    for key in ('wavecar', 'waveder', 'incar', 'outcar'):
+        run[key] = _path(src[key], base) if key in src else str(Path(run['input_dir'])/key.upper())
     run['mesh'] = _list(src['mesh'], lambda v, c: _int(v, c, 2), '[run] mesh', length=2)
     axes = _list(src.get('plane_axes', '0 1'), lambda v, c: _int(v, c, 0),
                  '[run] plane_axes', length=2, unique=True)
@@ -145,12 +162,18 @@ def load_settings(path):
     run['mpi_launcher'] = _path(launcher, base) if '/' in launcher or launcher.startswith('~') else launcher
 
     src = parser['hall']
-    _keys(src, {'mu', 'reference', 'temperatures', 'pair_band_max'}, {'mu', 'reference', 'temperatures'})
+    _keys(src, {'mu', 'reference', 'temperatures', 'pair_band_max', 'occupied', 'bands'}, {'mu', 'reference', 'temperatures'})
     hall = _scan(src['mu'], '[hall] mu')
     hall.update(mu_reference=_float(src['reference'], '[hall] reference'),
                 temperatures=_temperatures(src['temperatures'], '[hall] temperatures'),
                 pair_band_max=_int(src['pair_band_max'], '[hall] pair_band_max', 2)
-                if 'pair_band_max' in src else None)
+                if 'pair_band_max' in src else None,
+                occupied=_int(src['occupied'], '[hall] occupied') if 'occupied' in src else None,
+                bands=parse_bands(src['bands']) if 'bands' in src else None)
+    _require(not (hall['occupied'] is not None and hall['bands'] is not None),
+             '[hall] bands and occupied are mutually exclusive')
+    _require(run['kubo_source'] == 'waveder' or hall['bands'] is None,
+             '[hall] bands applies only to kubo_source = waveder')
 
     groups = []
     regions = []
@@ -192,7 +215,7 @@ def load_settings(path):
         _require(abs(math.hypot(*projection['axis'])-1) <= 1e-10,
                  '[projection] axis must be a Cartesian unit vector')
         for key in ('procar', 'outcar'):
-            projection[key] = _path(src[key], base) if key in src else str(Path(run['wavecar']).parent/key.upper())
+            projection[key] = _path(src[key], base) if key in src else str(Path(run['input_dir'])/key.upper())
         projection.update(_scan(src['mu'], '[projection] mu', projection=True) if 'mu' in src else
                           {key: hall[key] for key in ('mu_min', 'mu_max', 'mu_num')})
         _require(projection['mu_num'] >= 2 and projection['mu_min'] < projection['mu_max'],

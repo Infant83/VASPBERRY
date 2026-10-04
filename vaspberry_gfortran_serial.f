@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.6.3 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.6.5 (f77) for VASP
 ! Written by Hyun-Jung Kim
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -39,7 +39,9 @@
 !               : 2026. Sep. 29.
 ! version 1.6.3 release metadata; historical calculation unchanged
 !               : 2026. Sep. 30.
-! last update and bug fixes : 2026. Sep. 30.
+! version 1.6.5 release metadata; historical calculation unchanged
+!               : 2026. Oct. 04.
+! last update and bug fixes : 2026. Oct. 04.
 ! NOTE: This version only support serial calculations and modified
 !#define MPI_USE
 !#undef  MPI_USE
@@ -83,8 +85,8 @@
       nprocs=1
       myrank=0
 
-      ver_tag="# VASPBERRY (Ver 1.6.3), by Hyun-Jung Kim."//
-     &        " 2026. Sep. 30."
+      ver_tag="# VASPBERRY (Ver 1.6.5), by Hyun-Jung Kim."//
+     &        " 2026. Oct. 04."
       call vaspberry_help_request(ver_tag,.true.)
       pi=4.*atan(1.)
       berrymax=0d0
@@ -1044,7 +1046,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.6.3'
+      write(94,'(A)')'# vaspberry_version=1.6.5'
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
@@ -1244,7 +1246,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.6.3'
+      write(94,'(A)')'# vaspberry_version=1.6.5'
       if(fieldok)then
        write(94,'(A)')'# result_status=PASS'
       else
@@ -3346,6 +3348,10 @@
       real*8 x,y
       character*20 option
       character*75 value
+      character*75 input_dir
+      character*76 input_prefix
+      logical wavecar_seen,input_dir_exists
+      integer input_ios,input_pathlen
       integer iarg,narg,ia,nkx,nky,ispinor,iskp,ine,ng(3)
       dimension rs(3)
 
@@ -3355,6 +3361,9 @@
       iarg=iargc()
       nargs=iarg/2
       filename="WAVECAR"
+      input_dir='.'
+      input_prefix=''
+      wavecar_seen=.false.
       foname="BERRYCURV"
       fbz="BERRYCURV.tot.dat"
       if(iarg.ne.2*nargs) then
@@ -3363,8 +3372,20 @@
       do ia=1,nargs
          call getarg(2*ia-1,option)
          call getarg(2*ia,value)
+         if(option.eq.'--input-dir'.or.option.eq.'-f')then
+          call get_command_argument(2*ia,length=input_pathlen)
+          if(input_pathlen.gt.len(value).or.len_trim(value).eq.0)then
+           write(0,*)'*** error - input path must contain 1 to 75 characters'
+           call vaspberry_fail
+          endif
+         endif
+         if(option.eq.'--input-dir')then
+          input_dir=trim(value)
+          cycle
+         endif
          if(option == "-f") then
             filename=trim(value)
+            wavecar_seen=.true.
            else if(option == "-o") then
             read(value,*) foname
            else if(option == "-kx") then
@@ -3426,6 +3447,25 @@
            call help(ver_tag)
           endif
       enddo
+      inquire(file=trim(input_dir)//'/.',exist=input_dir_exists,
+     &        iostat=input_ios)
+      if(input_ios.ne.0.or..not.input_dir_exists)then
+       write(0,*)'*** error - --input-dir must be an existing directory: ',
+     &   trim(input_dir)
+       call vaspberry_fail
+      endif
+      if(trim(input_dir).ne.'.')then
+       input_prefix=trim(input_dir)
+       if(input_dir(len_trim(input_dir):len_trim(input_dir)).ne.'/')
+     &   input_prefix=trim(input_dir)//'/'
+      endif
+      if(.not.wavecar_seen)then
+       if(len_trim(input_prefix)+7.gt.len(filename))then
+        write(0,*)'*** error - --input-dir/WAVECAR exceeds 75 characters'
+        call vaspberry_fail
+       endif
+       filename=trim(input_prefix)//'WAVECAR'
+      endif
       foname_base=foname
       if(iz .eq. 1)then
        if(TRIM(foname_base) .eq. 'BERRYCURV')foname="NFIELD"
@@ -3827,6 +3867,8 @@
       write(6,*)" "
       write(6,*)"             ### POSSIBLE OPTIONS ###"
       write(6,*)" -h               : Print help overview and stop"
+      write(6,*)" --input-dir DIR  : directory for default WAVECAR (cwd)"
+      write(6,*)"                  : explicit -f stays cwd-relative"
       write(6,*)" -f filename      : File name to be read"
       write(6,*)"                  : Default: WAVECAR"
       write(6,*)" -kx(ky) kx(ky)   : k-point grid of your system"

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run VASPBERRY tutorials on actual public VASP WAVECAR files."""
+"""Reproduce archived VASP tutorials; Kubo examples explicitly select the WAVECAR approximation."""
 from __future__ import annotations
 
 import argparse
@@ -43,7 +43,9 @@ def main() -> int:
         for item in features.values():
             preparation = " [VASP preparation required]" if item.get("input_preparation") else ""
             print(f"{item['id']:23} {item['dataset']:9} {item['title']}{preparation}")
-        print("\nSee examples/README.md for VASP inputs, commands and actual reference results.")
+        print("\nKubo reference recipes explicitly select the WAVECAR approximation.")
+        print("Standard optical workflow: docs/WAVEDER_KUBO_PROTOCOL.md.")
+        print("See examples/README.md for VASP inputs, commands and actual reference results.")
         return 0
     selected = list(features) if args.all else list(dict.fromkeys(args.features))
     if args.output_dir is None:

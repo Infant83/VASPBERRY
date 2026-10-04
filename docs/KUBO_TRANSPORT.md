@@ -11,8 +11,16 @@ Berry flux from the Fukui–Hatsugai–Suzuki (FHS) link-variable method, also
 called the Fukui method, whereas the MoS₂ examples use Kubo-formula point
 Berry curvature.
 
-The VASPBERRY executable reads WAVECAR and exports point curvature or
-interband pair numerators. The supplied `tools/vaspberry_kubo.py` tool
+From 1.6.5, the standard charge Kubo source is same-run WAVEDER plus
+WAVECAR/INCAR/OUTCAR. Read the [standard protocol](WAVEDER_KUBO_PROTOCOL.md)
+first: native `--task kubo --bands SELECTOR` writes selected geometric
+curvature, and `kubo-hall --bands SELECTOR` integrates the selected μ/T
+charge contribution when all required pairs are valid. Omitting native
+`--bands`, or choosing Python `--occupied N`, retains occupied T=0 behavior. Missing
+or unsupported WAVEDER input stops rather than changing the operator.
+
+The explicit `--kubo-source wavecar` approximation reads WAVECAR and
+exports point curvature or interband pair numerators. The supplied `tools/vaspberry_kubo.py` tool
 postprocesses those results: it validates a reusable cache, applies occupations
 and integrates the two-dimensional intrinsic charge Hall response. Its
 additional matrix import and analytic-check commands are advanced interfaces.
@@ -22,7 +30,7 @@ Use `python tools/vaspberry_kubo.py --help` and each subcommand's `--help` for
 the available options. The [output specification](OUTPUT_FORMAT.md) describes
 the interchange files; [migration](MIGRATION.md) covers older normalization.
 The [operator input guide](OPERATOR_ROUTES.md) compares the ordinary WAVECAR
-workflow with optional standard optical and full-matrix routes, including
+approximation with the standard optical and optional full-matrix routes, including
 which routes require VASP source instrumentation.
 
 ## Start from actual VASP output
@@ -43,9 +51,13 @@ Bi's unresolved Kramers pairs prevent treating its individual
 bands as isolated-band input for pointwise Kubo-formula Berry curvature. Its zero charge Hall plateau is an actual
 material sanity check, not a nonzero valley-Hall demonstration.
 
-## WAVECAR to charge Hall in one command
+<a id="wavecar-to-charge-hall-in-one-command"></a>
 
-For a first calculation, `wavecar-hall` combines the native export, cache
+## Explicit WAVECAR approximation: charge Hall in one command
+
+The standard entry is `kubo-hall` with WAVEDER. To reproduce the historical
+canonical-momentum approximation, `wavecar-hall --kubo-source wavecar`
+combines the native export, cache
 validation and numerical Hall integration. **Python launches the
 VASPBERRY executable**, then reads its saved interband pairs. It performs no
 VASP calculation. Plotting remains a separate command so the same numerical
@@ -82,7 +94,7 @@ the Python scan or plotting commands. The launcher is used only when
 After preparing the actual MoS₂ input described below, run:
 
 ```bash
-python3 tools/vaspberry_kubo.py wavecar-hall \
+python3 tools/vaspberry_kubo.py wavecar-hall --kubo-source wavecar \
   --binary "$binary" --mpi-procs "$ranks" --mpi-launcher mpiexec \
   --wavecar results/mos2-24-b60-vasp/WAVECAR \
   --mesh 24 24 \
@@ -137,14 +149,14 @@ see [Native pairs to charge Hall](#native-pairs-to-charge-hall) below.
 
 ## Native pairs to charge Hall
 
-The main workflow has three explicit stages: execute VASPBERRY to export pair
+This explicit WAVECAR approximation has three stages: execute VASPBERRY to export pair
 data, perform numerical postprocessing, and plot the results. First generate the 24×24, 60-band MoS₂ WAVECAR with the
 [material tutorial](../examples/features/kubo-hall/#1-prepare-and-run-vasp).
 Run from the repository root with a fresh result directory:
 
 ```bash
 mkdir -p results/mos2-hall/native
-build/vaspberry --task kubo-pairs \
+build/vaspberry --task kubo-pairs --kubo-source wavecar \
   --wavecar results/mos2-24-b60-vasp/WAVECAR \
   --pairs-csv results/mos2-hall/native/PAIRS.csv
 
@@ -208,7 +220,7 @@ for reading numerical results without importing any VASPBERRY modules.
 For MPI, replace the native command with:
 
 ```bash
-mpiexec -n 4 build/vaspberry-mpi --task kubo-pairs \
+mpiexec -n 4 build/vaspberry-mpi --task kubo-pairs --kubo-source wavecar \
   --wavecar results/mos2-24-b60-vasp/WAVECAR \
   --pairs-csv results/mos2-hall/native/PAIRS.csv
 ```
@@ -280,7 +292,9 @@ that the result is insensitive to a tolerance small compared with physical
 band splittings and thermal energies; this option does not resolve a real
 band crossing or establish transport in a disordered metal.
 
-For an existing occupied-bundle CSV, `bundle-hall` provides a simpler adapter:
+For an existing canonical WAVECAR occupied-bundle CSV, `bundle-hall` provides
+a simpler adapter. It rejects the new PAW trace schema: use `kubo-hall` with
+the original optical run files for same-run validation. For the canonical CSV,
 use `--csv`, `--wavecar`, `--occupied`, mesh/spin options and a μ range strictly
 inside its common global insulating gap. It accepts only T=0 and a sampling
 plane parallel to Cartesian xy, because the native bundle CSV stores only
@@ -310,12 +324,13 @@ Hall transport.
 
 ## Native curvature of a band bundle
 
-For native `--task kubo`, `kubo-line` or `kubo-integral`, select a multi-band
-range to calculate its trace curvature directly from WAVECAR. For the eighteen occupied SOC bands in the
+This section describes the explicit `--kubo-source wavecar` approximation.
+For native `--task kubo`, `kubo-line` or `kubo-integral` with that option,
+select a multi-band range to calculate its trace curvature from WAVECAR. For the eighteen occupied SOC bands in the
 MoS₂ example:
 
 ```bash
-build/vaspberry --task kubo --wavecar WAVECAR \
+build/vaspberry --task kubo --kubo-source wavecar --wavecar WAVECAR \
   --bands 1:18 --curvature-csv KUBO_BUNDLE.csv
 ```
 
@@ -374,7 +389,8 @@ migration guidance. A named Kubo task uses the new range semantics even with
 legacy `-ii`/`-if` endpoints. A command using only legacy `-kubo` and band
 flags retains individual-band output with the same isolation check. The
 Python `bundle-hall` command remains a separate integration of an already
-computed native trace CSV; it does not select the native calculation mode.
+computed canonical native trace CSV; it does not select the native calculation
+mode or accept the new PAW optical trace as a replacement for its source files.
 
 The remainder of this guide describes the generic matrix and point-curvature
 interfaces. They require the actual exported operator/curvature data specified
@@ -557,29 +573,38 @@ windows, mesh/weights, region definitions, temperature and chemical-potential
 range. Repeat with denser k sampling and larger accurately computed m windows.
 File-format validation and physical convergence answer different questions.
 
-## Standard WAVEDER: insulating PAW Hall response
+<a id="standard-waveder-insulating-paw-hall-response"></a>
 
-`waveder-hall` reads the standard `WAVEDER`, `WAVECAR`, `INCAR` and `OUTCAR`
-from one completed VASP optical run. It evaluates the occupied-to-empty PAW
-optical matrix elements at **T=0**, with every requested chemical potential
-strictly inside the same global insulating gap. No custom VASP exporter is
-needed. This route does not support metallic or finite-temperature scans.
+## Standard WAVEDER: selected and occupied PAW responses
+
+`kubo-hall` defaults to WAVEDER; the dedicated `waveder-hall` command remains
+available. Both read the standard `WAVEDER`, `WAVECAR`, `INCAR` and `OUTCAR`
+from one completed VASP optical run. Choose mutually exclusive `--bands
+SELECTOR` for a selected μ/T contribution or `--occupied N` for the original
+insulating T=0 response. A selector accepts a single band, an inclusive range
+or a comma-separated combination, such as `31,33:34`. All source bands remain
+in the virtual sum. The selected output is labeled a contribution and does
+not certify total AHC, including at finite temperature.
 
 The initial supported producer is **VASP 5.4.4** with explicit
 `LOPTICS=.TRUE.`, `LPEAD=.FALSE.` and `LNABLA=.FALSE.`, a static `NSW=0` run,
 `ISYM=-1`, and `LREAL=.FALSE.`. Hybrid, meta-GGA, PEAD and other optical
 branches are rejected. The producer must report exactly `DEG_THRESHOLD=0.002`
-eV; altered producer thresholds are unsupported. The selected occupied and
-empty states must be separated by more than this **2 meV** threshold at every
-k point. Internal occupied-band degeneracies are allowed.
+eV; altered producer thresholds are unsupported. Transitive producer-degenerate
+groups may be retained when their response weights are equal. Unequal weights
+require erased internal couplings and are rejected; this applies to both a
+split geometric selection and μ/T weighting of a complete group. No rounding
+of thermal tails authorizes a missing pair.
 
-Use the actual occupied count, full mesh and energies from your run. For
+For the occupied compatibility mode, use the actual occupied count, full
+mesh and energies from your run. Every μ/reference must stay in the global
+gap and temperatures must be zero. For
 example, after defining `N_OCC`, `NX`, `NY`, `MU_LO`, `MU_HI` and `MU_REF`
 for a spinor calculation:
 
 ```bash
 python3 tools/vaspberry_kubo.py waveder-hall \
-  --run-dir path/to/optics-run --occupied "$N_OCC" \
+  --input-dir path/to/optics-run --occupied "$N_OCC" \
   --mesh "$NX" "$NY" \
   --energy-reference 'unchanged VASP eigenvalue zero' \
   --mu-min "$MU_LO" --mu-max "$MU_HI" --mu-reference "$MU_REF" \
@@ -587,7 +612,11 @@ python3 tools/vaspberry_kubo.py waveder-hall \
 ```
 
 The equivalent standalone command is `python3 tools/waveder_hall.py` with
-the same arguments. Output uses the standard Hall tables and can be plotted
+the same arguments. These Hall commands default `--input-dir` to the
+invocation working directory and read the four conventional filenames there.
+The `--wavecar`, `--waveder`, `--incar` and `--outcar` options override only
+the named file. Explicit relative CLI paths are relative to the invocation
+working directory, not the selected input directory. Output paths do not move. Output uses the standard Hall tables and can be plotted
 with `tools/plot_hall.py`. The insulating scan gives a constant response because
 the T=0 occupations do not change within the gap; constancy alone does not
 establish quantization. `delta_sigma_e2_over_h` is zero there. Collinear spin channels are
@@ -595,6 +624,9 @@ selected with `--spin` and summed separately, with multiplicity one.
 
 For a mesh calculated as several VASP jobs, pass their genuine run directories
 together, for example `--run-dir optics-part01 optics-part02 optics-part03`.
+This compatibility alternative cannot be combined with `--input-dir`.
+Individual file overrides are allowed for one run only; multiple chunks
+require conventional filenames in each directory.
 Every job must use `ICHARG=11`, `LCHARG=.FALSE.`, the same retained `CHGCAR`,
 `POTCAR` and `POSCAR`, and identical INCAR parameters apart from `SYSTEM`.
 The adapter checks each completed run and integrates only after their union
@@ -603,19 +635,60 @@ curvatures in memory; it does not construct replacement WAVEDER or OUTCAR
 files. For region definitions using k-point IDs, IDs follow run-directory
 order followed by each run's original k-point order.
 
+For a selected contribution, use for example:
+
+```bash
+python3 tools/vaspberry_kubo.py kubo-hall \
+  --input-dir path/to/optics-run --bands 31:32 --mesh "$NX" "$NY" \
+  --energy-reference 'unchanged VASP eigenvalue zero' \
+  --mu-min "$MU_LO" --mu-max "$MU_HI" --mu-num 101 \
+  --mu-reference "$MU_REF" --temperatures 0 300 \
+  --output-dir results/paw-selected-contribution
+```
+
+These source bands and energies must match the intended selection. `--bands`
+does not need `--allow-partial-bands`; that redundant flag, pair-band truncation
+and coalescing controls are rejected on this route. Regions and differences
+remain available. The [runnable selected example](../examples/features/waveder-selected/)
+uses declared synthetic input to demonstrate the full command flow.
+
+The stored band axes are `NBANDS` bras by `NDBANDS` derivative kets; they
+need not be square. Let `g_n=s_n f_n`, with `s_n=1` for selected target bands
+and zero otherwise. Every pair with nonzero `g_n-g_m` is required, using
+either available orientation with its proper sign. The intermediate index
+always spans all source NBANDS. Equal-weight internal terms cancel. For the
+complete occupied T=0 trace this reduces to the empty-bra/occupied-ket block.
+Missing required high-band pairs cause rejection; the adapter never pads
+zeros, constructs a square replacement, or restricts virtual bands to `S`.
+
 WAVEDER stores optical matrix elements in Å with complex64 precision. The
-adapter accumulates their occupied-bundle trace in complex128, without an
+adapter accumulates the pair contractions in complex128, without an
 extra energy denominator, factor one-half, or integer rounding. Valid zero
 matrix elements remain zero. This is the longitudinal PAW optical operator
 including projector and augmentation terms described by
 [Gajdoš et al., Eqs. (29)–(30)](https://doi.org/10.1103/PhysRevB.73.045112).
+Those terms enter VASP's matrix construction before WAVEDER is written;
+the Hall adapter does not add the same PAW correction again after reading it.
 
 The adapter checks dimensions, final OUTCAR eigenvalues and occupations,
 lattice, k points, electron count and mesh against WAVECAR. Keep the four
 files from the same run: WAVEDER itself has no energies or coordinates, so
 their association cannot be proven from its header. Source records are
 generated automatically. Finite-smearing source occupations are allowed;
-the postprocessing filling is explicitly T=0.
+selected-mode response occupations come from the requested μ/T on those
+fixed states. The `--occupied` compatibility mode remains explicitly T=0.
+Selected metadata records `scope=selected_band_contribution`,
+`selected_band_ids`, `intermediate_band_ids`, `rectangular_coverage` and
+`producer_cluster_checks`; `total_AHC_certified` and
+`total_delta_AHC_certified` remain false. A subset's finite-temperature curve
+must not be presented as the total response.
+
+These checks establish the file, optical-branch and filling contract, not
+complete physical-velocity validation for every Hamiltonian. In particular,
+the current WAVEDER validator does not audit `LDAU`. A readable SOC/+U file
+or a reproducible integral does not independently certify all response terms.
+The separate full-velocity/spin producer's exclusion of Hubbard U must also
+be respected; it is not an automatically validated substitute for such a run.
 
 Converge both the k mesh and accurately computed empty states. The
 [MnBi₂Te₄ example](../examples/materials/mnbi2te4-qah/) compares the Chern number

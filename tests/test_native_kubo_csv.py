@@ -39,6 +39,48 @@ def export_text(kind="trace", *, spins=2, legacy=False):
     return out.getvalue()
 
 
+def optical_export_text():
+    text = export_text().replace(native.TRACE_SCHEMA, native.PAW_TRACE_SCHEMA)
+    metadata = dict(kubo_source='WAVEDER', source_operator=native.WAVEDER_OPERATOR,
+        result_kind='T0_INSULATING_OCCUPIED_BUNDLE_TRACE', complete_occupied_bundle='true',
+        source_ndbands=2, spinor_components=1, physical_spin_multiplicity=1,
+        occupied_bands_spin_1=2, occupied_bands_spin_2=1, producer_cluster_threshold_eV='0.002')
+    for key in ('band_min', 'band_max', 'band_rank'):
+        text = '\n'.join(line for line in text.split('\n') if not line.startswith('# '+key+'='))
+    return ''.join(f'# {key}={value}\n' for key, value in metadata.items()) + text
+
+
+def selected_optical_text(kind="trace", *, ids=(1, 3), nb=4, nd=3):
+    """Independent schema fixture; gaps/values do not come from the producer."""
+    trace = kind == "trace"
+    full = trace and len(ids) == nb
+    meta = dict(schema=native.PAW_BUNDLE_SCHEMA if trace else native.PAW_BAND_SCHEMA,
+        normalization="STANDARD_MINUS_TWO_IM", kubo_source="WAVEDER",
+        source_operator=native.WAVEDER_OPERATOR, source_nbands=nb, source_ndbands=nd,
+        source_nkpoints=2, source_nspin=1, spinor_components=2, physical_spin_multiplicity=1,
+        expected_rows=2*(1 if trace else len(ids)), band_ids=','.join(map(str, ids)),
+        band_min=min(ids), band_max=max(ids), band_rank=len(ids),
+        result_kind="ISOLATED_SELECTED_BUNDLE_TRACE" if trace else "ISOLATED_SELECTED_BAND_CURVATURE",
+        occupation_weighting="NONE", required_pair_coverage="PASS",
+        intermediate_bands="EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS" if trace else "ALL_SOURCE_BANDS_EXCEPT_SELF",
+        producer_cluster_threshold_eV="0.002", no_external_states=str(full).lower(),
+        result_status="INCOMPLETE")
+    if full:
+        meta['zero_trace_scope'] = 'TRUNCATED_WAVEDER_BASIS'
+    out = io.StringIO()
+    for key, value in meta.items():
+        out.write(f'# {key}={value}\n')
+    writer = csv.writer(out, lineterminator='\n')
+    writer.writerow(native.TRACE_COLUMNS if trace else native.BAND_COLUMNS)
+    for k in (1, 2):
+        if trace:
+            writer.writerow([1, k, k*.25, 0., 0., 0. if full else .25*k, 'NA' if full else 1.])
+        else:
+            for band in ids:
+                writer.writerow([1, k, band, k*.25, 0., 0., float(band), .25*k, 1.])
+    return out.getvalue() + '# result_status=PASS\n'
+
+
 class NativeCurvatureCSVTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -137,6 +179,76 @@ class NativeCurvatureCSVTests(unittest.TestCase):
             meta, rows = native.read_curvature_csv(path, kind=kind)
             self.assertEqual(meta["completion_validation"], "legacy_unverified")
             self.assertEqual(len(rows), count)
+
+    def test_paw_trace_preserves_operator_and_different_collinear_occupations(self):
+        meta, rows = self.read(optical_export_text())
+        self.assertEqual(meta['schema'], native.PAW_TRACE_SCHEMA)
+        self.assertEqual(meta['source_operator'], native.WAVEDER_OPERATOR)
+        self.assertEqual(meta['completion_validation'], 'terminal_pass_and_full_coverage')
+        self.assertEqual((meta['occupied_bands_spin_1'], meta['occupied_bands_spin_2']), ('2', '1'))
+        self.assertEqual(len(rows), 4)
+        self.assertNotIn('operator', meta)  # No canonical-operator label is invented.
+
+    def test_paw_trace_rejects_missing_coverage_or_changed_operator_and_threshold(self):
+        text = optical_export_text()
+        replacements = [('source_ndbands=2', 'source_ndbands=1'),
+                        ('occupied_bands_spin_2=1', 'occupied_bands_spin_2=3'),
+                        ('source_operator='+native.WAVEDER_OPERATOR, 'source_operator=canonical'),
+                        ('complete_occupied_bundle=true', 'complete_occupied_bundle=false'),
+                        ('producer_cluster_threshold_eV=0.002', 'producer_cluster_threshold_eV=0.0001'),
+                        ('physical_spin_multiplicity=1', 'physical_spin_multiplicity=2'),
+                        ('# result_status=PASS\n', ''), ('0.125,2.0', '0.125,0.001')]
+        for old, new in replacements:
+            self.assertIn(old, text)
+            with self.subTest(field=old), self.assertRaises(ValueError):
+                self.read(text.replace(old, new))
+
+    def test_paw_trace_cannot_be_imported_as_canonical_bundle_hall(self):
+        from kubo_pairs import bundle_hall_spectrum
+        self.path.write_text(optical_export_text())
+        with self.assertRaisesRegex(ValueError, 'kubo-hall --run-dir'):
+            bundle_hall_spectrum(self.path, 'not-opened-WAVECAR', [0.], occupied=2,
+                sampling={'kind': 'uniform_full_2d', 'mesh': [2, 1]},
+                energy_reference='test', mu_reference=0.)
+
+    def test_selected_optical_trace_and_disjoint_band_rows_keep_exact_selection(self):
+        for kind in ('trace', 'band'):
+            meta, rows = self.read(selected_optical_text(kind), kind)
+            self.assertEqual(native.selected_band_ids(meta), [1, 3])
+            self.assertEqual(len(rows), 2 if kind == 'trace' else 4)
+            self.assertEqual(meta['completion_validation'], 'terminal_pass_and_full_coverage')
+            self.assertNotIn('sheet_hall_e2_over_h', meta)
+        text = selected_optical_text('band')
+        with self.assertRaisesRegex(ValueError, 'coverage'):
+            self.read(text.replace('1,1,3,', '1,1,2,'), 'band')
+
+    def test_selected_optical_reverse_coverage_and_empty_complement(self):
+        self.read(selected_optical_text(ids=(3, 4), nd=2))
+        self.read(selected_optical_text('band', ids=(4,), nd=3), 'band')
+        for kind in ('trace', 'band'):
+            with self.assertRaisesRegex(ValueError, 'missing high-high'):
+                self.read(selected_optical_text(kind, ids=(3,), nd=2), kind)
+        _, rows = self.read(selected_optical_text(ids=(1, 2, 3, 4), nd=2))
+        self.assertTrue(all(r['omega_z_A2'] == 0. and r['min_external_gap_eV'] is None for r in rows))
+
+    def test_selected_optical_metadata_cannot_claim_occupation_or_missing_pairs(self):
+        text = selected_optical_text()
+        for old, new in [('band_ids=1,3', 'band_ids=1,2'),
+                         ('band_ids=1,3', 'band_ids=3,1'),
+                         ('occupation_weighting=NONE', 'occupation_weighting=FERMI'),
+                         ('required_pair_coverage=PASS', 'required_pair_coverage=PARTIAL'),
+                         ('intermediate_bands=EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS', 'intermediate_bands=1:3'),
+                         ('no_external_states=false', 'no_external_states=true')]:
+            with self.subTest(field=old), self.assertRaises(ValueError):
+                self.read(text.replace(old, new))
+
+    def test_selected_optical_trace_is_not_canonical_bundle_hall(self):
+        from kubo_pairs import bundle_hall_spectrum
+        self.path.write_text(selected_optical_text())
+        with self.assertRaisesRegex(ValueError, 'kubo-hall --run-dir'):
+            bundle_hall_spectrum(self.path, 'not-opened-WAVECAR', [0.], occupied=2,
+                sampling={'kind': 'uniform_full_2d', 'mesh': [2, 1]},
+                energy_reference='test', mu_reference=0.)
 
 
 if __name__ == "__main__":

@@ -28,7 +28,8 @@ import numpy as np
 from plot_berry_curvature import (draw_bz_outline, plaquettes_in_first_bz,
     read_native_curvature, reciprocal_from_poscar, uniform_plaquettes)
 from wavecar_fukui import Wavecar
-from native_kubo_csv import BAND_SCHEMA, TRACE_SCHEMA, read_curvature_csv
+from native_kubo_csv import (BAND_SCHEMA, TRACE_SCHEMA, PAW_TRACE_SCHEMA, PAW_BUNDLE_SCHEMA,
+                            PAW_BAND_SCHEMA, PAW_SCHEMAS, read_curvature_csv, selected_band_ids)
 
 
 def digest(path):
@@ -154,13 +155,20 @@ def read_bundle(path, occupied, threshold):
     meta, rows = read_curvature_csv(path, kind="trace")
     if any(row["min_external_gap_eV"] is None for row in rows):
         raise ValueError("bundle plotter requires excluded states and a defined external gap")
-    if (meta.get("operator") != "WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY"
+    if meta.get("schema") == PAW_BUNDLE_SCHEMA:
+        # The CSV declares the selected set. occupied remains the band-display
+        # energy reference and must not relabel this trace as occupied space.
+        selected_band_ids(meta)
+    elif meta.get("schema") == PAW_TRACE_SCHEMA:
+        if int(meta.get("occupied_bands_spin_1", 0)) != occupied:
+            raise ValueError("WAVEDER occupied bundle disagrees with the occupied-group label")
+    elif (meta.get("operator") != "WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY"
             or meta.get("berry_connection") != "A_i=i<u|d/dk_i u>"
             or meta.get("intermediate_bands") != "EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS"
             or meta.get("result_kind") != "ISOLATED_BUNDLE_TRACE"
             or meta.get("result_status") != "PASS"):
         raise ValueError("a successful current native Kubo bundle CSV is required")
-    if tuple(int(meta[k]) for k in ("band_min", "band_max", "band_rank")) != (1, occupied, occupied):
+    if meta.get("schema") not in PAW_SCHEMAS and tuple(int(meta[k]) for k in ("band_min", "band_max", "band_rank")) != (1, occupied, occupied):
         raise ValueError("Kubo bundle range disagrees with the occupied-group label")
     rows.sort(key=lambda r: int(r["k_index"]))
     if not rows or [int(r["k_index"]) for r in rows] != list(range(1, len(rows) + 1)):
@@ -171,7 +179,7 @@ def read_bundle(path, occupied, threshold):
     values = np.array([float(r["omega_z_A2"]) for r in rows])
     gap = np.array([float(r["min_external_gap_eV"]) for r in rows])
     if not all(np.isfinite(a).all() for a in (q, values, gap)) or np.any(gap <= threshold):
-        raise ValueError("the occupied bundle is not isolated from the excluded states")
+        raise ValueError("the selected bundle is not isolated from the excluded states")
     return q, values, gap
 
 
@@ -213,11 +221,20 @@ def plot_panels(*, method, input_path, poscar_path, bands_csv, output_path,
         if path_input is None:
             raise ValueError("Kubo panels require an actual path KUBO.csv")
         headers = [native_metadata(p)[1] for p in (input_path, path_input)]
-        for key in ("intermediate_bands", "operator", "berry_connection", "normalization"):
+        paw_trace = headers[0].get("schema") in PAW_SCHEMAS
+        if paw_trace != (headers[1].get("schema") in PAW_SCHEMAS):
+            raise ValueError("Kubo map/path operators disagree: WAVEDER and WAVECAR cannot be mixed")
+        common_keys = (("schema", "source_operator", "normalization", "producer_cluster_threshold_eV", "source_nbands")
+                       if paw_trace else ("intermediate_bands", "operator", "berry_connection", "normalization"))
+        for key in common_keys:
             if not headers[0].get(key) or headers[0].get(key) != headers[1].get(key):
                 raise ValueError("Kubo map/path conventions disagree: " + key)
         if method == "kubo-bundle":
-            for key in ("band_min", "band_max", "band_rank", "source_nbands"):
+            selected_optical = headers[0].get("schema") == PAW_BUNDLE_SCHEMA
+            bundle_keys = (("band_ids", "source_nbands") if selected_optical else
+                           ("occupied_bands_spin_1", "source_nbands") if paw_trace else
+                           ("band_min", "band_max", "band_rank", "source_nbands"))
+            for key in bundle_keys:
                 if not headers[0].get(key) or headers[0].get(key) != headers[1].get(key):
                     raise ValueError("Kubo bundle map/path settings disagree: " + key)
             if int(headers[0]["source_nbands"]) != energies.shape[1]:
@@ -232,13 +249,19 @@ def plot_panels(*, method, input_path, poscar_path, bands_csv, output_path,
         if method == "kubo" and not np.allclose(path_energy, energies[:, band - 1], atol=1e-8, rtol=0):
             raise ValueError("Kubo path energies disagree with band table")
         if method == "kubo-bundle":
-            expected_gaps = np.min(abs(energies[:, :occupied, None] - energies[:, None, occupied:]), axis=(1, 2))
+            bundle_ids = (selected_band_ids(headers[0]) if selected_optical else list(range(1, occupied+1)))
+            targets = np.asarray(bundle_ids, dtype=int)-1
+            external = np.asarray([b for b in range(energies.shape[1]) if b not in targets], dtype=int)
+            expected_gaps = np.min(abs(energies[:, targets, None] - energies[:, None, external]), axis=(1, 2))
             if not np.allclose(path_gaps, expected_gaps, atol=1e-8, rtol=0):
                 raise ValueError("Kubo bundle path gaps disagree with band table")
         curve_kind = "native_Kubo_at_actual_path_points"
         map_kind = "pointwise_Kubo_bundle_trace" if method == "kubo-bundle" else "pointwise_Kubo_band_curvature"
-        quantity = rf"Kubo formula: occupied bands 1–{occupied}" if method == "kubo-bundle" else rf"Kubo formula: band {band}"
-        curve_label = "Occupied bundle" if method == "kubo-bundle" else rf"Band {band}"
+        bundle_label = ("Selected bands " + ",".join(map(str, bundle_ids)) if method == "kubo-bundle"
+                        and selected_optical else f"Occupied bands 1–{occupied}")
+        quantity = "Kubo formula: " + bundle_label.lower() if method == "kubo-bundle" else rf"Kubo formula: band {band}"
+        quantity += " (PAW optical)" if paw_trace else " (WAVECAR approximation)"
+        curve_label = bundle_label if method == "kubo-bundle" else rf"Band {band}"
     else:
         raise ValueError("method must be fukui, kubo or kubo-bundle")
     if not np.isfinite(values).any() or not np.isfinite(curve).any():
@@ -326,13 +349,16 @@ def plot_panels(*, method, input_path, poscar_path, bands_csv, output_path,
                 path_vertices_fractional=path_q[nodes].tolist(), path_node_distance_inv_A=distance[nodes].tolist(),
                 energy_reference_eV=energy_zero, energy_reference="maximum occupied energy on the supplied path",
                 occupied_bands=[1, occupied], kubo_band=band if method == "kubo" else None,
+                selected_bundle_bands=bundle_ids if method == "kubo-bundle" else None,
                 masked_map_points=int(np.isnan(values).sum()), masked_path_points=int(np.isnan(curve).sum()),
                 isolation_threshold_eV=threshold if method.startswith("kubo") else None,
                 color_limit_A2=bound, source_sha256={str(Path(p).name): digest(p) for p in (input_path, poscar_path, bands_csv)},
                 path_input_sha256=digest(path_input) if path_input is not None else None,
                 completion_validation={name: ("terminal_pass_and_full_coverage"
-                    if header.get("schema") in (TRACE_SCHEMA, BAND_SCHEMA) else "legacy_unverified")
+                    if header.get("schema") in (TRACE_SCHEMA, BAND_SCHEMA, *PAW_SCHEMAS) else "legacy_unverified")
                     for name, header in zip(("map", "path"), headers)} if method.startswith("kubo") else None,
+                source_operator=(headers[0].get("source_operator") or headers[0].get("operator"))
+                    if method.startswith("kubo") else None,
                 curvature_reader_sha256=digest(Path(__file__).with_name("native_kubo_csv.py")),
                 plotter_sha256=digest(__file__))
 
@@ -348,7 +374,8 @@ def main():
     bands.add_argument("--path-wavecar", type=Path, help="export bands from this SOC path WAVECAR")
     parser.add_argument("--path-input", type=Path, help="native path KUBO.csv for --method kubo")
     parser.add_argument("--band", type=int, default=18)
-    parser.add_argument("--occupied", type=int, default=18)
+    parser.add_argument("--occupied", type=int, default=18,
+                        help="occupied count for band-display energy zero; selected WAVEDER bundles keep their CSV band IDs")
     parser.add_argument("--gap-threshold", type=float, default=1e-5, help="minimum isolated-band separation in eV")
     parser.add_argument("--energy-range", type=float, nargs=2, default=(-3., 3.), metavar=("MIN", "MAX"),
                         help="displayed energies relative to the occupied maximum, in eV")

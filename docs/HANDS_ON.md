@@ -1,10 +1,16 @@
 # Hands-on: execute VASPBERRY, inspect its data, and plot results
 
+**1.6.5 input policy:** the standard charge-Kubo route uses WAVEDER. This
+guide retains the WAVECAR canonical-momentum approximation and explicitly
+selects `--kubo-source wavecar` (or INI `kubo_source = wavecar`) to reproduce
+its existing results. See the [standard protocol](WAVEDER_KUBO_PROTOCOL.md)
+for the PAW optical selected-band route and its required-pair checks.
+
 The main workflow is **VASP → WAVECAR → VASPBERRY execution with Intel MPI → numerical files → analysis and plots**. Native curvature is already a numerical result that you can plot in your preferred program. A charge-Hall scan additionally integrates interband pair data with occupations to evaluate the Kubo-formula response.
 
 For routine Hall and PROCAR analysis, start with the [single-file postprocessing guide](POSTPROCESSING.md) and [public Bi example](../examples/features/simple-postprocess/README.md): `python3 tools/vaspberry_post.py run analysis.ini` executes VASPBERRY and performs the requested numerical postprocessing and `python3 tools/vaspberry_post.py plot results/run01` draws them. An optional `python3 tools/vaspberry_post.py check analysis.ini` checks the inputs before running. The [settings reference](POSTPROCESSING_REFERENCE.md) lists the same input, output and naming conventions. The explicit stages below explain the native outputs and provide advanced controls.
 
-Use VASPBERRY 1.6.3 for this walkthrough. See the [migration guide](MIGRATION.md#native-kubo-band-selection) when updating older commands. Start in the repository root in Bash on a Linux host with Intel oneAPI Fortran, oneMKL and Intel MPI available. The following uses four MPI ranks; select the rank count allowed by your cluster allocation. Choose a fresh output directory when repeating a calculation.
+Use VASPBERRY 1.6.5 for this walkthrough. See the [migration guide](MIGRATION.md#native-kubo-band-selection) when updating older commands. Start in the repository root in Bash on a Linux host with Intel oneAPI Fortran, oneMKL and Intel MPI available. The following uses four MPI ranks; select the rank count allowed by your cluster allocation. Choose a fresh output directory when repeating a calculation.
 
 ```bash
 source /opt/intel/oneapi/setvars.sh
@@ -46,7 +52,7 @@ No Python script is needed for this VASPBERRY execution. This first calculation 
 mkdir -p results/first-kubo
 (
   cd results/first-kubo
-  mpiexec -n 4 "$vb_bin" --task kubo \
+  mpiexec -n 4 "$vb_bin" --task kubo --kubo-source wavecar \
     --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
     --bands 1:18 --curvature-csv KUBO.csv \
     > vaspberry.log 2> vaspberry.err
@@ -137,7 +143,7 @@ NY=24
 mkdir -p results/my-native
 (
   cd results/my-native
-  mpiexec -n 4 "$vb_bin" --task kubo-pairs --wavecar "$wavecar" \
+  mpiexec -n 4 "$vb_bin" --task kubo-pairs --kubo-source wavecar --wavecar "$wavecar" \
     --pairs-csv PAIRS.csv > vaspberry.log 2> vaspberry.err
 )
 
@@ -161,7 +167,7 @@ After preparing the tutorial's actual 24×24, 60-band MoS₂ WAVECAR,
 integration together:
 
 ```bash
-python3 tools/vaspberry_kubo.py wavecar-hall \
+python3 tools/vaspberry_kubo.py wavecar-hall --kubo-source wavecar \
   --wavecar results/mos2-24-b60-vasp/WAVECAR --binary "$vb_bin" --mpi-procs 4 \
   --mesh 24 24 \
   --energy-reference 'unchanged VASP eigenvalue zero' --pair-band-max 40 \
@@ -197,7 +203,7 @@ The atom IDs and Cartesian spin axis are user inputs; no material-specific layer
 ## 6. Choose what can be inferred from the outputs
 
 - The Fukui–Hatsugai–Suzuki (FHS) method, also called the Fukui method, computes Chern numbers from wavefunction link variables; the separate Fukui–Hatsugai (FH) n-field method computes Z₂. Kubo-formula point Berry curvature and occupation-weighted response use different discretizations and convergence checks.
-- Native Kubo-formula calculations use pseudo-wavefunction canonical momentum. This approximation is a useful baseline for charge and regional analysis; full material velocity may include missing PAW, nonlocal, SOC and Hubbard-U terms.
+- The explicit WAVECAR Kubo-formula calculations in this guide use pseudo-wavefunction canonical momentum. This approximation is a useful baseline for charge and regional analysis; full material velocity may include missing PAW, nonlocal, SOC and Hubbard-U terms.
 - Matching SOC `PROCAR`, `WAVECAR` and `OUTCAR` support atom/layer/orbital and chosen-axis spin character. The [PROCAR hands-on example](../examples/features/procar-character/) uses `tools/procar_character.py project`, `hall` and `plot` to save those weights, attribute selected isolated bands' charge Hall response, and make reusable figures. Define layer groups by actual atom IDs. This is character-weighted charge attribution; physical orbital-, layer- and spin-current operators are separate observables.
 - The optional [spin Hall route](SPIN_HALL.md) needs full spin/velocity matrices and supports a gapped 2D occupied group at T=0. The supplied instrumented VASP producer excludes Hubbard U; do not apply its Bi instructions unchanged to a DFT+U magnetic material.
 - Converge k sampling, source `NBANDS`, retained pair window and region choice separately. A smooth μ curve or picture does not refine the original k mesh.
@@ -216,7 +222,7 @@ In a directory containing matching full-mesh `WAVECAR` and `OUTCAR`, run:
 
 ```bash
 mpiexec -n 4 "$vb_bin" --task spin-chern --bands 1:10 --mesh 12,12
-mpiexec -n 4 "$vb_bin" --task spin-kubo --bands 1:10 --mesh 12,12
+mpiexec -n 4 "$vb_bin" --task spin-kubo --kubo-source wavecar --bands 1:10 --mesh 12,12
 ```
 
 The example band range is Bi's complete occupied space; graphene uses `1:8`.

@@ -3,6 +3,9 @@
 
 Use explicit band windows, spin multiplicity, sampling and source normalization.
 No material-specific energy reference, electron count or valley is assumed.
+Start with kubo-hall: standard WAVEDER optical matrices are the default.
+WAVECAR-only canonical momentum execution requires --kubo-source wavecar and
+prints an approximation warning; missing or invalid WAVEDER never falls back.
 """
 from __future__ import annotations
 
@@ -30,7 +33,7 @@ from vasp_spin_export import add_arguments as add_spin_export_arguments, command
 from spin_assembly import add_command as add_spin_merge, command as spin_merge_command
 from velocity_pairs import add_command as add_velocity_pairs, command as velocity_pairs_command
 
-__version__ = '1.6.3'
+__version__ = '1.6.5'
 
 
 def sampling(args):

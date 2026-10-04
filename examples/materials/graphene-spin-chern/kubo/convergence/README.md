@@ -32,7 +32,7 @@ EXAMPLE="$PWD/examples/materials/graphene-spin-chern/kubo/convergence"
 python3 "$EXAMPLE/prepare.py" --scf-dir "$WORK/scf" \
   --potcar /path/to/C/POTCAR --output-dir "$WORK/local"
 (cd "$WORK/local" && mpiexec -n 4 vasp_ncl)
-(cd "$WORK/local" && mpiexec -n 4 "$VB" --task spin-kubo --bands 1:8)
+(cd "$WORK/local" && mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:8)
 ```
 
 `prepare.py` writes the ordinary VASP input files and `points.csv`, which names
@@ -78,7 +78,7 @@ python3 "$EXAMPLE/prepare.py" --scf-dir "$WORK/scf" \
   --potcar /path/to/C/POTCAR --output-dir "$WORK/local-strict" \
   --radii 3e-8,1e-7,3e-7 --ediff 1e-11 --nelmin 40
 (cd "$WORK/local-strict" && mpiexec -n 4 vasp_ncl)
-(cd "$WORK/local-strict" && mpiexec -n 4 "$VB" --task spin-kubo --bands 1:8)
+(cd "$WORK/local-strict" && mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:8)
 python3 "$EXAMPLE/analyze.py" --input-dir "$WORK/local-strict" \
   --output-dir "$WORK/local-strict-analysis"
 ```
@@ -154,9 +154,9 @@ Hamiltonian and stored wavefunctions fixed. It does not test additional source
 bands above 16. The two-state conduction pair 9–10 is retained together.
 
 ```sh
-(cd "$WORK/local" && mpiexec -n 4 "$VB" --task spin-kubo --bands 1:8 \
+(cd "$WORK/local" && mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:8 \
   --sum-bands 10 --output SUM10)
-(cd "$WORK/local" && mpiexec -n 4 "$VB" --task spin-kubo --bands 1:8 \
+(cd "$WORK/local" && mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:8 \
   --sum-bands 12 --output SUM12)
 ```
 

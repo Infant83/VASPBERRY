@@ -1,8 +1,8 @@
 # VASPBERRY
 
 **Topology and response functions directly from VASP wavefunctions.**
-VASPBERRY reads `WAVECAR` and evaluates wavefunction overlaps and interband
-matrix elements in Fortran. Use the Fukui–Hatsugai–Suzuki (FHS) link-variable
+VASPBERRY reads `WAVECAR` for wavefunction overlaps and uses same-run
+`WAVEDER` optical matrix elements for standard charge Kubo calculations. Use the Fukui–Hatsugai–Suzuki (FHS) link-variable
 method, also called the Fukui method, for Chern numbers. The separate
 Fukui–Hatsugai (FH) n-field method gives the 2D Z₂ invariant. Kubo-formula
 calculations provide Berry-curvature maps, symmetry-path curves and intrinsic
@@ -11,7 +11,8 @@ numbers and spin-sector Kubo-formula Berry curvature use a matching `OUTCAR`
 to establish the Cartesian spin frame.
 
 ```text
-VASP calculation → WAVECAR → VASPBERRY → numerical output → analysis / plots
+VASP calculation → WAVECAR (+ WAVEDER for charge Kubo)
+                 → VASPBERRY → numerical output → analysis / plots
 ```
 
 VASP supplies the material's electronic structure. VASPBERRY postprocesses it;
@@ -21,16 +22,20 @@ band plots provide context for the calculated topology and response.
 [Hands-on commands](docs/HANDS_ON.md) · [Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
 [Postprocessing guide](docs/POSTPROCESSING.md) · [Output formats](docs/OUTPUT_FORMAT.md)
 
-**VASPBERRY [1.6.3](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.3).**
-Native Kubo band selection is simpler: `--bands N` calculates one band,
-and a multi-band range calculates its subspace trace. Use `--per-band 1`
-for separate bands. Byte and legacy four-byte-word WAVECAR record lengths
-are detected automatically. New curvature exports check finite results and
-complete row coverage before reporting success.
+**VASPBERRY 1.6.5 — WAVEDER is the standard Kubo input.**
+`--task kubo` uses same-run `WAVEDER`, `WAVECAR`, `INCAR` and `OUTCAR` by
+default. Select a single band, a range or a list for geometric curvature, or
+use occupation-weighted Python integration for a selected contribution. The
+required matrix pairs and producer-degenerate groups are checked for every
+request. Missing or unsupported optical input stops the calculation.
+The previous canonical-momentum approximation requires the explicit
+`--kubo-source wavecar` option and prints a warning. See the
+[standard calculation protocol](docs/WAVEDER_KUBO_PROTOCOL.md) and
+[migration guide](docs/MIGRATION.md#waveder-default-kubo-input-in-165).
 
 The native `--bundle` and `-kubo_bundle` flags have been removed. See the
 [short migration guide](docs/MIGRATION.md#native-kubo-band-selection),
-[release notes](docs/releases/v1.6.3.md), [validation scope](docs/VALIDATION_1.6.3.md),
+[release notes](docs/releases/v1.6.5.md), [validation scope](docs/VALIDATION_1.6.5.md),
 [changelog](CHANGELOG.md) and [version policy](docs/RELEASING.md).
 
 ## Install and run VASPBERRY
@@ -66,9 +71,20 @@ cd VASPBERRY
 make help
 ```
 
-For a fixed release, download and extract the source archive from
-[v1.6.3](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.3), then run the
-same build commands from the extracted directory containing `Makefile`.
+For the fixed source corresponding to this guide, use
+[v1.6.5](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.5):
+
+```bash
+git clone --branch v1.6.5 --depth 1 https://github.com/Infant83/VASPBERRY.git VASPBERRY-1.6.5
+cd VASPBERRY-1.6.5
+make serial
+```
+
+Release notes record its verified commit and checks. Earlier archives,
+including v1.6.3, retain their own documentation and do not provide these
+WAVEDER-default commands. The prepared 1.6.4 candidate was not published;
+1.6.5 supersedes it.
+Run build commands from the directory containing `Makefile`.
 **Archive builds do not require Git or Python.** No precompiled executable or
 system-wide installation is needed; the build creates local files in `build/`.
 Update an existing default-branch checkout with `git pull --ff-only`, then
@@ -144,10 +160,14 @@ Environment creation and package installation follow your site's usual practice.
 Plaquette flux from the Fukui method and Kubo-formula point Berry curvature
 are different finite-grid quantities. A Chern number computed with the Fukui method needs band
 isolation and mesh checks. A Kubo-formula curvature integral is not rounded to
-an integer; its k mesh and intermediate band window must be converged. Native
-Kubo-formula calculations use canonical momentum of the stored pseudo-wavefunctions.
-Optional full-velocity comparisons assess the missing
-PAW/nonlocal/SOC terms; see [operator choices](docs/OPERATOR_ROUTES.md).
+an integer; its k mesh and intermediate band window must be converged. The standard charge
+Kubo route uses PAW longitudinal optical connections stored by VASP in WAVEDER.
+Explicit `--kubo-source wavecar` uses canonical momentum of pseudo-wavefunctions
+and omits those augmentation/nonlocal terms. Selected WAVEDER bands retain
+the full source intermediate-band sum; metallic or finite-temperature scans
+require every nonzero-weight pair. Missing pairs, unresolved weighted groups
+or unsupported spin-current requests do not trigger an automatic fallback; see
+[operator choices](docs/OPERATOR_ROUTES.md).
 For spin-sector convergence, use [`--sum-bands N`](docs/SPIN_KUBO.md#real-examples-and-interpretation)
 to vary the intermediate sum on unchanged wavefunctions. The
 [Bi comparisons](examples/materials/bi-spin-hall/spin-chern-kubo/convergence/)
@@ -187,15 +207,45 @@ names, and `--help all` (also `--help legacy`) for the complete flag reference.
 `-h` is the short form of `--help`. See the
 [native help guide](docs/NATIVE_COMMANDS.md#learn-one-task-or-option-at-a-time).
 
-### First calculation: the supplied MoS₂ WAVECAR
+### Standard Kubo calculation: same-run optical files
+
+Follow the [standard protocol](docs/WAVEDER_KUBO_PROTOCOL.md) to generate
+`WAVEDER`, `WAVECAR`, `INCAR` and `OUTCAR` with standard VASP 5.4.4
+longitudinal optical branch. For a run with an insulating occupied space (inferred from the source):
+
+```bash
+mkdir -p results/paw-kubo
+build/vaspberry --task kubo --input-dir path/to/optics \
+  --curvature-csv results/paw-kubo/KUBO.csv
+```
+
+`--input-dir` selects the source directory; if omitted, it is the directory
+from which the command is launched. Standard Kubo reads `WAVECAR`,
+`WAVEDER`, `INCAR` and `OUTCAR` there. Per-file options `--wavecar`,
+`--waveder`, `--incar` and `--outcar` override only their named file; a
+WAVECAR override never redirects the other files. Relative CLI paths and
+output paths are resolved from the launch directory, not from `--input-dir`.
+The exact occupied count and
+producer must pass validation. No VASP source patch or square matrix
+padding is needed. The [actual MnBi₂Te₄ example](examples/materials/mnbi2te4-qah/)
+provides an input recipe and a deliberately unconverged coarse-mesh reference.
+For a geometric selection, add `--bands 31,33:34`; add `--per-band 1` only
+when separate resolvable bands are needed. This selection changes the target
+bands, not the full source virtual-band sum. Its mesh integral is a geometric
+contribution, not automatically the total physical AHC. The
+[selected-band example](examples/features/waveder-selected/) shows both native
+curvature and occupation-weighted Python commands.
+
+### WAVECAR approximation example: the supplied MoS₂ file
 
 Run from the repository root. This small example uses the actual SOC
-band-path WAVECAR already in the repository, and writes the curvature of
+band-path WAVECAR already in the repository. Its explicit source selection
+reproduces the canonical-momentum approximation and writes the curvature of
 the occupied bands 1–18 at its supplied k points:
 
 ```bash
 mkdir -p results/mos2-path
-mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo \
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo --kubo-source wavecar \
   --wavecar examples/1H-MoS2/KPATH/2.band/WAVECAR --bands 1:18 \
   --curvature-csv results/mos2-path/KUBO.csv
 ```
@@ -220,8 +270,10 @@ requires this gap only between the selected subspace and excluded bands.
 Choose the mesh and band range from your VASP calculation. VASPBERRY detects
 one- or two-component wavefunctions from WAVECAR automatically; an optional
 `--spinor 1` or `--spinor 2` checks that the file matches your expectation.
-These illustrative commands assume the appropriate `WAVECAR` in the working
+These illustrative commands assume the appropriate source files in the working
 directory; the band indices are examples, not universal occupied counts.
+Commands that select `--kubo-source wavecar` deliberately reproduce the
+previous approximation. They do not acquire PAW terms from a nearby WAVEDER.
 
 ```bash
 # Berry flux and Chern number from the Fukui method: full 12 × 12 mesh, bands 1–18.
@@ -233,11 +285,11 @@ mpiexec -n 4 ./build/vaspberry-ifx-mpi --task z2 --wavecar WAVECAR \
   --mesh 12,12 --bands 1:10 --output NFIELD
 
 # Occupied-bundle point curvature, excluding internal transitions.
-mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo --wavecar WAVECAR \
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo --kubo-source wavecar --wavecar WAVECAR \
   --bands 1:18 --curvature-csv KUBO_BUNDLE.csv
 
 # Reusable all-band pair numerators for charge Hall postprocessing.
-mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo-pairs --wavecar WAVECAR \
+mpiexec -n 4 ./build/vaspberry-ifx-mpi --task kubo-pairs --kubo-source wavecar --wavecar WAVECAR \
   --pairs-csv PAIRS.csv
 ```
 
@@ -261,7 +313,10 @@ unshifted, even `Nx × Ny × 1` mesh with `Nx,Ny >= 4`, generated with
 
 ### Postprocess and plot saved results
 
-Start with the [public Bi walkthrough](examples/features/simple-postprocess/).
+For the standard WAVEDER route, use `kubo-hall` or the INI example in the
+[protocol](docs/WAVEDER_KUBO_PROTOCOL.md). The following
+[public Bi walkthrough](examples/features/simple-postprocess/) demonstrates
+the explicit WAVECAR approximation; its INI sets `kubo_source = wavecar`.
 Its [`bi.ini`](examples/features/simple-postprocess/bi.ini) needs only `[run]`
 (input, native executable, mesh and output) and `[hall]` (μ, reference and
 temperature). After its build/input step, run from the repository root:

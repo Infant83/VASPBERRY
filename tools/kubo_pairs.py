@@ -17,7 +17,7 @@ from berry_data import CONDUCTANCE_QUANTUM_S, regions_from_spec, require
 from exported_matrix_kubo import sha256
 from vaspberry_transport import fermi_dirac
 from wavecar_fukui import Wavecar, infer_uniform_grid
-from native_kubo_csv import read_curvature_csv
+from native_kubo_csv import PAW_SCHEMAS, read_curvature_csv
 
 SCHEMA = 'vaspberry.kubo-pairs'
 NATIVE_SCHEMA = 'VASPBERRY_BARE_MOMENTUM_KUBO_PAIRS_V1'
@@ -389,6 +389,10 @@ def bundle_hall_spectrum(csv_path, wavecar_path, mus, *, occupied, spin=1, spino
                          region_spec=None, differences=()):
     """Only the zero-temperature common insulating gap is valid for a fixed bundle."""
     from types import SimpleNamespace
+    require(metadata_lines(csv_path).get('schema') not in PAW_SCHEMAS,
+            'PAW WAVEDER trace CSV is not a canonical bundle-hall input. '
+            'Use kubo-hall --run-dir with the original same-run WAVEDER/WAVECAR/INCAR/OUTCAR '
+            'to retain optical-source validation; no canonical relabelling is allowed')
     w, source = native_wavecar(csv_path, wavecar_path, spin, spinor_components, spin_multiplicity)
     spinor_components = w.spinor_components
     spin_multiplicity = w.resolve_spin_multiplicity(spin_multiplicity)

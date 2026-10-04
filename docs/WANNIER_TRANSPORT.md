@@ -21,7 +21,7 @@ provides actual VASP-derived operators and complete reproduction commands.
 | Input | Operator and scope |
 |---|---|
 | `WAVECAR`, through `wavecar-hall` | Canonical-momentum approximation; chemical-potential and temperature scans |
-| Standard optical VASP 5.4.4 run, through `waveder-hall` | PAW optical occupied-to-empty matrix elements; fixed insulating bundle at T=0 |
+| Standard optical VASP 5.4.4 run, through `kubo-hall` or `waveder-hall` | Stored PAW optical connections; selected μ/T contributions with required-pair/producer-cluster checks, or `--occupied N` insulating T=0 mode |
 | Full Hamiltonian and position matrices, through `wannier-hall` | Full connection of the supplied finite Wannier model; fixed insulating bundle at T=0 |
 
 The full connection needs **both** Hamiltonian and position matrices. A

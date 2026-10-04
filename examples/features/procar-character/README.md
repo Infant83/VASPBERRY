@@ -1,5 +1,11 @@
 # Atom, orbital and spin character of charge-Hall contributions
 
+**1.6.5 input policy:** the standard charge-Kubo route uses WAVEDER. This
+guide retains the WAVECAR canonical-momentum approximation and explicitly
+selects `--kubo-source wavecar` (or INI `kubo_source = wavecar`) to reproduce
+its existing results. See the [standard protocol](../../../docs/WAVEDER_KUBO_PROTOCOL.md)
+for the PAW optical selected-band route and its required-pair checks.
+
 This workflow combines noncollinear `LORBIT=11` PROCAR projections with the
 **same final WAVECAR** used for VASPBERRY Kubo pair export. Use the single-file
 front end described in the [beginner guide](../../../docs/POSTPROCESSING.md#add-layer-and-spin-character)
@@ -36,8 +42,10 @@ map_band = 19
 ```
 
 This is an addition to a complete INI, not a standalone input. `PROCAR` and
-`OUTCAR` default to the WAVECAR directory; use explicit `procar` and `outcar`
-paths in `[projection]` if needed. The example bands and atom IDs must be
+`OUTCAR` default to `[run] input_dir`, or the invocation working directory
+when that key is omitted. A `wavecar` override changes only WAVECAR. Use
+explicit `procar` and `outcar` paths in `[projection]` if needed; relative
+paths remain relative to the INI file. The example bands and atom IDs must be
 replaced with your material's choices. Atom IDs are 1-based POSCAR/PROCAR
 indices; `layer1` and `layer2` are your labels, not automatically detected layers.
 `axis = 0 0 1` means Cartesian +z. The INI passes these definitions to the
@@ -179,7 +187,7 @@ occupation-independent pair cache:
 
 ```sh
 mkdir -p results/my-sample-native
-build/vaspberry --task kubo-pairs --wavecar /absolute/path/to/WAVECAR \
+build/vaspberry --task kubo-pairs --kubo-source wavecar --wavecar /absolute/path/to/WAVECAR \
   --pairs-csv results/my-sample-native/PAIRS.csv
 
 python tools/vaspberry_kubo.py import-pairs \

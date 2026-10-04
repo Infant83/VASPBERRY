@@ -76,6 +76,50 @@ def write_bundle(path, q, values, gaps=None, metadata=None, spins=None):
             writer.writerow([spin, i + 1, *p, v, gap])
 
 
+def write_paw_trace(path, q, values):
+    write_bundle(path, q, values, metadata={
+        "schema": panels.PAW_TRACE_SCHEMA, "kubo_source": "WAVEDER",
+        "source_operator": "VASP_5.4.4_LONGITUDINAL_PAW_OPTICAL",
+        "result_kind": "T0_INSULATING_OCCUPIED_BUNDLE_TRACE",
+        "complete_occupied_bundle": "true", "result_status": "INCOMPLETE",
+        "source_ndbands": 1, "source_nkpoints": len(q), "source_nspin": 1,
+        "expected_rows": len(q), "occupied_bands_spin_1": 1,
+        "spinor_components": 2, "physical_spin_multiplicity": 1,
+        "producer_cluster_threshold_eV": "0.002"})
+    # Keep only the PAW route's operator contract in this fixture.
+    lines = [line for line in path.read_text().splitlines()
+             if not line.startswith(("# operator=", "# berry_connection=",
+                                     "# intermediate_bands="))]
+    path.write_text("\n".join(lines) + "\n# result_status=PASS\n")
+
+
+def write_paw_selected(path, q, values):
+    write_paw_trace(path, q, values)
+    text = path.read_text().replace(panels.PAW_TRACE_SCHEMA, panels.PAW_BUNDLE_SCHEMA)
+    for old, new in [('T0_INSULATING_OCCUPIED_BUNDLE_TRACE', 'ISOLATED_SELECTED_BUNDLE_TRACE'),
+                     ('# band_min=1', '# band_min=2'), ('# band_max=1', '# band_max=2')]:
+        text = text.replace(old, new)
+    text = ('# band_ids=2\n# required_pair_coverage=PASS\n'
+            '# intermediate_bands=EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS\n') + text
+    path.write_text(text)
+
+
+def write_paw_band(path, q, values):
+    write_paw_selected(path, q, values)
+    text = path.read_text().replace(panels.PAW_BUNDLE_SCHEMA, panels.PAW_BAND_SCHEMA)
+    text = text.replace('ISOLATED_SELECTED_BUNDLE_TRACE', 'ISOLATED_SELECTED_BAND_CURVATURE')
+    text = text.replace('EXTERNAL_TO_SELECTED_BUNDLE_WITHIN_SOURCE_NBANDS', 'ALL_SOURCE_BANDS_EXCEPT_SELF')
+    with path.open('w', newline='') as handle:
+        handle.write('\n'.join(line for line in text.splitlines()
+                               if line.startswith('#') and line != '# result_status=PASS')+'\n')
+        writer = csv.writer(handle)
+        writer.writerow(['spin','k_index','band','kx_frac','ky_frac','kz_frac',
+                         'energy_eV','omega_z_A2','min_gap_eV'])
+        for k,(point,value) in enumerate(zip(q,values),1):
+            writer.writerow([1,k,2,*point,1.+point[0]**2,value,2.])
+        handle.write('# result_status=PASS\n')
+
+
 class PeriodicDisplayCutTests(unittest.TestCase):
     def test_constant_field_is_unchanged_far_outside_primitive_cell(self):
         q = grid()
@@ -349,10 +393,56 @@ class PanelDataIntegrityTests(unittest.TestCase):
         np.testing.assert_array_equal([float(r["omega_z_A2"]) for r in output], [-3., .01, 3.])
         self.assertEqual(before, {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in before})
 
+    def test_selected_optical_bundle_plot_keeps_selection_separate_from_occupied_reference(self):
+        write_paw_selected(self.mesh, self.qmesh, self.native_values)
+        write_paw_selected(self.path_kubo, self.qpath, [-3., .01, 3.])
+        metadata = self.call_plot(method='kubo-bundle')
+        self.assertEqual(metadata['selected_bundle_bands'], [2])
+        self.assertEqual(metadata['occupied_bands'], [1, 1])
+        self.assertEqual(metadata['source_operator'], 'VASP_5.4.4_LONGITUDINAL_PAW_OPTICAL')
+        self.assertEqual(metadata['completion_validation'],
+                         {'map': 'terminal_pass_and_full_coverage', 'path': 'terminal_pass_and_full_coverage'})
+
+    def test_selected_optical_map_path_must_select_same_bands(self):
+        write_paw_selected(self.mesh, self.qmesh, self.native_values)
+        write_paw_selected(self.path_kubo, self.qpath, [-3., .01, 3.])
+        self.path_kubo.write_text(self.path_kubo.read_text().replace('# band_ids=2', '# band_ids=1'))
+        with self.assertRaisesRegex(ValueError, 'band_ids'):
+            self.call_plot(method='kubo-bundle')
+
+    def test_selected_optical_band_plot_preserves_operator_and_energy(self):
+        write_paw_band(self.mesh, self.qmesh, self.native_values)
+        write_paw_band(self.path_kubo, self.qpath, [-3., .01, 3.])
+        metadata = self.call_plot(band=2)
+        self.assertEqual(metadata['kubo_band'], 2)
+        self.assertEqual(metadata['source_operator'], 'VASP_5.4.4_LONGITUDINAL_PAW_OPTICAL')
+        self.assertEqual(metadata['masked_path_points'], 0)
+
     def test_bundle_path_gap_must_match_displayed_band_energies(self):
         write_bundle(self.mesh, self.qmesh, self.native_values)
         write_bundle(self.path_kubo, self.qpath, [-3., 0., 3.], gaps=[2., 2.1, 2.])
         with self.assertRaisesRegex(ValueError, "gap"):
+            self.call_plot(method="kubo-bundle")
+        self.assertFalse((self.path / "figure.png").exists())
+
+    def test_paw_trace_panels_preserve_operator_and_values(self):
+        write_paw_trace(self.mesh, self.qmesh, self.native_values)
+        write_paw_trace(self.path_kubo, self.qpath, [-3., .01, 3.])
+        metadata = self.call_plot(method="kubo-bundle")
+        self.assertEqual(metadata["source_operator"], "VASP_5.4.4_LONGITUDINAL_PAW_OPTICAL")
+        self.assertEqual(metadata["completion_validation"],
+                         {"map": "terminal_pass_and_full_coverage",
+                          "path": "terminal_pass_and_full_coverage"})
+        with (self.path / "curve.csv").open() as handle:
+            output = list(csv.DictReader(handle))
+        np.testing.assert_array_equal([float(r["omega_z_A2"]) for r in output], [-3., .01, 3.])
+        with self.assertRaisesRegex(ValueError, "occupied"):
+            panels.read_bundle(self.mesh, 2, 1e-5)
+
+    def test_paw_and_canonical_panel_inputs_cannot_be_mixed(self):
+        write_paw_trace(self.mesh, self.qmesh, self.native_values)
+        write_bundle(self.path_kubo, self.qpath, [-3., .01, 3.])
+        with self.assertRaisesRegex(ValueError, "mix"):
             self.call_plot(method="kubo-bundle")
         self.assertFalse((self.path / "figure.png").exists())
 

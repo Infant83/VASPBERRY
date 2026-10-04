@@ -183,7 +183,7 @@
        known=.true.
       case('mesh')
        known=.true.
-      case('wavecar')
+      case('wavecar','input-dir')
        known=.true.
       case('spinor')
        known=.true.
@@ -197,7 +197,7 @@
        known=.true.
       case('spin-axis')
        known=.true.
-      case('outcar')
+      case('outcar','incar','waveder','kubo-source')
        known=.true.
       case('energy-gap-tol')
        known=.true.
@@ -260,7 +260,7 @@
         known=.true.
        case('mesh')
         known=.true.
-       case('wavecar')
+       case('wavecar','input-dir')
         known=.true.
        case('spinor')
         known=.true.
@@ -326,9 +326,11 @@
        write(6,'(A)')'Intel MPI: make ifx-mpi'
        write(6,'(A)')'  mpiexec -n 4 build/vaspberry-ifx-mpi --help task'
        write(6,'(A)')'Example (join lines using the shown backslash):'
-       write(6,'(A)')'  mpiexec -n 4 build/vaspberry-ifx-mpi --task kubo --bands 18 '//achar(92)
-       write(6,'(A)')'    --curvature-csv BAND18.csv'
-       write(6,'(A)')'Input defaults to WAVECAR in the working directory.'
+       write(6,'(A)')'  mpiexec -n 4 build/vaspberry-ifx-mpi --task kubo --bands 1:18 '//achar(92)
+       write(6,'(A)')'    --curvature-csv KUBO_WAVEDER.csv'
+       write(6,'(A)')'Standard Kubo needs same-run WAVEDER/WAVECAR/INCAR/OUTCAR.'
+       write(6,'(A)')'Inputs default to cwd; --input-dir DIR changes omitted source filenames.'
+       write(6,'(A)')'Use --kubo-source wavecar only to opt into the warned approximation.'
        write(6,'(A)')'Use a fresh working directory for each calculation.'
        write(6,'(A)')'Topic names accept -- prefixes: --help --bands'
        write(6,'(A)')'Further guidance: docs/NATIVE_COMMANDS.md and docs/HANDS_ON.md'
@@ -338,9 +340,9 @@
        write(6,'(A)')'  spin-chern     projected-spin sector Chern numbers on a full mesh'
        write(6,'(A)')'  spin-kubo      approximate spin-sector local Berry curvature'
        write(6,'(A)')'  z2             FH n-field Z2 invariant on an even full mesh'
-       write(6,'(A)')'  kubo           band/bundle Berry curvature at supplied k points'
+       write(6,'(A)')'  kubo           WAVEDER selected/occupied curvature; default PAW optical source'
        write(6,'(A)')'  kubo-integral  full-mesh Kubo-formula integration diagnostic'
-       write(6,'(A)')'  kubo-pairs     reusable undivided interband pair numerators'
+       write(6,'(A)')'  kubo-pairs     approximate pair export; requires --kubo-source wavecar'
        write(6,'(A)')'  optical        selected-transition circular selectivity'
        write(6,'(A)')'  spectrum       broadened left/right optical transition spectra'
        write(6,'(A)')'  wavefunction   real-space wavefunction reconstruction'
@@ -352,7 +354,7 @@
       case('options')
        write(6,'(A)')'Each calculation option takes one separate value; no --name=value.'
        write(6,'(A)')'Read a topic with --help NAME or --help --NAME:'
-       write(6,'(A)')'  task  wavecar  bands  mesh  spinor  output'
+       write(6,'(A)')'  task  input-dir  wavecar  waveder  incar  kubo-source  bands  mesh  spinor  output'
        write(6,'(A)')'  curvature-csv  pairs-csv  per-band'
        write(6,'(A)')'  spin-axis  outcar  energy-gap-tol  spin-gap-tol  sum-bands'
        write(6,'(A)')'  wavefunction-band  kpoint  real-grid  imaginary  theta  phi'
@@ -391,7 +393,8 @@
        write(6,'(A)')'Reference: docs/SPIN_CHERN.md.'
       case('spin-kubo')
        write(6,'(A)')'Approximate projected-spin sector Berry curvature from a Kubo formula.'
-       write(6,'(A)')'  vaspberry --task spin-kubo --wavecar WAVECAR --outcar OUTCAR '//achar(92)
+       write(6,'(A)')'Requires --kubo-source wavecar; WAVEDER lacks the required spin matrices.'
+       write(6,'(A)')'  vaspberry --task spin-kubo --kubo-source wavecar --wavecar WAVECAR --outcar OUTCAR '//achar(92)
        write(6,'(A)')'    --bands 1:10 --spin-axis z'
        write(6,'(A)')'The default evaluates supplied k points, including a path.'
        write(6,'(A)')'An explicit --mesh NX,NY additionally requests full-mesh integrals;'
@@ -419,56 +422,60 @@
        write(6,'(A)')'Legacy selector: -z2 1. Half-mesh -hf 1 is rejected.'
        write(6,'(A)')'Reference: docs/Z2_FUKUI_HATSUGAI.md.'
       case('kubo')
-       write(6,'(A)')'Berry curvature from the Kubo formula at the supplied k points.'
-       write(6,'(A)')'One band:'
-       write(6,'(A)')'  vaspberry --task kubo --bands 18 --curvature-csv curvature.csv'
-       write(6,'(A)')'Occupied-group trace (allows internal degeneracies):'
-       write(6,'(A)')'  vaspberry --task kubo --bands 1:18 '//achar(92)
+       write(6,'(A)')'Kubo Berry curvature from PAW optical connections; default source: waveder.'
+       write(6,'(A)')'  vaspberry --task kubo --input-dir /data/optics --bands 1:18 '//achar(92)
        write(6,'(A)')'    --curvature-csv KUBO.csv'
-       write(6,'(A)')'--wavecar PATH defaults to WAVECAR. Mesh and path data are accepted;'
-       write(6,'(A)')'this task preserves source k-point order and does not integrate a path.'
-       write(6,'(A)')'Selected ranges use the whole subspace by default.'
-       write(6,'(A)')'Default trace CSV: KUBO.csv. --curvature-csv PATH changes the filename.'
-       write(6,'(A)')'For each individual band instead, add --per-band 1.'
-       write(6,'(A)')'A singleton or each per-band state needs all gaps >1e-5 eV.'
-       write(6,'(A)')'The trace excludes internal transitions; external gaps must exceed 1e-5 eV.'
-       write(6,'(A)')'Failed gap checks create no curvature outputs; bands are never enlarged.'
-       write(6,'(A)')'Omitted bands retain legacy occupied inference and individual-band output;'
-       write(6,'(A)')'specify --bands explicitly. Pure legacy -ii/-if without --task/--bands'
-       write(6,'(A)')'retains individual bands. --task with -ii/-if uses the new range rule.'
-       write(6,'(A)')'CSV omega_z_A2 uses the standard -2 Im normalization, in Angstrom^2.'
-       write(6,'(A)')'The operator is canonical momentum from pseudo WAVECAR coefficients;'
-       write(6,'(A)')'PAW augmentation and nonlocal velocity corrections are not included.'
-       write(6,'(A)')'Check band isolation and k/NBANDS convergence. CSV paths must be new.'
-       write(6,'(A)')'A complete CSV records source counts and ends in result_status=PASS.'
-       write(6,'(A)')'Writes PATH.partial first; only successful complete output becomes PATH.'
-       write(6,'(A)')'kubo-line is a synonym; legacy selector: -kubo 2.'
-       write(6,'(A)')'Related: per-band curvature-csv kubo-integral kubo-pairs.'
+       write(6,'(A)')'WAVECAR/WAVEDER/INCAR/OUTCAR default to cwd, or --input-dir DIR.'
+       write(6,'(A)')'--wavecar only overrides WAVECAR; it never redirects auxiliary inputs.'
+       write(6,'(A)')'Overrides: --wavecar PATH --waveder PATH --incar PATH --outcar PATH.'
+       write(6,'(A)')'Explicit relative file paths remain relative to invocation cwd, in any option order.'
+       write(6,'(A)')'Supported: standard VASP 5.4.4 LOPTICS, non-PEAD, longitudinal static branch.'
+       write(6,'(A)')'Explicit --bands 31,33:34 selects a bundle independently of all NBANDS partners.'
+       write(6,'(A)')'Omit --bands for verified fixed occupied T0 filling. Internal trace degeneracies are allowed.'
+       write(6,'(A)')'The selected boundary must not split full-source transitive 0.002 eV clusters.'
+       write(6,'(A)')'--per-band 1 with explicit --bands writes only resolved individual bands.'
+       write(6,'(A)')'Each required pair needs a stored orientation and strict consistency if both exist;'
+       write(6,'(A)')'no square padding, invented missing elements, or second energy denominator.'
+       write(6,'(A)')'Default trace CSV: KUBO_WAVEDER.csv; --curvature-csv changes the filename.'
+       write(6,'(A)')'CSV records omega_z_A2 in Angstrom^2, exact band IDs and optical source metadata.'
+       write(6,'(A)')'Source paths give point curvature only. Explicit --mesh validates a full grid'
+       write(6,'(A)')'and adds unrounded integration metadata. Selected integrals are geometric contributions.'
+       write(6,'(A)')'Only the omitted-band verified occupied integral labels total physical Hall.'
+       write(6,'(A)')'Native integral sums both ISPIN=2 channels. Python kubo-hall selects --spin'
+       write(6,'(A)')'(default 1); sum separately calculated spin 1 and 2 for collinear charge.'
+       write(6,'(A)')'Missing/unsupported input stops. No automatic WAVECAR fallback.'
+       write(6,'(A)')'Explicit approximation: --task kubo --kubo-source wavecar --bands 18'
+       write(6,'(A)')'WAVECAR uses canonical momentum without full PAW/nonlocal velocity terms.'
+       write(6,'(A)')'It permits isolated single/per-band or selected traces with gaps >1e-5 eV.'
+       write(6,'(A)')'Canonical trace default is KUBO.csv. --per-band 1 selects separate bands.'
+       write(6,'(A)')'Both routes require new CSV paths and complete finite output with PASS.'
+       write(6,'(A)')'Check k/NBANDS convergence. kmesh cannot restore missing operator terms.'
+       write(6,'(A)')'kubo-line is a synonym; legacy -kubo selectors obey the same source barrier.'
+       write(6,'(A)')'Reference: docs/WAVEDER_KUBO_PROTOCOL.md; related: kubo-source curvature-csv.'
       case('kubo-integral')
-       write(6,'(A)')'Full-mesh Kubo-formula integration diagnostic (legacy -kubo 1).'
+       write(6,'(A)')'Full-mesh Kubo integral; default source is standard WAVEDER.'
        write(6,'(A)')'  vaspberry --task kubo-integral --mesh 12,12 --bands 1:18 '//achar(92)
        write(6,'(A)')'    --curvature-csv KUBO.csv'
-       write(6,'(A)')'Use the actual full uniform 2D mesh in WAVECAR; never use a path.'
-       write(6,'(A)')'The bundle CSV is the same pointwise curvature as for --task kubo.'
-       write(6,'(A)')'An additional finite-grid curvature integral is printed to stdout.'
-       write(6,'(A)')'This is not an occupation-weighted chemical-potential/temperature scan,'
-       write(6,'(A)')'and a coarse-mesh integral is not an established integer invariant.'
-       write(6,'(A)')'For reusable transport scans use --task kubo-pairs then postprocessing.'
-       write(6,'(A)')'Operator and gap assumptions are the same as --help kubo.'
+       write(6,'(A)')'Requires explicit full --mesh and same-run WAVEDER/WAVECAR/INCAR/OUTCAR.'
+       write(6,'(A)')'Explicit --bands gives unit-weight selected Chern contribution, not total Hall.'
+       write(6,'(A)')'A path is not an integration mesh. The finite-grid integral is never rounded.'
+       write(6,'(A)')'For occupation-weighted Hall tables use python3 tools/vaspberry_kubo.py kubo-hall.'
+       write(6,'(A)')'The historical canonical diagnostic requires --kubo-source wavecar.'
+       write(6,'(A)')'Operator, source validation and gap assumptions: --help kubo.'
       case('kubo-pairs')
-       write(6,'(A)')'Export all unordered source-band pairs for reusable Kubo calculations.'
-       write(6,'(A)')'  vaspberry --task kubo-pairs --wavecar WAVECAR --pairs-csv PAIRS.csv'
-       write(6,'(A)')'Do not pass --bands: all pairs n<m over source NBANDS are exported.'
+       write(6,'(A)')'Canonical-momentum pair export requires explicit --kubo-source wavecar.'
+       write(6,'(A)')'  vaspberry --task kubo-pairs --kubo-source wavecar --pairs-csv PAIRS.csv'
+       write(6,'(A)')'The default WAVEDER route does not promise all unordered source-band pairs.'
+       write(6,'(A)')'Use standard --task kubo for selected or automatic occupied curvature.'
+       write(6,'(A)')'WAVECAR approximation: omit --bands; all n<m pairs are exported.'
        write(6,'(A)')'Writes energies, fractional k coordinates and three Cartesian numerators'
        write(6,'(A)')'(yz,zx,xy), in eV^2 Angstrom^2. No gap division or occupation weighting.'
-       write(6,'(A)')'Source occupations may vary with k. No gap or finite-mu result is assumed.'
-       write(6,'(A)')'Not compatible with --curvature-csv or --per-band.'
-       write(6,'(A)')'The file must be new; a final result_status=PASS marks complete export.'
-       write(6,'(A)')'Numerators use canonical momentum in the pseudo-wavefunction metric,'
-       write(6,'(A)')'without PAW/nonlocal velocity terms; they are not conductivity yet.'
-       write(6,'(A)')'Use full-BZ data and appropriate k weights for transport integration.'
-       write(6,'(A)')'Postprocess: python3 tools/vaspberry_kubo.py import-pairs, then pair-hall.'
-       write(6,'(A)')'Reference: docs/OUTPUT_FORMAT.md; --help outputs.'
+       write(6,'(A)')'Source occupations may vary with k. No physical filling is assumed.'
+       write(6,'(A)')'Not compatible with --curvature-csv or --per-band. Use a new file.'
+       write(6,'(A)')'Numerators omit PAW/nonlocal velocity terms; a warning identifies this choice.'
+       write(6,'(A)')'Final result_status=PASS marks complete export; pairs are not conductivity.'
+       write(6,'(A)')'Postprocess full-BZ data: python3 tools/vaspberry_kubo.py import-pairs, then pair-hall.'
+       write(6,'(A)')'Reference: docs/OUTPUT_FORMAT.md and docs/WAVEDER_KUBO_PROTOCOL.md.'
       case('optical')
        write(6,'(A)')'Circular optical selectivity for one initial-to-final transition.'
        write(6,'(A)')'  vaspberry --task optical --wavecar WAVECAR '//achar(92)
@@ -520,10 +527,11 @@
        write(6,'(A)')'not a full PAW/nonlocal velocity operator. Legacy selector: -vel 1.'
        write(6,'(A)')'Use a fresh working directory; existing DAT files may be replaced.'
       case('bands')
-       write(6,'(A)')'--bands N | --bands FIRST:LAST : one-based inclusive band selection.'
-       write(6,'(A)')'Examples: --bands 18 ; --bands 1:18. No spaces inside a range.'
+       write(6,'(A)')'--bands N | FIRST:LAST | N,M:P : one-based inclusive selection (no duplicates).'
+       write(6,'(A)')'Examples: --bands 18 ; --bands 1:18 ; WAVEDER kubo also accepts 31,33:34.'
        write(6,'(A)')'chern: one band or the full selected link-variable subspace.'
-       write(6,'(A)')'kubo: N is individual; FIRST:LAST with different ends is the group trace.'
+       write(6,'(A)')'WAVEDER kubo: explicit selection is geometric; omitted bands verifies occupied T0.'
+       write(6,'(A)')'Explicit wavecar: N is individual; FIRST:LAST is the group trace.'
        write(6,'(A)')'spin-chern/spin-kubo: the selected isolated energy subspace.'
        write(6,'(A)')'z2: all occupied bands 1:NE, with even rank and NBANDS>NE.'
        write(6,'(A)')'optical: initial/final endpoints. spectrum: LAST caps empty bands;'
@@ -547,8 +555,40 @@
        write(6,'(A)')'spin-kubo evaluates points by default; an explicit mesh additionally'
        write(6,'(A)')'requests SPIN_KUBO_INTEGRAL.csv and checks complete mesh geometry.'
        write(6,'(A)')'For transport use a full BZ mesh and verify sampling convergence.'
+      case('kubo-source')
+       write(6,'(A)')'--kubo-source waveder|wavecar : Kubo operator source; default waveder.'
+       write(6,'(A)')'waveder: same-run optical connections; selected geometry or verified occupied trace.'
+       write(6,'(A)')'wavecar: explicit canonical-momentum approximation; prints a warning.'
+       write(6,'(A)')'Missing WAVEDER or unsupported requests stop; fallback is never automatic.'
+       write(6,'(A)')'kubo-pairs and spin-kubo presently require explicit wavecar.'
+       write(6,'(A)')'This choice changes the operator, not just input speed or file preference.'
+       write(6,'(A)')'Reference: docs/WAVEDER_KUBO_PROTOCOL.md.'
+      case('input-dir')
+       write(6,'(A)')'--input-dir DIR : base for omitted WAVECAR/WAVEDER/INCAR/OUTCAR filenames.'
+       write(6,'(A)')'Default is the invocation working directory. DIR must exist and be a directory.'
+       write(6,'(A)')'Example: --task kubo --input-dir /data/optics --curvature-csv result.csv.'
+       write(6,'(A)')'Each explicit --wavecar/--waveder/--incar/--outcar overrides only that file.'
+       write(6,'(A)')'Explicit relative file paths are relative to cwd, never relative to DIR.'
+       write(6,'(A)')'Option order does not change precedence. --wavecar never redirects other inputs.'
+       write(6,'(A)')'Does not change cwd, outputs, or unrelated input lists. Empty/overlong paths fail.'
+       write(6,'(A)')'Standard Kubo prints all selected input paths before opening the source files.'
+      case('waveder')
+       write(6,'(A)')'--waveder PATH : optical connection input for --kubo-source waveder.'
+       write(6,'(A)')'Default is WAVEDER under --input-dir (default cwd), independent of --wavecar.'
+       write(6,'(A)')'Explicit relative PATH is relative to cwd; keep same-run INCAR and OUTCAR.'
+       write(6,'(A)')'Supported rectangular coverage is sufficient; do not pad to NBANDS squared.'
+       write(6,'(A)')'Standard VASP 5.4.4 longitudinal LOPTICS branch only; PAW terms are already'
+       write(6,'(A)')'included upstream. The stored connection already contains the gap denominator.'
+      case('incar')
+       write(6,'(A)')'--incar PATH : same-run INCAR for the standard WAVEDER Kubo route.'
+       write(6,'(A)')'Default is INCAR under --input-dir (default cwd), independent of --wavecar.'
+       write(6,'(A)')'Explicit relative PATH is relative to cwd. It validates the producer branch.'
+       write(6,'(A)')'Use LOPTICS=T, LPEAD=F, LNABLA=F, NSW=0, ISYM=-1, LREAL=F.'
+       write(6,'(A)')'Keep the actual input; do not synthesize settings to make validation pass.'
       case('wavecar')
-       write(6,'(A)')'--wavecar PATH : input WAVECAR; default WAVECAR in the working directory.'
+       write(6,'(A)')'--wavecar PATH : overrides only WAVECAR; default is --input-dir/WAVECAR.'
+       write(6,'(A)')'--input-dir defaults to cwd. Explicit relative PATH is relative to cwd.'
+       write(6,'(A)')'Changing --wavecar never changes WAVEDER/INCAR/OUTCAR defaults.'
        write(6,'(A)')'Example: --wavecar /data/project/WAVECAR ; legacy equivalent: -f PATH.'
        write(6,'(A)')'Quote paths with spaces. Prefer short paths (native fields: 256 chars).'
        write(6,'(A)')'Reads full-complex single-precision coefficients with RTAG=45200.'
@@ -580,8 +620,11 @@
        write(6,'(A)')'Use a fresh working directory; DAT outputs can replace existing files.'
        write(6,'(A)')'Legacy equivalent: -o LABEL. See --help outputs for data usage.'
       case('curvature-csv')
-       write(6,'(A)')'--curvature-csv PATH : exact band/bundle Kubo curvature CSV filename.'
-       write(6,'(A)')'Example: --task kubo --bands 18 --curvature-csv BAND18.csv.'
+       write(6,'(A)')'--curvature-csv PATH : exact Kubo curvature CSV filename.'
+       write(6,'(A)')'Standard WAVEDER default is KUBO_WAVEDER.csv. Omitted --bands uses schema'
+       write(6,'(A)')'VASPBERRY_WAVEDER_KUBO_OCCUPIED_V1; omega_z_A2 and external gap.'
+       write(6,'(A)')'Explicit selection: WAVEDER_KUBO_BUNDLE_V1 or WAVEDER_KUBO_BAND_V1 (VASPBERRY_ prefix).'
+       write(6,'(A)')'Example: --task kubo --kubo-source wavecar --bands 18 --curvature-csv BAND18.csv.'
        write(6,'(A)')'Used only with kubo or kubo-integral (legacy -kubo 2 or 1).'
        write(6,'(A)')'The parent directory must exist; PATH and PATH.partial must be new.'
        write(6,'(A)')'Trace V2/band V3 includes declared counts and terminal result_status=PASS.'
@@ -592,7 +635,7 @@
        write(6,'(A)')'Not compatible with --pairs-csv. Legacy equivalent: -kubo_csv PATH.'
       case('pairs-csv')
        write(6,'(A)')'--pairs-csv PATH : exact reusable native pair-export CSV filename.'
-       write(6,'(A)')'Use with --task kubo-pairs; legacy equivalent: -kubo 2 -kubo_pairs PATH.'
+       write(6,'(A)')'Use with --task kubo-pairs --kubo-source wavecar; legacy -kubo_pairs PATH.'
        write(6,'(A)')'The parent directory must exist; PATH and PATH.partial must be new.'
        write(6,'(A)')'PATH.partial is renamed only after all records are written and closed.'
        write(6,'(A)')'Omit --bands, --curvature-csv and --per-band.'
@@ -601,24 +644,29 @@
        write(6,'(A)')'See --help kubo-pairs for quantities, units and postprocessing.'
       case('per-band')
        write(6,'(A)')'--per-band 0|1 : individual Kubo output when 1; default 0.'
+       write(6,'(A)')'WAVEDER requires explicit --bands and resolved full-source 0.002 eV clusters.'
+       write(6,'(A)')'Every required partner among all NBANDS must be stored in either orientation.'
+       write(6,'(A)')'WAVEDER always writes CSV (default KUBO_WAVEDER.csv); no occupation weights.'
        write(6,'(A)')'Requires --task kubo, kubo-line or kubo-integral.'
-       write(6,'(A)')'Example: --task kubo --bands 1:18 --per-band 1 --curvature-csv BANDS.csv.'
+       write(6,'(A)')'Example: --task kubo --kubo-source wavecar --bands 1:18 --per-band 1 --curvature-csv BANDS.csv.'
        write(6,'(A)')'Without it, a selected multi-band range is the selected-space trace.'
+       write(6,'(A)')'For explicit wavecar the following historical rules apply:'
        write(6,'(A)')'Individual bands require all gaps >1e-5 eV at every source k/spin,'
        write(6,'(A)')'including gaps to other selected bands. Degeneracy fails before output.'
        write(6,'(A)')'No band range is enlarged automatically. A trace requires only external'
        write(6,'(A)')'gaps >1e-5 eV; internal transitions are excluded before division.'
        write(6,'(A)')'The trace writes CSV only, one row per source k/spin; default KUBO.csv.'
        write(6,'(A)')'For the full source space its trace is zero in the truncated basis;'
-       write(6,'(A)')'this is not a convergence result. Neither route applies occupations.'
+       write(6,'(A)')'this is not a convergence result. These canonical modes apply no occupations.'
        write(6,'(A)')'For individual output CSV is opt-in; existing DAT output remains.'
        write(6,'(A)')'Omitted bands retain occupied inference and individual output; use --bands.'
        write(6,'(A)')'Rejected with pair export, spin-sector, FHS and all other tasks.'
       case('bundle')
        write(6,'(A)')'--bundle and -kubo_bundle were removed; old commands fail explicitly.'
        write(6,'(A)')'Use --task kubo --bands FIRST:LAST for the selected-space trace.'
-       write(6,'(A)')'The CSV defaults to KUBO.csv; --curvature-csv PATH changes its filename.'
-       write(6,'(A)')'Use --per-band 1 with that task for individual-band results.'
+       write(6,'(A)')'Defaults: WAVEDER KUBO_WAVEDER.csv; explicit wavecar trace KUBO.csv.'
+       write(6,'(A)')'For either source use explicit --bands with --per-band 1 for resolved bands.'
+       write(6,'(A)')'WAVEDER also accepts disjoint selections such as --bands 31,33:34.'
       case('spin-axis')
        write(6,'(A)')'--spin-axis x|y|z|A,B,C : Cartesian analysis axis for spin-sector tasks.'
        write(6,'(A)')'Default z; for example --spin-axis 0,0,1.'
@@ -627,8 +675,9 @@
        write(6,'(A)')'Matching OUTCAR gives the source SAXIS-to-Cartesian spin frame.'
        write(6,'(A)')'Changing the analysis axis may close the projected-spin gap.'
       case('outcar')
-       write(6,'(A)')'--outcar PATH : matching OUTCAR for spin-chern and spin-kubo.'
-       write(6,'(A)')'Default OUTCAR in the working directory; WAVECAR is still the state source.'
+       write(6,'(A)')'--outcar PATH : same-run optical producer record, or spin-frame metadata.'
+       write(6,'(A)')'Defaults to OUTCAR under --input-dir (default cwd) for Kubo and spin tasks.'
+       write(6,'(A)')'Explicit relative PATH is relative to cwd; --wavecar never redirects it.'
        write(6,'(A)')'Needed for the printed SAXIS-to-Cartesian spin-frame rotation and'
        write(6,'(A)')'matching source dimensions/lattice. Preserve the WAVECAR/OUTCAR pair.'
        write(6,'(A)')'Not used to replace or infer wavefunction coefficients.'
@@ -637,7 +686,7 @@
        write(6,'(A)')'Used by spin-chern and spin-kubo; units eV, default 1e-8.'
        write(6,'(A)')'The selected energy subspace must stay isolated from excluded states.'
        write(6,'(A)')'This numerical cutoff is not broadening or evidence of convergence.'
-       write(6,'(A)')'The charge Kubo bundle has its own fixed external threshold of 1e-5 eV.'
+       write(6,'(A)')'Charge thresholds: standard WAVEDER >0.002 eV; wavecar >1e-5 eV.'
       case('spin-gap-tol')
        write(6,'(A)')'--spin-gap-tol VALUE : positive projected-Pauli distance from zero.'
        write(6,'(A)')'Used by spin-chern and spin-kubo; dimensionless, default 1e-6.'
@@ -649,7 +698,7 @@
        write(6,'(A)')'Include source bands 1:N outside the selected group in the Kubo sum.'
        write(6,'(A)')'Default is all stored source bands. N must include the selected group'
        write(6,'(A)')'and cannot exceed source NBANDS. VASP eigenstates remain fixed.'
-       write(6,'(A)')'Example: --task spin-kubo --bands 1:10 --sum-bands 20.'
+       write(6,'(A)')'Example: --task spin-kubo --kubo-source wavecar --bands 1:10 --sum-bands 20.'
        write(6,'(A)')'This does not truncate source WAVECAR, change --bands, or apply to'
        write(6,'(A)')'charge kubo, kubo-pairs, or spin-chern. Compare increasing cutoffs.'
       case('wavefunction-band')
@@ -741,9 +790,9 @@
        write(6,'(A)')'Set the absolute executable path:'
        write(6,'(A)')'  VB=/absolute/path/to/build/vaspberry-ifx'
        write(6,'(A)')'  "$VB" --task chern --wavecar /data/WAVECAR --mesh 12,12 --bands 1:18'
-       write(6,'(A)')'  "$VB" --task kubo --wavecar /data/WAVECAR --bands 1:18 '//achar(92)
+       write(6,'(A)')'  "$VB" --task kubo --input-dir /data --bands 1:18 '//achar(92)
        write(6,'(A)')'    --curvature-csv KUBO.csv'
-       write(6,'(A)')'  "$VB" --task kubo-pairs --wavecar /data/WAVECAR --pairs-csv PAIRS.csv'
+       write(6,'(A)')'  "$VB" --task kubo-pairs --kubo-source wavecar --wavecar /data/WAVECAR --pairs-csv PAIRS.csv'
        write(6,'(A)')'Backslashes continue commands onto the next line; options take one value.'
        write(6,'(A)')'For MPI, use the MPI executable with mpiexec -n N before the command.'
        write(6,'(A)')'For a copyable public-WAVECAR example see docs/NATIVE_COMMANDS.md.'
@@ -781,7 +830,7 @@
        write(6,'(A)')'Build the current vaspberry.f for the modern interface.'
       case('options')
        write(6,'(A)')'Supported help topics for this historical serial source:'
-       write(6,'(A)')'  bands mesh wavecar spinor output'
+       write(6,'(A)')'  bands mesh input-dir wavecar spinor output'
        write(6,'(A)')'  wavefunction-band kpoint real-grid imaginary'
        write(6,'(A)')'Calculation syntax uses legacy flags: -f, -kx/-ky, -ii/-if/-is, -s, -o,'
        write(6,'(A)')'-wf, -k, -ng, -im. Long option names are help topics only.'
@@ -827,6 +876,12 @@
        write(6,'(A)')'They must match the stored full periodic 2D mesh; no k points are generated.'
        write(6,'(A)')'Z2 needs an even Gamma-centered mesh with Nx,Ny>=4.'
        write(6,'(A)')'Modern --mesh is not accepted by this historical calculation parser.'
+      case('input-dir')
+       write(6,'(A)')'--input-dir DIR : directory for an omitted WAVECAR; default cwd.'
+       write(6,'(A)')'DIR must exist. An explicit -f PATH overrides only WAVECAR, in any order.'
+       write(6,'(A)')'Relative -f PATH remains relative to invocation cwd; outputs stay in cwd.'
+       write(6,'(A)')'Example: vaspberry --input-dir /data/run -kx 12 -ky 12 -ii 1 -if 18'
+       write(6,'(A)')'Historical path fields support 75 characters; overlong/empty paths fail.'
       case('wavecar')
        write(6,'(A)')'-f PATH selects the input WAVECAR; default WAVECAR.'
        write(6,'(A)')'Requires full-complex RTAG=45200 data and matching reader/writer RECL units.'

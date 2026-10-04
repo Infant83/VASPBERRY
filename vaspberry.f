@@ -1,4 +1,4 @@
-! PROGRAM VASPBERRY Version 1.6.3 (f77) for VASP
+! PROGRAM VASPBERRY Version 1.6.5 (f77) for VASP
 ! Written by Hyun-Jung Kim
 !  Korea Institute for Advanced Study (KIAS)
 !  Dep. of Phys., Hanyang Univ.
@@ -61,7 +61,11 @@
 !               : 2026. Sep. 29.
 ! version 1.6.3 native input/output integrity and RECL detection
 !               : 2026. Sep. 30.
-! last update and bug fixes : 2026. Sep. 30.
+! version 1.6.4 standard WAVEDER Kubo and explicit WAVECAR opt-in
+!               : 2026. Oct. 02.
+! version 1.6.5 selected WAVEDER release and consistent public help
+!               : 2026. Oct. 04.
+! last update and bug fixes : 2026. Oct. 04.
 
 !#define MPI_USE
 !#undef  MPI_USE        
@@ -126,6 +130,10 @@
       integer :: myrank, nprocs, ierr, mpierr
       integer :: imaxberry,iminberry
       integer ::  mpi_comm_earth
+      character*256 kubo_source,waveder_path,kubo_incar
+      integer kubo_per_band,kubo_outcar_seen
+      common /kubo_source_chars/ kubo_source,waveder_path,kubo_incar
+      common /kubo_source_ints/ kubo_per_band,kubo_outcar_seen
       integer spinchern_task,spinchern_mesh_seen,spinkubo_sum_max
       real*8 spinchern_axis(3),spinchern_etol,spinchern_stol
       character*256 spinchern_outcar
@@ -150,8 +158,8 @@
       mpi_comm_earth = 0
 #endif
 
-      ver_tag="# VASPBERRY (Ver 1.6.3), by Hyun-Jung Kim."//
-     &        " 2026. Sep. 30."
+      ver_tag="# VASPBERRY (Ver 1.6.5), by Hyun-Jung Kim."//
+     &        " 2026. Oct. 04."
       call vaspberry_help_request(ver_tag,.false.)
 #ifdef MPI_USE
       if(myrank == 0)then
@@ -174,6 +182,11 @@
      &   iwf,ikwf,ng,rs,imag,init_e,fina_e,nediv,sigma,
      &   klist_fname,sw_fname,atlist_fname,flag_atom_project,
      &   theta,phi,kubo_csv,ikubo_bundle,kubo_pairs)
+      if(ikubo.gt.0.and.trim(kubo_source).eq.'waveder'.and.
+     &   myrank.eq.0)then
+       call wd_print_inputs(filename,waveder_path,kubo_incar,
+     &   spinchern_outcar)
+      endif
       if(iz .ne. 0 .and. iz .ne. 1)then
        write(0,*) '*** error - Z2 option must be 0 or 1'
        call vaspberry_fail
@@ -195,6 +208,16 @@
 #ifdef MPI_USE
       call MPI_BCAST(ispinor,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 #endif
+      if(ikubo.gt.0.and.trim(kubo_source).eq.'waveder')then
+       call waveder_kubo_run(filename,waveder_path,kubo_incar,
+     &    spinchern_outcar,kubo_csv,nkx,nky,spinchern_mesh_seen,
+     &    nini,nmax,ispin,ispinor,nk,nband,a1,a2,a3,myrank)
+       close(10)
+#ifdef MPI_USE
+       call MPI_FINALIZE(ierr)
+#endif
+       stop
+      endif
       if(spinchern_task.gt.0)then
        if(spinchern_task.eq.1)then
         call spinchern_run(filename,spinchern_outcar,foname,
@@ -1674,7 +1697,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.6.3'
+      write(94,'(A)')'# vaspberry_version=1.6.5'
       write(94,'(A)')'# result_status=INCOMPLETE'
       write(94,'(A)')'# reportable_invariant=0'
       write(94,'(A)')'# band_range_status=UNRESOLVED'
@@ -1874,7 +1897,7 @@
       endif
       write(94,'(A)')'# schema=VASPBERRY_Z2_FIELD'
       write(94,'(A)')'# schema_version=2'
-      write(94,'(A)')'# vaspberry_version=1.6.3'
+      write(94,'(A)')'# vaspberry_version=1.6.5'
       if(fieldok)then
        write(94,'(A)')'# result_status=PASS'
       else
@@ -4149,7 +4172,7 @@
       else
        write(iunit,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_V2'
       endif
-      write(iunit,'(A)')'# vaspberry_version=1.6.3'
+      write(iunit,'(A)')'# vaspberry_version=1.6.5'
       write(iunit,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
       write(iunit,'(A)')'# operator='//
      & 'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
@@ -4412,7 +4435,7 @@
       call open_kubo_csv(path,isp.eq.1)
       if(isp.eq.1)then
        write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_BUNDLE_V2'
-       write(96,'(A)')'# vaspberry_version=1.6.3'
+       write(96,'(A)')'# vaspberry_version=1.6.5'
        write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
        write(96,'(A)')'# operator='//
      &  'WAVECAR_BARE_MOMENTUM_NO_PAW_NONLOCAL_VELOCITY'
@@ -4600,7 +4623,7 @@
        call open_kubo_csv(path,isp.eq.1)
        if(isp.eq.1)then
         write(96,'(A)')'# schema=VASPBERRY_BARE_MOMENTUM_KUBO_PAIRS_V1'
-        write(96,'(A)')'# vaspberry_version=1.6.3'
+        write(96,'(A)')'# vaspberry_version=1.6.5'
         write(96,'(A)')'# result_kind=UNORDERED_INTERBAND_NUMERATORS'
         write(96,'(A)')'# normalization=STANDARD_MINUS_TWO_IM'
         write(96,'(A)')'# operator='//
@@ -5616,17 +5639,28 @@
       character*256 kubo_csv,kubo_pairs
       real*8 x,y
       character*256 option,value,task,raw_option,number_string
-      integer cli_ios,cli_j,cli_delim,cli_values(3)
+      integer cli_ios,cli_j,cli_delim,cli_values(3),cli_pathlen
+      character*256 input_dir
+      character*257 input_prefix
+      logical wavecar_seen,input_dir_exists
       integer task_kubo,task_cd,task_vel,task_z2
       logical modern_cli,modern_option,task_seen
       logical modern_bands,per_band_seen,modern_kubo
-      integer per_band
+      integer per_band,band_start,band_end,band_colon
+      integer kubo_selection_explicit
+      character*256 kubo_band_spec,band_token
+      common /kubo_selection_ints/ kubo_selection_explicit
+      common /kubo_selection_chars/ kubo_band_spec
       integer iarg,narg,ia,nkx,nky,ispinor,iskp,ine,ng(3)
       integer ikubo_bundle
       dimension rs(3)
       real*8    init_e, fina_e
       real*8    theta, phi
       logical   flag_atom_project,pair_band_selection
+      character*256 kubo_source,waveder_path,kubo_incar
+      integer kubo_per_band,kubo_outcar_seen
+      common /kubo_source_chars/ kubo_source,waveder_path,kubo_incar
+      common /kubo_source_ints/ kubo_per_band,kubo_outcar_seen
       integer spinchern_task,spinchern_mesh_seen,spinkubo_sum_max
       real*8 spinchern_axis(3),spinchern_etol,spinchern_stol
       character*256 spinchern_outcar
@@ -5643,6 +5677,14 @@
       spinchern_etol=1d-8
       spinchern_stol=1d-6
       spinchern_outcar='OUTCAR'
+      input_dir='.'
+      input_prefix=''
+      wavecar_seen=.false.
+      kubo_source='waveder'
+      waveder_path=''
+      kubo_incar=''
+      kubo_per_band=0
+      kubo_outcar_seen=0
       spinchern_option=.false.
       nini=1;it=0;iskp=0;ine=0;icd=0;ixt=0;ivel=0;iz=0;ihf=0
       iwf=0;ikwf=1;ng=0;imag=0;rs=0.;ikubo=0;nn=0;nediv=1000
@@ -5661,6 +5703,8 @@
       kubo_csv=""
       kubo_pairs=""
       pair_band_selection=.false.
+      kubo_selection_explicit=0
+      kubo_band_spec=''
       ikubo_bundle=0
       per_band=0
       per_band_seen=.false.
@@ -5700,12 +5744,26 @@
          call getarg(2*ia-1,option)
          call getarg(2*ia,value)
          raw_option=option
+         if(option.eq.'--input-dir'.or.option.eq.'--wavecar'.or.
+     &      option.eq.'-f'.or.option.eq.'--waveder'.or.
+     &      option.eq.'--incar'.or.option.eq.'--outcar')then
+          call get_command_argument(2*ia,length=cli_pathlen)
+          if(cli_pathlen.gt.len(value))then
+           write(0,*)'*** error - input path exceeds 256 characters: ',
+     &       trim(option)
+           call vaspberry_fail
+          endif
+          if(len_trim(value).eq.0)goto 910
+         endif
          modern_option=option(1:2).eq.'--'
          if(modern_option.and.(len_trim(value).eq.0.or.
      &      value(1:2).eq.'--'))goto 910
 ! Long options normalize to the same legacy parser and dispatch below.
 ! Keep this routine self-contained for standalone parser regression builds.
          select case(trim(option))
+         case('--input-dir')
+          input_dir=trim(value)
+          cycle
          case('--sum-bands')
           do cli_j=1,len_trim(value)
            if(index('0123456789',value(cli_j:cli_j)).eq.0)goto 910
@@ -5713,9 +5771,19 @@
           read(value,*,iostat=cli_ios)spinkubo_sum_max
           if(cli_ios.ne.0.or.spinkubo_sum_max.lt.1)goto 910
           cycle
+         case('--kubo-source')
+          if(value.ne.'waveder'.and.value.ne.'wavecar')goto 910
+          kubo_source=trim(value)
+          cycle
+         case('--waveder')
+          waveder_path=trim(value)
+          cycle
+         case('--incar')
+          kubo_incar=trim(value)
+          cycle
          case('--outcar')
           spinchern_outcar=trim(value)
-          spinchern_option=.true.
+          kubo_outcar_seen=1
           cycle
          case('--spin-axis')
           spinchern_option=.true.
@@ -5763,48 +5831,70 @@
           task=trim(value)
           task_seen=.true.
           cycle
-         case('--mesh','--real-grid','--bands')
+         case('--bands')
+          call get_command_argument(2*ia,length=cli_pathlen)
+          if(cli_pathlen.gt.len(value))goto 910
+          kubo_band_spec=trim(value)
+          nini=huge(1);nmax=0;band_start=1
+          do
+           band_end=index(value(band_start:),',')
+           if(band_end.eq.0)then
+            band_end=len_trim(value)+1
+           else
+            band_end=band_start+band_end-1
+           endif
+           if(band_end.eq.band_start)goto 910
+           band_token=value(band_start:band_end-1)
+           band_colon=index(trim(band_token),':')
+           do cli_j=1,len_trim(band_token)
+            if(index('0123456789:',band_token(cli_j:cli_j)).eq.0)
+     &       goto 910
+           enddo
+           if(band_colon.eq.0)then
+            read(band_token,*,iostat=cli_ios)cli_values(1)
+            cli_values(2)=cli_values(1)
+           else
+            if(band_colon.eq.1.or.
+     &         band_colon.eq.len_trim(band_token))goto 910
+            if(index(band_token(band_colon+1:),':').gt.0)goto 910
+            band_token(band_colon:band_colon)=','
+            read(band_token,*,iostat=cli_ios)cli_values(1:2)
+           endif
+           if(cli_ios.ne.0.or.any(cli_values(1:2).lt.1))goto 910
+           if(cli_values(1).gt.cli_values(2))goto 910
+           nini=min(nini,cli_values(1));nmax=max(nmax,cli_values(2))
+           if(band_end.gt.len_trim(value))exit
+           band_start=band_end+1
+           if(band_start.gt.len_trim(value))goto 910
+          enddo
+          pair_band_selection=.true.
+          modern_bands=.true.
+          cycle
+         case('--mesh','--real-grid')
           number_string=trim(value)
           cli_delim=0
           do cli_j=1,len_trim(value)
-           if((option.eq.'--bands'.and.value(cli_j:cli_j).eq.':')
-     &       .or.(option.ne.'--bands'.and.
-     &                 value(cli_j:cli_j).eq.','))then
+           if(value(cli_j:cli_j).eq.',')then
             cli_delim=cli_delim+1
             if(cli_j.eq.1.or.cli_j.eq.len_trim(value))goto 910
             if(number_string(cli_j-1:cli_j-1).eq.',')goto 910
-            number_string(cli_j:cli_j)=','
            else if(index('0123456789',value(cli_j:cli_j)).eq.0)then
             goto 910
            endif
           enddo
           cli_values=0
-          select case(trim(option))
-          case('--mesh')
+          if(option.eq.'--mesh')then
            if(cli_delim.ne.1)goto 910
            read(number_string,*,iostat=cli_ios)cli_values(1:2)
            if(cli_ios.ne.0.or.any(cli_values(1:2).lt.1))goto 910
            nkx=cli_values(1);nky=cli_values(2)
            spinchern_mesh_seen=1
-          case('--real-grid')
+          else
            if(cli_delim.ne.2)goto 910
            read(number_string,*,iostat=cli_ios)cli_values
            if(cli_ios.ne.0.or.any(cli_values.lt.1))goto 910
            ng=cli_values
-          case('--bands')
-           if(cli_delim.gt.1)goto 910
-           if(cli_delim.eq.0)then
-            read(number_string,*,iostat=cli_ios)cli_values(1)
-            cli_values(2)=cli_values(1)
-           else
-            read(number_string,*,iostat=cli_ios)cli_values(1:2)
-           endif
-           if(cli_ios.ne.0.or.any(cli_values(1:2).lt.1))goto 910
-           if(cli_values(1).gt.cli_values(2))goto 910
-           nini=cli_values(1);nmax=cli_values(2)
-           pair_band_selection=.true.
-           modern_bands=.true.
-          end select
+          endif
           cycle
          case('--wavecar')
           option='-f'
@@ -5859,6 +5949,7 @@
          end select
          if(option == "-f") then
             filename = trim(value)
+            wavecar_seen=.true.
            else if(option == "-o") then
             read(value,*) foname
            else if(option == "-kx") then
@@ -5878,12 +5969,30 @@
              call vaspberry_fail
             end select
            else if(option == "-ii") then
+            if(index(kubo_band_spec,',').gt.0)then
+             write(0,*)'*** error - do not combine comma-list and ',
+     &         'legacy band selectors'
+             call vaspberry_fail
+            endif
+            kubo_band_spec=''
             pair_band_selection=.true.
             read(value,*) nini
            else if(option == "-if") then
+            if(index(kubo_band_spec,',').gt.0)then
+             write(0,*)'*** error - do not combine comma-list and ',
+     &         'legacy band selectors'
+             call vaspberry_fail
+            endif
+            kubo_band_spec=''
             pair_band_selection=.true.
             read(value,*) nmax
            else if(option == "-is") then
+            if(index(kubo_band_spec,',').gt.0)then
+             write(0,*)'*** error - do not combine comma-list and ',
+     &         'legacy band selectors'
+             call vaspberry_fail
+            endif
+            kubo_band_spec=''
             pair_band_selection=.true.
             read(value,*) nini
             nini=nini;nmax=nini
@@ -5956,6 +6065,27 @@
            call help(ver_tag)
           endif
       enddo
+! The input directory only supplies omitted known input filenames. It never
+! changes cwd, explicit relative paths, outputs, or auxiliary path lists.
+      inquire(file=trim(input_dir)//'/.',exist=input_dir_exists,
+     &        iostat=cli_ios)
+      if(cli_ios.ne.0.or..not.input_dir_exists)then
+       write(0,*)'*** error - --input-dir must be an existing directory: ',
+     &   trim(input_dir)
+       call vaspberry_fail
+      endif
+      if(trim(input_dir).ne.'.')then
+       input_prefix=trim(input_dir)
+       if(input_dir(len_trim(input_dir):len_trim(input_dir)).ne.'/')
+     &   input_prefix=trim(input_dir)//'/'
+      endif
+      if(.not.wavecar_seen)then
+       if(len_trim(input_prefix)+7.gt.len(filename))then
+        write(0,*)'*** error - --input-dir/WAVECAR exceeds 256 characters'
+        call vaspberry_fail
+       endif
+       filename=trim(input_prefix)//'WAVECAR'
+      endif
 ! Resolve the task after all options, independent of argument order.
       if(task_seen)then
        task_kubo=0;task_cd=0;task_vel=0;task_z2=0
@@ -6018,7 +6148,110 @@
      &   nmax.gt.nini.and.per_band.eq.0.and.
      &   len_trim(kubo_pairs).eq.0)then
        ikubo_bundle=1
-       if(len_trim(kubo_csv).eq.0)kubo_csv='KUBO.csv'
+       if(len_trim(kubo_csv).eq.0.and.
+     &    trim(kubo_source).eq.'wavecar')kubo_csv='KUBO.csv'
+      endif
+! Standard Kubo uses stored PAW optical connections. Choosing WAVECAR
+! explicitly acknowledges the separate bare-momentum approximation.
+      kubo_per_band=per_band
+      if(pair_band_selection)kubo_selection_explicit=1
+      if(index(kubo_band_spec,',').gt.0.and.
+     &   (ikubo.eq.0.or.trim(kubo_source).ne.'waveder'.or.
+     &    len_trim(kubo_pairs).ne.0))then
+       write(0,*)'*** error - comma-separated --bands requires ',
+     &   'standard WAVEDER charge Kubo'
+       call vaspberry_fail
+      endif
+      if(ikubo.gt.0.or.spinchern_task.eq.2)then
+       if(trim(kubo_source).eq.'waveder')then
+        if(trim(foname).ne.'BERRYCURV')then
+         write(0,*)'*** error - WAVEDER Kubo writes a curvature CSV; ',
+     &     'use --curvature-csv PATH instead of --output/-o'
+         call vaspberry_fail
+        endif
+        if(spinchern_task.eq.2)then
+         write(0,*)'*** error - WAVEDER does not supply spin-current ',
+     &     'matrices for spin-kubo; --kubo-source wavecar explicitly ',
+     &     'selects the legacy pseudo-wavefunction approximation'
+         call vaspberry_fail
+        endif
+        if(len_trim(kubo_pairs).gt.0)then
+         write(0,*)'*** error - WAVEDER standard route supports the ',
+     &     'selected trace via --task kubo, not kubo-pairs; ',
+     &     '--kubo-source wavecar opts into bare-momentum pairs'
+         call vaspberry_fail
+        endif
+        if(per_band.eq.1.and..not.pair_band_selection)then
+         write(0,*)'*** error - WAVEDER --per-band 1 requires ',
+     &     'explicit --bands; omit it for automatic occupied trace'
+         call vaspberry_fail
+        endif
+        if(ine.ne.0.or.ihf.ne.0.or.nn.ne.0)then
+         write(0,*)'*** error - WAVEDER route does not support ',
+     &     'manual filling/half-mesh/nn options'
+         call vaspberry_fail
+        endif
+        if(icd.ne.0.or.ivel.ne.0.or.iz.ne.0.or.iwf.ne.0.or.
+     &     it.ne.0.or.ixt.ne.0)then
+         write(0,*)'*** error - WAVEDER Kubo cannot mix other tasks'
+         call vaspberry_fail
+        endif
+        if(ikubo.eq.1.and.spinchern_mesh_seen.eq.0)then
+         write(0,*)'*** error - WAVEDER kubo-integral/-kubo 1 ',
+     &     'requires explicit --mesh NX,NY'
+         call vaspberry_fail
+        endif
+        if(len_trim(waveder_path).eq.0)then
+         if(len_trim(input_prefix)+7.gt.len(waveder_path))then
+          write(0,*)'*** error - --input-dir/WAVEDER exceeds 256 characters'
+          call vaspberry_fail
+         endif
+         waveder_path=trim(input_prefix)//'WAVEDER'
+        endif
+        if(len_trim(kubo_incar).eq.0)then
+         if(len_trim(input_prefix)+5.gt.len(kubo_incar))then
+          write(0,*)'*** error - --input-dir/INCAR exceeds 256 characters'
+          call vaspberry_fail
+         endif
+         kubo_incar=trim(input_prefix)//'INCAR'
+        endif
+        if(len_trim(kubo_csv).eq.0)kubo_csv='KUBO_WAVEDER.csv'
+       else
+        if(kubo_outcar_seen.eq.1.and.spinchern_task.eq.0)then
+         write(0,*)'*** error - --outcar is not used by charge ',
+     &    '--kubo-source wavecar; omit it or select WAVEDER'
+         call vaspberry_fail
+        endif
+        write(0,*)'*** WARNING: --kubo-source wavecar selects the ',
+     &   'bare-momentum/pseudo-wavefunction approximation. PAW ',
+     &   'optical augmentation and nonlocal velocity terms are ',
+     &   'not supplied by WAVECAR alone; WAVEDER is not used.'
+        if(len_trim(waveder_path).ne.0.or.
+     &     len_trim(kubo_incar).ne.0)then
+         write(0,*)'*** error - --waveder/--incar require ',
+     &     '--kubo-source waveder; do not mix source declarations'
+         call vaspberry_fail
+        endif
+       endif
+      else
+       if(trim(kubo_source).ne.'waveder'.or.
+     &    len_trim(waveder_path).ne.0.or.len_trim(kubo_incar).ne.0)then
+        write(0,*)'*** error - Kubo source options require a Kubo task'
+        call vaspberry_fail
+       endif
+       if(kubo_outcar_seen.eq.1.and.spinchern_task.eq.0)then
+        write(0,*)'*** error - --outcar requires a WAVEDER Kubo ',
+     &    'or spin-sector task'
+        call vaspberry_fail
+       endif
+      endif
+      if(kubo_outcar_seen.eq.0.and.(spinchern_task.gt.0.or.
+     &   (ikubo.gt.0.and.trim(kubo_source).eq.'waveder')))then
+       if(len_trim(input_prefix)+6.gt.len(spinchern_outcar))then
+        write(0,*)'*** error - --input-dir/OUTCAR exceeds 256 characters'
+        call vaspberry_fail
+       endif
+       spinchern_outcar=trim(input_prefix)//'OUTCAR'
       endif
       if(spinkubo_sum_max.gt.0.and.spinchern_task.ne.2)then
        write(0,*)'*** error - --sum-bands is only for --task spin-kubo'
@@ -6522,14 +6755,35 @@
       write(6,*)"*Native WAVECAR workflow: make serial"
       write(6,*)"  build/vaspberry --task chern --wavecar WAVECAR "//achar(92)
       write(6,*)"    --mesh 12,12 --bands 1:18"
-      write(6,*)"  build/vaspberry --task kubo --bands 18 "//achar(92)
+      write(6,*)"  build/vaspberry --task kubo --kubo-source wavecar --bands 18 "//achar(92)
       write(6,*)"    --curvature-csv curvature.csv"
-      write(6,*)"  build/vaspberry --task kubo-pairs --pairs-csv pairs.csv"
+      write(6,*)"  build/vaspberry --task kubo-pairs --kubo-source wavecar --pairs-csv pairs.csv"
       write(6,*)"  build/vaspberry --help"
       write(6,*)"  build/vaspberry-gfortran remains a compatibility alias."
       write(6,*)" "
       write(6,*)"  The Fukui-Hatsugai-Suzuki (FHS) method is referred to"
       write(6,*)"  below as the Fukui method."
+      write(6,*)"*Kubo source policy (1.6.5):"
+      write(6,*)"  --kubo-source waveder|wavecar  default: waveder"
+      write(6,*)"  Standard: same-run WAVEDER, WAVECAR, INCAR, OUTCAR."
+      write(6,*)"  --waveder PATH --incar PATH --outcar PATH"
+      write(6,*)"  --input-dir DIR defaults to the invocation directory."
+      write(6,*)"  Omitted WAVECAR/WAVEDER/INCAR/OUTCAR use that directory."
+      write(6,*)"  Explicit file paths override only that file; relative to cwd."
+      write(6,*)"  --wavecar never redirects the auxiliary input defaults."
+      write(6,*)"  Selected geometry or occupied T0 trace; audited VASP 5.4.4."
+      write(6,*)"  Full-source 0.002 eV clusters; required pair coverage checked."
+      write(6,*)"  Missing/unsupported input stops; never silent fallback."
+      write(6,*)"  Canonical/pair/spin Kubo requires explicit wavecar;"
+      write(6,*)"  --kubo-source wavecar prints an approximation warning."
+      write(6,*)"  Standard CSV default: KUBO_WAVEDER.csv."
+      write(6,*)"  --bands 31,33:34: selected trace, all source partners."
+      write(6,*)"  --per-band 1: resolved selected bands; never occupation weights."
+      write(6,*)"  Selected integral is geometric, not total physical Hall."
+      write(6,*)"  Omit bands for verified complete occupied T0 Hall."
+      write(6,*)"  Older band/pair descriptions below apply to wavecar."
+      write(6,*)"  See --help kubo and docs/WAVEDER_KUBO_PROTOCOL.md."
+
       write(6,*)"*Tasks (--task NAME; default: chern / Fukui method):"
       write(6,*)"  chern          Chern number via the Fukui method"
       write(6,*)"                 Full periodic 2D mesh required."
@@ -6860,3 +7114,5 @@
 #include "vaspberry_spin_kubo.inc"
 
 #include "vaspberry_help.inc"
+
+#include "vaspberry_waveder.inc"

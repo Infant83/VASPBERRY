@@ -1,5 +1,11 @@
 # MoS₂: intrinsic charge and regional valley Hall response
 
+**1.6.5 input policy:** the standard charge-Kubo route uses WAVEDER. This
+guide retains the WAVECAR canonical-momentum approximation and explicitly
+selects `--kubo-source wavecar` (or INI `kubo_source = wavecar`) to reproduce
+its existing results. See the [standard protocol](../../../docs/WAVEDER_KUBO_PROTOCOL.md)
+for the PAW optical selected-band route and its required-pair checks.
+
 This example starts from an actual VASP spinor `WAVECAR`. The VASPBERRY program
 exports interband matrix-element pairs directly from those wavefunctions.
 The bundled Python integration tool applies occupations and integrates the
@@ -87,7 +93,7 @@ Do not start the Python command with `mpiexec`: `--mpi-procs` launches only
 the native calculation on that many ranks.
 
 ```bash
-python3 tools/vaspberry_kubo.py wavecar-hall \
+python3 tools/vaspberry_kubo.py wavecar-hall --kubo-source wavecar \
   --binary "$binary" --mpi-procs "$ranks" --mpi-launcher mpiexec \
   --wavecar results/mos2-24-b60-vasp/WAVECAR \
   --mesh 24 24 \
@@ -148,7 +154,7 @@ mkdir -p results/mos2-24-native
   cd results/mos2-24-native
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/mos2-24-b60-vasp/WAVECAR" \
-    --task kubo-pairs --pairs-csv PAIRS.csv > vaspberry.log
+    --task kubo-pairs --kubo-source wavecar --pairs-csv PAIRS.csv > vaspberry.log
 )
 ```
 

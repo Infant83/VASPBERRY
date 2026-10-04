@@ -7,24 +7,36 @@ write JSON files or assemble the individual Python stages.
 | Command | What it does | What you get |
 |---|---|---|
 | `check analysis.ini` | Check settings, input files and mesh before running. | A summary or an actionable error; no calculation directory. |
-| `run analysis.ini` | Execute VASPBERRY, with MPI when configured, then calculate the requested Hall tables. | Numerical data in the INI's `output` directory. |
+| `run analysis.ini` | Calculate Hall tables from WAVEDER, or execute the explicitly selected native WAVECAR approximation. | Numerical data in the INI's `output` directory, with operator and contribution scope. |
 | `plot results/run01` | Read a completed result and draw it. | PNG, PDF and SVG figures; no new wavefunction calculation. |
 
-Prefix each command with `python3 tools/vaspberry_post.py`. `run` launches
-the compiled **VASPBERRY executable** named by `[run] binary`,
-then applies the requested numerical postprocessing to its output. `run`
+Prefix each command with `python3 tools/vaspberry_post.py`. The default
+`[run] kubo_source = waveder` reads standard optical input directly and
+calculates either a selected `[hall] bands` μ/T contribution or the
+`occupied` insulating T=0 compatibility response. The selectors are mutually
+exclusive; missing required matrix pairs and unresolved weighted groups stop
+the calculation. Selected output is not automatically total AHC.
+The [standard protocol](WAVEDER_KUBO_PROTOCOL.md) gives its INI and native
+curvature commands. Missing or unsupported optical input stops.
+
+Only an explicit `[run] kubo_source = wavecar` launches the compiled
+**VASPBERRY executable** named by `[run] binary`, then postprocesses its
+canonical-momentum pair data. This approximation prints a warning. `run`
 also performs the checks, so the separate `check` is useful when preparing
 an input. Numerical validity checks continue during `run`; this preliminary
 check does not establish convergence.
 
-**Choose a starting point:** [try the public example](#start-with-the-public-bi-example),
+**Choose a starting point:** [selected WAVEDER software example](../examples/features/waveder-selected/),
+[public Bi approximation](#start-with-the-public-bi-example),
 [execute VASPBERRY directly](#execute-vaspberry-directly-for-a-curvature-table),
 [use your own data](#use-your-own-vasp-calculation),
 [add layer/spin analysis](#add-layer-and-spin-character), or
 [add a region](#add-a-k-space-region). Look up individual options in the
 [settings reference](POSTPROCESSING_REFERENCE.md).
 
-## Start with the public Bi example
+<a id="start-with-the-public-bi-example"></a>
+
+## Reproduce the public Bi WAVECAR approximation example
 
 Run commands from the repository directory containing `Makefile` and
 `tools/`. Load Intel Fortran, Intel MPI and oneMKL with your site's modules
@@ -97,14 +109,14 @@ mkdir -p results
 mkdir results/mos2-direct-kubo && (
   cd results/mos2-direct-kubo
   mpiexec.hydra -n 4 "$repo_dir/build/vaspberry-ifx-mpi" \
-    --task kubo \
+    --task kubo --kubo-source wavecar \
     --wavecar "$repo_dir/examples/1H-MoS2/KPATH/2.band/WAVECAR" \
     --bands 1:18 \
     --curvature-csv KUBO.csv > vaspberry.log
 )
 ```
 
-This command uses VASPBERRY 1.6.3; see the
+This command uses VASPBERRY 1.6.5 with explicit WAVECAR opt-in; see the
 [migration guide](MIGRATION.md#native-kubo-band-selection) for older commands.
 It executes **VASPBERRY through MPI** without a Python helper. It reads
 the supplied SOC MoS₂ WAVECAR and creates
@@ -129,13 +141,19 @@ and postprocessing commands in the [hands-on guide](HANDS_ON.md).
 
 ## Use your own VASP calculation
 
+For the standard PAW optical calculation, start with the
+[WAVEDER INI protocol](WAVEDER_KUBO_PROTOCOL.md#3-calculate-and-plot-the-insulating-hall-response).
+The following example deliberately selects the WAVECAR approximation for a
+general μ/T scan; it does not supply PAW/nonlocal velocity terms.
+
 Create `analysis.ini` in the **repository root**. Use your own complete,
 uniform two-dimensional mesh WAVECAR; a symmetry-reduced mesh or band path
 cannot provide this Hall integral. Here is an illustrative SOC calculation:
 
 ```ini
 [run]
-wavecar = /path/to/your/vasp-calculation/WAVECAR
+kubo_source = wavecar  # explicit canonical-momentum approximation
+input_dir = /path/to/your/vasp-calculation
 binary = build/vaspberry-ifx-mpi
 output = results/run01
 mesh = 24 24
@@ -151,7 +169,7 @@ reference = 5.2
 temperatures = 0 100 300
 ```
 
-Set `wavecar` and `mesh` from your input; choose `mu`, `reference` and
+Set `input_dir` and `mesh` from your input; choose `mu`, `reference` and
 `temperatures` for your research question. Set the executable/launcher once
 for your installation. Spinor components and state counting are automatic.
 For a collinear `ISPIN=2` input, select `spin_mode = collinear-up` or
@@ -207,7 +225,9 @@ character_group = layer1
 `ions = 1 3 5`. Naming a group does not discover a layer. Optional
 `orbitals` selects actual PROCAR orbital labels. The axis is Cartesian +z
 here; the OUTCAR supplies the source spin-frame rotation. PROCAR and OUTCAR
-default to the WAVECAR directory.
+default to `[run] input_dir` (or the invocation working directory if omitted).
+A `wavecar` override does not redirect them. Explicit relative INI paths
+remain relative to the INI file.
 
 `bands` selects the bands included in the character-weighted Hall sum.
 Each selected band must be isolated from every other stored band; the public Bi input's

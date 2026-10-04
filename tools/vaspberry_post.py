@@ -5,10 +5,12 @@
   python3 tools/vaspberry_post.py run analysis.ini
   python3 tools/vaspberry_post.py plot results/run01
 
-The run command executes VASPBERRY (with MPI when configured), then uses
-Python for numerical Hall integration and optional PROCAR analysis. The plot
-command reads saved tables. This front end records the underlying commands
-and keeps the numerical data available for independent analysis.
+The standard run uses WAVEDER from a completed VASP optical run for selected-band
+mu/T contributions or insulating occupied-bundle T=0 charge Hall. Set
+[run] kubo_source = wavecar to explicitly select the
+WAVECAR-only canonical momentum approximation (a warning is emitted). Missing
+or invalid WAVEDER never causes automatic fallback. The plot command reads
+saved tables without changing their source operator.
 """
 from __future__ import annotations
 
@@ -92,6 +94,16 @@ def preflight(settings, reuse=None):
     run = settings['run']
     output = Path(run['output'])
     require(not output.exists(), 'output directory exists; set [run] output to a new directory')
+    source = run.get('kubo_source', 'waveder')
+    require(source in ('waveder', 'wavecar'), '[run] kubo_source must be waveder or wavecar')
+    require(Path(run['input_dir']).is_dir(), 'input directory does not exist: '+run['input_dir'])
+    if source == 'waveder':
+        return preflight_waveder(settings, reuse)
+    require(settings['hall'].get('occupied') is None and settings['hall'].get('bands') is None,
+            '[hall] occupied/bands is only supported for kubo_source = waveder; '
+            'the WAVECAR approximation uses the requested mu/T occupations')
+    from kubo_hall_workflow import warn_wavecar_approximation
+    warn_wavecar_approximation()
     wavecar = Path(run['wavecar'])
     require(wavecar.is_file(), 'WAVECAR does not exist: ' + str(wavecar))
     auto = run['spin_mode'] == 'auto'
@@ -136,6 +148,7 @@ def preflight(settings, reuse=None):
 
     cache = None
     if reuse is None:
+        require(run.get('binary') is not None, '[run] binary is required for kubo_source = wavecar')
         binary = Path(run['binary'])
         require(binary.is_file() and os.access(binary, os.X_OK),
                 'native executable is missing or not executable: ' + str(binary))
@@ -150,6 +163,9 @@ def preflight(settings, reuse=None):
         require(record['inputs']['wavecar']['sha256'] == inputs['wavecar']['sha256'],
                 '--reuse requires the same WAVECAR; use a fresh native run for a new VASP state')
         old_run = record['settings']['run']
+        # Runs predating source selection used the canonical WAVECAR operator.
+        require(old_run.get('kubo_source', 'wavecar') == 'wavecar',
+                '--reuse requires a WAVECAR approximation pair cache')
         for key in ('mesh', 'plane_axes', 'spin', 'spinor_components',
                     'spin_multiplicity', 'energy_reference'):
             require(old_run[key] == run[key], '--reuse cannot change source setting: ' + key)
@@ -160,9 +176,56 @@ def preflight(settings, reuse=None):
     return inputs, cache
 
 
+def preflight_waveder(settings, reuse):
+    """Validate and evaluate the optical input before any output directory exists."""
+    import numpy as np
+    from waveder_hall import waveder_hall_spectrum
+
+    run, hall = settings['run'], settings['hall']
+    require(run.get('binary') is None and run['mpi_procs'] == 1 and run['mpi_launcher'] == 'mpiexec',
+            '[run] binary and native MPI settings apply only to kubo_source = wavecar; '
+            'the standard WAVEDER route evaluates optical matrices directly in Python')
+    require(reuse is None, '--reuse is only supported for explicitly selected WAVECAR pair caches')
+    require((hall.get('occupied') is None) != (hall.get('bands') is None),
+            '[hall] occupied or bands is required for the WAVEDER route')
+    if hall.get('occupied') is not None:
+        require(hall['temperatures'] == [0.], 'WAVEDER occupied mode supports only insulating T=0; use bands for a selected mu/T contribution')
+    require(hall['pair_band_max'] is None, '[hall] pair_band_max is unsupported for WAVEDER; the full source virtual range is retained')
+    require(settings['projection'] is None, '[projection] is unsupported for WAVEDER charge Hall; '
+            'do not substitute canonical pair projections silently')
+    optical = Path(run['input_dir'])
+    paths = {name: Path(run[name.lower()]) for name in ('WAVEDER', 'WAVECAR', 'INCAR', 'OUTCAR')}
+    rows, meta = waveder_hall_spectrum(optical,
+        np.unique(np.linspace(hall['mu_min'], hall['mu_max'], hall['mu_num'])),
+        occupied=hall['occupied'], bands=hall.get('bands'), temperatures=hall['temperatures'], spin=run['spin'], spinor_components=run['spinor_components'],
+        spin_multiplicity=run['spin_multiplicity'],
+        sampling={'kind': 'uniform_full_2d', 'mesh': run['mesh'], 'plane_axes': run['plane_axes']},
+        energy_reference=run['energy_reference'], mu_reference=hall['mu_reference'],
+        region_spec=settings['regions'], differences=settings['differences'], source_paths=paths)
+    source = meta['source_metadata']
+    if run['spin_mode'] == 'auto':
+        require(source['source_nspin'] == 1, '[run] collinear WAVECAR requires spin_mode = collinear-up or collinear-down')
+    else:
+        require(source['source_nspin'] == run['expected_nspin'], '[run] spin_mode does not match WAVECAR ISPIN')
+    run['spinor_components'] = source['spinor_components']
+    run['spin_multiplicity'] = meta['spin_multiplicity']
+    run['expected_nspin'] = source['source_nspin']
+    run['resolved_spin_mode'] = ('spinor' if run['spinor_components'] == 2 else
+                                 'scalar-degenerate' if run['expected_nspin'] == 1 else
+                                 'collinear-up' if run['spin'] == 1 else 'collinear-down')
+    inputs = {name.lower(): {'path': source['source_paths'][name], 'sha256': checksum}
+              for name, checksum in source['source_sha256'].items()}
+    return inputs, {'waveder_hall': (rows, meta)}
+
+
 def settings_summary(settings):
     run, hall = settings['run'], settings['hall']
     print('WAVECAR: ' + run['wavecar'])
+    print('Input directory: ' + run['input_dir'])
+    print('Kubo matrix source: ' + run.get('kubo_source', 'waveder'))
+    if run.get('kubo_source', 'waveder') == 'waveder':
+        print('Optical run: ' + run['optical_run_dir'] + ('; selected bands '+str(hall['bands'])
+              if hall.get('bands') is not None else '; insulating occupied bundle at T=0'))
     print('Output:  ' + run['output'])
     mode = run.get('resolved_spin_mode', run['spin_mode'])
     print(f"Source: {mode}; full {run['mesh'][0]} x {run['mesh'][1]} mesh")
@@ -219,10 +282,26 @@ def run_calculation(settings, reuse=None):
     write_json(root / 'run.json', record)
     started = time.monotonic()
     try:
-        if cache is None:
+        if run.get('kubo_source', 'waveder') == 'waveder':
+            from berry_data import write_hall
+
+            # preflight evaluated the validated optical matrices. Verify that
+            # none of those inputs changed before publishing the cached result.
+            require(all(sha256(item['path']) == item['sha256'] for item in inputs.values()),
+                    'optical inputs changed after validation')
+            rows, metadata = cache['waveder_hall']
+            metadata['provenance'] = dict(kubo_source='waveder',
+                settings_sha256=record['settings_sha256'],
+                implementation_sha256={name: sha256(TOOLS/name) for name in
+                                       ('vaspberry_post.py', 'waveder_hall.py', 'waveder_selected.py', 'band_selection.py')})
+            write_hall(root/'hall', rows, metadata, formats=['csv', 'dat', 'npz'])
+            record['stages'].append(dict(name='waveder-charge-hall', status='PASS', exit_code=0,
+                implementation='waveder_hall.waveder_hall_spectrum',
+                note='Optical input validated and evaluated before creating the output directory.'))
+        elif cache is None:
             raw = root / 'native'
             raw.mkdir()
-            command = [run['binary'], '--task', 'kubo-pairs', '--wavecar', run['wavecar'],
+            command = [run['binary'], '--task', 'kubo-pairs', '--kubo-source', 'wavecar', '--wavecar', run['wavecar'],
                        '--spinor', str(run['spinor_components']), '--pairs-csv', 'PAIRS.csv']
             if run['mpi_procs'] > 1:
                 command = [shutil.which(run['mpi_launcher']), '-n', str(run['mpi_procs']), *command]
@@ -230,7 +309,7 @@ def run_calculation(settings, reuse=None):
             execute_stage(root, record, 'import-pairs', python_command('vaspberry_kubo.py',
                 'import-pairs', '--csv', raw / 'PAIRS.csv', *source_arguments(run),
                 '--output-dir', root / 'pairs'))
-        else:
+        elif run.get('kubo_source', 'waveder') == 'wavecar':
             shutil.copytree(cache, root / 'pairs')
             record['reused_pair_cache'] = str(cache)
             print('Reusing saved pairs; VASPBERRY execution is skipped.', flush=True)
@@ -238,10 +317,13 @@ def run_calculation(settings, reuse=None):
         difference_args = [item for row in settings['differences'] for item in ('--difference', ':'.join(row))]
         cap = settings['hall']['pair_band_max']
         cap_args = [] if cap is None else ['--pair-band-max', str(cap)]
-        execute_stage(root, record, 'charge-hall', python_command('vaspberry_kubo.py',
-            'pair-hall', '--pairs-dir', root / 'pairs', *scan_arguments(settings['hall']),
-            *region_args, *difference_args, *cap_args, '--formats', 'csv', 'dat', 'npz',
-            '--output-dir', root / 'hall'))
+        if run.get('kubo_source', 'waveder') == 'wavecar':
+            from kubo_hall_workflow import WAVECAR_WARNING
+            record['approximation_warning'] = WAVECAR_WARNING
+            execute_stage(root, record, 'charge-hall', python_command('vaspberry_kubo.py',
+                'pair-hall', '--pairs-dir', root / 'pairs', *scan_arguments(settings['hall']),
+                *region_args, *difference_args, *cap_args, '--formats', 'csv', 'dat', 'npz',
+                '--output-dir', root / 'hall'))
         projection = settings['projection']
         if projection:
             execute_stage(root, record, 'procar-character', python_command('procar_character.py',
@@ -264,7 +346,8 @@ def run_calculation(settings, reuse=None):
     finally:
         record['elapsed_s'] = time.monotonic() - started
         write_json(root / 'run.json', record)
-    print('Saved native pair cache: ' + str(root / 'pairs'))
+    if run.get('kubo_source', 'waveder') == 'wavecar':
+        print('Saved native pair cache: ' + str(root / 'pairs'))
     print('Saved Hall tables: ' + str(root / 'hall' / 'conductivity.csv'))
     if projection:
         print('Saved character and projected Hall tables: ' + str(root / 'character-hall'))
@@ -341,11 +424,11 @@ def parser():
     result.add_argument('--version', action='version', version='VASPBERRY ' + (ROOT / 'VERSION').read_text().strip())
     sub = result.add_subparsers(dest='command', required=True)
     for name, help_text in [('check', 'check settings and source paths without running calculations'),
-                            ('run', 'execute VASPBERRY, then perform the requested numerical postprocessing')]:
+                            ('run', 'standard WAVEDER Hall; native WAVECAR approximation only with explicit settings opt-in')]:
         command = sub.add_parser(name, help=help_text)
         command.add_argument('settings', type=Path, help='commented INI settings file')
         command.add_argument('--reuse', type=Path, metavar='PREVIOUS_RUN',
-                             help='reuse its validated pair cache for the same WAVECAR; skip VASPBERRY execution')
+                             help='reuse a pair cache only with [run] kubo_source=wavecar; preserves its approximation')
     plots = sub.add_parser('plot', help='draw saved numerical tables; do not execute VASP or VASPBERRY')
     plots.add_argument('result', type=Path, help='completed run directory')
     plots.add_argument('--output-dir', type=Path, help='new figure directory (default: RESULT/figures)')

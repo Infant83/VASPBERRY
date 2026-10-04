@@ -19,6 +19,12 @@ from exported_matrix_kubo import sha256
 from wavecar_fukui import Wavecar
 
 
+def native_export_command(binary, wavecar):
+    """Keep the comparison's canonical operator explicit under the WAVEDER default."""
+    return [str(binary), '--task', 'kubo-pairs', '--kubo-source', 'wavecar',
+            '--wavecar', str(wavecar), '--spinor', '2', '--pairs-csv', 'PAIRS.csv']
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--run-dir',type=Path,required=True,help='completed opt-in producer run with its run.json')
@@ -61,8 +67,7 @@ def main():
             '--metadata',str(out/'physical/physical-matrices.json'),'--mesh',str(mesh),str(mesh),
             '--energy-reference','unchanged VASP eigenvalue zero','--output-dir',str(out/'paw-pairs')])
         raw=out/'native';raw.mkdir()
-        run('native-export',[str(binary),'-f',str(source/'WAVECAR'),'-s','2','-kubo','2',
-                             '-kubo_pairs','PAIRS.csv'],cwd=raw)
+        run('native-export',native_export_command(binary,source/'WAVECAR'),cwd=raw)
         run('native-pairs',cli+['import-pairs','--csv',str(raw/'PAIRS.csv'),'--wavecar',str(source/'WAVECAR'),
             '--spinor-components','2','--spin-multiplicity','1','--mesh',str(mesh),str(mesh),
             '--energy-reference','unchanged VASP eigenvalue zero','--output-dir',str(out/'canonical-pairs')])

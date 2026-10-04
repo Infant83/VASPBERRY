@@ -10,21 +10,23 @@
 
 [^present-address]: Present address: LG Display, Republic of Korea. Affiliations 1 and 2 refer to the institutions where the initial code development was carried out; the author was an Alexander von Humboldt Fellow at Forschungszentrum Jülich.
 
-Based on VASPBERRY 1.6.3.
+Based on VASPBERRY 1.6.5. Existing material reference data retain their original producer versions.
 
 ## Abstract
 
 VASPBERRY calculates Berry curvature, topological indices and response
 properties directly from VASP wavefunctions. Its main workflow reads a
 WAVECAR with the native Fortran executable and writes numerical results for
-post-processing and plotting. The
+post-processing and plotting. From 1.6.5, standard charge-Kubo calculations
+also require the same-run WAVEDER optical connections and INCAR/OUTCAR
+producer records. WAVECAR canonical momentum requires explicit opt-in. The
 examples compare occupied-space and spin-sector Chern numbers evaluated with the
 Fukui-Hatsugai-Suzuki (FHS) method (also called the Fukui method), the Z₂ invariant evaluated with the
 Fukui-Hatsugai (FH) method, and Berry curvature from the Kubo formula on
 Brillouin-zone meshes and symmetry paths. A native projected-spin
 Kubo task also resolves the two spin sectors, including the change of their
-basis with k; its canonical-momentum approximation remains explicit. Native interband
-matrix elements also support chemical-potential and temperature scans through
+basis with k; its canonical-momentum approximation remains explicit.
+Separately selected pair operators support chemical-potential and temperature scans through
 Python occupation weighting and integration. Circular optical selection and
 real-space spinor densities complete the direct-wavefunction demonstrations.
 
@@ -34,8 +36,8 @@ the electronic structure; its band energies provide context for VASPBERRY's
 topology and response results. Integer-valued topological invariants and
 Kubo-formula response integrals have different convergence requirements: an
 integer invariant does
-not establish a converged transport integral. Optional physical-operator
-extensions and VASP-derived Wannier checks are documented separately in the
+not establish a converged transport integral. The standard optical route,
+optional full-operator extensions and VASP-derived Wannier checks are documented in the
 appendices. The report documents software capabilities and numerical
 limitations with reproducible inputs, commands and reference results.
 
@@ -128,13 +130,20 @@ canonical momentum of the stored pseudo-wavefunctions; full material velocity
 can require PAW, nonlocal and SOC terms. The exported-matrix interface permits
 an explicitly supplied physical operator (Appendix A).
 
-The ordinary WAVECAR route is the starting point for the charge-Hall examples
-and requires no VASP source modification. Two optional comparisons extend
-the operator description: standard VASP optical output for insulating
-occupied bundles, and an instrumented producer for full velocity and spin
-matrices. These input routes and their distinct scopes are summarized in the
-[operator guide ↗](OPERATOR_ROUTES.md). A more complete operator addresses an
-operator approximation; its k-mesh and band-window convergence must still be tested.
+Version 1.6.5 makes standard WAVEDER the default charge-Kubo input. The
+native `--task kubo` and high-level `kubo-hall` use same-run WAVEDER,
+WAVECAR, INCAR and OUTCAR from the standard VASP 5.4.4 longitudinal optical
+branch. Native selectors provide geometric bands/bundles; Python selectors
+provide occupation-weighted μ/T contributions. All source intermediate bands
+remain included, and every noncanceling pair must be resolvable. The original
+occupied T=0 route remains available. Missing input or an unsupported request stops;
+it never changes the operator automatically. The historical WAVECAR
+canonical-momentum route requires `--kubo-source wavecar` and prints a
+warning. Its existing numerical references below remain examples of that
+approximation. Full velocity/spin export is a separate operator route.
+The [standard protocol ↗](WAVEDER_KUBO_PROTOCOL.md) and
+[operator guide ↗](OPERATOR_ROUTES.md) define the input contracts. Operator
+completeness and k-mesh/band-window convergence remain distinct questions.
 
 For an isolated occupied bundle $`\mathcal V`$, the trace curvature is
 
@@ -165,15 +174,17 @@ background on Berry curvature and electronic transport is given in
 The [Bi Hall example ↗](../examples/features/hall-valley/) evaluates the occupied-group flux directly;
 it does not assign independent curvatures to unresolved Kramers partners.
 
-For chemical potentials crossing band edges, the Kubo implementation uses
-unordered interband pairs. With $`N^{xy}_{nm}=-2\,\mathrm{Im}(D_{x,nm}D_{y,mn})`$,
+For chemical potentials crossing band edges, the standard WAVEDER route
+and separately selected WAVECAR or full-velocity routes use weighted
+unordered interband pairs (Appendix A). With $`N^{xy}_{nm}=-2\,\mathrm{Im}(D_{x,nm}D_{y,mn})`$,
 the occupation-weighted integrand is
 $`\sum_{n\lt m}(f_n-f_m)N^{xy}_{nm}/(E_n-E_m)^2`$.
 Equal-occupation pairs cancel before division. Changes from a gap reference
 are evaluated with occupation differences before summation. This preserves
 small doping responses without subtracting large filled-band baselines.
-The temperature enters only the Fermi function; the electronic structure
-remains fixed. Regional contributions integrate the same charge response over
+For a selected contribution replace $`f_n`$ by $`s_n f_n`$, with
+$`s_n=1`$ only in the target set. Temperature changes the Fermi weights;
+the electronic structure remains fixed. Regional contributions integrate the same charge response over
 specified parts of the BZ, with a K−K′ difference defined without a factor of
 one-half. Such a partition is not a separately conserved valley-current operator.
 
@@ -265,19 +276,21 @@ approaches the Chern number +1 obtained with the Fukui method: 1.015414722 at
 The mixing term reaches 0.05207, so its omission is detectable. These tests
 validate the geometric kernel separately from material approximations.
 
-### 1.3 From a WAVECAR to reusable results
+### 1.3 From VASP output to reusable results
 
 The direct-wavefunction workflow has four steps:
 
 1. Calculate the electronic states with VASP, using a full periodic mesh
    for BZ integrals or an explicit path for local curvature and band context.
 2. Run the native VASPBERRY executable on the WAVECAR. Select the Fukui method
-   for Chern numbers, the FH n-field method for the Z₂ invariant, Kubo-formula
-   calculations for pointwise curvature and charge response, or the optical
-   and wavefunction output modes.
-3. Retain the original numerical samples. For charge transport, the Python
+   for Chern numbers or the FH n-field method for the Z₂ invariant. For
+   standard Kubo curvature, also supply same-run WAVEDER/INCAR/OUTCAR.
+   Canonical-momentum band/pair/spin approximations require explicit
+   `--kubo-source wavecar`. Optical and wavefunction modes remain available.
+3. Retain the original numerical samples. Standard WAVEDER Hall processing
+   integrates selected μ/T contributions or the occupied T=0 trace. The separately selected
    pair processor applies occupations, temperature and BZ or regional weights
-   to native matrix elements; this is part of the response calculation.
+   to its declared operator; this is part of the response calculation.
    The common Python interfaces provide CSV, DAT and NPZ results where
    supported, with units and represented bands recorded.
 4. Plot those outputs beside the material's VASP band energies. Display
@@ -291,35 +304,38 @@ The current repository build provides the following `--task` selectors:
 | `chern` | Berry flux, area-averaged curvature and Chern number of the selected band space, evaluated with the Fukui method |
 | `z2` | Z₂ invariant from the Fukui-Hatsugai (FH) n-field method |
 | `spin-chern` | Spin-sector Berry fluxes and Chern numbers from the Fukui method; spin Chern number |
-| `spin-kubo` | Projected-spin sector point curvature and optional raw mesh integrals |
-| `kubo` | Pointwise band or bundle curvature on a mesh or path |
-| `kubo-pairs` | Interband-pair data for Python charge-Hall integration |
+| `spin-kubo --kubo-source wavecar` | Approximate projected-spin sector point curvature and optional raw mesh integrals |
+| `kubo` | Standard WAVEDER selected geometric band/bundle curvature; omitted selection infers the insulating occupied trace |
+| `kubo --kubo-source wavecar` | Explicit canonical-momentum band or selected-bundle approximation |
+| `kubo-pairs --kubo-source wavecar` | Approximate interband-pair data for Python charge-Hall integration |
 | `optical` / `spectrum` | Circular transition selectivity / broadened spectra |
 | `wavefunction` | Selected Γ-state amplitudes for density plots |
 
-For example, `build/vaspberry --task kubo` selects the native pointwise
-calculation; supply the WAVECAR and band options listed in the
-[usage guide ↗](../README.md#usage) and [worked examples ↗](../examples/README.md).
-For the native Kubo tasks, one selected band gives its isolated-band
-curvature; a multi-band range gives the subspace trace. Add `--per-band 1`
-for separate band curves. The trace writes `KUBO.csv` by default, or the
-explicit `--curvature-csv` path. Every individual band must be separated
-from all other source bands by more than 1e-5 eV; the trace requires this
-gap only to excluded bands. These source-interface changes preserve the
-formulas and saved numerical results below. Native WAVECAR input detects
-byte and legacy four-byte-word record lengths without modifying the file.
-Current Kubo curvature CSVs record expected coverage and mark PASS only
-after all finite results are written; incomplete files are not results.
-The
+`build/vaspberry --task kubo --input-dir optics` reads WAVECAR, WAVEDER,
+INCAR and OUTCAR from `optics/`; omission uses the invocation directory.
+Explicit file options override only that file and keep cwd-relative paths,
+as do outputs. These extra optical inputs apply to standard charge Kubo.
+Omitting `--bands` infers the insulating occupied space. An explicit selector,
+such as `--bands 31,33:34`, instead gives a geometric trace over those targets;
+`--per-band 1` requests separate resolvable bands. The virtual index always
+spans all source NBANDS. `KUBO_WAVEDER.csv` remains the default filename.
+With a validated full `--mesh`, selected integrals use unit geometric weights
+and carry no total-Hall label; paths supply point curvature only. Complete
+producer-degenerate groups may form a trace, but unresolved single bands or
+split groups are rejected.
+
+The WAVECAR approximation retains `KUBO.csv` and its 1e-5 eV isolation
+threshold. Archived MoS₂ results retain this canonical operator label.
+Both sources require complete finite CSV output and a final PASS marker.
+WAVECAR byte and legacy four-byte-word layouts are detected without changing
+the file. The
 [hands-on guide ↗](HANDS_ON.md) and [report-to-example map ↗](../examples/REPORT_REPRODUCTION.md)
 give the input files, commands and expected outputs for each example.
 
-Python prepares inputs, normalizes outputs and performs the stated
-post-processing. For `spin-chern` and `spin-kubo`, the native executable
-already writes the computed values; the example Python plotter only draws
-them. Optional
-standard-WAVEDER, supplied physical-matrix and Wannier interfaces use
-additional Python numerical backends with input requirements described in
+Native spin tasks write their computed values; Python draws the examples.
+Native WAVEDER curvature contracts the stored connections directly. The
+WAVEDER Hall, physical-matrix and Wannier interfaces compute their responses
+in Python; their input requirements appear in
 [Appendix A](#appendix-a-optional-physical-operator-extensions) and
 [Appendix B](#appendix-b-optional-wannier-supporting-validation).
 
@@ -448,8 +464,8 @@ the bundle curve.
 The occupied-bundle curvature is approximately **−13.18 Å² at K** and
 **+13.18 Å² at K′**. The occupied space stays separated from the empty states
 by at least **1.674 eV** on both samplings, so every mesh and path point is
-valid for the bundle calculation. In VASPBERRY 1.6.3,
-`--task kubo --bands 1:18` performs the external-band sum directly, avoiding
+valid for the bundle calculation. To reproduce this canonical calculation in VASPBERRY 1.6.5,
+`--task kubo --kubo-source wavecar --bands 1:18` performs the external-band sum directly, avoiding
 large cancelling internal terms.
 
 Figures 1 and 2 describe the same occupied band space. Their numerical
@@ -552,8 +568,9 @@ general advantage in convergence rate.
 
 The full-velocity route includes the supported PAW, nonlocal and SOC
 operator terms, giving a more complete current description. Generating its
-input uses the optional VASP instrumentation; ordinary WAVECAR remains the
-starting workflow. The [separate comparison guide ↗](../examples/features/kubo-hall/operator-comparison/)
+input uses the optional VASP instrumentation; standard charge-Kubo now
+uses the standard WAVEDER protocol, while the canonical comparison requires
+explicit opt-in. The [separate comparison guide ↗](../examples/features/kubo-hall/operator-comparison/)
 provides preparation instructions, both reusable pair caches and the original
 CSV/DAT/NPZ results. Their integration can be repeated without VASP.
 
@@ -767,9 +784,9 @@ containing its matching WAVECAR and OUTCAR:
 
 ```bash
 # In the path directory: local curvature, no Chern number assigned.
-mpiexec -n 4 "$VB" --task spin-kubo --bands 1:8
+mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:8
 # In the separate full 12x12 mesh directory:
-mpiexec -n 4 "$VB" --task spin-kubo --bands 1:8 --mesh 12,12
+mpiexec -n 4 "$VB" --task spin-kubo --kubo-source wavecar --bands 1:8 --mesh 12,12
 mpiexec -n 4 "$VB" --task spin-chern --bands 1:8 --mesh 12,12
 ```
 
@@ -1024,20 +1041,21 @@ named k paths for band-resolved quantities, and energy or chemical potential
 for spectra and transport. State units, represented bands, temperature and
 broadening in the caption.
 
-Start with WAVECAR and the native executable to calculate Chern numbers with
-the Fukui method, the Z₂ invariant with the FH method, Kubo
-curvature, optical selection and state densities. For charge Kubo transport,
-export the native interband pairs and use the Python occupation/integration
-step to scan chemical potential and temperature without repeating the
-matrix-element calculation. These main workflows do not require Wannier90.
+Start with WAVECAR and the native executable for Chern numbers with the
+Fukui method, the Z₂ invariant with the FH method, optical selection and
+state densities. For charge Kubo calculations, generate standard optical
+output and use the WAVEDER protocol. Selected geometric bands/bundles and
+μ/T charge contributions require every noncanceling pair to be available;
+the complete insulating occupied trace remains a separate compatibility
+route. Missing high-band pairs or producer-erased couplings are not inferred. These workflows do not require Wannier90.
 For layer, orbital and spin attribution, add the matching PROCAR and OUTCAR,
 define atom groups and a spin axis, and follow the
 [projection tutorial ↗](../examples/features/procar-character/). Each strained,
 field-biased or magnetically distinct calculation needs its own matching
 wavefunctions and projections; changing occupations alone does not recalculate
 the electronic structure under those perturbations.
-Optional standard optical or full transition-matrix inputs allow additional
-operator terms to be assessed on matching electronic states. The
+Standard optical input and optional full transition-matrix input provide
+distinct operator contracts; compare them on matching electronic states. The
 [operator guide ↗](OPERATOR_ROUTES.md) links the input requirements and
 separate instructions for each route.
 
@@ -1051,12 +1069,14 @@ numerical files for reproducibility. Saved reference tables retain the producer
 identities and input checksums of their original calculation; software
 validation and material convergence are recorded separately.
 
-## Appendix A. Optional physical-operator extensions
+<a id="appendix-a-optional-physical-operator-extensions"></a>
+
+## Appendix A. Standard optical and optional full-operator routes
 
 These additional routes address the operator content of response functions.
-They complement the native WAVECAR examples; they are not prerequisites for
-Chern-number calculations with the Fukui method, the FH Z₂ invariant, or
-canonical-momentum Kubo-formula analysis. Standard WAVEDER needs no
+Standard WAVEDER is now the default charge-Kubo input. These operator
+inputs are not prerequisites for Chern-number calculations with the Fukui
+method or the FH Z₂ invariant. Standard WAVEDER needs no
 VASP source change. Full velocity and PAW spin inputs use the separately
 documented instrumented producer. Their Python backends and convergence
 conditions are explicit below; the matched charge comparison remains in
@@ -1065,9 +1085,12 @@ Section 3.2.3 so readers can assess its effect on the native baseline.
 ### A.1 Standard VASP optical matrices
 
 For an insulating occupied bundle, the supported standard VASP longitudinal
-optical calculation supplies matrix elements
-$`C_{cv,\alpha}=\langle u_c|\partial_{k_\alpha}u_v\rangle`$ in Å. Here $`v`$ and
-$`c`$ label occupied and empty states. Their contribution to the trace is
+optical calculation supplies longitudinal PAW connection elements
+$`C_{cv,\alpha}`$ in Å. Here $`v`$ and $`c`$ label occupied and empty states.
+The adapter retains the producer's complex convention; a common phase relative
+to derivative overlaps cancels in the bilinear below. These elements include
+the PAW optical terms and are not bare pseudo-wavefunction overlaps. Their
+contribution to the trace is
 
 ```math
 \Omega^{\rm occ}_{xy}=-2\,\mathrm{Im}
@@ -1077,12 +1100,42 @@ $`c`$ label occupied and empty states. Their contribution to the trace is
 The energy denominator is already contained in these derivatives. The
 longitudinal PAW optical expression includes projector and augmentation terms,
 as described by [Gajdoš et al.](https://doi.org/10.1103/PhysRevB.73.045112).
-This standard `WAVEDER` route needs no VASP source modification.
-The `waveder-hall` command checks the actual VASP output, occupied filling and
-global gap before integration. Its present scope is VASP 5.4.4, zero
-temperature and a fixed insulating bundle; the occupied–empty separation
-must exceed the producer's 2 meV degeneracy threshold. Mesh and empty-state
-convergence remain separate requirements.
+PAW projector, overlap and augmentation terms are
+constructed inside VASP before WAVEDER is written; VASPBERRY does not add
+them again. The stored connection already contains the energy denominator.
+
+The stored matrix can be rectangular: `NBANDS` bra rows by `NDBANDS`
+derivative-ket columns. In the audited 5.4.4 branch,
+`NDBANDS=min(2*LAST_FILLED_OPTICS,NBANDS)` can give 80×60 when the occupied
+bound is 30, even though 80 source bands are present. Ket column 31 still
+contains bra connections to every stored band 1–80: the column count is not
+the virtual-state cutoff. For the complete occupied trace, internal
+occupied-pair terms cancel and the empty-bra/occupied-ket block suffices.
+For a general selected response, define $`g_n=s_n f(E_n,\mu,T)`$, where
+$`s_n`$ selects target bands; native geometric traces use $`g_n=s_n`$.
+Pair terms are weighted by $`g_n-g_m`$. All source bands enter the virtual
+sum. A required pair may use either stored orientation with the correct
+sign, but a missing high-empty/high-empty pair with unequal weights causes
+rejection. No square completion or zero filling is performed.
+
+Transitive groups affected by the producer's 2 meV threshold are checked
+before contraction. Equal-weight internal pairs cancel, so complete
+degenerate groups can be retained. Unequal weights require erased matrix
+elements and are rejected, including during finite-temperature scans.
+Temperature does not restore those elements.
+
+`kubo-hall --bands` and `waveder-hall --bands` report a selected-band charge
+contribution and record that neither total AHC nor total ΔAHC is certified.
+An arbitrary subset's μ/T curve must not be presented as the full material
+response. The mutually exclusive `--occupied N` mode retains the complete
+insulating T=0/gap contract. Mesh and source-band convergence remain
+separate requirements for both routes.
+
+The [selected-band software example ↗](../examples/features/waveder-selected/)
+checks the public native, INI and plot routes against direct full-matrix
+sums using declared synthetic inputs. It also retains required-pair and
+producer-cluster rejection cases; these checks do not certify a material's
+mesh or source-band convergence.
 
 The same standard optical matrices provide circular transition spectra at
 each k point. For propagation along +z and

@@ -14,6 +14,7 @@ from postprocess_config import load_settings
 
 BASE = '''# Paths and scientific choices, once per study.
 [run]
+input_dir = input files
 wavecar = input files/WAVECAR
 binary = build/vaspberry
 output = results/first
@@ -73,8 +74,10 @@ class PostprocessConfigTests(unittest.TestCase):
         self.assertEqual(run['output'], str(self.root/'results/first'))
         self.assertEqual((run['spin'], run['spinor_components'], run['spin_multiplicity'], run['expected_nspin']), (1, 2, 1, 1))
         self.assertEqual((run['mpi_procs'], run['mpi_launcher'], run['plane_axes']), (1, 'mpiexec', [0, 1]))
+        self.assertEqual(run['kubo_source'], 'waveder')
+        self.assertEqual(run['optical_run_dir'], str(self.root/'input files'))
         self.assertEqual(settings['hall'], dict(mu_min=-3.15, mu_max=-1.05, mu_num=101,
-            mu_reference=-2.5319, temperatures=[0., 100., 300.], pair_band_max=None))
+            mu_reference=-2.5319, temperatures=[0., 100., 300.], pair_band_max=None, occupied=None, bands=None))
         self.assertIsNone(settings['projection'])
         self.assertEqual(settings['groups'], {'groups': []})
         self.assertEqual(settings['regions'], {'regions': []})

@@ -1,5 +1,11 @@
 # One settings file: VASPBERRY Bi pairs, Hall table and figures
 
+**1.6.5 input policy:** the standard charge-Kubo route uses WAVEDER. This
+guide retains the WAVECAR canonical-momentum approximation and explicitly
+selects `--kubo-source wavecar` (or INI `kubo_source = wavecar`) to reproduce
+its existing results. See the [standard protocol](../../../docs/WAVEDER_KUBO_PROTOCOL.md)
+for the PAW optical selected-band route and its required-pair checks.
+
 This example uses the public **Bi bilayer SOC WAVECAR on a complete 12×12
 mesh**. One INI file specifies the VASPBERRY executable, input, output and Hall
 scan. `run` launches VASPBERRY to calculate interband pairs, then performs
@@ -48,9 +54,12 @@ MPI alternatives are in the [build guide](../../../docs/BUILD.md).
 
 ## 2. Check and calculate
 
-Inspect [`bi.ini`](bi.ini). Its paths are relative to the INI directory;
-the `../../../` prefixes point back to the repository root. The calculation
-settings are:
+Inspect [`bi.ini`](bi.ini). Its explicit paths are relative to the INI
+directory; the `../../../` prefixes point back to the repository root.
+`input_dir` selects the fetched source directory and supplies the default
+WAVECAR filename. If omitted, it would use the invocation working directory,
+not the INI directory. A `wavecar` override would change only that file.
+The calculation settings are:
 
 | Setting | Value for this input |
 |---|---|
@@ -83,7 +92,7 @@ without the Python front end. After step 1, the equivalent pair export is:
 ```bash
 mkdir results/direct-bi
 mpiexec.hydra -n 4 build/vaspberry-ifx-mpi \
-  --task kubo-pairs --wavecar results/simple-bi-input/WAVECAR \
+  --task kubo-pairs --kubo-source wavecar --wavecar results/simple-bi-input/WAVECAR \
   --pairs-csv results/direct-bi/PAIRS.csv
 ```
 

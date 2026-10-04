@@ -4,6 +4,67 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+## [1.6.5] - 2026-10-04
+
+This release incorporates and supersedes the locally prepared 1.6.4 candidate,
+which was never published. Saved scientific reference data keep their
+original producer versions.
+
+### Release documentation
+
+- Align the README, native/Python commands, selected-band example and
+  technical report with the 1.6.5 release. Correct the current-source
+  installation links and migration anchors.
+- Distinguish direct WAVEDER Hall integration from the separate native
+  WAVECAR pair-export workflow throughout the introductory guides.
+- Retain the original 1.6.4 validation record as candidate history and
+  record new release checks separately in `docs/VALIDATION_1.6.5.md`.
+
+### Explicit input directory
+
+- Add `--input-dir DIR` to native and Python Hall commands, with the
+  invocation working directory as the default. Per-file overrides change
+  only that file; `--wavecar` never relocates auxiliary inputs.
+- Keep explicit relative CLI paths and output paths relative to the launch
+  directory. INI `input_dir` defaults to the launch directory, while explicit
+  relative INI paths stay relative to their configuration file.
+- Retain mutually exclusive `--run-dir` chunk compatibility and the
+  WAVEDER-only `optical_run_dir` INI alias. Standard INIs may omit `wavecar`.
+
+### WAVEDER standard Kubo protocol
+
+- Default supported Kubo charge calculations to standard VASP WAVEDER
+  optical matrices. Require explicit `--kubo-source wavecar` for the
+  canonical-momentum approximation and print an operator warning.
+- Reject missing, invalid or unsupported WAVEDER input without silently
+  changing the operator. Keep source choice and the actual operator in
+  output metadata and calculation records.
+- Support explicit single/range/list WAVEDER target bands, geometric native
+  traces or resolvable per-band output, and Python μ/T selected contributions.
+  Retain the full source intermediate-band space. Keep inferred native occupied
+  and Python `--occupied N` insulating T=0 compatibility routes.
+- Check every required weighted pair in either stored orientation. Permit
+  complete producer-degenerate groups only with equal response weights; reject
+  erased or missing pairs when needed. Never pad a missing block, truncate
+  virtual bands to the target selection, or apply a second optical denominator.
+- Label selected geometric integrals and charge contributions separately from
+  total physical Hall, including finite-temperature subset calculations.
+- Make the supported standard route explicit in native/Python help,
+  examples, migration instructions and the technical report. Historical
+  canonical results keep their original provenance and gain explicit
+  approximation selections in reproduction commands.
+- Update the native-spin CI driver and full-velocity/canonical comparison
+  example to select the intended WAVECAR approximation explicitly; verify
+  these executable callers as part of release preparation.
+- Preserve explicit coverage/weight limits for selected metallic and
+  finite-temperature responses, and separate spin-current operator contracts.
+  Operator applicability and k-mesh/band convergence remain independent of
+  source-file validation.
+
+The maintainer selected the 1.6.5 patch-number increment for this release.
+The changed default relative to published 1.6.3 means implicit WAVECAR Kubo
+commands require the documented opt-in. Earlier release tags remain fixed.
+
 ## [1.6.3] - 2026-09-30
 
 ### Native Kubo band selection

@@ -1,17 +1,61 @@
 # Migrating to the current source
 
-VASPBERRY 1.6.3 simplifies native Kubo band selection and strengthens
+VASPBERRY 1.6.5 changes the default Kubo input as described first below.
+Version 1.6.3 simplified native Kubo band selection and strengthened
 curvature-output validation as specified below. Use `--help task`, then `--help NAME` for a task or
 option; the complete flag reference is `--help all` (also `--help legacy`).
-The [current release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.3),
+The [current release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.5),
 [native reference](NATIVE_COMMANDS.md) and [hands-on tutorial](HANDS_ON.md)
 provide the current setup and commands. Earlier migration requirements follow.
 
-## Native Kubo band selection
+<a id="waveder-default-kubo-input-in-164"></a>
+<a id="waveder-default-kubo-input-in-170"></a>
+
+## WAVEDER-default Kubo input in 1.6.5
+
+Version 1.6.5 supersedes the unpublished 1.6.4 candidate. These are the
+changes from published 1.6.3; no separate 1.6.4 release is required.
+
+`--input-dir DIR` now selects the default input directory in native commands
+and Python `kubo-hall`; omit it to use the invocation working directory.
+Each per-file option overrides only that file. `--wavecar elsewhere/WAVECAR`
+never changes where WAVEDER/INCAR/OUTCAR are found. Explicit relative CLI
+paths and all output paths remain relative to the invocation working directory.
+INI `input_dir` works similarly, but explicit relative INI paths remain
+relative to the INI file. The standard INI no longer requires `wavecar`.
+
+`--task kubo` and `kubo-integral` now select `--kubo-source waveder`.
+Keep same-run WAVEDER, WAVECAR, INCAR and OUTCAR. A missing file or unsupported
+producer/filling stops with an explanation. There is no automatic change of
+operator. Omit native `--bands` to retain the complete insulating occupied route.
+An explicit single/range/list selector, such as `31,33:34`, now selects a
+geometric target space; `--per-band 1` requests separate resolvable bands.
+Even an explicit `1:N` matching the occupied set is labeled geometric: only
+the omitted-band occupied route retains the native physical total-Hall
+metadata. Pair export and spin-sector Kubo remain separate routes.
+
+To reproduce an old canonical-momentum command, add `--kubo-source wavecar`,
+including for `kubo-pairs`, `spin-kubo` and legacy `-kubo` selectors. The code
+prints a warning and marks the approximation in its output. Missing PAW or
+nonlocal terms are not restored by increasing the mesh or band count.
+
+For Python, prefer `kubo-hall` (WAVEDER by default). Historical
+`wavecar-hall` also requires `--kubo-source wavecar`. The INI front end
+defaults to `[run] kubo_source = waveder`, with exactly one `[hall] bands`
+(selected μ/T contribution) or `[hall] occupied` (insulating T=0). Required
+pairs are checked across the full source virtual space. Old
+canonical pair/metallic/projected recipes must explicitly set `kubo_source = wavecar`.
+See [commands and supported scope](WAVEDER_KUBO_PROTOCOL.md). Historical
+reference data keep their original operator and version metadata.
+
+<a id="native-kubo-band-selection"></a>
+
+## Historical canonical Kubo band selection in 1.6.3
 
 Version 1.6.3 removes `--bundle` and `-kubo_bundle`. Both names now
-fail with migration guidance instead of selecting a mode. For named tasks
-`kubo`, `kubo-line` and `kubo-integral`:
+fail with migration guidance instead of selecting a mode. The table below
+describes canonical tasks `kubo`, `kubo-line` and `kubo-integral`; add
+`--kubo-source wavecar` when reproducing these commands with 1.6.5:
 
 | Requested result | Current arguments | Output |
 |---|---|---|
@@ -179,14 +223,14 @@ line-mode calculation into a two-dimensional integration mesh. See the
 
 ## Version and release records
 
-`VERSION`, CLI version output and current citation metadata identify 1.6.3.
+`VERSION`, CLI version output and current citation metadata identify 1.6.5.
 Historical changelog entries, the 1.2.0 release notes and archived reference
 data retain their original versions. The CFF schema version is independent
 of the software version.
 
 The 2018 DOI `10.5281/zenodo.1402593` identifies VASPBERRY V1.0. It is not a
-DOI for version 1.6.3. Use the immutable
-[`v1.6.3` release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.3)
+DOI for version 1.6.5. Use the immutable
+[`v1.6.5` release](https://github.com/Infant83/VASPBERRY/releases/tag/v1.6.5)
 for version-pinned source, or `master` for current source. Build binaries locally.
 Cite the software version, exact commit and method references appropriate to
 the calculation; see the [version policy](RELEASING.md).

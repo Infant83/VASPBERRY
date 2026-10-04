@@ -1,6 +1,7 @@
 # Examples: calculate directly from VASP wavefunctions
 
-VASPBERRY reads **VASP WAVECAR files directly**. The compiled VASPBERRY executable
+VASPBERRY reads **VASP WAVECAR files directly** and also requires same-run
+**WAVEDER/INCAR/OUTCAR for standard charge Kubo calculations**. The compiled executable
 calculates Berry curvature and Chern numbers, projected-spin sectors, Z₂, Kubo curvature, circular
 optical transitions and real-space wavefunctions. Use the resulting numerical files in your own analysis
 or the supplied Python plotting tools.
@@ -11,7 +12,7 @@ method**, called the **Fukui method** below. Z₂ uses the distinct **Fukui–Ha
 Build with `make serial` and run `build/vaspberry --help` for the native CLI.
 The older executable name `build/vaspberry-gfortran` and short flags remain
 supported; the guides use descriptive task and option names. Use VASPBERRY
-1.6.3 for the complete commands below, including automatic Kubo subspace
+1.6.5 for the complete commands below, including automatic Kubo subspace
 selection and `--per-band 1` for separate bands. The
 [migration guide](../docs/MIGRATION.md#native-kubo-band-selection) lists the
 removed native flags and their replacements.
@@ -23,6 +24,18 @@ The [report reproduction table](REPORT_REPRODUCTION.md) maps every report
 figure to its calculation, numerical files and input-regeneration requirements.
 Start with the [hands-on commands](../docs/HANDS_ON.md); use the compact
 [native command reference](../docs/NATIVE_COMMANDS.md) when changing task options.
+
+## Standard charge Kubo calculation (1.6.5)
+
+Follow the [WAVEDER protocol](../docs/WAVEDER_KUBO_PROTOCOL.md): generate
+same-run WAVEDER/WAVECAR/INCAR/OUTCAR and run `--task kubo` or `kubo-hall`.
+The [MnBi₂Te₄ optical example](materials/mnbi2te4-qah/) provides actual
+VASP preparation and a coarse-mesh diagnostic. No VASP patch is required.
+The [selected-band tutorial](features/waveder-selected/) demonstrates native
+geometric traces and Python μ/T contributions with required-pair validation.
+The complete occupied T=0 route remains available; unsupported requests stop. The MoS₂ canonical and Bi pair examples below keep their
+original results and explicitly choose `--kubo-source wavecar` or INI
+`kubo_source = wavecar`. They are operator approximations, not the new default.
 
 ## Learn the postprocessing workflow
 
@@ -59,9 +72,10 @@ convergence and the report figures use the feature-specific guides below;
 
 For an additional insulating charge-Hall check, the [Bi Hall guide](features/hall-valley/)
 integrates occupied-subspace flux from the Fukui method and obtains a zero charge response.
-Kubo Hall occupation weighting and BZ integration currently use the bundled
-Python tools after native matrix-element export; its guide shows both
-stages explicitly. Python plotting reads the completed numerical outputs.
+Kubo Hall occupation weighting and BZ integration use the bundled Python
+tools. The standard route reads WAVEDER directly; the explicit WAVECAR
+approximation first exports native pair matrices. Each guide identifies its
+operator and inputs. Python plotting reads the completed numerical outputs.
 
 ## First calculation: the supplied Bi wavefunctions
 
@@ -130,7 +144,7 @@ mkdir -p results/mos2-kubo-mpi
   cd results/mos2-kubo-mpi
   mpiexec -np 2 ../../build/vaspberry-mpi \
     --wavecar ../../examples/1H-MoS2/KPATH/2.band/WAVECAR \
-    --task kubo --bands 1:18 --curvature-csv KUBO.csv
+    --task kubo --kubo-source wavecar --bands 1:18 --curvature-csv KUBO.csv
 )
 ```
 

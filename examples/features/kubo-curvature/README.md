@@ -1,5 +1,11 @@
 # MoS₂: Kubo curvature of the occupied valence-band bundle
 
+**1.6.5 input policy:** the standard charge-Kubo route uses WAVEDER. This
+guide retains the WAVECAR canonical-momentum approximation and explicitly
+selects `--kubo-source wavecar` (or INI `kubo_source = wavecar`) to reproduce
+its existing results. See the [standard protocol](../../../docs/WAVEDER_KUBO_PROTOCOL.md)
+for the PAW optical selected-band route and its required-pair checks.
+
 The main figure shows the trace Berry curvature of **occupied bands 1–18**
 across the Brillouin zone and along **K–Γ–K′**. It uses the same occupied
 space and VASP inputs as the [Fukui method example](../fukui-berry-curvature/).
@@ -63,14 +69,14 @@ mkdir -p results/mos2-kubo-mesh results/mos2-kubo-path
   cd results/mos2-kubo-mesh
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/mos2-fullmesh-vasp/WAVECAR" \
-    --task kubo --bands 1:18 \
+    --task kubo --kubo-source wavecar --bands 1:18 \
     --curvature-csv KUBO.csv > vaspberry.log
 )
 (
   cd results/mos2-kubo-path
   "$repo_dir/build/vaspberry" \
     --wavecar "$repo_dir/results/mos2-path-vasp/WAVECAR" \
-    --task kubo --bands 1:18 \
+    --task kubo --kubo-source wavecar --bands 1:18 \
     --curvature-csv KUBO.csv > vaspberry.log
 )
 ```
@@ -202,7 +208,7 @@ occupied bundle so that its internal degeneracy at Γ is handled correctly:
 
 ```bash
 mkdir -p results/mos2-path
-build/vaspberry --task kubo \
+build/vaspberry --task kubo --kubo-source wavecar \
   --wavecar examples/1H-MoS2/KPATH/2.band/WAVECAR \
   --bands 1:18 \
   --curvature-csv results/mos2-path/KUBO.csv

@@ -3,8 +3,9 @@
 From this folder, run:
 
 ../../../../build/vaspberry --wavecar ../2.band/WAVECAR \
-  --task kubo --bands 1:18
+  --task kubo --kubo-source wavecar --bands 1:18
 
+This explicitly selects the historical canonical-momentum approximation.
 The explicit range selects the full trace and writes KUBO.csv automatically.
 Its occupied-to-empty gap is finite at every stored point, including Gamma.
 For a plotted example, follow examples/features/kubo-curvature/README.md.

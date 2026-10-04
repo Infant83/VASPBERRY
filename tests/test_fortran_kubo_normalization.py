@@ -148,7 +148,7 @@ class CompiledKuboTests(unittest.TestCase):
 
     def test_compiled_parser_preserves_output_basename_and_csv_contract(self):
         for arguments, expected in [(["-o", "sample"], "BERRYCURV.sample"),
-                                    (["-kubo", "1"], "BERRYCURV_KUBO"),
+                                    (["-kubo", "1", "--kubo-source", "wavecar"], "BERRYCURV_KUBO"),
                                     (["-o", "sample", "-z2", "1"], "sample"),
                                     (["-o", "sample", "-vel", "1"], "VEL_EXPT.sample")]:
             actual = self.run_command([str(self.work / "test-parser"), *arguments])
