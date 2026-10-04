@@ -126,25 +126,17 @@ jobs:
           status=${PIPESTATUS[0]}
           echo "$status" > "$INSTALL_ROOT/results/build-runtime.exit"
           exit "$status"
-      - name: Compare original and locally flushed abort diagnostics on MPICH
+      - name: Capture flushed native and minimal abort messages directly per process
         run: |
           cd "$INSTALL_ROOT/source"
-          set +e
-          python tests/diagnose_mpi_abort.py \
-            --compiler "$MPIFC" --mpiexec "$MPIEXEC" \
-            --native build/vaspberry-mpi \
-            --output-dir "$INSTALL_ROOT/results/abort-baseline"
-          baseline_status=$?
-          echo "$baseline_status" > "$INSTALL_ROOT/results/baseline.exit"
-          set -e
           python tests/create_abort_flush_variant.py \
             > "$INSTALL_ROOT/results/flush-variant.json"
           make mpi MPI_SOURCE=vaspberry-abort-flush.f BUILD_DIR=build-flush \
             > "$INSTALL_ROOT/results/build-flush.log" 2>&1
           python tests/diagnose_mpi_abort.py \
             --compiler "$MPIFC" --mpiexec "$MPIEXEC" \
-            --native build-flush/vaspberry-mpi \
-            --output-dir "$INSTALL_ROOT/results/abort-flushed"
+            --native build-flush/vaspberry-mpi --variants rank-files \
+            --output-dir "$INSTALL_ROOT/results/abort-rank-files"
       - name: Retain toolchains, commands, checksums and numerical failure logs
         if: always()
         uses: actions/upload-artifact@v4

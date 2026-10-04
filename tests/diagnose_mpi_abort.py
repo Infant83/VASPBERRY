@@ -26,6 +26,12 @@ def sha(path):
 def signal_policy(command, variant):
     if variant == 'default':
         return command, True
+    if variant == 'rank-files':
+        if command[1:3] == ['-n', '2']:
+            command = [*command[:3], '/bin/sh', '-c',
+                       'exec "$@" >"mpi-process-$$.stdout.log" 2>"mpi-process-$$.stderr.log"',
+                       'mpi-direct-log', *command[3:]]
+        return command, True
     if variant == 'ignore-pipe':
         # A literal script and a separate argv array; no interpolated shell code.
         # exec preserves the actual launcher's exit/signal result. Only SIGPIPE
@@ -54,8 +60,7 @@ def run_case(command, directory, variant, expected, diagnostic, timeout):
                 process.wait()
                 raise
         row['exit_code'] = exit_code
-        text = ' '.join(((directory/'stdout.log').read_text(errors='replace') + '\n' +
-                         (directory/'stderr.log').read_text(errors='replace')).lower().split())
+        text = ' '.join('\n'.join(p.read_text(errors='replace') for p in sorted(directory.glob('*.log'))).lower().split())
         row['diagnostic_present'] = not diagnostic or ' '.join(diagnostic.lower().split()) in text
         row['completed_csv'] = [p.name for p in directory.glob('*.csv*')
                                 if p.read_text(errors='replace').strip().endswith('# result_status=PASS')]
@@ -68,7 +73,7 @@ def run_case(command, directory, variant, expected, diagnostic, timeout):
         row.update(status='ERROR', error=f'{type(error).__name__}: {error}')
     finally:
         row['elapsed_seconds'] = time.monotonic()-start
-        row['logs_sha256'] = {name:sha(directory/name) for name in ('stdout.log','stderr.log') if (directory/name).exists()}
+        row['logs_sha256'] = {p.name:sha(p) for p in directory.glob('*.log')}
         (directory/'command.json').write_text(json.dumps(row,indent=2)+'\n')
     return row
 
@@ -83,7 +88,7 @@ def main():
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--repeats', type=int, default=20)
     parser.add_argument('--timeout', type=float, default=12)
-    parser.add_argument('--variants', nargs='+', choices=['default','ignore-pipe','inherit-python'],
+    parser.add_argument('--variants', nargs='+', choices=['default','ignore-pipe','inherit-python','rank-files'],
                         default=['default','ignore-pipe'])
     args = parser.parse_args()
     if args.repeats < 1 or args.timeout <= 0:
@@ -142,7 +147,7 @@ def main():
             rows=[]
             controls = [
                 ('signal-policy', ['/bin/sh','-c','kill -PIPE $$; exit 17'],
-                 -signal.SIGPIPE if variant == 'default' else 17,None),
+                 -signal.SIGPIPE if variant in ('default','rank-files') else 17,None),
                 ('mpi-success', [*prefix,str(probe),'success'],0,'PROBE_SUCCESS'),
                 ('mpi-abort7', [*prefix,str(probe),'abort7'],7,'code=7'),
             ]
