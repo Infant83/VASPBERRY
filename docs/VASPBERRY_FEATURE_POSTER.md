@@ -30,3 +30,13 @@ See the [technical report](TECHNICAL_REPORT.md),
 [standard Kubo protocol](WAVEDER_KUBO_PROTOCOL.md) for inputs, validation and
 limitations. The poster is a visual overview, not an additional convergence
 study.
+
+## Sharing images
+
+The [full-resolution PNG](VASPBERRY_FEATURE_POSTER.png) is displayed in the
+repository README and links to the PDF.
+
+The [social-preview PNG](VASPBERRY_SOCIAL_PREVIEW.png) is 1280×640 and under
+1 MB. It preserves the entire poster with side margins. Repository owners
+can upload it under Settings → Social preview. This setting is separate
+from the README image; committing this file alone does not change link cards.

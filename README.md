@@ -23,6 +23,11 @@ band plots provide context for the calculated topology and response.
 [Hands-on commands](docs/HANDS_ON.md) · [Feature examples](examples/README.md) · [Build guide](docs/BUILD.md) ·
 [Postprocessing guide](docs/POSTPROCESSING.md) · [Output formats](docs/OUTPUT_FORMAT.md)
 
+[![VASPBERRY feature poster: Berry curvature, Chern and spin topology, Z2 n-field, Hall response, circular dichroism, and wavefunctions](docs/VASPBERRY_FEATURE_POSTER.png)](docs/VASPBERRY_FEATURE_POSTER.pdf)
+
+Click the poster to open the full-resolution PDF and its linked references.
+See the [figure notes](docs/VASPBERRY_FEATURE_POSTER.md) for calculation scope and approximations.
+
 **VASPBERRY 1.6.6 — WAVEDER is the standard Kubo input.**
 `--task kubo` uses same-run `WAVEDER`, `WAVECAR`, `INCAR` and `OUTCAR` by
 default. Select a single band, a range or a list for geometric curvature, or
