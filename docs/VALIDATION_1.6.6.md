@@ -46,6 +46,15 @@ versioned release commit. Report-specific checks additionally exercised the
 four-state model, revised plot labels, all eight catalogue features, INI
 calculation/rescan/region workflows and selected-WAVEDER/PROCAR examples.
 
+The initial release candidate encountered intermittent Intel MPI launcher
+SIGPIPE termination during invalid-input tests. An isolated comparison of
+minimal MPI_ABORT and native rejection cases under both Intel compilers
+supported an explicit SIGPIPE-ignore policy for the CI launch path. This
+stabilizes the tested launcher behavior without establishing the MPI runtime's
+internal cause. The revised harness still requires controlled exit 1,
+expected diagnostics and output guards; signal exits are not accepted as
+successful rejections. Native kernels and MPI error handling are unchanged.
+
 Final release preparation rebuilds the versioned executable and reruns the
 appropriate local tests and examples. Exact-commit remote checks and the
 publication receipt are recorded in the published release body; an

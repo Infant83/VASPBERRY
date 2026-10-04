@@ -21,6 +21,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
+from mpi_validation_launcher import mpi_validation_command
 from native_kubo_csv import (BAND_SCHEMA, TRACE_SCHEMA, metadata, read_curvature_csv,
                              require_terminal_pass, positive_integer)
 INPUT_SHA256 = "33f8546512856d6c04ad0a80454b18ac9b60e2af4b98f2f85b376ec49b1a8d9f"
@@ -253,6 +254,8 @@ def main():
     parser.add_argument("--mpi", type=Path, required=True)
     parser.add_argument("--mpiexec", default="mpiexec.hydra")
     parser.add_argument("--mpi-flag", action="append", default=[])
+    parser.add_argument("--mpi-ignore-sigpipe", action="store_true",
+                        help="Intel Hydra validation: ignore SIGPIPE at launcher exec; keep real exit status")
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     serial, mpi = args.serial.resolve(), args.mpi.resolve()
@@ -266,7 +269,8 @@ def main():
     output.mkdir(parents=True, exist_ok=False)
     summary = {"status": "RUNNING", "input_sha256": INPUT_SHA256,
                "serial_sha256": sha256(serial), "mpi_sha256": sha256(mpi),
-               "mpi_launcher": launcher, "ranks": 2, "checks": {}}
+               "mpi_launcher": launcher, "ranks": 2, "checks": {},
+               "mpi_signal_policy": "ignore_sigpipe" if args.mpi_ignore_sigpipe else "default"}
     try:
         tables = {}
         version = (ROOT / "VERSION").read_text().strip()
@@ -277,7 +281,8 @@ def main():
             write_synthetic_wavecar(path, word4=name == "word4",
                                     corruption=None if name in ("byte", "word4") else name)
         for mode, prefix in (("serial", [str(serial)]),
-                             ("mpi", [launcher, *args.mpi_flag, "-n", "2", str(mpi)])):
+                             ("mpi", mpi_validation_command([launcher, *args.mpi_flag, "-n", "2", str(mpi)],
+                                                             ignore_sigpipe=args.mpi_ignore_sigpipe))):
             tables[mode] = {}
             for task, kind, extra in (("kubo", "BUNDLE", ["--bands", "1:18"]),
                                       ("kubo-pairs", "PAIRS", [])):

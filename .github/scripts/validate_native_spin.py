@@ -24,6 +24,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[2]
 # Importing these helpers does not run their unittest classes or compile code.
 sys.path.insert(0, str(ROOT / "tests"))
+from mpi_validation_launcher import mpi_validation_command
 from test_fortran_spin_chern import fixture, table
 from test_fortran_spin_kubo import response_fixture
 
@@ -66,7 +67,7 @@ def invoke(command, case, expected_error=None, timeout=120):
         receipt["exit_code"] = result.returncode
         stderr = (case / "stderr.log").read_text(errors="replace")
         if expected_error:
-            if result.returncode == 0 or expected_error not in stderr:
+            if result.returncode != 1 or expected_error not in stderr:
                 raise AssertionError(f"{case.name}: expected rejection {expected_error!r}")
             if list(case.glob("SPIN*.csv")):
                 raise AssertionError(f"{case.name}: rejected input produced result files")
@@ -194,7 +195,8 @@ def validate(args, output):
     report = {"scope": "synthetic pseudo-wavefunction kernel validation; not material/PAW validation",
               "version": (ROOT / "VERSION").read_text().strip(),
               "executables": {p: sha256(Path(p)) for p in (serial, mpi, launcher)},
-              "mpi_ranks": 2, "numpy_version": np.__version__, "checks": []}
+              "mpi_ranks": 2, "numpy_version": np.__version__, "checks": [],
+              "mpi_signal_policy": "ignore_sigpipe" if getattr(args, "mpi_ignore_sigpipe", False) else "default"}
     dump(output / "environment.json", {
         "python": sys.version, "platform": sys.platform,
         "runtime": {k: os.environ[k] for k in ("OMP_NUM_THREADS", "MKL_NUM_THREADS",
@@ -211,7 +213,8 @@ def validate(args, output):
             if task == "spin-kubo":
                 command += ["--kubo-source", "wavecar"]
             if mode == "mpi":
-                command = [launcher, *args.mpi_arg, "-n", "2", *command]
+                command = mpi_validation_command([launcher, *args.mpi_arg, "-n", "2", *command],
+                                                 ignore_sigpipe=getattr(args, "mpi_ignore_sigpipe", False))
             invoke(command, case, expected_error, args.timeout)
             paths.append(case)
         return paths
@@ -279,6 +282,8 @@ def main(argv=None):
     parser.add_argument("--mpi", required=True, help="prebuilt MPI executable")
     parser.add_argument("--mpiexec", default="mpiexec", help="MPI launcher executable")
     parser.add_argument("--mpi-arg", action="append", default=[], help="repeatable launcher argument; use --mpi-arg=--flag")
+    parser.add_argument("--mpi-ignore-sigpipe", action="store_true",
+                        help="Intel Hydra validation: ignore SIGPIPE at launcher exec; keep real exit status")
     parser.add_argument("--output-dir", required=True, type=Path, help="new directory; existing paths are refused")
     parser.add_argument("--timeout", default=120., type=float, help="maximum seconds per native invocation")
     args = parser.parse_args(argv)

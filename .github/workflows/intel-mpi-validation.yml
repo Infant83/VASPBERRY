@@ -80,6 +80,7 @@ jobs:
           python tests/run_intel_mpi_validation.py \
             --serial build/vaspberry-${{ matrix.target }} \
             --mpi build/vaspberry-${{ matrix.target }}-mpi \
+            --mpi-ignore-sigpipe \
             --output-dir results/intel-mpi-${{ matrix.target }}/numerics
       - name: Validate native spin Chern and spin Kubo using the Intel binaries
         shell: bash
@@ -92,6 +93,7 @@ jobs:
             --serial build/vaspberry-${{ matrix.target }} \
             --mpi build/vaspberry-${{ matrix.target }}-mpi \
             --mpiexec mpiexec.hydra \
+            --mpi-ignore-sigpipe \
             --output-dir results/intel-mpi-${{ matrix.target }}/native-spin
       - name: Retain commands, checksums, numerical exports and failure logs
         if: always()

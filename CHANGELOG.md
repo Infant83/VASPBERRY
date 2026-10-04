@@ -35,6 +35,12 @@ material reference data retain their original producer versions.
 - Correct standard/canonical output filenames, rescan and cache-reuse
   guidance, protocol navigation and the two-endpoint pair-band cutoff label.
 
+### CI launcher validation
+
+- Stabilize Intel MPI CI launcher signal handling while retaining controlled
+  rejection status, expected diagnostics and output guards. Native kernels
+  and MPI error handling are unchanged.
+
 ## [1.6.5] - 2026-10-04
 
 This release incorporates and supersedes the locally prepared 1.6.4 candidate,
