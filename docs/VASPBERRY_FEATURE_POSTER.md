@@ -2,7 +2,8 @@
 
 [View the one-page poster (PDF)](VASPBERRY_FEATURE_POSTER.pdf).
 
-Revised 5 October 2026; example and capability overview for VASPBERRY 1.6.6.
+Revised 9 October 2026; example and capability overview for VASPBERRY 1.6.6.
+The scientific panels and the 4 October metrics snapshot are unchanged.
 The six panels cover Berry-curvature maps and paths, charge and projected-spin
 Chern numbers, the 2D Z₂ n-field, regional Hall response, circular dichroism,
 and real-space wavefunctions. Original method references are linked in the PDF.
@@ -30,6 +31,14 @@ See the [technical report](TECHNICAL_REPORT.md),
 [standard Kubo protocol](WAVEDER_KUBO_PROTOCOL.md) for inputs, validation and
 limitations. The poster is a visual overview, not an additional convergence
 study.
+
+## Agent workflow
+
+The bottom strip introduces the Codex plugin and standalone agent skill,
+with an example request to install VASPBERRY and run the public analytic demo.
+The PDF includes a clickable [agent setup guide](https://github.com/Infant83/VASPBERRY/blob/master/docs/AGENT_USAGE.md).
+The plugin/skill guides a separately installed VASPBERRY engine; it does not
+run VASP or turn the analytic demo into a real-material validation.
 
 ## Sharing images
 
