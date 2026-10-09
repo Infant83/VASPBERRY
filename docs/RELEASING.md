@@ -138,3 +138,16 @@ The [1.6.6 validation record](VALIDATION_1.6.6.md) separates the prior
 report-wide numerical reproduction from the release commit's own checks.
 Publication receipts identify the final commit and successful remote runs;
 verify a fresh version-pinned source archive afterwards.
+
+## Maintainer-requested 1.6.6 help amendment
+
+On 2026-10-09 the maintainer explicitly requested retaining version 1.6.6
+for the help and documentation update. This is a one-time exception to the
+fixed-tag policy above. Preserve the original release commit
+`de84ed3337b900b36990f0230e5d497ff989061f` and its publication checks in the
+release history. After all thirteen required CI jobs pass on the updated
+source, update only v1.6.6 and its existing release notes; do not reuse the
+one-time publication workflow or change earlier tags. Check a fresh
+version-pinned download and record its source/hash. Version 1.6.6 alone
+does not distinguish the two editions: reproducible runs must also record
+the exact source commit. Numerical kernels and saved results are unchanged.

@@ -141,13 +141,13 @@ class NativeHelpTests(HelpAssertions, unittest.TestCase):
         self.assertIn('outputs stay in cwd', text)
 
     def test_mesh_and_band_help_distinguish_explicit_control_requests(self):
-        mesh = self.request('--help', 'mesh').stdout
+        mesh = ' '.join(self.request('--help', 'mesh').stdout.split())
         self.assertIn('only explicit --mesh requests integration', mesh)
         self.assertIn('legacy -kx/-ky alone', mesh)
-        bands = self.request('--help', 'bands').stdout
+        bands = ' '.join(self.request('--help', 'bands').stdout.split())
         self.assertIn('Prefer one --bands selection', bands)
         self.assertIn('historical endpoint/singleton precedence', bands)
-        kubo = self.request('--help', 'kubo').stdout
+        kubo = ' '.join(self.request('--help', 'kubo').stdout.split())
         self.assertIn('rejects wavefunction/optical/folding controls', kubo)
         self.assertIn('-sigma', kubo)
 
@@ -194,6 +194,36 @@ class NativeHelpTests(HelpAssertions, unittest.TestCase):
                     result = self.request(flag, *suffix, binary=binary, success=False)
                     self.assertIn("removed", result.stderr)
                     self.assertNotIn("Error opening", result.stdout + result.stderr)
+
+    def test_topics_have_readable_sections_and_bounded_width(self):
+        for topic in (*TASKS, *OPTIONS, 'task', 'options', 'outputs', 'examples',
+                      'ien', 'fen', 'nediv', 'sigma', 'build', 'bundle', 'all'):
+            with self.subTest(topic=topic):
+                text = self.request('--help', topic).stdout
+                self.assertNotIn('\x1b', text)
+                self.assertTrue(all(len(line.expandtabs(8)) <= 80
+                                    for line in text.splitlines()), text)
+                self.assertGreater(text.count('\n\n'), 1, text)
+                if topic in TASKS:
+                    for heading in ('Run', 'Inputs', 'Outputs', 'Conditions', 'More'):
+                        self.assertIn('\n'+heading+'\n', text)
+
+    def test_corrected_help_contracts_and_required_auxiliary_inputs(self):
+        full = ' '.join(self.request('--help', 'all').stdout.split())
+        for value in ('-sw_file', 'BERRYCURV.filename.dat', '(2*np-1)',
+                      'LEFT/RIGHT intensity', '--kubo-source wavecar'):
+            self.assertIn(value, full)
+        self.assertNotIn(' -sw ', full)
+        self.assertNotIn("unless '-cd' is not 1", full)
+        waveform = ' '.join(self.request('--help', 'wavefunction').stdout.split())
+        for value in ('POSCAR/EIGENVAL are required', '--input-dir does not relocate',
+                      'amplitudes', 'Gamma'):
+            self.assertIn(value, waveform)
+        bands = ' '.join(self.request('--help', 'bands').stdout.split())
+        self.assertIn('N:N is a singleton', bands)
+        self.assertIn('With explicit --kubo-source wavecar', bands)
+        for topic in ('spin-chern', 'spin-kubo'):
+            self.assertIn('ISPIN=1', self.request('--help', topic).stdout)
 
     def test_bad_keyword_does_not_silently_fall_back(self):
         for keyword in ("typo-topic", "", "k" * 400):

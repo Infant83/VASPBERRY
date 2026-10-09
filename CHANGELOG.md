@@ -10,6 +10,23 @@ This patch retains the 1.6.5 WAVEDER input protocol and packages the
 CLI-consistency fixes and report reproduction corrections below. Historical
 material reference data retain their original producer versions.
 
+### Help and workflow clarity — updated 2026-10-09
+
+- Organize every native task and option page into readable plain-text sections,
+  with copyable commands, required inputs, output quantities and units,
+  defaults, validity conditions and related guides. Keep lines within 80 columns.
+- Correct legacy option names, Chern output labels, optical spectrum quantities,
+  periodic-repeat dimensions and historical defaults. Qualify canonical Kubo
+  compatibility rules and CSV schemas by source; retain existing help aliases.
+- State required wavefunction POSCAR/EIGENVAL inputs, spin task prerequisites,
+  singleton band ranges and task-specific file replacement rules.
+- Group Python CLI options, expose useful defaults/units and saved artifact
+  types, and carry scientific scope into direct subcommand help. Clarify
+  WAVEDER direct calculation versus native WAVECAR execution, conditional
+  selections, plot input requirements and retained legacy replacement behavior.
+- Keep numerical kernels, selection grammar, defaults and output schemas intact;
+  extend help checks to cover presentation and parser contracts.
+
 ### Report reproduction
 
 - Recalculate the technical-report figures and numerical controls from

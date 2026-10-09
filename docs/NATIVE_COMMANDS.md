@@ -43,6 +43,28 @@ also selects the `bands` topic; `-h` accepts the same topics as `--help`.
 | `--help bands` | One option's values and usage |
 | `--help all` or `--help legacy` | Complete flag reference, including historical options |
 
+Task pages use the same order: **Run → Inputs → Outputs → Common options →
+Conditions → More** (short tasks omit the optional common-options block).
+The command can be copied directly; adapt its example bands and mesh to your
+own input. Output sections identify the filename, quantity, units and whether
+existing files can be replaced. Option pages give defaults and task scope.
+The output uses plain text within 80 columns and can be saved for later use:
+
+```bash
+./build/vaspberry-ifx --help kubo > kubo-help.txt
+```
+
+The same topics and labels serve interactive users and agents. `all` and
+`legacy` remain aliases; their shared reference labels the canonical WAVECAR
+compatibility rules locally instead of implying that they apply to default
+WAVEDER calculations. See `--help curvature-csv` for source-specific schemas.
+
+For wavefunction reconstruction, matching `POSCAR` and `EIGENVAL` are required
+in the invocation working directory. `--input-dir` supplies omitted
+`WAVECAR`/`WAVEDER`/`INCAR`/`OUTCAR` paths and does not relocate those two files.
+The reconstruction output contains real/imaginary wavefunction amplitudes in
+a CHGCAR-style container; it is not a charge-density output.
+
 ## A runnable first command
 
 In Bash on a Linux oneAPI host, start at the repository root and use the

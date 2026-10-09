@@ -7,6 +7,7 @@ Use matching noncollinear LORBIT=11 PROCAR/WAVECAR/OUTCAR from one static run.
 from __future__ import annotations
 
 import argparse
+from cli_help import configure_help
 import csv
 from dataclasses import dataclass
 import json
@@ -421,7 +422,20 @@ def parser():
     plot.add_argument('--region', default='total')
     plot.add_argument('--delta', action='store_true')
     for cmd in (project, hall, plot): cmd.add_argument('--output-dir', type=Path, required=True)
-    return p
+    return configure_help(p, descriptions={
+        'project': 'Same-run PROCAR/WAVECAR/OUTCAR -> reusable character.npz and\n'
+                   'character.json, using user-defined atom/orbital group labels.',
+        'hall': 'Character-weighted attribution of selected-band charge Hall.\n'
+                'This is not a spin, layer or orbital-current response.\n'
+                'Inputs: character cache from project and a compatible native pair cache.',
+        'plot': 'Plot raw character maps and attributed charge-Hall curves from\n'
+                'saved project/hall tables; output is a new figure directory.',
+    }, epilogs={None: 'Guide: docs/KUBO_TRANSPORT.md (PROCAR character section)',
+                'hall': 'Guide: docs/KUBO_TRANSPORT.md (PROCAR character section)'}, option_help={
+        ('plot', '--group'): 'user-defined group label saved by project, e.g. layer1',
+        ('plot', '--region'): 'user-defined saved region label, e.g. M or total',
+        ('plot', '--delta'): 'plot the reference-subtracted charge-Hall curve',
+    })
 
 
 def main(argv=None):

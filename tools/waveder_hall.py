@@ -18,6 +18,7 @@ Missing or producer-erased pairs are allowed only for equal response weights.
 from __future__ import annotations
 
 import argparse
+from cli_help import configure_help
 from bisect import bisect_right
 import json
 from pathlib import Path
@@ -590,7 +591,9 @@ def command(args):
 
 
 def main(argv=None):
-    p = add_arguments(argparse.ArgumentParser(description=__doc__))
+    p = configure_help(add_arguments(argparse.ArgumentParser(description=__doc__)),
+        epilogs={None: 'Output: conductivity.csv/.dat/.npz in a new --output-dir.\n'
+                        'Guide: docs/WAVEDER_KUBO_PROTOCOL.md'})
     args = p.parse_args(argv)
     try:
         meta = command(args)

@@ -61,7 +61,7 @@ for required in \
   "Reference and output names: docs/NATIVE_COMMANDS.md." \
   "External gaps must exceed 1e-5 eV." \
   "Selected ranges use the whole subspace by default." \
-  "Default trace CSV: KUBO.csv." \
+  "Canonical WAVECAR trace default: KUBO.csv." \
   "Fukui-Hatsugai n-field Z2 index" \
   "full, even Gamma-centered mesh" \
   "ICHARG=11 run with ISYM=-1" \

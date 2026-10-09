@@ -7,6 +7,24 @@ or the canonical [Bi example](../examples/features/simple-postprocess/README.md)
 and its [initial scan](../examples/features/simple-postprocess/bi.ini) or
 [rescan](../examples/features/simple-postprocess/bi-rescan.ini).
 
+For command-line details, use `python3 tools/vaspberry_post.py run --help`
+or `python3 tools/vaspberry_kubo.py kubo-hall --help`. The help groups inputs,
+response settings and outputs, displays useful defaults and units, and names
+the saved artifacts accepted by the next stage. `vaspberry_post.py plot`
+requires a successful frontend run with `run.json`; a standalone pair cache
+or a `wavecar-hall` directory with `workflow.json` is not interchangeable.
+Long CLI pages use a short `[OPTIONS]` synopsis; the complete grouped option
+list marks required arguments and displays useful defaults. Conditional
+source requirements, such as WAVEDER's `--occupied`/`--bands` choice, appear
+on the same help page.
+
+The Kubo command-line tools create new result directories and refuse existing
+ones. The older `vaspberry_transport.py` entry point reads whitespace DAT,
+not the current named-column `KUBO.csv`. Its `sigma` command removes the
+specified CSV/plot/summary before input validation, and `wavecar_fukui.py`
+replaces its planned result files before reading WAVECAR. Use fresh result
+paths with these retained tools. Their help states this file policy.
+
 ## File syntax and names
 
 - Sections and keys are case-sensitive. Use `key = value`, space-separated

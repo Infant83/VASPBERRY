@@ -9,6 +9,7 @@ parallel to Cartesian xy, with reciprocal vectors including 2*pi.
 from __future__ import annotations
 
 import argparse
+from cli_help import configure_help
 import hashlib
 import json
 from pathlib import Path
@@ -302,6 +303,10 @@ def main():
     parser.add_argument("--dpi", type=int, default=300)
     parser.add_argument("--k-fractional", default="0.3333333333333333,0.6666666666666666",
                         help="two fractional coordinates of K; K-prime is -K (default matches MoS2 KPOINTS)")
+    configure_help(parser, epilogs={None: 'Plots a Fukui-method BERRYCURV.dat BZ map in Angstrom^2.\n'
+                                         'Writes the requested figure plus a .json provenance companion.\n'
+                                         'Existing figure/provenance files are refused.\n'
+                                         'Guide: docs/HANDS_ON.md'})
     args = parser.parse_args()
     record_path = args.output.with_suffix(args.output.suffix + ".json")
     if args.output.exists() or record_path.exists():

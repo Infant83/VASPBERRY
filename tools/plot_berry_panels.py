@@ -10,6 +10,7 @@ changed by plotting.
 from __future__ import annotations
 
 import argparse
+from cli_help import configure_help
 import csv
 import hashlib
 import json
@@ -374,8 +375,8 @@ def main():
     bands = parser.add_mutually_exclusive_group(required=True)
     bands.add_argument("--bands-csv", type=Path, help="long-form unchanged VASP band table")
     bands.add_argument("--path-wavecar", type=Path, help="export bands from this SOC path WAVECAR")
-    parser.add_argument("--path-input", type=Path, help="native path KUBO.csv for --method kubo")
-    parser.add_argument("--band", type=int, default=18)
+    parser.add_argument("--path-input", type=Path, help="native path KUBO.csv; required for --method kubo and kubo-bundle")
+    parser.add_argument("--band", type=int, default=18, help="one-based plotted band; example-oriented default 18")
     parser.add_argument("--occupied", type=int, default=18,
                         help="occupied count for band-display energy zero; selected WAVEDER bundles keep their CSV band IDs")
     parser.add_argument("--gap-threshold", type=float, default=1e-5, help="minimum isolated-band separation in eV")
@@ -386,7 +387,11 @@ def main():
     parser.add_argument("--title", default="Berry curvature")
     parser.add_argument("--map-style", choices=("cells", "smooth"), default="cells")
     parser.add_argument("--display-grid", type=int, default=401, help="smooth display pixels per axis; no new k-point calculation")
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True, help="new panel figure filename; existing figure/provenance are refused")
+    configure_help(parser, epilogs={None: 'Plots a Berry map beside an unchanged VASP band path.\n'
+                                         '--method selects the saved input format, not a native task.\n'
+                                         'Choose --band/--occupied for your material.\n'
+                                         'Guide: docs/HANDS_ON.md'})
     args = parser.parse_args()
     if not np.isfinite(args.energy_range).all() or args.energy_range[0] >= args.energy_range[1]:
         parser.error("--energy-range requires finite increasing limits")

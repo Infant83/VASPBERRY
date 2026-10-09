@@ -19,6 +19,7 @@ VASPBERRY executable or its legacy output files.
 from __future__ import annotations
 
 import argparse
+from cli_help import configure_help
 import csv
 import json
 import math
@@ -1493,7 +1494,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--input", required=True, help="VASPBERRY curvature data file")
+    common.add_argument("--input", required=True, help="legacy whitespace DAT with at least seven columns; not named-column KUBO.csv")
     common.add_argument("--eigenval", help="matching EIGENVAL used to attach band energies")
     common.add_argument("--band", type=int, help="one-based band index in EIGENVAL")
     common.add_argument("--spin", type=int, default=1, choices=(1, 2), help="EIGENVAL spin column")
@@ -1521,7 +1522,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sigma_parser = subparsers.add_parser("sigma", help="integrate sigma_xy(mu) on a full BZ mesh")
     sigma_parser.add_argument("--input", action="append", required=True,
-                              help="band-resolved curvature file; repeat for multiple bands")
+                              help="legacy band-resolved whitespace DAT; repeat for multiple bands")
     sigma_parser.add_argument("--bands", nargs="+", type=int,
                               help="one band index per input (otherwise infer from headers)")
     sigma_parser.add_argument("--eigenval", required=True)
@@ -1554,7 +1555,25 @@ def build_parser() -> argparse.ArgumentParser:
     sigma_parser.add_argument("--csv", required=True)
     sigma_parser.add_argument("--plot", required=True)
     sigma_parser.add_argument("--summary", help="optional JSON validation summary")
-    return parser
+    return configure_help(parser, descriptions={
+        'map': 'Plot a k-resolved heat map from legacy VASPBERRY whitespace DAT.',
+        'line': 'Plot an ordered k path from legacy VASPBERRY whitespace DAT.',
+        'cut': 'Interpolate a K-to-Kprime display cut from a legacy full-BZ DAT map.',
+        'sigma': 'Integrate sigma_xy(mu) on a full BZ mesh from legacy band-resolved\n'
+                 'whitespace DAT and matching EIGENVAL. Current KUBO.csv, pair caches\n'
+                 'and conductivity.csv use the Kubo tools instead.',
+    }, epilogs={
+        None: 'Legacy DAT entry point. Standard optical Hall: tools/vaspberry_kubo.py\n'
+              'kubo-hall. Guide: docs/KUBO_TRANSPORT.md',
+        'sigma': 'File policy: existing --csv, --plot and --summary results are removed\n'
+                 'before input validation. Choose fresh result paths.\n'
+                 'Guide: docs/KUBO_TRANSPORT.md',
+    }, option_help={
+        **{(name, '--output'): 'figure filename; existing figure may be replaced'
+           for name in ('map', 'line', 'cut')},
+        ('sigma', '--csv'): 'output Hall CSV; existing file is removed before input validation',
+        ('sigma', '--plot'): 'output Hall figure; existing file is removed before input validation',
+    })
 
 
 def main(argv: Sequence[str] | None = None) -> int:

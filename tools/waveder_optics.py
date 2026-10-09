@@ -8,6 +8,7 @@ absorption or photoluminescence. A path is allowed; no BZ integral is inferred.
 from __future__ import annotations
 
 import argparse
+from cli_help import configure_help
 import csv
 import json
 from pathlib import Path
@@ -261,7 +262,9 @@ def command(args):
 
 
 def main(argv=None):
-    p = add_arguments(argparse.ArgumentParser(description=__doc__))
+    p = configure_help(add_arguments(argparse.ArgumentParser(description=__doc__)),
+        epilogs={None: 'Saved circular strengths/spectra can be plotted independently.\n'
+                        'Output directory must be new. Guide: docs/PAW_OPTICS.md'})
     args = p.parse_args(argv)
     try:
         meta = command(args)

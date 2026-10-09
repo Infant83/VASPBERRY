@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Execute VASPBERRY and postprocess its results from one settings file.
+"""Calculate Hall tables and plot saved results from one INI settings file.
 
   python3 tools/vaspberry_post.py check analysis.ini
   python3 tools/vaspberry_post.py run analysis.ini
@@ -11,6 +11,11 @@ mu/T contributions or insulating occupied-bundle T=0 charge Hall. Set
 WAVECAR-only canonical momentum approximation (a warning is emitted). Missing
 or invalid WAVEDER never causes automatic fallback. The plot command reads
 saved tables without changing their source operator.
+
+The WAVEDER route computes directly in Python. The explicit WAVECAR route
+executes the native VASPBERRY pair exporter, optionally through MPI.
+Template: examples/features/waveder-selected/selected.ini
+Guides: docs/POSTPROCESSING.md and docs/POSTPROCESSING_REFERENCE.md
 """
 from __future__ import annotations
 
@@ -24,6 +29,7 @@ import shutil
 import subprocess
 import sys
 import time
+from cli_help import configure_help
 
 from postprocess_config import load_settings
 
@@ -434,13 +440,29 @@ def parser():
         command.add_argument('--reuse', type=Path, metavar='PREVIOUS_RUN',
                              help='reuse a pair cache only with [run] kubo_source=wavecar; preserves its approximation')
     plots = sub.add_parser('plot', help='draw saved numerical tables; do not execute VASP or VASPBERRY')
-    plots.add_argument('result', type=Path, help='completed run directory')
+    plots.add_argument('result', type=Path, help='successful vaspberry_post.py run directory containing run.json')
     plots.add_argument('--output-dir', type=Path, help='new figure directory (default: RESULT/figures)')
     plots.add_argument('--temperature', type=float, help='draw one already calculated temperature (K)')
     plots.add_argument('--group', help='draw another saved atom/orbital group')
     plots.add_argument('--band', type=int, help='band for the character map; the saved Hall band sum is unchanged')
     plots.add_argument('--quantity', choices=['sigma', 'delta-sigma'], help='absolute or reference-subtracted curves')
-    return result
+    return configure_help(result, descriptions={
+        'plot': 'Draw saved Hall curves and character maps from a successful INI run.\n'
+                'Reads run.json and numerical tables; uses saved calculation settings.',
+    }, epilogs={
+        'check': 'Explicit relative INI paths resolve from the INI file. An omitted\n'
+                 'input_dir defaults to invocation cwd. See docs/POSTPROCESSING.md.',
+        'run': 'Writes a new result directory containing run.json, numerical tables\n'
+               'and workflow records. Use plot for figures. Existing results are refused.\n'
+               'Explicit relative INI paths resolve from the INI file; omitted input_dir\n'
+               'defaults to invocation cwd. See docs/POSTPROCESSING_REFERENCE.md.',
+        'plot': 'Default figures: RESULT/figures (must be new).\n'
+                'Accepted RESULT is an INI frontend run with successful run.json,\n'
+                'not a standalone pair cache or wavecar-hall workflow.json directory.',
+    }, option_help={
+        ('check', '--reuse'): 'previous successful INI run with run.json; wavecar pair-cache reuse only',
+        ('run', '--reuse'): 'previous successful INI run with run.json; wavecar pair-cache reuse only',
+    })
 
 
 def main(argv=None):

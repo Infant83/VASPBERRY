@@ -3,7 +3,8 @@
 
 The Fukui-Hatsugai-Suzuki (FHS) method is called the Fukui method here.
 
-This is a deliberately small, read-only validation program.  Its conventions
+This validation program preserves its input WAVECAR and writes result files.
+Its conventions
 match VASPBERRY 1.0:
 
 * VASP's g3/g2/g1 plane-wave ordering is reproduced exactly.
@@ -20,6 +21,7 @@ WAVECAR.
 from __future__ import annotations
 
 import argparse
+from cli_help import configure_help
 import csv
 import json
 import math
@@ -3023,7 +3025,7 @@ def validate_map_specifications(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
-    parser.add_argument("wavecar", type=Path)
+    parser.add_argument("wavecar", type=Path, help="input WAVECAR; never modified")
     parser.add_argument("--nx", type=int, required=True)
     parser.add_argument("--ny", type=int, required=True)
     parser.add_argument("--spinor-components", type=int, choices=(1, 2), default=None,
@@ -3100,6 +3102,13 @@ def main() -> None:
         action="store_true",
         help="write an explicitly INVALID diagnostic scan instead of refusing it",
     )
+    configure_help(parser, epilogs={None: 'Example-oriented defaults: energy band 19; mu=0.40..0.55 eV.\n'
+                                         'Choose explicit maps and energies for your material.\n'
+                                         'File policy: planned result files are removed before reading\n'
+                                         'WAVECAR. Choose a fresh --output-dir.\n'
+                                         'Guide: docs/KUBO_TRANSPORT.md'}, option_help={
+        (None, '--output-dir'): 'result directory; planned result files are replaced before input validation',
+    })
     args = parser.parse_args()
 
     full_only_no_legacy_maps = (

@@ -16,6 +16,7 @@ from pathlib import Path
 import sys
 
 import numpy as np
+from cli_help import configure_help
 
 from berry_data import (CurvatureData, base_metadata, hall_spectrum, read_curvature,
                        require, write_curvature, write_hall)
@@ -254,7 +255,39 @@ def parser():
     add_spin_commands(sub)
     add_spin_merge(sub)
     add_spin_export_arguments(sub.add_parser('spin-export',help='validate instrumented VASP PAW spin/full-velocity output and create portable matrices'))
-    return p
+    return configure_help(p, descriptions={
+        'spin-hall': 'Conventional intrinsic spin Hall of a gapped 2D occupied subspace.\n'
+                     'Requires audited full PAW spin/velocity matrices from the supported\n'
+                     'instrumented VASP producer; WAVECAR or PROCAR alone is insufficient.',
+        'spin-export': 'Validate instrumented VASP PAW spin/full-velocity output and save\n'
+                       'physical-matrices.npz plus physical-matrices.json for spin-hall.',
+    }, epilogs={
+        None: 'Start: python3 tools/vaspberry_kubo.py kubo-hall --help\n\n'
+              'Routes\n  Standard charge: kubo-hall (WAVEDER)\n'
+              '  Saved pairs: import-pairs -> pair-hall -> tools/plot_hall.py\n'
+              '  Explicit approximation: wavecar-hall --kubo-source wavecar\n'
+              '  Advanced operators: matrix, spin-*, velocity-pairs, wannier-*\n\n'
+              'Guides: docs/KUBO_TRANSPORT.md, docs/WAVEDER_KUBO_PROTOCOL.md',
+        'kubo-hall': 'WAVEDER requires exactly one of --occupied or --bands.\n'
+                     '--occupied: insulating T=0; --bands: selected mu/T contribution.\n'
+                     'WAVEDER computes in Python; --binary/MPI run the native WAVECAR\n'
+                     'pair exporter only with explicit --kubo-source wavecar.\n'
+                     'WAVEDER output: conductivity.csv, .dat and .npz in --output-dir.\n'
+                     'Explicit WAVECAR output: the same tables under hall/.\n'
+                     'Guide: docs/WAVEDER_KUBO_PROTOCOL.md',
+        'spin-hall': 'Guide and producer scope: docs/SPIN_HALL.md',
+        'import-pairs': 'Input: native --task kubo-pairs PAIRS.csv plus the same WAVECAR.\n'
+                        'Output: pairs.npz and pairs.json; next command: pair-hall.\n'
+                        'Guide: docs/KUBO_TRANSPORT.md',
+        'pair-hall': 'Input: pairs.npz + pairs.json from import-pairs or velocity-pairs.\n'
+                     'Output: conductivity tables for tools/plot_hall.py.\n'
+                     'Guide: docs/KUBO_TRANSPORT.md',
+    }, option_help={
+        ('demo', '--mesh'): 'number of generated mesh points per reciprocal axis',
+        ('import-legacy', '--csv'): 'canonical per-band CSV with declared normalization; pair with WAVECAR',
+        ('import-pairs', '--csv'): 'native PAIRS.csv from --task kubo-pairs; pair with the same WAVECAR',
+        ('bundle-hall', '--csv'): 'saved canonical occupied-trace CSV; standard WAVEDER CSV is not accepted',
+    })
 
 
 def main(argv=None):

@@ -216,6 +216,11 @@ names, and `--help all` (also `--help legacy`) for the complete flag reference.
 `-h` is the short form of `--help`. See the
 [native help guide](docs/NATIVE_COMMANDS.md#learn-one-task-or-option-at-a-time).
 
+Task help groups a copyable command, required inputs, output data and units,
+common options, and validity conditions. Option help shows defaults and the
+tasks to which it applies. The same plain text works in a terminal, redirected
+to a file, or read by an agent.
+
 ### Standard Kubo calculation: same-run optical files
 
 Follow the [standard protocol](docs/WAVEDER_KUBO_PROTOCOL.md) to generate

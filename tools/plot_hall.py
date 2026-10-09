@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from cli_help import configure_help
 import csv
 import json
 from pathlib import Path
@@ -58,14 +59,17 @@ def selected_scope(path):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('input', type=Path)
+    p.add_argument('input', type=Path, help='saved conductivity.csv/.dat/.npz Hall table; plots band_id=0 rows')
     p.add_argument('--output-dir', type=Path, required=True)
     p.add_argument('--formats', nargs='+', choices=['png', 'pdf', 'svg'], default=['png', 'pdf', 'svg'])
-    p.add_argument('--regions', nargs='+', default=['total'])
-    p.add_argument('--temperatures', nargs='+', type=float)
+    p.add_argument('--regions', nargs='+', default=['total'], help='saved user-defined region labels')
+    p.add_argument('--temperatures', nargs='+', type=float, help='saved temperatures in K; default all saved temperatures')
     p.add_argument('--quantity', choices=['sigma', 'delta-sigma'], default='sigma')
     p.add_argument('--energy-origin-eV', type=float, help='plot mu minus this energy; default is table mu_reference')
     p.add_argument('--energy-label', default=None, help='x-axis label, e.g. mu - VBM (eV)')
+    configure_help(p, epilogs={None: 'Draws mu-dependent sigma or delta-sigma in e^2/h.\n'
+                                    'Writes hall.png/.pdf/.svg and plot.json provenance.\n'
+                                    'Guide: docs/KUBO_TRANSPORT.md'})
     args = p.parse_args(argv)
     try:
         require(not args.output_dir.exists(), 'output directory exists; choose a new directory')

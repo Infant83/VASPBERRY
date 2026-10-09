@@ -82,6 +82,31 @@ It rechecks the latest attempts, preserves the immutable v1.6.5 commit
 an advanced default branch or modification of an existing release.
 A fresh version-pinned source archive is checked after publication.
 
+## Help update on 2026-10-09
+
+The maintainer requested that the completed help improvements remain in
+version 1.6.6. Native help was exercised in 176 current-source calls and
+22 historical-profile calls; Python help was exercised in 42 calls. All
+normal requests exited successfully, expected invalid-topic rejections were
+checked separately, and help produced no calculation files. Native output
+fits 80 columns with separated sections. The GNU serial/MPI build and
+runtime checks passed, as did 58 help/parser/source-regression tests.
+
+Main and historical Fortran code before `help_all`, numerical includes and
+help dispatch were unchanged. Python computational functions and execution
+after parsing were AST-equivalent; selection grammar, argument types,
+defaults and required-input rules were retained. These checks cover help
+and workflow presentation, not a new material-convergence study. Fresh
+exact-commit remote compiler/MPI/archive results are recorded in the
+updated release body, separately from the original publication receipts.
+
+The original 2026-10-04 release source is commit
+`de84ed3337b900b36990f0230e5d497ff989061f`. This explicitly requested
+help-only amendment may update the existing v1.6.6 tag and release after
+the same thirteen exact-source CI jobs pass. Other release tags and
+historical calculation metadata remain fixed. The original one-time
+publisher is not used to amend an existing release; its guards remain.
+
 ## Scientific boundaries
 
 The [WAVEDER protocol](WAVEDER_KUBO_PROTOCOL.md) and
