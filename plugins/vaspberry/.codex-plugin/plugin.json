@@ -1,0 +1,42 @@
+{
+  "name": "vaspberry",
+  "version": "0.1.3",
+  "description": "Use VASPBERRY for Berry curvature, Chern numbers, supported two-dimensional Z2 invariants and intrinsic charge Hall analysis.",
+  "author": {
+    "name": "Hyun-Jung Kim",
+    "url": "https://github.com/Infant83"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "VASPBERRY",
+    "shortDescription": "VASP topology and response",
+    "longDescription": "Analyze supported VASP outputs with VASPBERRY to calculate Berry curvature, Chern numbers, two-dimensional time-reversal Z2 invariants and intrinsic charge Hall response. Designed for materials researchers, the skill guides engine installation, input compatibility, numerical diagnostics, convergence assessment, plotting and scientific reporting with software and paper citations. The engine runs locally and is installed separately from the official GitHub release. Bring your own VASP outputs, or start with a public analytic model demonstration.",
+    "developerName": "Hyun-Jung Kim",
+    "category": "Productivity",
+    "capabilities": [],
+    "websiteURL": "https://github.com/Infant83/VASPBERRY",
+    "composerIcon": "./assets/vaspberry.png",
+    "logo": "./assets/vaspberry.png",
+    "defaultPrompt": [
+      "Install the latest stable VASPBERRY and run its public analytic demo with citations.",
+      "Check whether my VASP outputs support Berry-curvature or Chern analysis, then run the supported calculation.",
+      "Plot my VASPBERRY Hall results and report the remaining convergence checks."
+    ]
+  },
+  "homepage": "https://github.com/Infant83/VASPBERRY",
+  "license": "MIT",
+  "keywords": [
+    "vaspberry",
+    "vasp",
+    "berry-curvature",
+    "chern-number",
+    "z2-invariant",
+    "hall-conductivity",
+    "anomalous-hall",
+    "wavecar",
+    "waveder",
+    "topological-materials",
+    "materials-science"
+  ],
+  "repository": "https://github.com/Infant83/VASPBERRY"
+}

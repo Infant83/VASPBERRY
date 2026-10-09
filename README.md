@@ -47,6 +47,27 @@ The native `--bundle` and `-kubo_bundle` flags have been removed. See the
 [release notes](docs/releases/v1.6.6.md), [validation scope](docs/VALIDATION_1.6.6.md),
 [changelog](CHANGELOG.md) and [version policy](docs/RELEASING.md).
 
+## Use VASPBERRY with an AI coding agent
+
+VASPBERRY includes a **Codex plugin and an independently installable agent
+skill**. Ask an agent with local terminal and file access:
+
+> Install the VASPBERRY agent plugin from https://github.com/Infant83/VASPBERRY
+> and set it up for use in this project.
+
+The agent can install directly from this GitHub repository, inspect your
+inputs, run supported calculations, check numerical diagnostics and
+convergence, make plots, and report the software and paper citations.
+For a first example, ask: “Use VASPBERRY to run its public analytic demo
+and explain the results and validation limits.”
+
+The plugin contains the workflow and small helpers. It installs the latest
+stable VASPBERRY engine separately when needed, preserving the exact source
+version used for each analysis. Read the [agent installation and usage
+guide](docs/AGENT_USAGE.md) for plugin installation, the standalone skill,
+example requests and updates. GitHub installation is available independently
+of a listing in the public plugin directory.
+
 ## Install and run VASPBERRY
 
 The VASPBERRY executable requires a **Fortran compiler, GNU Make, POSIX shell/tools

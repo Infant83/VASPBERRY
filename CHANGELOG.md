@@ -4,6 +4,15 @@ All notable changes to VASPBERRY are recorded here.
 
 ## [Unreleased]
 
+### Agent installation and use
+
+- Add the VASPBERRY Codex plugin 0.1.3 and GitHub marketplace catalog, with
+  a standalone skill installer and a short natural-language installation
+  request in the README.
+- Keep the calculation engine separately installed from its selected stable
+  release; retain source provenance, scientific validation and citation
+  guidance. The numerical engine and its version remain unchanged.
+
 ## [1.6.6] - 2026-10-04
 
 This patch retains the 1.6.5 WAVEDER input protocol and packages the

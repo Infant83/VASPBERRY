@@ -1,0 +1,4 @@
+interface:
+  display_name: "VASPBERRY"
+  short_description: "Analyze topology and response from VASP outputs"
+  default_prompt: "Use $vaspberry to inspect my VASP output and calculate supported topology with validation and citations."
